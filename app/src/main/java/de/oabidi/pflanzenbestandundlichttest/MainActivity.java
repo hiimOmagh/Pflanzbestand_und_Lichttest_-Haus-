@@ -118,33 +118,33 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_add:
-                plantRepository.insert(new Plant(
-                    getString(R.string.new_plant_name),
-                    getString(R.string.new_plant_description),
-                    getString(R.string.unknown),
-                    getString(R.string.unknown),
-                    System.currentTimeMillis(),
-                    Uri.EMPTY));
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_add) {
+            plantRepository.insert(new Plant(
+                getString(R.string.new_plant_name),
+                getString(R.string.new_plant_description),
+                getString(R.string.unknown),
+                getString(R.string.unknown),
+                System.currentTimeMillis(),
+                Uri.EMPTY));
+            refreshPlants();
+            return true;
+        } else if (itemId == R.id.action_update) {
+            if (!plants.isEmpty()) {
+                Plant first = plants.get(0);
+                first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
+                plantRepository.update(first);
                 refreshPlants();
-                return true;
-            case R.id.action_update:
-                if (!plants.isEmpty()) {
-                    Plant first = plants.get(0);
-                    first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
-                    plantRepository.update(first);
-                    refreshPlants();
-                }
-                return true;
-            case R.id.action_delete:
-                if (!plants.isEmpty()) {
-                    plantRepository.delete(plants.get(0));
-                    refreshPlants();
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            }
+            return true;
+        } else if (itemId == R.id.action_delete) {
+            if (!plants.isEmpty()) {
+                plantRepository.delete(plants.get(0));
+                refreshPlants();
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
