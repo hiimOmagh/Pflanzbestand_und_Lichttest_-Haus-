@@ -3,13 +3,14 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPlantClickListener, LightSensorHelper.OnLuxChangedListener {
@@ -17,6 +18,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private TextView ppfdView;
     private TextView dliView;
     private LightSensorHelper lightSensorHelper;
+    private PlantRepository plantRepository;
+    private PlantAdapter adapter;
+    private List<Plant> plants
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,33 +35,9 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         RecyclerView recyclerView = findViewById(R.id.plant_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        List<Plant> plants = Arrays.asList(
-            new Plant(
-                "Rose",
-                "A thorny flowering shrub.",
-                "Rosa",
-                "Garden bed",
-                System.currentTimeMillis(),
-                Uri.EMPTY
-            ),
-            new Plant(
-                "Tulip",
-                "A bulbous spring-flowering plant.",
-                "Tulipa",
-                "Planter",
-                System.currentTimeMillis(),
-                Uri.EMPTY
-            ),
-            new Plant(
-                "Sunflower",
-                "A tall plant with a large daisy-like flower.",
-                "Helianthus",
-                "Backyard",
-                System.currentTimeMillis(),
-                Uri.EMPTY
-            )
-        );
-        PlantAdapter adapter = new PlantAdapter(plants, this);
+        plantRepository = new PlantRepository(this);
+        plants = plantRepository.getAllPlants();
+        adapter = new PlantAdapter(plants, this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -70,6 +51,49 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     protected void onPause() {
         super.onPause();
         lightSensorHelper.stop();
+    }
+
+    private void refreshPlants() {
+        plants = plantRepository.getAllPlants();
+        adapter.updatePlants(plants);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_add:
+                plantRepository.insert(new Plant(
+                    "New Plant",
+                    "A newly added plant.",
+                    "Unknown",
+                    "Unknown",
+                    System.currentTimeMillis(),
+                    Uri.EMPTY));
+                refreshPlants();
+                return true;
+            case R.id.action_update:
+                if (!plants.isEmpty()) {
+                    Plant first = plants.get(0);
+                    first.setDescription(first.getDescription() + " (updated)");
+                    plantRepository.update(first);
+                    refreshPlants();
+                }
+                return true;
+            case R.id.action_delete:
+                if (!plants.isEmpty()) {
+                    plantRepository.delete(plants.get(0));
+                    refreshPlants();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override

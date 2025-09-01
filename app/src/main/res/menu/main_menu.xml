@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_add"
+        android:title="Add Plant"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_update"
+        android:title="Update First Plant"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_delete"
+        android:title="Delete First Plant"
+        app:showAsAction="never" />
+</menu>

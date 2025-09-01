@@ -16,12 +16,17 @@ public class PlantAdapter extends RecyclerView.Adapter<PlantAdapter.PlantViewHol
         void onPlantClick(Plant plant);
     }
 
-    private final List<Plant> plants;
+    private List<Plant> plants;
     private final OnPlantClickListener listener;
 
     public PlantAdapter(List<Plant> plants, OnPlantClickListener listener) {
         this.plants = plants;
         this.listener = listener;
+    }
+
+    public void updatePlants(List<Plant> plants) {
+        this.plants = plants;
+        notifyDataSetChanged();
     }
 
     @NonNull

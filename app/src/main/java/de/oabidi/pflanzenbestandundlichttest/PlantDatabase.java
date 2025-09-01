@@ -1,0 +1,30 @@
+package de.oabidi.pflanzenbestandundlichttest;
+
+import android.content.Context;
+
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
+
+@Database(entities = {Plant.class}, version = 1)
+@TypeConverters({Converters.class})
+public abstract class PlantDatabase extends RoomDatabase {
+    private static volatile PlantDatabase INSTANCE;
+
+    public abstract PlantDao plantDao();
+
+    public static PlantDatabase getDatabase(Context context) {
+        if (INSTANCE == null) {
+            synchronized (PlantDatabase.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
+                            PlantDatabase.class, "plant_database")
+                        .allowMainThreadQueries()
+                        .build();
+                }
+            }
+        }
+        return INSTANCE;
+    }
+}
