@@ -10,15 +10,46 @@ import java.util.List;
 
 @Dao
 public interface PlantDao {
+    /**
+     * Retrieves all {@link Plant} entries from the database.
+     * <p>
+     * Note: Should be called off the main thread for production usage.
+     *
+     * @return a list containing all plants stored in the database
+     */
     @Query("SELECT * FROM Plant")
     List<Plant> getAll();
 
+    /**
+     * Inserts the given {@link Plant} into the database.
+     * <p>
+     * Note: Should be called off the main thread for production usage. This method
+     * does not return a value.
+     *
+     * @param plant the plant entity to insert
+     */
     @Insert
     void insert(Plant plant);
 
+    /**
+     * Updates the given {@link Plant} in the database.
+     * <p>
+     * Note: Should be called off the main thread for production usage. This method
+     * does not return a value.
+     *
+     * @param plant the plant entity to update
+     */
     @Update
     void update(Plant plant);
 
+    /**
+     * Deletes the given {@link Plant} from the database.
+     * <p>
+     * Note: Should be called off the main thread for production usage. This method
+     * does not return a value.
+     *
+     * @param plant the plant entity to delete
+     */
     @Delete
     void delete(Plant plant);
 }
