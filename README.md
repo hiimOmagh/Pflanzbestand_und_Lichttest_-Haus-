@@ -17,3 +17,17 @@ This will download dependencies and produce the app's APK in `app/build/outputs/
 2. Open the app to view the list of sample plants.
 3. Tap a plant to view its details.
 4. Watch the main screen's live lux, PPFD, and DLI readings to test lighting conditions for your plants.
+
+## Background thread usage
+
+`PlantRepository` performs blocking database operations. Use an
+`ExecutorService` or similar mechanism to call its methods off the main thread:
+
+```java
+ExecutorService executor = Executors.newSingleThreadExecutor();
+executor.execute(() -> {
+    PlantRepository repository = new PlantRepository(context);
+    List<Plant> plants = repository.getAllPlants();
+    // Update UI on the main thread after retrieving data.
+});
+```
