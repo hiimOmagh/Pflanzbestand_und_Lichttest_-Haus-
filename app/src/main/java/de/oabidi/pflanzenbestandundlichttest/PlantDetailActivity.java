@@ -10,20 +10,27 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+/**
+ * Activity responsible for showing detailed information about a plant.
+ *
+ * <p>The details are supplied via {@link android.content.Intent} extras when this
+ * activity is launched.</p>
+ */
 public class PlantDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Allow the layout to extend into the system bar areas.
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
 
-        String name = getIntent().getStringExtra("name");
-        String description = getIntent().getStringExtra("description");
-        String species = getIntent().getStringExtra("species");
-        String locationHint = getIntent().getStringExtra("locationHint");
-        long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L);
-        String photoUriStr = getIntent().getStringExtra("photoUri");
+        String name = getIntent().getStringExtra("name"); // Plant's display name
+        String description = getIntent().getStringExtra("description"); // Additional notes about the plant
+        String species = getIntent().getStringExtra("species"); // Botanical species identifier
+        String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
+        long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition date in epoch seconds
+        String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
         Uri photoUri = photoUriStr != null ? Uri.parse(photoUriStr) : Uri.EMPTY;
 
         TextView nameView = findViewById(R.id.detail_name);
@@ -40,6 +47,8 @@ public class PlantDetailActivity extends AppCompatActivity {
         acquiredAtView.setText(String.valueOf(acquiredAtEpoch));
         photoUriView.setText(photoUri.toString());
 
+        // After drawing edge-to-edge, pad the root view so content isn't
+        // obscured by system bars like the status and navigation bars.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
