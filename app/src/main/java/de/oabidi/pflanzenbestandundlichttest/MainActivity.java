@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private LightSensorHelper lightSensorHelper;
     private PlantRepository plantRepository;
     private PlantAdapter adapter;
-    private List<Plant> plants
+    private List<Plant> plants;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +31,11 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         ppfdView = findViewById(R.id.ppfd_value);
         dliView = findViewById(R.id.dli_value);
         lightSensorHelper = new LightSensorHelper(this, this);
+        if (!lightSensorHelper.hasLightSensor()) {
+            luxView.setText(R.string.no_light_sensor);
+            ppfdView.setText("");
+            dliView.setText("");
+        }
 
         RecyclerView recyclerView = findViewById(R.id.plant_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -44,7 +49,9 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     @Override
     protected void onResume() {
         super.onResume();
-        lightSensorHelper.start();
+        if (lightSensorHelper.hasLightSensor()) {
+            lightSensorHelper.start();
+        }
     }
 
     @Override

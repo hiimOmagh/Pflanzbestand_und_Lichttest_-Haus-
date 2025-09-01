@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Pflanzenbestand und Lichttest</string>
+    <string name="no_light_sensor">No light sensor detected</string>
 </resources>
