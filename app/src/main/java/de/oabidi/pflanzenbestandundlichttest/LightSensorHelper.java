@@ -11,13 +11,19 @@ import java.util.Deque;
 
 /**
  * Helper class that manages the ambient light sensor and reports lux readings.
+ *
+ * <p>Readings are smoothed using a simple moving-average algorithm that maintains up to
+ * {@link #MAX_SAMPLES} recent lux values. As new readings arrive, older ones are dropped
+ * once the limit is reached, and the average of the remaining samples is reported to the
+ * listener.</p>
  */
 public class LightSensorHelper implements SensorEventListener {
     public interface OnLuxChangedListener {
         void onLuxChanged(float lux);
     }
 
-    private static final int MAX_SAMPLES = 10;
+    /** Maximum number of samples to include in the moving average. */
+    private static final int MAX_SAMPLES = 10; // TODO: Allow configuring the sample size.
 
     private final SensorManager sensorManager;
     private final Sensor lightSensor;
@@ -50,6 +56,12 @@ public class LightSensorHelper implements SensorEventListener {
         }
     }
 
+    /**
+     * Receives raw sensor events, updates the moving average, and notifies the listener.
+     * The latest lux value is appended to a queue and, if necessary, the oldest sample
+     * is discarded so that no more than {@link #MAX_SAMPLES} readings are retained. The
+     * average of the stored samples is then computed and passed to the listener.
+     */
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (listener != null && event.sensor.getType() == Sensor.TYPE_LIGHT) {
