@@ -7,10 +7,24 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Singleton Room database for storing {@link Plant} data.
+ *
+ * <p>The database disallows main-thread queries. Database read/write work
+ * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
+ * used to run operations asynchronously.</p>
+ */
 @Database(entities = {Plant.class}, version = 1)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
+
+    private static final int NUMBER_OF_THREADS = 4;
+    public static final ExecutorService databaseWriteExecutor =
+        Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
     public abstract PlantDao plantDao();
 
@@ -20,7 +34,6 @@ public abstract class PlantDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             PlantDatabase.class, "plant_database")
-                        .allowMainThreadQueries()
                         .build();
                 }
             }
