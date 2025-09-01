@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -30,9 +31,30 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         List<Plant> plants = Arrays.asList(
-                new Plant("Rose", "A thorny flowering shrub."),
-                new Plant("Tulip", "A bulbous spring-flowering plant."),
-                new Plant("Sunflower", "A tall plant with a large daisy-like flower.")
+            new Plant(
+                "Rose",
+                "A thorny flowering shrub.",
+                "Rosa",
+                "Garden bed",
+                System.currentTimeMillis(),
+                Uri.EMPTY
+            ),
+            new Plant(
+                "Tulip",
+                "A bulbous spring-flowering plant.",
+                "Tulipa",
+                "Planter",
+                System.currentTimeMillis(),
+                Uri.EMPTY
+            ),
+            new Plant(
+                "Sunflower",
+                "A tall plant with a large daisy-like flower.",
+                "Helianthus",
+                "Backyard",
+                System.currentTimeMillis(),
+                Uri.EMPTY
+            )
         );
         PlantAdapter adapter = new PlantAdapter(plants, this);
         recyclerView.setAdapter(adapter);
@@ -55,6 +77,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         Intent intent = new Intent(this, PlantDetailActivity.class);
         intent.putExtra("name", plant.getName());
         intent.putExtra("description", plant.getDescription());
+        intent.putExtra("species", plant.getSpecies());
+        intent.putExtra("locationHint", plant.getLocationHint());
+        intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
+        intent.putExtra("photoUri", plant.getPhotoUri().toString());
         startActivity(intent);
     }
 

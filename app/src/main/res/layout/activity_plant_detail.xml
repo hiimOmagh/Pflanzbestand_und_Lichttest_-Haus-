@@ -23,5 +23,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/detail_species"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/detail_location_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/detail_acquired_at"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/detail_photo_uri"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:textSize="16sp" />
     </LinearLayout>
 </ScrollView>
