@@ -20,7 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="Lux: --"
+        android:text="@string/lux_placeholder"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -29,7 +29,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="PPFD: --"
+        android:text="@string/lux_placeholder"
         app:layout_constraintStart_toStartOf="@id/lux_value"
         app:layout_constraintTop_toBottomOf="@id/lux_value" />
 
@@ -38,7 +38,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="DLI: --"
+        android:text="@string/dli_placeholder"
         app:layout_constraintStart_toStartOf="@id/ppfd_value"
         app:layout_constraintTop_toBottomOf="@id/ppfd_value" />
 

@@ -1,5 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import static de.oabidi.pflanzenbestandundlichttest.R.*;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -51,8 +53,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
         lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f);
 
-        kInput.setText(String.format("%.4f", calibrationFactor));
-        hoursInput.setText(String.format("%.1f", lightHours));
+        kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
+        hoursInput.setText(getString(R.string.format_light_hours, lightHours));
 
         kInput.addTextChangedListener(new SimpleTextWatcher() {
             @Override
@@ -119,10 +121,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         switch (item.getItemId()) {
             case R.id.action_add:
                 plantRepository.insert(new Plant(
-                    "New Plant",
-                    "A newly added plant.",
-                    "Unknown",
-                    "Unknown",
+                    getString(R.string.new_plant_name),
+                    getString(R.string.new_plant_description),
+                    getString(R.string.unknown),
+                    getString(R.string.unknown),
                     System.currentTimeMillis(),
                     Uri.EMPTY));
                 refreshPlants();
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
             case R.id.action_update:
                 if (!plants.isEmpty()) {
                     Plant first = plants.get(0);
-                    first.setDescription(first.getDescription() + " (updated)");
+                    first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
                     plantRepository.update(first);
                     refreshPlants();
                 }
@@ -162,9 +164,9 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     public void onLuxChanged(float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
-        luxView.setText(String.format("Lux: %.2f", lux));
-        ppfdView.setText(String.format("PPFD: %.2f µmol/m²/s", ppfd));
-        dliView.setText(String.format("DLI: %.2f mol/m²/day", dli));
+        luxView.setText(getString(R.string.format_lux, lux));
+        ppfdView.setText(getString(R.string.format_ppfd, ppfd));
+        dliView.setText(getString(R.string.format_dli, dli));
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {
