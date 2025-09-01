@@ -19,7 +19,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+/**
+ * Main screen of the app showing current light sensor readings and a list of plants.
+ * It listens for {@link LightSensorHelper} updates and persists calibration data so
+ * that light calculations remain stable between sessions.
+ */
 public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPlantClickListener, LightSensorHelper.OnLuxChangedListener {
+    // TODO: Extract sensor and database interactions into a presenter/helper class.
     private static final String PREFS_NAME = "settings";
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_LIGHT_HOURS = "light_hours";
@@ -30,13 +36,17 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private LightSensorHelper lightSensorHelper;
     private EditText kInput;
     private EditText hoursInput;
-    private float calibrationFactor;
-    private float lightHours;
+    private float calibrationFactor; // Factor converting lux to PPFD
+    private float lightHours; // Expected daily exposure used for DLI
     private SharedPreferences preferences;
     private PlantRepository plantRepository;
     private PlantAdapter adapter;
     private List<Plant> plants;
 
+    /**
+     * Sets up views, sensor helper, and loads persisted calibration settings.
+     * This method is invoked when the activity is created for the first time.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,13 +55,13 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         luxView = findViewById(R.id.lux_value);
         ppfdView = findViewById(R.id.ppfd_value);
         dliView = findViewById(R.id.dli_value);
-        lightSensorHelper = new LightSensorHelper(this, this);
+        lightSensorHelper = new LightSensorHelper(this, this); // Encapsulates sensor registration and callbacks
         kInput = findViewById(R.id.k_input);
         hoursInput = findViewById(R.id.light_hours_input);
 
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
-        lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f);
+        calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f); // default for typical LEDs
+        lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f); // assume continuous light as fallback
 
         kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
         hoursInput.setText(getString(R.string.format_light_hours, lightHours));
@@ -61,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
             public void afterTextChanged(Editable s) {
                 try {
                     calibrationFactor = Float.parseFloat(s.toString());
+                    // Persist user-provided calibration for consistent conversions
                     preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
                 } catch (NumberFormatException ignored) {}
             }
@@ -71,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
             public void afterTextChanged(Editable s) {
                 try {
                     lightHours = Float.parseFloat(s.toString());
+                    // Store expected light duration for later DLI calculations
                     preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
                 } catch (NumberFormatException ignored) {}
             }
@@ -91,14 +103,20 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         recyclerView.setAdapter(adapter);
     }
 
+    /**
+     * Starts listening for light sensor updates when the activity comes to the foreground.
+     */
     @Override
     protected void onResume() {
         super.onResume();
         if (lightSensorHelper.hasLightSensor()) {
-            lightSensorHelper.start();
+            lightSensorHelper.start(); // Begin sensor monitoring
         }
     }
 
+    /**
+     * Stops sensor updates to conserve resources when the activity is not visible.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -110,12 +128,18 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         adapter.updatePlants(plants);
     }
 
+    /**
+     * Inflates the menu providing actions to add, update, or delete plants.
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
 
+    /**
+     * Handles menu selections that modify the plant database.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
@@ -160,10 +184,13 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         startActivity(intent);
     }
 
+    /**
+     * Receives raw lux values, applies calibration and computes plant-relevant metrics.
+     */
     @Override
     public void onLuxChanged(float lux) {
-        float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
-        float dli = LightMath.dliFromPpfd(ppfd, lightHours);
+        float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor); // Adjust lux using calibration factor
+        float dli = LightMath.dliFromPpfd(ppfd, lightHours); // Convert PPFD to daily light integral
         luxView.setText(getString(R.string.format_lux, lux));
         ppfdView.setText(getString(R.string.format_ppfd, ppfd));
         dliView.setText(getString(R.string.format_dli, dli));
