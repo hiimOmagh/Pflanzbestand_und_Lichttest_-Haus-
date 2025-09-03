@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -98,9 +99,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         plantRepository = new PlantRepository(this);
-        plants = plantRepository.getAllPlants();
+        plants = new ArrayList<>();
         adapter = new PlantAdapter(plants, this);
         recyclerView.setAdapter(adapter);
+        refreshPlants();
     }
 
     /**
@@ -124,8 +126,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     }
 
     private void refreshPlants() {
-        plants = plantRepository.getAllPlants();
-        adapter.updatePlants(plants);
+        plantRepository.getAllPlants(result -> {
+            plants = result;
+            adapter.updatePlants(plants);
+        });
     }
 
     /**
@@ -150,21 +154,19 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
                 getString(R.string.unknown),
                 getString(R.string.unknown),
                 System.currentTimeMillis(),
-                Uri.EMPTY));
-            refreshPlants();
+                    Uri.EMPTY),
+                this::refreshPlants);
             return true;
         } else if (itemId == R.id.action_update) {
             if (!plants.isEmpty()) {
                 Plant first = plants.get(0);
                 first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
-                plantRepository.update(first);
-                refreshPlants();
+                plantRepository.update(first, this::refreshPlants);
             }
             return true;
         } else if (itemId == R.id.action_delete) {
             if (!plants.isEmpty()) {
-                plantRepository.delete(plants.get(0));
-                refreshPlants();
+                plantRepository.delete(plants.get(0), this::refreshPlants);
             }
             return true;
         } else {

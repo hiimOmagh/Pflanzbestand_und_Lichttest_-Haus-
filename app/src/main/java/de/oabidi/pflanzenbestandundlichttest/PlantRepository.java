@@ -1,18 +1,22 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 
 /**
- * Repository providing synchronous access to {@link Plant} entities.
+ * Repository providing asynchronous access to {@link Plant} entities.
  * <p>
- * All methods are blocking and should be invoked on a background thread.
- * Use an {@link java.util.concurrent.ExecutorService} or similar mechanism
- * to avoid blocking the Android main thread.
+ * All database operations are executed on {@link PlantDatabase#databaseWriteExecutor}
+ * and results or completion callbacks are delivered on the Android main thread.
  */
 public class PlantRepository {
     private final PlantDao plantDao;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
      * Creates a new repository instance.
@@ -28,50 +32,64 @@ public class PlantRepository {
     }
 
     /**
-     * Returns all stored plants.
-     * <p>
-     * This call accesses the database directly and should run on a
-     * background thread.
+     * Retrieves all stored plants asynchronously and delivers them on the main thread.
      *
-     * @return list of all {@link Plant} entries
+     * @param callback invoked with the resulting list on the main thread
      */
-    public List<Plant> getAllPlants() {
-        return plantDao.getAll();
+    public void getAllPlants(Consumer<List<Plant>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Plant> result = plantDao.getAll();
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
     }
 
     /**
-     * Inserts a plant into the database.
-     * <p>
-     * Should be executed on a background thread to prevent blocking
-     * the UI.
+     * Inserts a plant into the database asynchronously.
      *
-     * @param plant the {@link Plant} to add
+     * @param plant    the {@link Plant} to add
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
      */
-    public void insert(Plant plant) {
-        plantDao.insert(plant);
+    public Future<?> insert(Plant plant, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            plantDao.insert(plant);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
     }
 
     /**
-     * Updates an existing plant.
-     * <p>
-     * Should be executed on a background thread to prevent blocking
-     * the UI.
+     * Updates an existing plant asynchronously.
      *
-     * @param plant the {@link Plant} to update
+     * @param plant    the {@link Plant} to update
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
      */
-    public void update(Plant plant) {
-        plantDao.update(plant);
+    public Future<?> update(Plant plant, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            plantDao.update(plant);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
     }
 
     /**
-     * Removes a plant from the database.
-     * <p>
-     * Should be executed on a background thread to prevent blocking
-     * the UI.
+     * Removes a plant from the database asynchronously.
      *
-     * @param plant the {@link Plant} to remove
+     * @param plant    the {@link Plant} to remove
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
      */
-    public void delete(Plant plant) {
-        plantDao.delete(plant);
+    public Future<?> delete(Plant plant, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            plantDao.delete(plant);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
     }
 }
