@@ -56,7 +56,7 @@ public class PlantRepository {
     public Future<?> insert(Plant plant, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
             long id = plantDao.insert(plant);
-            plant.setId((int) id);
+            plant.setId(id);
             if (callback != null) {
                 mainHandler.post(callback);
             }
