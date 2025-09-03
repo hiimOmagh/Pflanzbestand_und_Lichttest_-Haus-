@@ -172,7 +172,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         intent.putExtra("species", plant.getSpecies());
         intent.putExtra("locationHint", plant.getLocationHint());
         intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
-        intent.putExtra("photoUri", plant.getPhotoUri().toString());
+        String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
+        intent.putExtra("photoUri", photo);
         startActivity(intent);
     }
 

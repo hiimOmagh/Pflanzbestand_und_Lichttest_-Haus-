@@ -34,7 +34,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
-        Uri photoUri = photoUriStr != null ? Uri.parse(photoUriStr) : Uri.EMPTY;
+        Uri photoUri = (photoUriStr == null || photoUriStr.isEmpty()) ? Uri.EMPTY : Uri.parse(photoUriStr);
 
         TextView nameView = findViewById(R.id.detail_name);
         TextView descriptionView = findViewById(R.id.detail_description);
@@ -50,7 +50,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         DateFormat dateFormat = DateFormat.getDateTimeInstance();
         String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
         acquiredAtView.setText(acquiredAt);
-        photoUriView.setText(photoUri.toString());
+        photoUriView.setText(Uri.EMPTY.equals(photoUri) ? "" : photoUri.toString());
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
