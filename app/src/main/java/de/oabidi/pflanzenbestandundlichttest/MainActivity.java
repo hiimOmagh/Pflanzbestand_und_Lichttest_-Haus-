@@ -56,7 +56,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         luxView = findViewById(R.id.lux_value);
         ppfdView = findViewById(R.id.ppfd_value);
         dliView = findViewById(R.id.dli_value);
-        lightSensorHelper = new LightSensorHelper(this, this); // Encapsulates sensor registration and callbacks
+        // Use a moving average over the last 10 samples to smooth the sensor readings
+        lightSensorHelper = new LightSensorHelper(this, this, 10); // Encapsulates sensor registration and callbacks
         kInput = findViewById(R.id.k_input);
         hoursInput = findViewById(R.id.light_hours_input);
 

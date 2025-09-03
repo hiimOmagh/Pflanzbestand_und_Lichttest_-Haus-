@@ -12,10 +12,10 @@ import java.util.Deque;
 /**
  * Helper class that manages the ambient light sensor and reports lux readings.
  *
- * <p>Readings are smoothed using a simple moving-average algorithm that maintains up to
- * {@link #MAX_SAMPLES} recent lux values. As new readings arrive, older ones are dropped
- * once the limit is reached, and the average of the remaining samples is reported to the
- * listener.</p>
+ * <p>Readings are smoothed using a simple moving-average algorithm that maintains a
+ * configurable number of recent lux values. As new readings arrive, older ones are
+ * dropped once the limit is reached, and the average of the remaining samples is
+ * reported to the listener.</p>
  */
 public class LightSensorHelper implements SensorEventListener {
     public interface OnLuxChangedListener {
@@ -23,7 +23,7 @@ public class LightSensorHelper implements SensorEventListener {
     }
 
     /** Maximum number of samples to include in the moving average. */
-    private static final int MAX_SAMPLES = 10; // TODO: Allow configuring the sample size.
+    private final int maxSamples;
 
     private final SensorManager sensorManager;
     private final Sensor lightSensor;
@@ -31,10 +31,24 @@ public class LightSensorHelper implements SensorEventListener {
     private final Deque<Float> recentLuxSamples = new ArrayDeque<>();
     private float luxSum = 0f;
 
+    /**
+     * Creates a new helper using the default sample size of 10 readings.
+     */
     public LightSensorHelper(Context context, OnLuxChangedListener listener) {
+        this(context, listener, 10);
+    }
+
+    /**
+     * Creates a new helper and configures how many samples are retained for the moving
+     * average.
+     *
+     * @param sampleSize number of recent readings used to compute the average
+     */
+    public LightSensorHelper(Context context, OnLuxChangedListener listener, int sampleSize) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         lightSensor = sensorManager != null ? sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) : null;
         this.listener = listener;
+        this.maxSamples = sampleSize;
     }
 
     /** Check whether a light sensor is available. */
@@ -59,7 +73,7 @@ public class LightSensorHelper implements SensorEventListener {
     /**
      * Receives raw sensor events, updates the moving average, and notifies the listener.
      * The latest lux value is appended to a queue and, if necessary, the oldest sample
-     * is discarded so that no more than {@link #MAX_SAMPLES} readings are retained. The
+     * is discarded so that no more than {@code maxSamples} readings are retained. The
      * average of the stored samples is then computed and passed to the listener.
      */
     @Override
@@ -68,7 +82,7 @@ public class LightSensorHelper implements SensorEventListener {
             float lux = event.values[0];
             recentLuxSamples.addLast(lux);
             luxSum += lux;
-            if (recentLuxSamples.size() > MAX_SAMPLES) {
+            if (recentLuxSamples.size() > maxSamples) {
                 luxSum -= recentLuxSamples.removeFirst();
             }
             float averageLux = luxSum / recentLuxSamples.size();
