@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
@@ -19,6 +20,7 @@ import androidx.room.PrimaryKey;
 public class Plant {
     @PrimaryKey(autoGenerate = true)
     private long id;
+    @NonNull
     private String name;
     private String description;
     private String species;
@@ -44,7 +46,7 @@ public class Plant {
      * @param photoUri       optional reference to a photo, may be {@code null}
      */
     @Ignore
-    public Plant(String name, String description, String species, String locationHint, long acquiredAtEpoch, Uri photoUri) {
+    public Plant(@NonNull String name, String description, String species, String locationHint, long acquiredAtEpoch, Uri photoUri) {
         this.name = name;
         this.description = description;
         this.species = species;
@@ -81,7 +83,10 @@ public class Plant {
      *
      * @param name new non-null name value
      */
-    public void setName(String name) {
+    public void setName(@NonNull String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("name must not be null");
+        }
         this.name = name;
     }
 
