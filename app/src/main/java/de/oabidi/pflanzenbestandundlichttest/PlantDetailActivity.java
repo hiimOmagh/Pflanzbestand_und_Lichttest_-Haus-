@@ -41,6 +41,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
 
+        long plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
         String description = getIntent().getStringExtra("description"); // Additional notes about the plant
         String species = getIntent().getStringExtra("species"); // Botanical species identifier
@@ -55,6 +56,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         TextView locationHintView = findViewById(R.id.detail_location_hint);
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
         ImageView photoView = findViewById(R.id.detail_photo_uri);
+        View diaryButton = findViewById(R.id.detail_diary);
 
         setTextOrFallback(nameView, name);
         setTextOrFallback(descriptionView, description);
@@ -73,6 +75,14 @@ public class PlantDetailActivity extends AppCompatActivity {
             photoView.setImageURI(photoUri);
             photoView.setVisibility(View.VISIBLE);
         }
+
+        diaryButton.setOnClickListener(v -> {
+            DiaryFragment fragment = DiaryFragment.newInstance(plantId);
+            getSupportFragmentManager().beginTransaction()
+                .replace(android.R.id.content, fragment)
+                .addToBackStack(null)
+                .commit();
+        });
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.

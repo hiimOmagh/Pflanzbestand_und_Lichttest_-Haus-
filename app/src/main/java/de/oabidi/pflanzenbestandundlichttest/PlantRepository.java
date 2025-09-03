@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 public class PlantRepository {
     private final PlantDao plantDao;
     private final MeasurementDao measurementDao;
+    private final DiaryDao diaryDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
@@ -31,6 +32,7 @@ public class PlantRepository {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         plantDao = db.plantDao();
         measurementDao = db.measurementDao();
+        diaryDao = db.diaryDao();
     }
 
     /**
@@ -114,6 +116,22 @@ public class PlantRepository {
     }
 
     /**
+     * Inserts a diary entry into the database asynchronously.
+     *
+     * @param entry    the {@link DiaryEntry} to add
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> insertDiaryEntry(DiaryEntry entry, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            diaryDao.insert(entry);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Retrieves recent measurements for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant
@@ -123,6 +141,21 @@ public class PlantRepository {
     public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             List<Measurement> result = measurementDao.recentForPlant(plantId, limit);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
+     * Retrieves all diary entries for a plant asynchronously and delivers them on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<DiaryEntry> result = diaryDao.entriesForPlant(plantId);
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
             }

@@ -201,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     @Override
     public void onPlantClick(Plant plant) {
         Intent intent = new Intent(this, PlantDetailActivity.class);
+        intent.putExtra("plantId", plant.getId());
         intent.putExtra("name", plant.getName());
         intent.putExtra("description", plant.getDescription());
         intent.putExtra("species", plant.getSpecies());

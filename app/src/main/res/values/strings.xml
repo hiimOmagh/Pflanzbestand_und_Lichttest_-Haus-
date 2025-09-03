@@ -25,4 +25,6 @@
     <string name="error_positive_number">Value must be greater than 0</string>
     <string name="measurement_save">Save</string>
     <string name="plant_photo">Plant photo</string>
+    <string name="action_view_diary">View Diary</string>
+    <string name="action_add_diary_entry">Add Entry</string>
 </resources>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -14,9 +15,9 @@
             android:id="@+id/detail_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingBottom="8dp"
             android:textSize="24sp"
-            android:textStyle="bold"
-            android:paddingBottom="8dp" />
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/detail_description"
@@ -49,9 +50,18 @@
             android:id="@+id/detail_photo_uri"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="4dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/plant_photo"
-            android:src="@drawable/ic_launcher_foreground" />
+            android:paddingTop="4dp"
+            android:src="@drawable/ic_launcher_foreground"
+            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+
+        <Button
+            android:id="@+id/detail_diary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action_view_diary"
+            android:paddingTop="8dp" />
     </LinearLayout>
 </ScrollView>
