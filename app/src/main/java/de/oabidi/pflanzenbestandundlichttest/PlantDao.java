@@ -17,7 +17,7 @@ public interface PlantDao {
      *
      * @return a list containing all plants stored in the database
      */
-    @Query("SELECT * FROM Plant")
+    @Query("SELECT * FROM Plant ORDER BY name ASC")
     List<Plant> getAll();
 
     /**
