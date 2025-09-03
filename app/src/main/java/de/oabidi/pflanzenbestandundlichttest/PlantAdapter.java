@@ -6,38 +6,28 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
+import java.util.Objects;
 
 /**
  * RecyclerView adapter that renders a list of {@link Plant} items and forwards
  * click events to an {@link OnPlantClickListener}. Each list item displays the
  * plant name and notifies the listener when tapped.
  */
-public class PlantAdapter extends RecyclerView.Adapter<PlantAdapter.PlantViewHolder> {
+public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolder> {
 
     public interface OnPlantClickListener {
         void onPlantClick(Plant plant);
     }
 
-    private List<Plant> plants;
     private final OnPlantClickListener listener;
 
-    public PlantAdapter(List<Plant> plants, OnPlantClickListener listener) {
-        this.plants = plants;
+    public PlantAdapter(OnPlantClickListener listener) {
+        super(DIFF_CALLBACK);
         this.listener = listener;
-    }
-
-    /**
-     * Replaces the current data set with the provided list of plants and
-     * refreshes the attached RecyclerView.
-     *
-     * @param plants new list of plants to display
-     */
-    public void updatePlants(List<Plant> plants) {
-        this.plants = plants;
-        notifyDataSetChanged();
     }
 
     /**
@@ -63,14 +53,27 @@ public class PlantAdapter extends RecyclerView.Adapter<PlantAdapter.PlantViewHol
      */
     @Override
     public void onBindViewHolder(@NonNull PlantViewHolder holder, int position) {
-        Plant plant = plants.get(position);
+        Plant plant = getItem(position);
         holder.bind(plant, listener);
     }
 
-    @Override
-    public int getItemCount() {
-        return plants.size();
-    }
+    private static final DiffUtil.ItemCallback<Plant> DIFF_CALLBACK =
+        new DiffUtil.ItemCallback<Plant>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
+                return oldItem.getId() == newItem.getId();
+            }
+
+            @Override
+            public boolean areContentsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
+                return Objects.equals(oldItem.getName(), newItem.getName())
+                    && Objects.equals(oldItem.getDescription(), newItem.getDescription())
+                    && Objects.equals(oldItem.getSpecies(), newItem.getSpecies())
+                    && Objects.equals(oldItem.getLocationHint(), newItem.getLocationHint())
+                    && oldItem.getAcquiredAtEpoch() == newItem.getAcquiredAtEpoch()
+                    && Objects.equals(oldItem.getPhotoUri(), newItem.getPhotoUri());
+            }
+        };
 
     static class PlantViewHolder extends RecyclerView.ViewHolder {
         private final TextView nameView;

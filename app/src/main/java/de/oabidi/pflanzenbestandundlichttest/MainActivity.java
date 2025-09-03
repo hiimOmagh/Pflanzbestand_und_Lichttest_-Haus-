@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         plants = new ArrayList<>();
-        adapter = new PlantAdapter(plants, this);
+        adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
         presenter.refreshPlants();
     }
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     @Override
     public void showPlants(List<Plant> plants) {
         this.plants = plants;
-        adapter.updatePlants(plants);
+        adapter.submitList(new ArrayList<>(plants));
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {
