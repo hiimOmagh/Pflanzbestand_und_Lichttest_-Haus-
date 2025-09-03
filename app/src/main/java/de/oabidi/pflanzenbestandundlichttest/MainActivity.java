@@ -4,7 +4,6 @@ import static de.oabidi.pflanzenbestandundlichttest.R.*;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -161,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
                 getString(R.string.unknown),
                 getString(R.string.unknown),
                 System.currentTimeMillis(),
-                Uri.EMPTY));
+                null));
             return true;
         } else if (itemId == R.id.action_update) {
             if (!plants.isEmpty()) {
