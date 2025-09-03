@@ -4,6 +4,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -29,7 +32,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         String description = getIntent().getStringExtra("description"); // Additional notes about the plant
         String species = getIntent().getStringExtra("species"); // Botanical species identifier
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
-        long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition date in epoch seconds
+        long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
         Uri photoUri = photoUriStr != null ? Uri.parse(photoUriStr) : Uri.EMPTY;
 
@@ -44,7 +47,9 @@ public class PlantDetailActivity extends AppCompatActivity {
         descriptionView.setText(description);
         speciesView.setText(species);
         locationHintView.setText(locationHint);
-        acquiredAtView.setText(String.valueOf(acquiredAtEpoch));
+        DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
+        acquiredAtView.setText(acquiredAt);
         photoUriView.setText(photoUri.toString());
 
         // After drawing edge-to-edge, pad the root view so content isn't
