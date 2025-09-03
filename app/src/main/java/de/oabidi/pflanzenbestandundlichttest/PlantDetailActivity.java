@@ -18,6 +18,17 @@ import androidx.core.view.WindowInsetsCompat;
  *
  * <p>The details are supplied via {@link android.content.Intent} extras when this
  * activity is launched.</p>
+ *
+ * <p>Expected extras and their defaults:</p>
+ * <ul>
+ *   <li>{@code name} – plant's display name (defaults to "—")</li>
+ *   <li>{@code description} – additional notes (defaults to "—")</li>
+ *   <li>{@code species} – botanical species identifier (defaults to "—")</li>
+ *   <li>{@code locationHint} – where the plant is located (defaults to "—")</li>
+ *   <li>{@code acquiredAtEpoch} – acquisition time in milliseconds since the Unix epoch;
+ *       {@code 0} results in "Unknown date"</li>
+ *   <li>{@code photoUri} – string form of the plant photo URI (defaults to "—")</li>
+ * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity {
 
@@ -43,14 +54,18 @@ public class PlantDetailActivity extends AppCompatActivity {
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
         TextView photoUriView = findViewById(R.id.detail_photo_uri);
 
-        nameView.setText(name);
-        descriptionView.setText(description);
-        speciesView.setText(species);
-        locationHintView.setText(locationHint);
-        DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
-        acquiredAtView.setText(acquiredAt);
-        photoUriView.setText(photoUri == null ? "" : photoUri.toString());
+        setTextOrFallback(nameView, name);
+        setTextOrFallback(descriptionView, description);
+        setTextOrFallback(speciesView, species);
+        setTextOrFallback(locationHintView, locationHint);
+        if (acquiredAtEpoch == 0) {
+            acquiredAtView.setText("Unknown date");
+        } else {
+            DateFormat dateFormat = DateFormat.getDateTimeInstance();
+            String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
+            acquiredAtView.setText(acquiredAt);
+        }
+        setTextOrFallback(photoUriView, photoUri == null ? null : photoUri.toString());
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
@@ -59,5 +74,15 @@ public class PlantDetailActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    /**
+     * Sets the text of the given view or a fallback when the text is {@code null} or empty.
+     *
+     * @param view the TextView to update
+     * @param text the text to set, may be {@code null}
+     */
+    private static void setTextOrFallback(TextView view, String text) {
+        view.setText((text == null || text.isEmpty()) ? "—" : text);
     }
 }
