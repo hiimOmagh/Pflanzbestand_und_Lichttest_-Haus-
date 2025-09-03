@@ -42,4 +42,6 @@
         <item>FERTILIZE</item>
         <item>PRUNE</item>
     </string-array>
+    <string name="action_delete_diary_entry">Delete Entry</string>
+    <string name="confirm_delete_diary_entry">Delete this entry?</string>
 </resources>

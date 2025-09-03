@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
@@ -19,6 +20,14 @@ public interface DiaryDao {
      */
     @Insert
     long insert(DiaryEntry entry);
+
+    /**
+     * Removes a diary entry from the database.
+     *
+     * @param entry the entity to delete
+     */
+    @Delete
+    void delete(DiaryEntry entry);
 
     /**
      * Retrieves all diary entries for the given plant ordered by most recent first.

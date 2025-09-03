@@ -16,8 +16,12 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Fragment showing diary entries.
@@ -32,6 +36,7 @@ public class DiaryFragment extends Fragment {
     private long plantId = -1;
     private PlantRepository repository;
     private ArrayAdapter<String> adapter;
+    private final List<DiaryEntry> entries = new ArrayList<>();
 
     /**
      * Creates a new instance of the fragment for the given plant.
@@ -68,6 +73,17 @@ public class DiaryFragment extends Fragment {
         adapter = new ArrayAdapter<>(requireContext(),
             android.R.layout.simple_list_item_1, new ArrayList<>());
         listView.setAdapter(adapter);
+        listView.setOnItemLongClickListener((parent, v1, position, id) -> {
+            DiaryEntry entry = entries.get(position);
+            new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.action_delete_diary_entry)
+                .setMessage(R.string.confirm_delete_diary_entry)
+                .setPositiveButton(android.R.string.ok, (d, w) ->
+                    repository.deleteDiaryEntry(entry, this::loadEntries))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+            return true;
+        });
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_entry);
 
@@ -116,16 +132,18 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.diaryEntriesForPlant(plantId, entries -> {
+        repository.diaryEntriesForPlant(plantId, result -> {
+            entries.clear();
+            entries.addAll(result);
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             List<String> items = new ArrayList<>();
             for (DiaryEntry e : entries) {
-                String type = e.getType();
                 String note = e.getNote() != null ? e.getNote() : "";
+                String item = df.format(new Date(e.getTimeEpoch())) + " – " + e.getType();
                 if (!note.isEmpty()) {
-                    items.add(type + " – " + note);
-                } else {
-                    items.add(type);
+                    item += " – " + note;
                 }
+                item += " – " + note;
             }
             adapter.clear();
             adapter.addAll(items);

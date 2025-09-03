@@ -134,6 +134,22 @@ public class PlantRepository {
     }
 
     /**
+     * Deletes a diary entry from the database asynchronously.
+     *
+     * @param entry    the {@link DiaryEntry} to remove
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            diaryDao.delete(entry);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Retrieves the PPFD target range for the given species key asynchronously.
      *
      * @param speciesKey identifier of the species
