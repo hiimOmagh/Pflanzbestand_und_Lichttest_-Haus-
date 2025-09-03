@@ -24,4 +24,5 @@
     <string name="hint_positive_number">Positive number</string>
     <string name="error_positive_number">Value must be greater than 0</string>
     <string name="measurement_save">Save</string>
+    <string name="plant_photo">Plant photo</string>
 </resources>

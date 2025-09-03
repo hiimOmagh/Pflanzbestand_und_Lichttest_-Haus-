@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.DateFormat;
@@ -52,7 +54,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         TextView speciesView = findViewById(R.id.detail_species);
         TextView locationHintView = findViewById(R.id.detail_location_hint);
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
-        TextView photoUriView = findViewById(R.id.detail_photo_uri);
+        ImageView photoView = findViewById(R.id.detail_photo_uri);
 
         setTextOrFallback(nameView, name);
         setTextOrFallback(descriptionView, description);
@@ -65,7 +67,12 @@ public class PlantDetailActivity extends AppCompatActivity {
             String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
             acquiredAtView.setText(acquiredAt);
         }
-        setTextOrFallback(photoUriView, photoUri == null ? null : photoUri.toString());
+        if (photoUri == null) {
+            photoView.setVisibility(View.GONE);
+        } else {
+            photoView.setImageURI(photoUri);
+            photoView.setVisibility(View.VISIBLE);
+        }
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
