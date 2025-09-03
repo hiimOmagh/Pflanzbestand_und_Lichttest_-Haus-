@@ -41,6 +41,15 @@
         app:layout_constraintStart_toStartOf="@id/ppfd_value"
         app:layout_constraintTop_toBottomOf="@id/ppfd_value" />
 
+    <Spinner
+        android:id="@+id/plant_selector"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/dli_value"
+        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+
     <Button
         android:id="@+id/measurement_save_button"
         android:layout_width="wrap_content"
@@ -48,7 +57,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/measurement_save"
         app:layout_constraintStart_toStartOf="@id/dli_value"
-        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+        app:layout_constraintTop_toBottomOf="@id/plant_selector" />
 
     <TextView
         android:id="@+id/location_check_value"

@@ -11,11 +11,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.util.List;
 
 /**
  * Fragment responsible for displaying live light measurements.
@@ -31,12 +35,15 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView dliView;
     private EditText kInput;
     private EditText hoursInput;
+    private Spinner plantSelector;
     private Button saveMeasurementButton;
     private TextView locationCheckView;
     private float calibrationFactor;
     private float lightHours;
     private float lastLux;
     private float lastPpfd;
+    private long selectedPlantId = -1;
+    private List<Plant> plants;
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
 
@@ -56,6 +63,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         dliView = view.findViewById(R.id.dli_value);
         kInput = view.findViewById(R.id.k_input);
         hoursInput = view.findViewById(R.id.light_hours_input);
+        plantSelector = view.findViewById(R.id.plant_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
 
@@ -107,10 +115,24 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             }
         });
 
+        plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
+                if (plants != null && position >= 0 && position < plants.size()) {
+                    selectedPlantId = plants.get(position).getId();
+                    presenter.selectPlant(position);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedPlantId = -1;
+            }
+        });
+
         saveMeasurementButton.setOnClickListener(v -> {
-            long plantId = presenter.getFirstPlantId();
-            if (plantId != -1) {
-                presenter.saveMeasurement(plantId, lastLux, lastPpfd);
+            if (selectedPlantId != -1) {
+                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd);
             }
         });
 
@@ -149,6 +171,26 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     @Override
     public void showRangeStatus(String status) {
         locationCheckView.setText(getString(R.string.format_location_check, status));
+    }
+
+    @Override
+    public void showPlants(List<Plant> plants) {
+        this.plants = plants;
+        String[] names = new String[plants.size()];
+        for (int i = 0; i < plants.size(); i++) {
+            names[i] = plants.get(i).getName();
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+            android.R.layout.simple_spinner_item,
+            names);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        plantSelector.setAdapter(adapter);
+        if (!plants.isEmpty()) {
+            plantSelector.setSelection(0);
+            selectedPlantId = plants.get(0).getId();
+        } else {
+            selectedPlantId = -1;
+        }
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {

@@ -11,6 +11,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public interface View {
         void showLightData(float rawLux, float lux, float ppfd, float dli);
         void showRangeStatus(String status);
+        void showPlants(List<Plant> plants);
     }
 
     private final View view;
@@ -62,26 +63,22 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public void refreshPlants() {
         plantRepository.getAllPlants(plants -> {
             this.plants = plants;
-            loadTargetForSelectedPlant();
+            view.showPlants(plants);
+            selectPlant(0);
         });
     }
 
-    private void loadTargetForSelectedPlant() {
-        if (plants != null && !plants.isEmpty()) {
-            String speciesKey = plants.get(0).getSpecies();
-            if (speciesKey != null && !speciesKey.isEmpty()) {
-                plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target);
-            } else {
-                speciesTarget = null;
-            }
+    public void selectPlant(int index) {
+        if (plants == null || index < 0 || index >= plants.size()) {
+            speciesTarget = null;
+            return;
         }
-    }
-
-    public long getFirstPlantId() {
-        if (plants == null || plants.isEmpty()) {
-            return -1;
+        String speciesKey = plants.get(index).getSpecies();
+        if (speciesKey != null && !speciesKey.isEmpty()) {
+            plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target);
+        } else {
+            speciesTarget = null;
         }
-        return plants.get(0).getId();
     }
 
     @Override
