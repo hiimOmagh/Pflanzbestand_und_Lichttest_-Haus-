@@ -5,6 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +24,9 @@ public class StatsFragment extends Fragment {
     private MeasurementAdapter adapter;
     private PlantRepository repository;
     private TextView diaryCountsView;
+    private Spinner plantSelector;
+    private List<Plant> plants;
+    private long selectedPlantId = -1;
 
     @Nullable
     @Override
@@ -37,14 +43,44 @@ public class StatsFragment extends Fragment {
         adapter = new MeasurementAdapter();
         list.setAdapter(adapter);
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
+        plantSelector = view.findViewById(R.id.stats_plant_selector);
         repository = new PlantRepository(requireContext().getApplicationContext());
-        repository.getAllPlants(plants -> {
-            if (!plants.isEmpty()) {
-                long plantId = plants.get(0).getId();
-                repository.recentMeasurementsForPlant(plantId, 10, adapter::setMeasurements);
-                repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
+
+        plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
+                if (plants != null && position >= 0 && position < plants.size()) {
+                    selectedPlantId = plants.get(position).getId();
+                    loadDataForPlant(selectedPlantId);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedPlantId = -1;
             }
         });
+
+        repository.getAllPlants(result -> {
+            plants = result;
+            String[] names = new String[plants.size()];
+            for (int i = 0; i < plants.size(); i++) {
+                names[i] = plants.get(i).getName();
+            }
+            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item,
+                names);
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            plantSelector.setAdapter(spinnerAdapter);
+            if (!plants.isEmpty()) {
+                plantSelector.setSelection(0);
+            }
+        });
+    }
+
+    private void loadDataForPlant(long plantId) {
+        repository.recentMeasurementsForPlant(plantId, 10, adapter::setMeasurements);
+        repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
     }
 
     private void updateDiaryCounts(List<DiaryEntry> entries) {
