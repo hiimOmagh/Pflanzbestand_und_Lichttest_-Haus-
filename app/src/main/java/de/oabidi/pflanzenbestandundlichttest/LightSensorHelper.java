@@ -59,6 +59,9 @@ public class LightSensorHelper implements SensorEventListener {
     /** Start listening to the light sensor. */
     public void start() {
         if (sensorManager != null && lightSensor != null) {
+            // Clear any buffered samples so averages remain accurate after a pause
+            recentLuxSamples.clear();
+            luxSum = 0f;
             sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
