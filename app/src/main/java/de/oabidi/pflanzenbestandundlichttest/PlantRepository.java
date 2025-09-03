@@ -46,7 +46,8 @@ public class PlantRepository {
     }
 
     /**
-     * Inserts a plant into the database asynchronously.
+     * Inserts a plant into the database asynchronously and updates the provided
+     * entity with the generated primary key.
      *
      * @param plant    the {@link Plant} to add
      * @param callback optional callback invoked on the main thread when done
@@ -54,7 +55,8 @@ public class PlantRepository {
      */
     public Future<?> insert(Plant plant, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            plantDao.insert(plant);
+            long id = plantDao.insert(plant);
+            plant.setId((int) id);
             if (callback != null) {
                 mainHandler.post(callback);
             }
