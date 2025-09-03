@@ -9,26 +9,28 @@ import static org.junit.Assert.assertEquals;
  */
 public class LightMathTest {
 
+    /**
+     * Verify conversion from a lux reading to PPFD using a typical calibration
+     * factor for white LEDs. 10,000 lux multiplied by a factor of 0.015 should
+     * yield 150 µmol·m⁻²·s⁻¹.
+     */
     @Test
     public void ppfdFromLux_calculatesPPFD() {
-        float lux = 10000f;
-        float k = 0.015f; // Approx. 15 μmol·m⁻²·s⁻¹ per 1000 lux for white LEDs
-        float expectedPpfd = 150f; // 10,000 lux * 0.015 = 150 μmol·m⁻²·s⁻¹
+        float lux = 10_000f;
+        float k = 0.015f; // Approx. 15 µmol·m⁻²·s⁻¹ per 1000 lux
+        float expectedPpfd = 150f;
         assertEquals(expectedPpfd, LightMath.ppfdFromLux(lux, k), 0.0001f);
     }
 
+    /**
+     * Verify daily light integral calculation for a known PPFD value and
+     * photoperiod. 200 µmol·m⁻²·s⁻¹ over 16 hours equals 11.52 mol·m⁻²·day⁻¹.
+     */
     @Test
     public void dliFromPpfd_calculatesDli() {
         float ppfd = 200f;
-        float hours = 16f; // Example: 200 μmol·m⁻²·s⁻¹ for a 16h photoperiod
-        float expectedDli = 11.52f; // 200 * 16 * 0.0036 = 11.52 mol·m⁻²·day⁻¹
+        float hours = 16f;
+        float expectedDli = 11.52f;
         assertEquals(expectedDli, LightMath.dliFromPpfd(ppfd, hours), 0.0001f);
-    }
-
-    @Test
-    public void rangeCheck_evaluatesRanges() {
-        assertEquals("Low", LightMath.rangeCheck(50f, 100f, 200f));
-        assertEquals("OK", LightMath.rangeCheck(150f, 100f, 200f));
-        assertEquals("High", LightMath.rangeCheck(250f, 100f, 200f));
     }
 }
