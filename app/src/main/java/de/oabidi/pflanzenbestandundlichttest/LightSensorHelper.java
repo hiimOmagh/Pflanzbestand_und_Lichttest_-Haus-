@@ -42,12 +42,16 @@ public class LightSensorHelper implements SensorEventListener {
      * Creates a new helper and configures how many samples are retained for the moving
      * average.
      *
-     * @param sampleSize number of recent readings used to compute the average
+     * @param sampleSize number of recent readings used to compute the average; must be at least 1
+     * @throws IllegalArgumentException if {@code sampleSize < 1}
      */
     public LightSensorHelper(Context context, OnLuxChangedListener listener, int sampleSize) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         lightSensor = sensorManager != null ? sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) : null;
         this.listener = listener;
+        if (sampleSize < 1) {
+            throw new IllegalArgumentException("sampleSize must be at least 1");
+        }
         this.maxSamples = sampleSize;
     }
 
