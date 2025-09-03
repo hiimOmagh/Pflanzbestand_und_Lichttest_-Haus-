@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
  * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
  * used to run operations asynchronously.</p>
  */
-@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class}, version = 3)
+@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class}, version = 4)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
@@ -31,6 +31,8 @@ public abstract class PlantDatabase extends RoomDatabase {
     public abstract MeasurementDao measurementDao();
 
     public abstract DiaryDao diaryDao();
+
+    public abstract SpeciesTargetDao speciesTargetDao();
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {

@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private EditText kInput;
     private EditText hoursInput;
     private Button saveMeasurementButton;
+    private TextView locationCheckView;
     private float calibrationFactor; // Factor converting lux to PPFD
     private float lightHours; // Expected daily exposure used for DLI
     private float lastLux;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         kInput = findViewById(R.id.k_input);
         hoursInput = findViewById(R.id.light_hours_input);
         saveMeasurementButton = findViewById(R.id.measurement_save_button);
+        locationCheckView = findViewById(R.id.location_check_value);
 
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f); // default for typical LEDs
@@ -220,6 +222,11 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         dliView.setText(getString(R.string.format_dli, dli));
         lastLux = lux;
         lastPpfd = ppfd;
+    }
+
+    @Override
+    public void showRangeStatus(String status) {
+        locationCheckView.setText(getString(R.string.format_location_check, status));
     }
 
     @Override

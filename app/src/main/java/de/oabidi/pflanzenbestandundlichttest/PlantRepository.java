@@ -18,6 +18,7 @@ public class PlantRepository {
     private final PlantDao plantDao;
     private final MeasurementDao measurementDao;
     private final DiaryDao diaryDao;
+    private final SpeciesTargetDao speciesTargetDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
@@ -33,6 +34,7 @@ public class PlantRepository {
         plantDao = db.plantDao();
         measurementDao = db.measurementDao();
         diaryDao = db.diaryDao();
+        speciesTargetDao = db.speciesTargetDao();
     }
 
     /**
@@ -127,6 +129,21 @@ public class PlantRepository {
             diaryDao.insert(entry);
             if (callback != null) {
                 mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
+     * Retrieves the PPFD target range for the given species key asynchronously.
+     *
+     * @param speciesKey identifier of the species
+     * @param callback   invoked with the resulting target on the main thread
+     */
+    public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            SpeciesTarget result = speciesTargetDao.findBySpeciesKey(speciesKey);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
             }
         });
     }

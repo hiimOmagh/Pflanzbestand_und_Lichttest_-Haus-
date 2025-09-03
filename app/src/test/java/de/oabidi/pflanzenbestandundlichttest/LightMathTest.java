@@ -24,4 +24,11 @@ public class LightMathTest {
         float expectedDli = 11.52f; // 200 * 16 * 0.0036 = 11.52 mol·m⁻²·day⁻¹
         assertEquals(expectedDli, LightMath.dliFromPpfd(ppfd, hours), 0.0001f);
     }
+
+    @Test
+    public void rangeCheck_evaluatesRanges() {
+        assertEquals("Low", LightMath.rangeCheck(50f, 100f, 200f));
+        assertEquals("OK", LightMath.rangeCheck(150f, 100f, 200f));
+        assertEquals("High", LightMath.rangeCheck(250f, 100f, 200f));
+    }
 }

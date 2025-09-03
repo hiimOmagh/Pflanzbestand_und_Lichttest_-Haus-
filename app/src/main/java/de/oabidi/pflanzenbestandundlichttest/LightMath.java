@@ -25,4 +25,24 @@ public class LightMath {
     public static float dliFromPpfd(float ppfd, float hours) {
         return ppfd * hours * 0.0036f;
     }
+
+    /**
+     * Evaluate whether a PPFD value falls below, within or above the provided
+     * target range.
+     *
+     * @param ppfd current PPFD in µmol·m⁻²·s⁻¹
+     * @param min  lower bound of the target range
+     * @param max  upper bound of the target range
+     * @return "Low" if {@code ppfd} is below {@code min}, "High" if above
+     * {@code max} and "OK" when the value lies within the range
+     */
+    public static String rangeCheck(float ppfd, float min, float max) {
+        if (ppfd < min) {
+            return "Low";
+        } else if (ppfd > max) {
+            return "High";
+        } else {
+            return "OK";
+        }
+    }
 }

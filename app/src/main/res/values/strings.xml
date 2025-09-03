@@ -13,6 +13,8 @@
     <string name="format_raw_lux">Raw lux: %.2f</string>
     <string name="format_ppfd">PPFD: %.2f µmol/m²/s</string>
     <string name="format_dli">DLI: %.2f mol/m²/day</string>
+    <string name="location_check_placeholder">Location check: --</string>
+    <string name="format_location_check">Location check: %s</string>
     <string name="new_plant_name">New Plant</string>
     <string name="new_plant_description">A newly added plant.</string>
     <string name="default_description">No description</string>

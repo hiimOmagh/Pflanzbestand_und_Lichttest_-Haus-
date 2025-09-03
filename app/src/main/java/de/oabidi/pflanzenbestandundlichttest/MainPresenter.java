@@ -15,6 +15,9 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
         /** Display the latest light measurements. */
         void showLightData(float rawLux, float lux, float ppfd, float dli);
 
+        /** Display the PPFD range status for the current plant. */
+        void showRangeStatus(String status);
+
         /** Display the current list of plants. */
         void showPlants(List<Plant> plants);
     }
@@ -22,6 +25,8 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
     private final View view;
     private final LightSensorHelper lightSensorHelper;
     private final PlantRepository plantRepository;
+    private List<Plant> plants;
+    private SpeciesTarget speciesTarget;
     private float calibrationFactor;
     private float lightHours;
 
@@ -52,7 +57,22 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
 
     /** Refresh the list of plants from the database. */
     public void refreshPlants() {
-        plantRepository.getAllPlants(view::showPlants);
+        plantRepository.getAllPlants(plants -> {
+            this.plants = plants;
+            view.showPlants(plants);
+            loadTargetForSelectedPlant();
+        });
+    }
+
+    private void loadTargetForSelectedPlant() {
+        if (plants != null && !plants.isEmpty()) {
+            String speciesKey = plants.get(0).getSpecies();
+            if (speciesKey != null && !speciesKey.isEmpty()) {
+                plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target);
+            } else {
+                speciesTarget = null;
+            }
+        }
     }
 
     /** Update the calibration factor used for light calculations. */
@@ -96,6 +116,11 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
     public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
+        String status = "Unknown";
+        if (speciesTarget != null) {
+            status = LightMath.rangeCheck(ppfd, speciesTarget.getPpfdMin(), speciesTarget.getPpfdMax());
+        }
         view.showLightData(rawLux, lux, ppfd, dli);
+        view.showRangeStatus(status);
     }
 }
