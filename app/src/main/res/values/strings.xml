@@ -19,4 +19,6 @@
     <string name="menu_add_plant">Add Plant</string>
     <string name="menu_update_first_plant">Update First Plant</string>
     <string name="menu_delete_first_plant">Delete First Plant</string>
+    <string name="hint_positive_number">Positive number</string>
+    <string name="error_positive_number">Value must be greater than 0</string>
 </resources>

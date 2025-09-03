@@ -70,11 +70,19 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
             @Override
             public void afterTextChanged(Editable s) {
                 try {
-                    calibrationFactor = Float.parseFloat(s.toString());
-                    // Persist user-provided calibration for consistent conversions
-                    preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
-                    presenter.setCalibrationFactor(calibrationFactor);
-                } catch (NumberFormatException ignored) {}
+                    float value = Float.parseFloat(s.toString());
+                    if (value > 0f) {
+                        calibrationFactor = value;
+                        // Persist user-provided calibration for consistent conversions
+                        preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
+                        presenter.setCalibrationFactor(calibrationFactor);
+                        kInput.setError(null);
+                    } else {
+                        kInput.setError(getString(R.string.error_positive_number));
+                    }
+                } catch (NumberFormatException e) {
+                    kInput.setError(getString(R.string.error_positive_number));
+                }
             }
         });
 
@@ -82,11 +90,19 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
             @Override
             public void afterTextChanged(Editable s) {
                 try {
-                    lightHours = Float.parseFloat(s.toString());
-                    // Store expected light duration for later DLI calculations
-                    preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
-                    presenter.setLightHours(lightHours);
-                } catch (NumberFormatException ignored) {}
+                    float value = Float.parseFloat(s.toString());
+                    if (value > 0f) {
+                        lightHours = value;
+                        // Store expected light duration for later DLI calculations
+                        preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
+                        presenter.setLightHours(lightHours);
+                        hoursInput.setError(null);
+                    } else {
+                        hoursInput.setError(getString(R.string.error_positive_number));
+                    }
+                } catch (NumberFormatException e) {
+                    hoursInput.setError(getString(R.string.error_positive_number));
+                }
             }
         });
 

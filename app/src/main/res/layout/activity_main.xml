@@ -58,6 +58,8 @@
         android:layout_marginStart="8dp"
         android:ems="4"
         android:inputType="numberDecimal"
+        android:digits="0123456789."
+        android:hint="@string/hint_positive_number"
         app:layout_constraintBaseline_toBaselineOf="@id/k_label"
         app:layout_constraintStart_toEndOf="@id/k_label" />
 
@@ -77,6 +79,8 @@
         android:layout_marginStart="8dp"
         android:ems="4"
         android:inputType="numberDecimal"
+        android:digits="0123456789."
+        android:hint="@string/hint_positive_number"
         app:layout_constraintBaseline_toBaselineOf="@id/hours_label"
         app:layout_constraintStart_toEndOf="@id/hours_label" />
 </androidx.constraintlayout.widget.ConstraintLayout>
