@@ -39,6 +39,10 @@ public abstract class PlantDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             PlantDatabase.class, "plant_database")
+                        // During development we simply reset the database whenever the
+                        // schema version changes. If data preservation becomes
+                        // important, replace this with explicit Migration objects for
+                        // each version step.
                         .fallbackToDestructiveMigration()
                         .build();
                 }
