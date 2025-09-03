@@ -22,11 +22,10 @@ import java.util.List;
 
 /**
  * Main screen of the app showing current light sensor readings and a list of plants.
- * It listens for {@link LightSensorHelper} updates and persists calibration data so
+ * It delegates background work to {@link MainPresenter} and persists calibration data so
  * that light calculations remain stable between sessions.
  */
-public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPlantClickListener, LightSensorHelper.OnLuxChangedListener {
-    // TODO: Extract sensor and database interactions into a presenter/helper class.
+public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPlantClickListener, MainPresenter.View {
     private static final String PREFS_NAME = "settings";
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_LIGHT_HOURS = "light_hours";
@@ -34,13 +33,12 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private TextView luxView;
     private TextView ppfdView;
     private TextView dliView;
-    private LightSensorHelper lightSensorHelper;
     private EditText kInput;
     private EditText hoursInput;
     private float calibrationFactor; // Factor converting lux to PPFD
     private float lightHours; // Expected daily exposure used for DLI
     private SharedPreferences preferences;
-    private PlantRepository plantRepository;
+    private MainPresenter presenter;
     private PlantAdapter adapter;
     private List<Plant> plants;
 
@@ -56,14 +54,14 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         luxView = findViewById(R.id.lux_value);
         ppfdView = findViewById(R.id.ppfd_value);
         dliView = findViewById(R.id.dli_value);
-        // Use a moving average over the last 10 samples to smooth the sensor readings
-        lightSensorHelper = new LightSensorHelper(this, this, 10); // Encapsulates sensor registration and callbacks
         kInput = findViewById(R.id.k_input);
         hoursInput = findViewById(R.id.light_hours_input);
 
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f); // default for typical LEDs
         lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f); // assume continuous light as fallback
+
+        presenter = new MainPresenter(this, this, calibrationFactor, lightHours);
 
         kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
         hoursInput.setText(getString(R.string.format_light_hours, lightHours));
@@ -75,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
                     calibrationFactor = Float.parseFloat(s.toString());
                     // Persist user-provided calibration for consistent conversions
                     preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
+                    presenter.setCalibrationFactor(calibrationFactor);
                 } catch (NumberFormatException ignored) {}
             }
         });
@@ -86,11 +85,12 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
                     lightHours = Float.parseFloat(s.toString());
                     // Store expected light duration for later DLI calculations
                     preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
+                    presenter.setLightHours(lightHours);
                 } catch (NumberFormatException ignored) {}
             }
         });
 
-        if (!lightSensorHelper.hasLightSensor()) {
+        if (!presenter.hasLightSensor()) {
             luxView.setText(R.string.no_light_sensor);
             ppfdView.setText("");
             dliView.setText("");
@@ -99,11 +99,10 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         RecyclerView recyclerView = findViewById(R.id.plant_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        plantRepository = new PlantRepository(this);
         plants = new ArrayList<>();
         adapter = new PlantAdapter(plants, this);
         recyclerView.setAdapter(adapter);
-        refreshPlants();
+        presenter.refreshPlants();
     }
 
     /**
@@ -112,9 +111,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     @Override
     protected void onResume() {
         super.onResume();
-        if (lightSensorHelper.hasLightSensor()) {
-            lightSensorHelper.start(); // Begin sensor monitoring
-        }
+        presenter.start();
     }
 
     /**
@@ -123,14 +120,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     @Override
     protected void onPause() {
         super.onPause();
-        lightSensorHelper.stop();
-    }
-
-    private void refreshPlants() {
-        plantRepository.getAllPlants(result -> {
-            plants = result;
-            adapter.updatePlants(plants);
-        });
+        presenter.stop();
     }
 
     /**
@@ -149,25 +139,24 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.action_add) {
-            plantRepository.insert(new Plant(
+            presenter.insertPlant(new Plant(
                 getString(R.string.new_plant_name),
                 getString(R.string.new_plant_description),
                 getString(R.string.unknown),
                 getString(R.string.unknown),
                 System.currentTimeMillis(),
-                    Uri.EMPTY),
-                this::refreshPlants);
+                Uri.EMPTY));
             return true;
         } else if (itemId == R.id.action_update) {
             if (!plants.isEmpty()) {
                 Plant first = plants.get(0);
                 first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
-                plantRepository.update(first, this::refreshPlants);
+                presenter.updatePlant(first);
             }
             return true;
         } else if (itemId == R.id.action_delete) {
             if (!plants.isEmpty()) {
-                plantRepository.delete(plants.get(0), this::refreshPlants);
+                presenter.deletePlant(plants.get(0));
             }
             return true;
         } else {
@@ -187,16 +176,17 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         startActivity(intent);
     }
 
-    /**
-     * Receives raw lux values, applies calibration and computes plant-relevant metrics.
-     */
     @Override
-    public void onLuxChanged(float lux) {
-        float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor); // Adjust lux using calibration factor
-        float dli = LightMath.dliFromPpfd(ppfd, lightHours); // Convert PPFD to daily light integral
+    public void showLightData(float lux, float ppfd, float dli) {
         luxView.setText(getString(R.string.format_lux, lux));
         ppfdView.setText(getString(R.string.format_ppfd, ppfd));
         dliView.setText(getString(R.string.format_dli, dli));
+    }
+
+    @Override
+    public void showPlants(List<Plant> plants) {
+        this.plants = plants;
+        adapter.updatePlants(plants);
     }
 
     private abstract static class SimpleTextWatcher implements TextWatcher {
