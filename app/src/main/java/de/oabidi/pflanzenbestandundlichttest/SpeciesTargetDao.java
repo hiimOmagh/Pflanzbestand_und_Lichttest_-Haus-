@@ -2,7 +2,10 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+
+import java.util.List;
 
 /**
  * Data access object for {@link SpeciesTarget} records.
@@ -19,11 +22,19 @@ public interface SpeciesTargetDao {
     SpeciesTarget findBySpeciesKey(String speciesKey);
 
     /**
-     * Insert a species target into the database.
+     * Retrieve all stored species targets.
      *
+     * @return list of all targets sorted by species key
+     */
+    @Query("SELECT * FROM SpeciesTarget ORDER BY speciesKey")
+    List<SpeciesTarget> getAll();
+
+    /**
+     * Insert or replace a species target in the database.
+     * *
      * @param target entity to persist
      * @return row ID of the inserted entity
      */
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(SpeciesTarget target);
 }

@@ -105,12 +105,22 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                 presenter.deletePlant(plants.get(0));
             }
             return true;
-        }
+        } else if (itemId == R.id.action_species_targets) {
+            navigateToSpeciesTargets();
+            return true;}
         return super.onOptionsItemSelected(item);
     }
 
     private void navigateToEdit(@Nullable Plant plant) {
         PlantEditFragment fragment = PlantEditFragment.newInstance(plant);
+        getParentFragmentManager().beginTransaction()
+            .replace(R.id.nav_host_fragment, fragment)
+            .addToBackStack(null)
+            .commit();
+    }
+
+    private void navigateToSpeciesTargets() {
+        SpeciesTargetListFragment fragment = new SpeciesTargetListFragment();
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)

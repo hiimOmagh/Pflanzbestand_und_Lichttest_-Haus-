@@ -165,6 +165,36 @@ public class PlantRepository {
     }
 
     /**
+     * Retrieves all species targets asynchronously.
+     *
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<SpeciesTarget> result = speciesTargetDao.getAll();
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
+     * Inserts or updates a species target asynchronously.
+     *
+     * @param target   the {@link SpeciesTarget} to persist
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> insertSpeciesTarget(SpeciesTarget target, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            speciesTargetDao.insert(target);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Retrieves recent measurements for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant
