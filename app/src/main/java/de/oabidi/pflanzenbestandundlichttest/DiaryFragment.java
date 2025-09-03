@@ -5,17 +5,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -85,8 +86,30 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), "note", "");
-        repository.insertDiaryEntry(entry, this::loadEntries);
+
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
+        Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
+        EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+
+        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.diary_entry_types,
+            android.R.layout.simple_spinner_item);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        typeSpinner.setAdapter(spinnerAdapter);
+
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.action_add_diary_entry)
+            .setView(dialogView)
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                String type = (String) typeSpinner.getSelectedItem();
+                String note = noteEdit.getText().toString();
+                DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
+                repository.insertDiaryEntry(entry, this::loadEntries);
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
     }
 
     private void loadEntries() {
@@ -95,11 +118,14 @@ public class DiaryFragment extends Fragment {
         }
         repository.diaryEntriesForPlant(plantId, entries -> {
             List<String> items = new ArrayList<>();
-            DateFormat df = DateFormat.getDateTimeInstance();
             for (DiaryEntry e : entries) {
-                String time = df.format(new Date(e.getTimeEpoch()));
+                String type = e.getType();
                 String note = e.getNote() != null ? e.getNote() : "";
-                items.add(time + " - " + note);
+                if (!note.isEmpty()) {
+                    items.add(type + " – " + note);
+                } else {
+                    items.add(type);
+                }
             }
             adapter.clear();
             adapter.addAll(items);

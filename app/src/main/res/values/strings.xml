@@ -34,4 +34,10 @@
     <string name="title_diary">Diary</string>
     <string name="title_stats">Stats</string>
     <string name="stats_placeholder">No statistics yet</string>
+    <string name="diary_hint_note">Note</string>
+    <string-array name="diary_entry_types">
+        <item>WATER</item>
+        <item>FERTILIZE</item>
+        <item>PRUNE</item>
+    </string-array>
 </resources>
