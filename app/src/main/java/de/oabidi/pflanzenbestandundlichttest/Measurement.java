@@ -1,13 +1,23 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 /**
  * Room entity capturing a single light measurement for a plant.
  */
-@Entity
+@Entity(
+    foreignKeys = @ForeignKey(
+        entity = Plant.class,
+        parentColumns = "id",
+        childColumns = "plantId",
+        onDelete = ForeignKey.CASCADE
+    ),
+    indices = @Index("plantId")
+)
 public class Measurement {
     @PrimaryKey(autoGenerate = true)
     private long id;

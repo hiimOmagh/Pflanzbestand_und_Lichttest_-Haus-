@@ -2,13 +2,23 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 /**
  * Room entity representing a single diary entry for a plant.
  */
-@Entity
+@Entity(
+    foreignKeys = @ForeignKey(
+        entity = Plant.class,
+        parentColumns = "id",
+        childColumns = "plantId",
+        onDelete = ForeignKey.CASCADE
+    ),
+    indices = @Index("plantId")
+)
 public class DiaryEntry {
     @PrimaryKey(autoGenerate = true)
     private long id;
