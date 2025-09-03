@@ -16,13 +16,23 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
-        android:id="@+id/lux_value"
+        android:id="@+id/lux_raw_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:text="@string/lux_placeholder"
+        android:text="@string/lux_raw_placeholder"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/lux_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/lux_placeholder"
+        app:layout_constraintStart_toStartOf="@id/lux_raw_value"
+        app:layout_constraintTop_toBottomOf="@id/lux_raw_value" />
 
     <TextView
         android:id="@+id/ppfd_value"

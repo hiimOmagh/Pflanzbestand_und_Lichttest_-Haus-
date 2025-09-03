@@ -19,7 +19,13 @@ import java.util.Deque;
  */
 public class LightSensorHelper implements SensorEventListener {
     public interface OnLuxChangedListener {
-        void onLuxChanged(float lux);
+        /**
+         * Called when a new light sensor reading is available.
+         *
+         * @param rawLux the latest raw lux value reported by the sensor
+         * @param avgLux the moving average of recent lux readings including this one
+         */
+        void onLuxChanged(float rawLux, float avgLux);
     }
 
     /** Maximum number of samples to include in the moving average. */
@@ -93,7 +99,7 @@ public class LightSensorHelper implements SensorEventListener {
                 luxSum -= recentLuxSamples.removeFirst();
             }
             float averageLux = luxSum / recentLuxSamples.size();
-            listener.onLuxChanged(averageLux);
+            listener.onLuxChanged(lux, averageLux);
         }
     }
 

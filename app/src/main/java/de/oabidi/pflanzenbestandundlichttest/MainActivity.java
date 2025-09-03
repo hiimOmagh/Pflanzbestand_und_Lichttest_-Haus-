@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_LIGHT_HOURS = "light_hours";
 
+    private TextView luxRawView;
     private TextView luxView;
     private TextView ppfdView;
     private TextView dliView;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        luxRawView = findViewById(R.id.lux_raw_value);
         luxView = findViewById(R.id.lux_value);
         ppfdView = findViewById(R.id.ppfd_value);
         dliView = findViewById(R.id.dli_value);
@@ -106,7 +108,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         });
 
         if (!presenter.hasLightSensor()) {
-            luxView.setText(R.string.no_light_sensor);
+            luxRawView.setText(R.string.no_light_sensor);
+            luxView.setText("");
             ppfdView.setText("");
             dliView.setText("");
         }
@@ -197,7 +200,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     }
 
     @Override
-    public void showLightData(float lux, float ppfd, float dli) {
+    public void showLightData(float rawLux, float lux, float ppfd, float dli) {
+        luxRawView.setText(getString(R.string.format_raw_lux, rawLux));
         luxView.setText(getString(R.string.format_lux, lux));
         ppfdView.setText(getString(R.string.format_ppfd, ppfd));
         dliView.setText(getString(R.string.format_dli, dli));

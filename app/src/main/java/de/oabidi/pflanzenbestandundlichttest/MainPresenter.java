@@ -13,7 +13,7 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
     /** View contract implemented by the activity. */
     public interface View {
         /** Display the latest light measurements. */
-        void showLightData(float lux, float ppfd, float dli);
+        void showLightData(float rawLux, float lux, float ppfd, float dli);
 
         /** Display the current list of plants. */
         void showPlants(List<Plant> plants);
@@ -81,9 +81,9 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
     }
 
     @Override
-    public void onLuxChanged(float lux) {
+    public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
-        view.showLightData(lux, ppfd, dli);
+        view.showLightData(rawLux, lux, ppfd, dli);
     }
 }
