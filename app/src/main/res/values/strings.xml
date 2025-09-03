@@ -15,4 +15,7 @@
     <string name="new_plant_description">A newly added plant.</string>
     <string name="unknown">Unknown</string>
     <string name="updated_suffix"> (updated)</string>
+    <string name="menu_add_plant">Add Plant</string>
+    <string name="menu_update_first_plant">Update First Plant</string>
+    <string name="menu_delete_first_plant">Delete First Plant</string>
 </resources>
