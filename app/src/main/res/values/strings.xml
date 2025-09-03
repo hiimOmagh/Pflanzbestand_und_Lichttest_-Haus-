@@ -34,6 +34,8 @@
     <string name="title_diary">Diary</string>
     <string name="title_stats">Stats</string>
     <string name="stats_placeholder">No statistics yet</string>
+    <string name="stats_no_diary_entries">No diary entries yet</string>
+    <string name="format_diary_counts">Waterings: %1$d, Fertilizations: %2$d, Prunings: %3$d</string>
     <string name="diary_hint_note">Note</string>
     <string-array name="diary_entry_types">
         <item>WATER</item>
