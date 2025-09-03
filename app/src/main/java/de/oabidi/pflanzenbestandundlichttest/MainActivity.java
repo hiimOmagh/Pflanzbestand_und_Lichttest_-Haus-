@@ -10,6 +10,7 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,8 +36,11 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
     private TextView dliView;
     private EditText kInput;
     private EditText hoursInput;
+    private Button saveMeasurementButton;
     private float calibrationFactor; // Factor converting lux to PPFD
     private float lightHours; // Expected daily exposure used for DLI
+    private float lastLux;
+    private float lastPpfd;
     private SharedPreferences preferences;
     private MainPresenter presenter;
     private PlantAdapter adapter;
@@ -57,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         dliView = findViewById(R.id.dli_value);
         kInput = findViewById(R.id.k_input);
         hoursInput = findViewById(R.id.light_hours_input);
+        saveMeasurementButton = findViewById(R.id.measurement_save_button);
 
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f); // default for typical LEDs
@@ -104,6 +109,13 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
                 } catch (NumberFormatException e) {
                     hoursInput.setError(getString(R.string.error_positive_number));
                 }
+            }
+        });
+
+        saveMeasurementButton.setOnClickListener(v -> {
+            if (!plants.isEmpty()) {
+                long plantId = plants.get(0).getId();
+                presenter.saveMeasurement(plantId, lastLux, lastPpfd);
             }
         });
 
@@ -205,6 +217,8 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         luxView.setText(getString(R.string.format_lux, lux));
         ppfdView.setText(getString(R.string.format_ppfd, ppfd));
         dliView.setText(getString(R.string.format_dli, dli));
+        lastLux = lux;
+        lastPpfd = ppfd;
     }
 
     @Override

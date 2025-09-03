@@ -80,6 +80,18 @@ public class MainPresenter implements LightSensorHelper.OnLuxChangedListener {
         plantRepository.delete(plant, this::refreshPlants);
     }
 
+    /**
+     * Persist a light measurement for the specified plant.
+     *
+     * @param plantId identifier of the plant
+     * @param lux     average lux during measurement
+     * @param ppfd    calculated photosynthetic photon flux density
+     */
+    public void saveMeasurement(long plantId, float lux, float ppfd) {
+        Measurement measurement = new Measurement(plantId, System.currentTimeMillis(), lux, ppfd);
+        plantRepository.insertMeasurement(measurement, null);
+    }
+
     @Override
     public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);

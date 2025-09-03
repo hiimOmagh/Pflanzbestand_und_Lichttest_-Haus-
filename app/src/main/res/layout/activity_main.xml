@@ -52,6 +52,15 @@
         app:layout_constraintStart_toStartOf="@id/ppfd_value"
         app:layout_constraintTop_toBottomOf="@id/ppfd_value" />
 
+    <Button
+        android:id="@+id/measurement_save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/measurement_save"
+        app:layout_constraintStart_toStartOf="@id/dli_value"
+        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+
     <TextView
         android:id="@+id/k_label"
         android:layout_width="wrap_content"
@@ -59,7 +68,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/label_calibration"
         app:layout_constraintStart_toStartOf="@id/dli_value"
-        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+        app:layout_constraintTop_toBottomOf="@id/measurement_save_button" />
 
     <EditText
         android:id="@+id/k_input"

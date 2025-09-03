@@ -16,6 +16,7 @@ import java.util.function.Consumer;
  */
 public class PlantRepository {
     private final PlantDao plantDao;
+    private final MeasurementDao measurementDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
@@ -29,6 +30,7 @@ public class PlantRepository {
     public PlantRepository(Context context) {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         plantDao = db.plantDao();
+        measurementDao = db.measurementDao();
     }
 
     /**
@@ -91,6 +93,38 @@ public class PlantRepository {
             plantDao.delete(plant);
             if (callback != null) {
                 mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
+     * Inserts a measurement into the database asynchronously.
+     *
+     * @param measurement the {@link Measurement} to add
+     * @param callback    optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> insertMeasurement(Measurement measurement, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            measurementDao.insert(measurement);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
+     * Retrieves recent measurements for a plant asynchronously and delivers them on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param limit    maximum number of measurements to return
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Measurement> result = measurementDao.recentForPlant(plantId, limit);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
             }
         });
     }
