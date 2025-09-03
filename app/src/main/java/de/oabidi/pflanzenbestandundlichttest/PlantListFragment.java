@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,6 +43,24 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         recyclerView.setAdapter(adapter);
         presenter = new PlantListPresenter(this, requireContext().getApplicationContext());
         presenter.refreshPlants();
+
+        getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
+            (requestKey, bundle) -> {
+                Plant plant = new Plant(
+                    bundle.getString("name"),
+                    bundle.getString("notes"),
+                    bundle.getString("species"),
+                    bundle.getString("location"),
+                    bundle.getLong("acquired"),
+                    bundle.containsKey("photo") ? Uri.parse(bundle.getString("photo")) : null);
+                plant.setId(bundle.getLong("id", 0));
+                if (plant.getId() == 0) {
+                    presenter.insertPlant(plant);
+                } else {
+                    presenter.updatePlant(plant);
+                }
+            });
+
         setHasOptionsMenu(true);
     }
 
@@ -74,23 +93,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.action_add) {
-            presenter.insertPlant(new Plant(
-                getString(R.string.new_plant_name),
-                getString(R.string.new_plant_description),
-                getString(R.string.unknown),
-                getString(R.string.unknown),
-                System.currentTimeMillis(),
-                null));
+            navigateToEdit(null);
             return true;
         } else if (itemId == R.id.action_update) {
             if (!plants.isEmpty()) {
-                Plant first = plants.get(0);
-                String description = first.getDescription();
-                if (description == null) {
-                    description = getString(R.string.default_description);
-                }
-                first.setDescription(description + getString(R.string.updated_suffix));
-                presenter.updatePlant(first);
+                navigateToEdit(plants.get(0));
             }
             return true;
         } else if (itemId == R.id.action_delete) {
@@ -100,5 +107,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void navigateToEdit(@Nullable Plant plant) {
+        PlantEditFragment fragment = PlantEditFragment.newInstance(plant);
+        getParentFragmentManager().beginTransaction()
+            .replace(R.id.nav_host_fragment, fragment)
+            .addToBackStack(null)
+            .commit();
     }
 }

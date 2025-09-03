@@ -1,0 +1,171 @@
+package de.oabidi.pflanzenbestandundlichttest;
+
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+/**
+ * Fragment allowing creation or editing of a {@link Plant}.
+ * The result is returned to the caller via {@link androidx.fragment.app.FragmentResultOwner}.
+ */
+public class PlantEditFragment extends Fragment {
+    public static final String RESULT_KEY = "plant_edit_result";
+
+    private static final String ARG_ID = "id";
+    private static final String ARG_NAME = "name";
+    private static final String ARG_SPECIES = "species";
+    private static final String ARG_LOCATION = "location";
+    private static final String ARG_ACQUIRED = "acquired";
+    private static final String ARG_NOTES = "notes";
+    private static final String ARG_PHOTO = "photo";
+
+    private TextInputEditText nameInput;
+    private TextInputEditText speciesInput;
+    private TextInputEditText locationInput;
+    private TextInputEditText acquiredInput;
+    private TextInputEditText notesInput;
+    private ImageView photoView;
+
+    private Uri photoUri;
+
+    private final ActivityResultLauncher<String> photoPicker =
+        registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri != null) {
+                photoUri = uri;
+                photoView.setImageURI(uri);
+            }
+        });
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_plant_edit, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        nameInput = view.findViewById(R.id.input_name);
+        speciesInput = view.findViewById(R.id.input_species);
+        locationInput = view.findViewById(R.id.input_location);
+        acquiredInput = view.findViewById(R.id.input_acquired);
+        notesInput = view.findViewById(R.id.input_notes);
+        photoView = view.findViewById(R.id.image_photo);
+
+        Button pickPhoto = view.findViewById(R.id.btn_pick_photo);
+        Button saveButton = view.findViewById(R.id.btn_save);
+
+        pickPhoto.setOnClickListener(v -> photoPicker.launch("image/*"));
+
+        Bundle args = getArguments();
+        if (args != null) {
+            nameInput.setText(args.getString(ARG_NAME));
+            speciesInput.setText(args.getString(ARG_SPECIES));
+            locationInput.setText(args.getString(ARG_LOCATION));
+            long epoch = args.getLong(ARG_ACQUIRED, System.currentTimeMillis());
+            acquiredInput.setText(formatDate(epoch));
+            notesInput.setText(args.getString(ARG_NOTES));
+            String photo = args.getString(ARG_PHOTO);
+            if (photo != null) {
+                photoUri = Uri.parse(photo);
+                photoView.setImageURI(photoUri);
+            }
+        }
+
+        saveButton.setOnClickListener(v -> savePlant());
+    }
+
+    private void savePlant() {
+        String name = getText(nameInput);
+        if (name.isEmpty()) {
+            nameInput.setError(getString(R.string.error_required));
+            return;
+        }
+        String species = emptyToNull(getText(speciesInput));
+        String location = emptyToNull(getText(locationInput));
+        String notes = emptyToNull(getText(notesInput));
+        long acquired = parseDate(getText(acquiredInput));
+
+        Plant plant = new Plant(name, notes, species, location, acquired, photoUri);
+        Bundle args = getArguments();
+        if (args != null) {
+            plant.setId(args.getLong(ARG_ID, 0));
+        }
+
+        Bundle result = new Bundle();
+        result.putLong(ARG_ID, plant.getId());
+        result.putString(ARG_NAME, plant.getName());
+        result.putString(ARG_SPECIES, plant.getSpecies());
+        result.putString(ARG_LOCATION, plant.getLocationHint());
+        result.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
+        result.putString(ARG_NOTES, plant.getDescription());
+        if (plant.getPhotoUri() != null) {
+            result.putString(ARG_PHOTO, plant.getPhotoUri().toString());
+        }
+        getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
+        getParentFragmentManager().popBackStack();
+    }
+
+    private static String getText(TextInputEditText editText) {
+        CharSequence cs = editText.getText();
+        return cs != null ? cs.toString().trim() : "";
+    }
+
+    private static String emptyToNull(String s) {
+        return s.isEmpty() ? null : s;
+    }
+
+    private static String formatDate(long epoch) {
+        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(epoch));
+    }
+
+    private static long parseDate(String value) {
+        if (value.isEmpty()) {
+            return System.currentTimeMillis();
+        }
+        try {
+            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(value);
+            if (date != null) {
+                return date.getTime();
+            }
+        } catch (ParseException ignored) {
+        }
+        return System.currentTimeMillis();
+    }
+
+    public static PlantEditFragment newInstance(@Nullable Plant plant) {
+        PlantEditFragment fragment = new PlantEditFragment();
+        if (plant != null) {
+            Bundle args = new Bundle();
+            args.putLong(ARG_ID, plant.getId());
+            args.putString(ARG_NAME, plant.getName());
+            args.putString(ARG_SPECIES, plant.getSpecies());
+            args.putString(ARG_LOCATION, plant.getLocationHint());
+            args.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
+            args.putString(ARG_NOTES, plant.getDescription());
+            if (plant.getPhotoUri() != null) {
+                args.putString(ARG_PHOTO, plant.getPhotoUri().toString());
+            }
+            fragment.setArguments(args);
+        }
+        return fragment;
+    }
+}

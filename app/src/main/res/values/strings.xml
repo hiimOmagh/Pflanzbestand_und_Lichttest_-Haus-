@@ -47,4 +47,12 @@
     </string-array>
     <string name="action_delete_diary_entry">Delete Entry</string>
     <string name="confirm_delete_diary_entry">Delete this entry?</string>
+    <string name="hint_plant_name">Name</string>
+    <string name="hint_species">Species</string>
+    <string name="hint_location">Location</string>
+    <string name="hint_acquired">Acquired</string>
+    <string name="hint_notes">Notes</string>
+    <string name="action_pick_photo">Pick Photo</string>
+    <string name="action_save_plant">Save</string>
+    <string name="error_required">Required</string>
 </resources>
