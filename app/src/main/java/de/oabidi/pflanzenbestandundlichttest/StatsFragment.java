@@ -91,11 +91,11 @@ public class StatsFragment extends Fragment {
         int prune = 0;
         for (DiaryEntry e : entries) {
             String type = e.getType();
-            if ("WATER".equals(type)) {
+            if (DiaryEntry.TYPE_WATER.equals(type)) {
                 water++;
-            } else if ("FERTILIZE".equals(type)) {
+            } else if (DiaryEntry.TYPE_FERTILIZE.equals(type)) {
                 fertilize++;
-            } else if ("PRUNE".equals(type)) {
+            } else if (DiaryEntry.TYPE_PRUNE.equals(type)) {
                 prune++;
             }
         }
@@ -103,7 +103,13 @@ public class StatsFragment extends Fragment {
         if (entries.isEmpty()) {
             text = getString(R.string.stats_no_diary_entries);
         } else {
-            text = getString(R.string.format_diary_counts, water, fertilize, prune);
+            String waterLabel = getString(R.string.diary_type_water);
+            String fertilizeLabel = getString(R.string.diary_type_fertilize);
+            String pruneLabel = getString(R.string.diary_type_prune);
+            text = getString(R.string.format_diary_counts,
+                waterLabel, water,
+                fertilizeLabel, fertilize,
+                pruneLabel, prune);
         }
         diaryCountsView.setText(text);
     }

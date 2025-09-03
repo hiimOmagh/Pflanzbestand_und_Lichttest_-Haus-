@@ -35,12 +35,15 @@
     <string name="title_stats">Stats</string>
     <string name="stats_placeholder">No statistics yet</string>
     <string name="stats_no_diary_entries">No diary entries yet</string>
-    <string name="format_diary_counts">Waterings: %1$d, Fertilizations: %2$d, Prunings: %3$d</string>
+    <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
     <string name="diary_hint_note">Note</string>
+    <string name="diary_type_water">Water</string>
+    <string name="diary_type_fertilize">Fertilize</string>
+    <string name="diary_type_prune">Prune</string>
     <string-array name="diary_entry_types">
-        <item>WATER</item>
-        <item>FERTILIZE</item>
-        <item>PRUNE</item>
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
     </string-array>
     <string name="action_delete_diary_entry">Delete Entry</string>
     <string name="confirm_delete_diary_entry">Delete this entry?</string>

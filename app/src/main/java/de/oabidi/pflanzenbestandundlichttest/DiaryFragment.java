@@ -119,7 +119,8 @@ public class DiaryFragment extends Fragment {
             .setTitle(R.string.action_add_diary_entry)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                String type = (String) typeSpinner.getSelectedItem();
+                String label = (String) typeSpinner.getSelectedItem();
+                String type = codeFromLabel(label);
                 String note = noteEdit.getText().toString();
                 DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
                 repository.insertDiaryEntry(entry, this::loadEntries);
@@ -139,14 +140,38 @@ public class DiaryFragment extends Fragment {
             List<String> items = new ArrayList<>();
             for (DiaryEntry e : entries) {
                 String note = e.getNote() != null ? e.getNote() : "";
-                String item = df.format(new Date(e.getTimeEpoch())) + " – " + e.getType();
+                String item = df.format(new Date(e.getTimeEpoch())) + " – " + labelFromCode(e.getType());
                 if (!note.isEmpty()) {
                     item += " – " + note;
                 }
-                item += " – " + note;
+                items.add(item);
             }
             adapter.clear();
             adapter.addAll(items);
         });
+    }
+
+    private String codeFromLabel(String label) {
+        if (getString(R.string.diary_type_water).equals(label)) {
+            return DiaryEntry.TYPE_WATER;
+        } else if (getString(R.string.diary_type_fertilize).equals(label)) {
+            return DiaryEntry.TYPE_FERTILIZE;
+        } else if (getString(R.string.diary_type_prune).equals(label)) {
+            return DiaryEntry.TYPE_PRUNE;
+        }
+        return label;
+    }
+
+    private String labelFromCode(String code) {
+        switch (code) {
+            case DiaryEntry.TYPE_WATER:
+                return getString(R.string.diary_type_water);
+            case DiaryEntry.TYPE_FERTILIZE:
+                return getString(R.string.diary_type_fertilize);
+            case DiaryEntry.TYPE_PRUNE:
+                return getString(R.string.diary_type_prune);
+            default:
+                return code;
+        }
     }
 }

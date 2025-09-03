@@ -20,6 +20,9 @@ import androidx.room.PrimaryKey;
     indices = @Index("plantId")
 )
 public class DiaryEntry {
+    public static final String TYPE_WATER = "WATER";
+    public static final String TYPE_FERTILIZE = "FERTILIZE";
+    public static final String TYPE_PRUNE = "PRUNE";
     @PrimaryKey(autoGenerate = true)
     private long id;
     private long plantId;
