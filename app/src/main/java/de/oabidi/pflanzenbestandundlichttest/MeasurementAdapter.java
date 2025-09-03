@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * RecyclerView adapter displaying recent PPFD measurements.
+ * RecyclerView adapter displaying recent PPFD and DLI measurements.
  */
 public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.ViewHolder> {
     private final List<Measurement> measurements = new ArrayList<>();
@@ -27,8 +27,9 @@ public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Measurement m = measurements.get(position);
-        String text = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
-        holder.valueView.setText(text);
+        String ppfdText = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
+        String dliText = holder.itemView.getContext().getString(R.string.format_dli, m.getDli());
+        holder.valueView.setText(ppfdText + ", " + dliText);
     }
 
     @Override

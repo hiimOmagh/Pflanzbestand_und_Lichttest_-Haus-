@@ -52,11 +52,11 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.lightHours = lightHours;
     }
 
-    public void saveMeasurement(long plantId, float lux, float ppfd) {
+    public void saveMeasurement(long plantId, float lux, float ppfd, float dli) {
         if (plantId < 0) {
             return;
         }
-        Measurement measurement = new Measurement(plantId, System.currentTimeMillis(), lux, ppfd);
+        Measurement measurement = new Measurement(plantId, System.currentTimeMillis(), lux, ppfd, dli);
         plantRepository.insertMeasurement(measurement, null);
     }
 

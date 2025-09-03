@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 /**
- * Displays simple statistics such as recent PPFD measurements for a plant.
+ * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
  */
 public class StatsFragment extends Fragment {
     private MeasurementAdapter adapter;

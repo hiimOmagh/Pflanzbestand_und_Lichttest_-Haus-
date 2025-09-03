@@ -25,6 +25,7 @@ public class Measurement {
     private long timeEpoch;
     private float luxAvg;
     private float ppfd;
+    private float dli;
 
     /** Default constructor required by Room. */
     public Measurement() {
@@ -34,11 +35,12 @@ public class Measurement {
      * Convenience constructor to create fully initialised measurement instances.
      */
     @Ignore
-    public Measurement(long plantId, long timeEpoch, float luxAvg, float ppfd) {
+    public Measurement(long plantId, long timeEpoch, float luxAvg, float ppfd, float dli) {
         this.plantId = plantId;
         this.timeEpoch = timeEpoch;
         this.luxAvg = luxAvg;
         this.ppfd = ppfd;
+        this.dli = dli;
     }
 
     public long getId() {
@@ -79,5 +81,13 @@ public class Measurement {
 
     public void setPpfd(float ppfd) {
         this.ppfd = ppfd;
+    }
+
+    public float getDli() {
+        return dli;
+    }
+
+    public void setDli(float dli) {
+        this.dli = dli;
     }
 }

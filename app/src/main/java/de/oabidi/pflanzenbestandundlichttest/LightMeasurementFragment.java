@@ -42,6 +42,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private float lightHours;
     private float lastLux;
     private float lastPpfd;
+    private float lastDli;
     private long selectedPlantId = -1;
     private List<Plant> plants;
     private SharedPreferences preferences;
@@ -132,7 +133,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
-                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd);
+                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli);
             }
         });
 
@@ -166,6 +167,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         dliView.setText(getString(R.string.format_dli, dli));
         lastLux = lux;
         lastPpfd = ppfd;
+        lastDli = dli;
     }
 
     @Override
