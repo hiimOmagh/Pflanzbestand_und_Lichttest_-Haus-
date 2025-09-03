@@ -29,4 +29,9 @@
     <string name="plant_photo">Plant photo</string>
     <string name="action_view_diary">View Diary</string>
     <string name="action_add_diary_entry">Add Entry</string>
+    <string name="title_plants">Plants</string>
+    <string name="title_measure">Measure</string>
+    <string name="title_diary">Diary</string>
+    <string name="title_stats">Stats</string>
+    <string name="stats_placeholder">No statistics yet</string>
 </resources>

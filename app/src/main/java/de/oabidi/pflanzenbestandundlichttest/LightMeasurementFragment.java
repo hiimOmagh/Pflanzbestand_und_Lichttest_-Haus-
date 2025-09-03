@@ -1,0 +1,158 @@
+package de.oabidi.pflanzenbestandundlichttest;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+
+/**
+ * Fragment responsible for displaying live light measurements.
+ */
+public class LightMeasurementFragment extends Fragment implements LightMeasurementPresenter.View {
+    private static final String PREFS_NAME = "settings";
+    private static final String KEY_CALIBRATION = "calibration_factor";
+    private static final String KEY_LIGHT_HOURS = "light_hours";
+
+    private TextView luxRawView;
+    private TextView luxView;
+    private TextView ppfdView;
+    private TextView dliView;
+    private EditText kInput;
+    private EditText hoursInput;
+    private Button saveMeasurementButton;
+    private TextView locationCheckView;
+    private float calibrationFactor;
+    private float lightHours;
+    private float lastLux;
+    private float lastPpfd;
+    private SharedPreferences preferences;
+    private LightMeasurementPresenter presenter;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_light_measurement, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        luxRawView = view.findViewById(R.id.lux_raw_value);
+        luxView = view.findViewById(R.id.lux_value);
+        ppfdView = view.findViewById(R.id.ppfd_value);
+        dliView = view.findViewById(R.id.dli_value);
+        kInput = view.findViewById(R.id.k_input);
+        hoursInput = view.findViewById(R.id.light_hours_input);
+        saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
+        locationCheckView = view.findViewById(R.id.location_check_value);
+
+        Context context = requireContext().getApplicationContext();
+        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
+        lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f);
+
+        presenter = new LightMeasurementPresenter(this, context, calibrationFactor, lightHours);
+
+        kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
+        hoursInput.setText(getString(R.string.format_light_hours, lightHours));
+
+        kInput.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                try {
+                    float value = Float.parseFloat(s.toString());
+                    if (value > 0f) {
+                        calibrationFactor = value;
+                        preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
+                        presenter.setCalibrationFactor(calibrationFactor);
+                        kInput.setError(null);
+                    } else {
+                        kInput.setError(getString(R.string.error_positive_number));
+                    }
+                } catch (NumberFormatException e) {
+                    kInput.setError(getString(R.string.error_positive_number));
+                }
+            }
+        });
+
+        hoursInput.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                try {
+                    float value = Float.parseFloat(s.toString());
+                    if (value > 0f) {
+                        lightHours = value;
+                        preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
+                        presenter.setLightHours(lightHours);
+                        hoursInput.setError(null);
+                    } else {
+                        hoursInput.setError(getString(R.string.error_positive_number));
+                    }
+                } catch (NumberFormatException e) {
+                    hoursInput.setError(getString(R.string.error_positive_number));
+                }
+            }
+        });
+
+        saveMeasurementButton.setOnClickListener(v -> {
+            long plantId = presenter.getFirstPlantId();
+            if (plantId != -1) {
+                presenter.saveMeasurement(plantId, lastLux, lastPpfd);
+            }
+        });
+
+        if (!presenter.hasLightSensor()) {
+            luxRawView.setText(R.string.no_light_sensor);
+            luxView.setText("");
+            ppfdView.setText("");
+            dliView.setText("");
+        }
+
+        presenter.refreshPlants();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        presenter.start();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        presenter.stop();
+    }
+
+    @Override
+    public void showLightData(float rawLux, float lux, float ppfd, float dli) {
+        luxRawView.setText(getString(R.string.format_raw_lux, rawLux));
+        luxView.setText(getString(R.string.format_lux, lux));
+        ppfdView.setText(getString(R.string.format_ppfd, ppfd));
+        dliView.setText(getString(R.string.format_dli, dli));
+        lastLux = lux;
+        lastPpfd = ppfd;
+    }
+
+    @Override
+    public void showRangeStatus(String status) {
+        locationCheckView.setText(getString(R.string.format_location_check, status));
+    }
+
+    private abstract static class SimpleTextWatcher implements TextWatcher {
+        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+    }
+}

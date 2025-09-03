@@ -19,12 +19,16 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Fragment showing diary entries for a specific plant.
+ * Fragment showing diary entries.
+ *
+ * <p>When instantiated with {@link #newInstance(long)} it displays entries for the
+ * provided plant. If no plant ID is supplied the fragment simply shows an empty
+ * view, making it suitable as a top-level destination as well.</p>
  */
 public class DiaryFragment extends Fragment {
     private static final String ARG_PLANT_ID = "plantId";
 
-    private long plantId;
+    private long plantId = -1;
     private PlantRepository repository;
     private ArrayAdapter<String> adapter;
 
@@ -65,17 +69,30 @@ public class DiaryFragment extends Fragment {
         listView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_entry);
+
+        if (plantId < 0) {
+            listView.setVisibility(View.GONE);
+            fab.setVisibility(View.GONE);
+            return;
+        }
+
         fab.setOnClickListener(v -> addEntry());
 
         loadEntries();
     }
 
     private void addEntry() {
+        if (plantId < 0) {
+            return;
+        }
         DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), "note", "");
         repository.insertDiaryEntry(entry, this::loadEntries);
     }
 
     private void loadEntries() {
+        if (plantId < 0) {
+            return;
+        }
         repository.diaryEntriesForPlant(plantId, entries -> {
             List<String> items = new ArrayList<>();
             DateFormat df = DateFormat.getDateTimeInstance();
