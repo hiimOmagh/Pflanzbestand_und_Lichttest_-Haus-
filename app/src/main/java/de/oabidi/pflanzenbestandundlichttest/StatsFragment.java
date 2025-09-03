@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -79,7 +80,8 @@ public class StatsFragment extends Fragment {
     }
 
     private void loadDataForPlant(long plantId) {
-        repository.recentMeasurementsForPlant(plantId, 10, adapter::setMeasurements);
+        repository.recentMeasurementsForPlant(plantId, 10,
+            list -> adapter.submitList(new ArrayList<>(list)));
         repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
     }
 
