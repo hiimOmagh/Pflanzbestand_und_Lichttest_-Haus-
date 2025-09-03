@@ -150,7 +150,11 @@ public class MainActivity extends AppCompatActivity implements PlantAdapter.OnPl
         } else if (itemId == R.id.action_update) {
             if (!plants.isEmpty()) {
                 Plant first = plants.get(0);
-                first.setDescription(first.getDescription() + getString(R.string.updated_suffix));
+                String description = first.getDescription();
+                if (description == null) {
+                    description = getString(R.string.default_description);
+                }
+                first.setDescription(description + getString(R.string.updated_suffix));
                 presenter.updatePlant(first);
             }
             return true;

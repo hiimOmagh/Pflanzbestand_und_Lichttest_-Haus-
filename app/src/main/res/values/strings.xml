@@ -13,6 +13,7 @@
     <string name="format_dli">DLI: %.2f mol/m²/day</string>
     <string name="new_plant_name">New Plant</string>
     <string name="new_plant_description">A newly added plant.</string>
+    <string name="default_description">No description</string>
     <string name="unknown">Unknown</string>
     <string name="updated_suffix"> (updated)</string>
     <string name="menu_add_plant">Add Plant</string>
