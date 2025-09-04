@@ -157,4 +157,15 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     public void onTargetClick(SpeciesTarget target) {
         showDialog(target);
     }
+
+    @Override
+    public void onTargetLongClick(SpeciesTarget target) {
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.action_delete_target)
+            .setMessage(R.string.confirm_delete_target)
+            .setPositiveButton(android.R.string.ok, (d, which) ->
+                repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets))
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+    }
 }

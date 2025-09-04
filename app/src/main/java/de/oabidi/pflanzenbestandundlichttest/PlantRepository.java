@@ -227,6 +227,22 @@ public class PlantRepository {
     }
 
     /**
+     * Deletes the species target identified by the given key asynchronously.
+     *
+     * @param speciesKey key of the species target to delete
+     * @param callback   optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> deleteSpeciesTarget(String speciesKey, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            speciesTargetDao.deleteBySpeciesKey(speciesKey);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Returns all measurements stored in the database.
      * <p>
      * This method must be invoked on a background thread.

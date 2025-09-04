@@ -19,6 +19,7 @@ public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTarg
 
     public interface OnTargetClickListener {
         void onTargetClick(SpeciesTarget target);
+        void onTargetLongClick(SpeciesTarget target);
     }
 
     private final OnTargetClickListener listener;
@@ -67,6 +68,10 @@ public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTarg
             String display = target.getSpeciesKey() + ": " + target.getPpfdMin() + " - " + target.getPpfdMax();
             textView.setText(display);
             itemView.setOnClickListener(v -> listener.onTargetClick(target));
+            itemView.setOnLongClickListener(v -> {
+                listener.onTargetLongClick(target);
+                return true;
+            });
         }
     }
 }

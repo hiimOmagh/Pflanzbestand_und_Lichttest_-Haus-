@@ -63,6 +63,8 @@
     <string name="confirm_delete_diary_entry">Delete this entry?</string>
     <string name="action_delete_measurement">Delete Measurement</string>
     <string name="confirm_delete_measurement">Delete this measurement?</string>
+    <string name="action_delete_target">Delete Target</string>
+    <string name="confirm_delete_target">Delete this target?</string>
     <string name="hint_plant_name">Name</string>
     <string name="hint_species">Species</string>
     <string name="hint_location">Location</string>

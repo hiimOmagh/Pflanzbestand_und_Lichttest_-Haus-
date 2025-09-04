@@ -37,4 +37,12 @@ public interface SpeciesTargetDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(SpeciesTarget target);
+
+    /**
+     * Remove the species target for the given key.
+     *
+     * @param speciesKey identifier of the species to remove
+     */
+    @Query("DELETE FROM SpeciesTarget WHERE speciesKey = :speciesKey")
+    void deleteBySpeciesKey(String speciesKey);
 }
