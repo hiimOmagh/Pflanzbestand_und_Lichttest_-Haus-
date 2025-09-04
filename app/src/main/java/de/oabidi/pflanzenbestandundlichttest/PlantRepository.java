@@ -243,6 +243,28 @@ public class PlantRepository {
     }
 
     /**
+     * Returns all plants stored in the database.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @return list of all plants
+     */
+    public List<Plant> getAllPlantsSync() {
+        return plantDao.getAll();
+    }
+
+    /**
+     * Returns all species targets stored in the database.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @return list of all species targets
+     */
+    public List<SpeciesTarget> getAllSpeciesTargetsSync() {
+        return speciesTargetDao.getAll();
+    }
+
+    /**
      * Returns all measurements stored in the database.
      * <p>
      * This method must be invoked on a background thread.

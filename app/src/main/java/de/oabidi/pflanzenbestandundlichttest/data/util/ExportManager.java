@@ -15,8 +15,10 @@ import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.
@@ -47,10 +49,27 @@ public class ExportManager {
             boolean success = false;
             try (OutputStream os = context.getContentResolver().openOutputStream(uri);
                  BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
+                List<Plant> plants = repository.getAllPlantsSync();
+                List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
                 List<Measurement> measurements = repository.getAllMeasurementsSync();
                 List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
 
-                writer.write("Measurements\n");
+                writer.write("Plants\n");
+                writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+                for (Plant p : plants) {
+                    writer.write(p.getId() + "," + escape(p.getName()) + "," +
+                        escape(p.getDescription()) + "," + escape(p.getSpecies()) + "," +
+                        escape(p.getLocationHint()) + "," + p.getAcquiredAtEpoch() + "," +
+                        escape(p.getPhotoUri() != null ? p.getPhotoUri().toString() : null) + "\n");
+                }
+
+                writer.write("\nSpeciesTargets\n");
+                writer.write("speciesKey,ppfdMin,ppfdMax\n");
+                for (SpeciesTarget t : targets) {
+                    writer.write(escape(t.getSpeciesKey()) + "," + t.getPpfdMin() + "," + t.getPpfdMax() + "\n");
+                }
+
+                writer.write("\nMeasurements\n");
                 writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli\n");
                 for (Measurement m : measurements) {
                     writer.write(m.getId() + "," + m.getPlantId() + "," + m.getTimeEpoch() + "," +

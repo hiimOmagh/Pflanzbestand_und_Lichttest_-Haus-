@@ -18,8 +18,10 @@ import java.util.concurrent.ExecutionException;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -70,6 +72,16 @@ public class ImportManager {
             if (line.trim().isEmpty()) {
                 continue;
             }
+            if (line.equals("Plants")) {
+                section = Section.PLANTS;
+                reader.readLine(); // skip header
+                continue;
+            }
+            if (line.equals("SpeciesTargets")) {
+                section = Section.SPECIES_TARGETS;
+                reader.readLine(); // skip header
+                continue;
+            }
             if (line.equals("Measurements")) {
                 section = Section.MEASUREMENTS;
                 reader.readLine(); // skip header
@@ -82,7 +94,35 @@ public class ImportManager {
             }
             List<String> parts = parseCsv(line);
             try {
-                if (section == Section.MEASUREMENTS) {
+                if (section == Section.PLANTS) {
+                    if (parts.size() >= 7) {
+                        long id = Long.parseLong(parts.get(0));
+                        String name = parts.get(1);
+                        String description = parts.get(2).isEmpty() ? null : parts.get(2);
+                        String species = parts.get(3).isEmpty() ? null : parts.get(3);
+                        String location = parts.get(4).isEmpty() ? null : parts.get(4);
+                        long acquired = Long.parseLong(parts.get(5));
+                        String photo = parts.get(6);
+                        Uri photoUri = photo.isEmpty() ? null : Uri.parse(photo);
+                        Plant p = new Plant(name, description, species, location, acquired, photoUri);
+                        p.setId(id);
+                        repository.insert(p, null).get();
+                        importedAny = true;
+                    } else {
+                        Log.e(TAG, "Malformed plant row: " + line);
+                    }
+                } else if (section == Section.SPECIES_TARGETS) {
+                    if (parts.size() >= 3) {
+                        String speciesKey = parts.get(0);
+                        float ppfdMin = Float.parseFloat(parts.get(1));
+                        float ppfdMax = Float.parseFloat(parts.get(2));
+                        SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
+                        repository.insertSpeciesTarget(t, null).get();
+                        importedAny = true;
+                    } else {
+                        Log.e(TAG, "Malformed species target row: " + line);
+                    }
+                } else if (section == Section.MEASUREMENTS) {
                     if (parts.size() >= 6) {
                         long plantId = Long.parseLong(parts.get(1));
                         long timeEpoch = Long.parseLong(parts.get(2));
@@ -145,6 +185,8 @@ public class ImportManager {
 
     private enum Section {
         NONE,
+        PLANTS,
+        SPECIES_TARGETS,
         MEASUREMENTS,
         DIARY
     }

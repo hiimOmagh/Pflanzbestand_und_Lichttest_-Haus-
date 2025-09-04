@@ -29,8 +29,11 @@ public class DataImportExportInstrumentedTest {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository repository = new PlantRepository(context);
 
-        // Insert plant with measurement and diary entry
-        Plant plant = new Plant("ExportPlant", null, null, null, 0L, null);
+        // Insert species target and plant with measurement and diary entry
+        SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
+        repository.insertSpeciesTarget(target, null).get();
+
+        Plant plant = new Plant("ExportPlant", null, "ExportSpecies", null, 0L, null);
         repository.insert(plant, null).get();
 
         Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 3f);
@@ -51,16 +54,18 @@ public class DataImportExportInstrumentedTest {
             PlantDatabase.getDatabase(context).clearAllTables()
         ).get();
 
-        // Recreate plant with same ID
-        Plant newPlant = new Plant("ExportPlant", null, null, null, 0L, null);
-        repository.insert(newPlant, null).get();
-
         // Import data
         CountDownLatch importLatch = new CountDownLatch(1);
         new ImportManager(context).importData(uri, success -> importLatch.countDown());
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
 
-        // Verify measurements and diary entries restored
+        // Verify all data restored
+        int plantCount = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllPlantsSync().size()
+        ).get();
+        int targetCount = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllSpeciesTargetsSync().size()
+        ).get();
         int measurementCount = PlantDatabase.databaseWriteExecutor.submit(
             () -> repository.getAllMeasurementsSync().size()
         ).get();
@@ -68,6 +73,8 @@ public class DataImportExportInstrumentedTest {
             () -> repository.getAllDiaryEntriesSync().size()
         ).get();
 
+        assertEquals(1, plantCount);
+        assertEquals(1, targetCount);
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
     }
