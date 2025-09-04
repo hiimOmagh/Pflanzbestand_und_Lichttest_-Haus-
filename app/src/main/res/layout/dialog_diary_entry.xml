@@ -16,6 +16,13 @@
         android:layout_height="wrap_content"
         android:hint="@string/diary_hint_note" />
 
+    <EditText
+        android:id="@+id/diary_entry_remind_days"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:hint="@string/hint_remind_days" />
+
     <Button
         android:id="@+id/diary_entry_add_photo"
         android:layout_width="match_parent"

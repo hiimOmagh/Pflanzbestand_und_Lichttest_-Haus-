@@ -192,6 +192,7 @@ public class DiaryFragment extends Fragment {
         View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
         Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
         EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+        EditText remindEdit = dialogView.findViewById(R.id.diary_entry_remind_days);
         Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
         final String[] photoUri = new String[1];
         photoButton.setOnClickListener(v -> {
@@ -216,6 +217,16 @@ public class DiaryFragment extends Fragment {
                 DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
                 entry.setPhotoUri(photoUri[0]);
                 repository.insertDiaryEntry(entry, this::loadEntries);
+
+                String daysText = remindEdit.getText().toString().trim();
+                if (!daysText.isEmpty()) {
+                    try {
+                        int days = Integer.parseInt(daysText);
+                        String message = note.isEmpty() ? label : label + " – " + note;
+                        ReminderScheduler.scheduleReminder(requireContext(), days, message);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
             })
             .setNegativeButton(android.R.string.cancel, null)
             .show();

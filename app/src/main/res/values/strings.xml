@@ -71,4 +71,8 @@
     <string name="action_add_photo">Add Photo</string>
     <string name="export_success">Export successful</string>
     <string name="export_failure">Export failed</string>
+    <string name="hint_remind_days">Remind me in days</string>
+    <string name="reminder_mark_done">Done</string>
+    <string name="reminder_snooze">Snooze</string>
+    <string name="reminder_channel">Reminders</string>
 </resources>
