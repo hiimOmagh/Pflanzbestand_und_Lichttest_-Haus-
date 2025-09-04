@@ -16,6 +16,20 @@ The project uses the Gradle wrapper. From the repository root run:
 
 This will download dependencies and produce the app's APK in `app/build/outputs/apk/`.
 
+## Running tests
+
+To execute the JVM unit tests run:
+
+```bash
+./gradlew test
+```
+
+Instrumentation tests require a connected Android device or emulator. They can be launched with:
+
+```bash
+./gradlew connectedAndroidTest
+```
+
 ## Usage
 
 1. Install the generated APK on an Android device or emulator that has a light sensor.

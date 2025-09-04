@@ -19,6 +19,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.allOf;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
@@ -85,6 +86,61 @@ public class PlantDiaryInstrumentedTest {
             // Verify entry appears in list
             onView(allOf(withId(R.id.diary_entry_text), withText(containsString("Test note"))))
                 .check(matches(isDisplayed()));
+        }
+    }
+
+    @Test
+    public void testSaveMeasurementDisplaysToast() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            Context context = ApplicationProvider.getApplicationContext();
+
+            // Add a plant to measure
+            openActionBarOverflowOrOptionsMenu(context);
+            onView(withText("Add Plant")).perform(click());
+            onView(withId(R.id.input_name)).perform(replaceText("Measure Plant"), closeSoftKeyboard());
+            onView(withId(R.id.btn_save)).perform(click());
+            SystemClock.sleep(500);
+
+            // Open measurement screen
+            onView(withId(R.id.nav_measure)).perform(click());
+            SystemClock.sleep(500);
+
+            // Save measurement
+            onView(withId(R.id.measurement_save_button)).perform(click());
+
+            // Verify confirmation toast
+            onView(withText(R.string.measurement_saved))
+                .inRoot(new ToastMatcher())
+                .check(matches(isDisplayed()));
+        }
+    }
+
+    @Test
+    public void testStatsFragmentDisplaysData() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            Context context = ApplicationProvider.getApplicationContext();
+
+            // Create plant and save a measurement
+            openActionBarOverflowOrOptionsMenu(context);
+            onView(withText("Add Plant")).perform(click());
+            onView(withId(R.id.input_name)).perform(replaceText("Stats Plant"), closeSoftKeyboard());
+            onView(withId(R.id.btn_save)).perform(click());
+            SystemClock.sleep(500);
+
+            onView(withId(R.id.nav_measure)).perform(click());
+            SystemClock.sleep(500);
+            onView(withId(R.id.measurement_save_button)).perform(click());
+            SystemClock.sleep(500);
+
+            // Navigate to stats screen
+            onView(withId(R.id.nav_stats)).perform(click());
+            SystemClock.sleep(500);
+
+            // Verify plant name is shown and stats text displayed
+            onView(withText("Stats Plant")).check(matches(isDisplayed()));
+            onView(withId(R.id.stats_chart)).check(matches(isDisplayed()));
+            onView(withId(R.id.stats_diary_counts))
+                .check(matches(withText(R.string.stats_no_diary_entries)));
         }
     }
 }
