@@ -26,6 +26,7 @@
     <string name="menu_delete_first_plant">Delete First Plant</string>
     <string name="menu_species_targets">Species Targets</string>
     <string name="menu_export_data">Export Data</string>
+    <string name="menu_import_data">Import Data</string>
     <string name="hint_positive_number">Positive number</string>
     <string name="error_positive_number">Value must be greater than 0</string>
     <string name="measurement_save">Save</string>
@@ -74,6 +75,8 @@
     <string name="action_add_photo">Add Photo</string>
     <string name="export_success">Export successful</string>
     <string name="export_failure">Export failed</string>
+    <string name="import_success">Import successful</string>
+    <string name="import_failure">Import failed</string>
     <string name="hint_remind_days">Remind me in days</string>
     <string name="reminder_mark_done">Done</string>
     <string name="reminder_snooze">Snooze</string>

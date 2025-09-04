@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+
 /**
  * Fragment displaying the list of plants.
  */
@@ -31,6 +33,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private PlantAdapter adapter;
     private List<Plant> plants = new ArrayList<>();
     private ExportManager exportManager;
+    private ImportManager importManager;
 
     private final ActivityResultLauncher<String> exportLauncher =
         registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
@@ -41,6 +44,18 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                 });
             } else {
                 Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    private final ActivityResultLauncher<String[]> importLauncher =
+        registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                importManager.importData(uri, success -> {
+                    int msg = success ? R.string.import_success : R.string.import_failure;
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                Toast.makeText(requireContext(), R.string.import_failure, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -61,6 +76,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         presenter = new PlantListPresenter(this, requireContext().getApplicationContext());
         presenter.refreshPlants();
         exportManager = new ExportManager(requireContext().getApplicationContext());
+        importManager = new ImportManager(requireContext().getApplicationContext());
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
             (requestKey, bundle) -> {
@@ -128,6 +144,9 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             return true;
         } else if (itemId == R.id.action_export_data) {
             exportLauncher.launch("plant_data.csv");
+            return true;
+        } else if (itemId == R.id.action_import_data) {
+            importLauncher.launch(new String[]{"text/csv"});
             return true;
         }
         return super.onOptionsItemSelected(item);
