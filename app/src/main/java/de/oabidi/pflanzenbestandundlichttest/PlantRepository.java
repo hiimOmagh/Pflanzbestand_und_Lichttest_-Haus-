@@ -134,6 +134,22 @@ public class PlantRepository {
     }
 
     /**
+     * Updates an existing diary entry asynchronously.
+     *
+     * @param entry    the {@link DiaryEntry} to update
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> updateDiaryEntry(DiaryEntry entry, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            diaryDao.update(entry);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Deletes a diary entry from the database asynchronously.
      *
      * @param entry    the {@link DiaryEntry} to remove

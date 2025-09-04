@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -28,6 +29,14 @@ public interface DiaryDao {
      */
     @Delete
     void delete(DiaryEntry entry);
+
+    /**
+     * Updates an existing diary entry in the database.
+     *
+     * @param entry the entity to update
+     */
+    @Update
+    void update(DiaryEntry entry);
 
     /**
      * Retrieves all diary entries for the given plant ordered by most recent first.

@@ -170,4 +170,30 @@ public class PlantRepositoryTest {
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         assertTrue(latch.await(1, TimeUnit.SECONDS));
     }
+
+    @Test
+    public void updateDiaryEntry_callbackOnMainThread() throws Exception {
+        Plant plant = new Plant("Ivy", null, null, null, 0, null);
+        repository.insert(plant, null);
+        waitForExecutor();
+
+        DiaryEntry entry = new DiaryEntry(plant.getId(), 789L, DiaryEntry.TYPE_WATER, "old");
+        repository.insertDiaryEntry(entry, null);
+        waitForExecutor();
+
+        entry.setType(DiaryEntry.TYPE_PRUNE);
+        entry.setNote("new");
+        CountDownLatch latch = new CountDownLatch(1);
+        repository.updateDiaryEntry(entry, () -> {
+            assertSame(Looper.getMainLooper(), Looper.myLooper());
+            latch.countDown();
+        });
+        waitForExecutor();
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        List<DiaryEntry> list = database.diaryDao().entriesForPlant(plant.getId());
+        assertEquals(1, list.size());
+        assertEquals(DiaryEntry.TYPE_PRUNE, list.get(0).getType());
+        assertEquals("new", list.get(0).getNote());
+    }
 }

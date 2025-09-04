@@ -73,6 +73,39 @@ public class DiaryFragment extends Fragment {
         adapter = new ArrayAdapter<>(requireContext(),
             android.R.layout.simple_list_item_1, new ArrayList<>());
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener((parent, v1, position, id) -> {
+            DiaryEntry entry = entries.get(position);
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
+            Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
+            EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+
+            ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.diary_entry_types,
+                android.R.layout.simple_spinner_item);
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            typeSpinner.setAdapter(spinnerAdapter);
+
+            String label = labelFromCode(entry.getType());
+            int selection = spinnerAdapter.getPosition(label);
+            if (selection >= 0) {
+                typeSpinner.setSelection(selection);
+            }
+            noteEdit.setText(entry.getNote());
+
+            new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.action_edit_diary_entry)
+                .setView(dialogView)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    String selectedLabel = (String) typeSpinner.getSelectedItem();
+                    entry.setType(codeFromLabel(selectedLabel));
+                    entry.setNote(noteEdit.getText().toString());
+                    repository.updateDiaryEntry(entry, this::loadEntries);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+        });
         listView.setOnItemLongClickListener((parent, v1, position, id) -> {
             DiaryEntry entry = entries.get(position);
             new AlertDialog.Builder(requireContext())

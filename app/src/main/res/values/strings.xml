@@ -30,6 +30,7 @@
     <string name="plant_photo">Plant photo</string>
     <string name="action_view_diary">View Diary</string>
     <string name="action_add_diary_entry">Add Entry</string>
+    <string name="action_edit_diary_entry">Edit Entry</string>
     <string name="action_add_target">Add Target</string>
     <string name="action_edit_target">Edit Target</string>
     <string name="hint_species_key">Species Key</string>
