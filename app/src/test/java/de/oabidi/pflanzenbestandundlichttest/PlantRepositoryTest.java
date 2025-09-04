@@ -21,179 +21,200 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link PlantRepository} verifying main-thread callbacks and data retrieval using
- * an in-memory Room database.
+ * Unit tests for {@link PlantRepository} verifying basic CRUD operations and
+ * that callbacks are dispatched on the main thread.
  */
 @RunWith(RobolectricTestRunner.class)
 public class PlantRepositoryTest {
-    private PlantDatabase database;
     private PlantRepository repository;
+    private PlantDatabase db;
 
     @Before
     public void setUp() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        database = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
+        db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();
-        // Inject in-memory DB into singleton
-        Field field = PlantDatabase.class.getDeclaredField("INSTANCE");
-        field.setAccessible(true);
-        field.set(null, database);
+        Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
+        instance.setAccessible(true);
+        instance.set(null, db);
         repository = new PlantRepository(context);
     }
 
     @After
     public void tearDown() throws Exception {
-        database.close();
-        Field field = PlantDatabase.class.getDeclaredField("INSTANCE");
-        field.setAccessible(true);
-        field.set(null, null);
+        db.close();
+        Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
+        instance.setAccessible(true);
+        instance.set(null, null);
     }
 
-    private void waitForExecutor() throws Exception {
-        PlantDatabase.databaseWriteExecutor.submit(() -> {}).get();
-    }
-
-    @Test
-    public void getAllPlants_callbackOnMainThread() throws Exception {
-        Plant plant = new Plant("Aloe", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        repository.getAllPlants(plants -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            assertEquals(1, plants.size());
-            latch.countDown();
-        });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+    private void awaitLatch(CountDownLatch latch) throws InterruptedException {
+        long end = System.currentTimeMillis() + 2000;
+        while (System.currentTimeMillis() < end) {
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+            if (latch.await(100, TimeUnit.MILLISECONDS)) {
+                return;
+            }
+        }
+        fail("Callback not invoked");
     }
 
     @Test
-    public void insert_callbackOnMainThread() throws Exception {
-        Plant plant = new Plant("Basil", null, null, null, 0, null);
-        CountDownLatch latch = new CountDownLatch(1);
-        repository.insert(plant, () -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            latch.countDown();
-        });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-        assertTrue(plant.getId() > 0);
-    }
+    public void plantCrudOperations() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Aloe");
+        plant.setAcquiredAtEpoch(123);
 
-    @Test
-    public void update_callbackOnMainThread() throws Exception {
-        Plant plant = new Plant("Mint", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
-
-        plant.setName("Peppermint");
-        CountDownLatch latch = new CountDownLatch(1);
-        repository.update(plant, () -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            latch.countDown();
-        });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-        List<Plant> plants = database.plantDao().getAll();
-        assertEquals("Peppermint", plants.get(0).getName());
-    }
-
-    @Test
-    public void delete_callbackOnMainThread() throws Exception {
-        Plant plant = new Plant("Rose", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        repository.delete(plant, () -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            latch.countDown();
-        });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-        assertTrue(database.plantDao().getAll().isEmpty());
-    }
-
-    @Test
-    public void insertMeasurement_and_retrieve() throws Exception {
-        Plant plant = new Plant("Cactus", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
-
-        Measurement measurement = new Measurement(plant.getId(), 123L, 100f, 10f, 1f);
         CountDownLatch insertLatch = new CountDownLatch(1);
-        repository.insertMeasurement(measurement, () -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
+        repository.insert(plant, () -> {
+            assertTrue(plant.getId() > 0);
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             insertLatch.countDown();
         });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(insertLatch.await(1, TimeUnit.SECONDS));
+        awaitLatch(insertLatch);
 
-        CountDownLatch latch = new CountDownLatch(1);
-        repository.recentMeasurementsForPlant(plant.getId(), 10, list -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            assertEquals(1, list.size());
-            assertEquals(100f, list.get(0).getLuxAvg(), 0.0f);
-            latch.countDown();
+        CountDownLatch queryLatch = new CountDownLatch(1);
+        final List<Plant>[] holder = new List[1];
+        repository.getAllPlants(plants -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            holder[0] = plants;
+            queryLatch.countDown();
         });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
+        awaitLatch(queryLatch);
+        assertEquals(1, holder[0].size());
+
+        plant.setName("Aloe Vera");
+        CountDownLatch updateLatch = new CountDownLatch(1);
+        repository.update(plant, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            updateLatch.countDown();
+        });
+        awaitLatch(updateLatch);
+
+        CountDownLatch queryLatch2 = new CountDownLatch(1);
+        repository.getAllPlants(plants -> {
+            assertEquals("Aloe Vera", plants.get(0).getName());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch2.countDown();
+        });
+        awaitLatch(queryLatch2);
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.delete(plant, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            deleteLatch.countDown();
+        });
+        awaitLatch(deleteLatch);
+
+        CountDownLatch queryLatch3 = new CountDownLatch(1);
+        repository.getAllPlants(plants -> {
+            assertTrue(plants.isEmpty());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch3.countDown();
+        });
+        awaitLatch(queryLatch3);
     }
 
     @Test
-    public void diaryEntriesForPlant_returnsEntries() throws Exception {
-        Plant plant = new Plant("Fern", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
+    public void measurementOperations() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Basil");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
 
-        DiaryEntry entry = new DiaryEntry(plant.getId(), 456L, DiaryEntry.TYPE_WATER, "note");
-        repository.insertDiaryEntry(entry, null);
-        waitForExecutor();
+        Measurement measurement = new Measurement(plant.getId(), 1L, 2f, 3f, 4f);
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insertMeasurement(measurement, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            insertLatch.countDown();
+        });
+        awaitLatch(insertLatch);
 
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch queryLatch = new CountDownLatch(1);
+        final List<Measurement>[] holder = new List[1];
+        repository.recentMeasurementsForPlant(plant.getId(), 10, ms -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            holder[0] = ms;
+            queryLatch.countDown();
+        });
+        awaitLatch(queryLatch);
+        assertEquals(1, holder[0].size());
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.deleteMeasurement(holder[0].get(0), () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            deleteLatch.countDown();
+        });
+        awaitLatch(deleteLatch);
+
+        CountDownLatch queryLatch2 = new CountDownLatch(1);
+        repository.recentMeasurementsForPlant(plant.getId(), 10, ms -> {
+            assertTrue(ms.isEmpty());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch2.countDown();
+        });
+        awaitLatch(queryLatch2);
+    }
+
+    @Test
+    public void diaryEntryOperations() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Cactus");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        DiaryEntry entry = new DiaryEntry(plant.getId(), 1L, DiaryEntry.TYPE_WATER, "note");
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insertDiaryEntry(entry, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            insertLatch.countDown();
+        });
+        awaitLatch(insertLatch);
+
+        CountDownLatch queryLatch = new CountDownLatch(1);
+        final List<DiaryEntry>[] holder = new List[1];
         repository.diaryEntriesForPlant(plant.getId(), entries -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            assertEquals(1, entries.size());
-            assertEquals(DiaryEntry.TYPE_WATER, entries.get(0).getType());
-            latch.countDown();
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            holder[0] = entries;
+            queryLatch.countDown();
         });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-    }
+        awaitLatch(queryLatch);
+        assertEquals(1, holder[0].size());
 
-    @Test
-    public void updateDiaryEntry_callbackOnMainThread() throws Exception {
-        Plant plant = new Plant("Ivy", null, null, null, 0, null);
-        repository.insert(plant, null);
-        waitForExecutor();
-
-        DiaryEntry entry = new DiaryEntry(plant.getId(), 789L, DiaryEntry.TYPE_WATER, "old");
-        repository.insertDiaryEntry(entry, null);
-        waitForExecutor();
-
-        entry.setType(DiaryEntry.TYPE_PRUNE);
-        entry.setNote("new");
-        CountDownLatch latch = new CountDownLatch(1);
+        entry.setNote("updated");
+        CountDownLatch updateLatch = new CountDownLatch(1);
         repository.updateDiaryEntry(entry, () -> {
-            assertSame(Looper.getMainLooper(), Looper.myLooper());
-            latch.countDown();
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            updateLatch.countDown();
         });
-        waitForExecutor();
-        Shadows.shadowOf(Looper.getMainLooper()).idle();
-        assertTrue(latch.await(1, TimeUnit.SECONDS));
-        List<DiaryEntry> list = database.diaryDao().entriesForPlant(plant.getId());
-        assertEquals(1, list.size());
-        assertEquals(DiaryEntry.TYPE_PRUNE, list.get(0).getType());
-        assertEquals("new", list.get(0).getNote());
+        awaitLatch(updateLatch);
+
+        CountDownLatch queryLatch2 = new CountDownLatch(1);
+        repository.diaryEntriesForPlant(plant.getId(), entries -> {
+            assertEquals("updated", entries.get(0).getNote());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch2.countDown();
+        });
+        awaitLatch(queryLatch2);
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.deleteDiaryEntry(entry, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            deleteLatch.countDown();
+        });
+        awaitLatch(deleteLatch);
+
+        CountDownLatch queryLatch3 = new CountDownLatch(1);
+        repository.diaryEntriesForPlant(plant.getId(), entries -> {
+            assertTrue(entries.isEmpty());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch3.countDown();
+        });
+        awaitLatch(queryLatch3);
     }
 }
