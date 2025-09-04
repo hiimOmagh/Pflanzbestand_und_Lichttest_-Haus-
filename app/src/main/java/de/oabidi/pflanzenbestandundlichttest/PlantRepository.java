@@ -118,6 +118,22 @@ public class PlantRepository {
     }
 
     /**
+     * Deletes a measurement from the database asynchronously.
+     *
+     * @param measurement the {@link Measurement} to remove
+     * @param callback    optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> deleteMeasurement(Measurement measurement, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            measurementDao.delete(measurement);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Inserts a diary entry into the database asynchronously.
      *
      * @param entry    the {@link DiaryEntry} to add

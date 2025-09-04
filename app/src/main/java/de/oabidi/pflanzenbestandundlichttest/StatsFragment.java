@@ -1,7 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -46,6 +48,25 @@ public class StatsFragment extends Fragment {
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         repository = new PlantRepository(requireContext().getApplicationContext());
+
+        GestureDetector gestureDetector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public void onLongPress(MotionEvent e) {
+                View child = list.findChildViewUnder(e.getX(), e.getY());
+                if (child != null) {
+                    int position = list.getChildAdapterPosition(child);
+                    Measurement m = adapter.getCurrentList().get(position);
+                    repository.deleteMeasurement(m, () -> loadDataForPlant(selectedPlantId));
+                }
+            }
+        });
+        list.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
+                gestureDetector.onTouchEvent(e);
+                return false;
+            }
+        });
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override

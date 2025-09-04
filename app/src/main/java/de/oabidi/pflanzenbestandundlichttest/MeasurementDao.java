@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 
@@ -22,6 +23,14 @@ public interface MeasurementDao {
      */
     @Insert
     long insert(Measurement measurement);
+
+    /**
+     * Removes a measurement from the database.
+     *
+     * @param measurement the entity to remove
+     */
+    @Delete
+    void delete(Measurement measurement);
 
     /**
      * Retrieves the most recent measurements for the given plant.

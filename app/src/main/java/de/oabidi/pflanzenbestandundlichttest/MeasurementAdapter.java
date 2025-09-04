@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 /**
  * RecyclerView adapter displaying recent PPFD and DLI measurements.
  */
@@ -50,14 +53,18 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         String ppfdText = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
         String dliText = holder.itemView.getContext().getString(R.string.format_dli, m.getDli());
         holder.valueView.setText(ppfdText + ", " + dliText);
+        String timeText = DateFormat.getDateTimeInstance().format(new Date(m.getTimeEpoch()));
+        holder.timeView.setText(timeText);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView valueView;
+        final TextView timeView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             valueView = itemView.findViewById(R.id.measurement_value);
+            timeView = itemView.findViewById(R.id.measurement_time);
         }
     }
 }
