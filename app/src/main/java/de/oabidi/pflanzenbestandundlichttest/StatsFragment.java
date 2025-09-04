@@ -1,33 +1,30 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.os.Bundle;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
 
 /**
  * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
  */
 public class StatsFragment extends Fragment {
-    private MeasurementAdapter adapter;
     private PlantRepository repository;
     private TextView diaryCountsView;
     private Spinner plantSelector;
+    private BarChartView chart;
     private List<Plant> plants;
     private long selectedPlantId = -1;
 
@@ -41,32 +38,10 @@ public class StatsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        RecyclerView list = view.findViewById(R.id.stats_list);
-        list.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new MeasurementAdapter();
-        list.setAdapter(adapter);
+        chart = view.findViewById(R.id.stats_chart);
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         repository = new PlantRepository(requireContext().getApplicationContext());
-
-        GestureDetector gestureDetector = new GestureDetector(requireContext(), new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public void onLongPress(MotionEvent e) {
-                View child = list.findChildViewUnder(e.getX(), e.getY());
-                if (child != null) {
-                    int position = list.getChildAdapterPosition(child);
-                    Measurement m = adapter.getCurrentList().get(position);
-                    repository.deleteMeasurement(m, () -> loadDataForPlant(selectedPlantId));
-                }
-            }
-        });
-        list.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
-            @Override
-            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {
-                gestureDetector.onTouchEvent(e);
-                return false;
-            }
-        });
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -101,8 +76,8 @@ public class StatsFragment extends Fragment {
     }
 
     private void loadDataForPlant(long plantId) {
-        repository.recentMeasurementsForPlant(plantId, 10,
-            list -> adapter.submitList(new ArrayList<>(list)));
+        repository.recentMeasurementsForPlant(plantId, 30,
+            list -> chart.setMeasurements(list));
         repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
     }
 

@@ -7,10 +7,11 @@
     <Spinner
         android:id="@+id/stats_plant_selector"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:minHeight="32dp" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/stats_list"
+    <de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView
+        android:id="@+id/stats_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
