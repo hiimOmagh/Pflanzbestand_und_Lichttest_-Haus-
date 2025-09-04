@@ -27,6 +27,7 @@ public class StatsFragment extends Fragment {
     private BarChartView chart;
     private List<Plant> plants;
     private long selectedPlantId = -1;
+    private View viewMeasurementsButton;
 
     @Nullable
     @Override
@@ -41,6 +42,7 @@ public class StatsFragment extends Fragment {
         chart = view.findViewById(R.id.stats_chart);
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
+        viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         repository = new PlantRepository(requireContext().getApplicationContext());
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -55,6 +57,16 @@ public class StatsFragment extends Fragment {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
+            }
+        });
+
+        viewMeasurementsButton.setOnClickListener(v -> {
+            if (selectedPlantId >= 0) {
+                MeasurementListFragment fragment = MeasurementListFragment.newInstance(selectedPlantId);
+                requireActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment, fragment)
+                    .addToBackStack(null)
+                    .commit();
             }
         });
 

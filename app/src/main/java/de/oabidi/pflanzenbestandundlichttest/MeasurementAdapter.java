@@ -17,8 +17,16 @@ import java.util.Date;
  * RecyclerView adapter displaying recent PPFD and DLI measurements.
  */
 public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdapter.ViewHolder> {
-    protected MeasurementAdapter() {
+    /** Listener invoked when a measurement is long-pressed. */
+    public interface OnMeasurementLongClickListener {
+        void onMeasurementLongClick(Measurement measurement);
+    }
+
+    private final OnMeasurementLongClickListener longClickListener;
+
+    public MeasurementAdapter(OnMeasurementLongClickListener longClickListener) {
         super(DIFF_CALLBACK);
+        this.longClickListener = longClickListener;
     }
 
     private static final DiffUtil.ItemCallback<Measurement> DIFF_CALLBACK =
@@ -52,18 +60,27 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         Measurement m = getItem(position);
         String ppfdText = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
         String dliText = holder.itemView.getContext().getString(R.string.format_dli, m.getDli());
-        holder.valueView.setText(ppfdText + ", " + dliText);
+        holder.ppfdView.setText(ppfdText);
+        holder.dliView.setText(dliText);
         String timeText = DateFormat.getDateTimeInstance().format(new Date(m.getTimeEpoch()));
         holder.timeView.setText(timeText);
+        holder.itemView.setOnLongClickListener(v -> {
+            if (longClickListener != null) {
+                longClickListener.onMeasurementLongClick(m);
+            }
+            return true;
+        });
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView valueView;
+        final TextView ppfdView;
+        final TextView dliView;
         final TextView timeView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
-            valueView = itemView.findViewById(R.id.measurement_value);
+            ppfdView = itemView.findViewById(R.id.measurement_ppfd);
+            dliView = itemView.findViewById(R.id.measurement_dli);
             timeView = itemView.findViewById(R.id.measurement_time);
         }
     }

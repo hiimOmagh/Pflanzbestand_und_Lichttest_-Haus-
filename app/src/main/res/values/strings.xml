@@ -34,6 +34,7 @@
     <string name="error_select_plant">Please select a plant</string>
     <string name="plant_photo">Plant photo</string>
     <string name="action_view_diary">View Diary</string>
+    <string name="action_view_measurements">View Measurements</string>
     <string name="action_add_diary_entry">Add Entry</string>
     <string name="action_edit_diary_entry">Edit Entry</string>
     <string name="action_add_target">Add Target</string>
@@ -59,6 +60,8 @@
     </string-array>
     <string name="action_delete_diary_entry">Delete Entry</string>
     <string name="confirm_delete_diary_entry">Delete this entry?</string>
+    <string name="action_delete_measurement">Delete Measurement</string>
+    <string name="confirm_delete_measurement">Delete this measurement?</string>
     <string name="hint_plant_name">Name</string>
     <string name="hint_species">Species</string>
     <string name="hint_location">Location</string>
