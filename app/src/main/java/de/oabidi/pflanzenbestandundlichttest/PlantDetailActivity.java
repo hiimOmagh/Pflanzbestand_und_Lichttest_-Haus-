@@ -23,13 +23,13 @@ import androidx.core.view.WindowInsetsCompat;
  *
  * <p>Expected extras and their defaults:</p>
  * <ul>
- *   <li>{@code name} – plant's display name (defaults to "—")</li>
- *   <li>{@code description} – additional notes (defaults to "—")</li>
- *   <li>{@code species} – botanical species identifier (defaults to "—")</li>
- *   <li>{@code locationHint} – where the plant is located (defaults to "—")</li>
+ *   <li>{@code name} – plant's display name (defaults to a placeholder dash)</li>
+ *   <li>{@code description} – additional notes (defaults to a placeholder dash)</li>
+ *   <li>{@code species} – botanical species identifier (defaults to a placeholder dash)</li>
+ *   <li>{@code locationHint} – where the plant is located (defaults to a placeholder dash)</li>
  *   <li>{@code acquiredAtEpoch} – acquisition time in milliseconds since the Unix epoch;
- *       {@code 0} results in "Unknown date"</li>
- *   <li>{@code photoUri} – string form of the plant photo URI (defaults to "—")</li>
+ *       {@code 0} results in an unknown date</li>
+ *   <li>{@code photoUri} – string form of the plant photo URI (defaults to a placeholder dash)</li>
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity {
@@ -63,7 +63,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         setTextOrFallback(speciesView, species);
         setTextOrFallback(locationHintView, locationHint);
         if (acquiredAtEpoch == 0) {
-            acquiredAtView.setText("Unknown date");
+            acquiredAtView.setText(R.string.unknown_date);
         } else {
             DateFormat dateFormat = DateFormat.getDateTimeInstance();
             String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
@@ -100,6 +100,8 @@ public class PlantDetailActivity extends AppCompatActivity {
      * @param text the text to set, may be {@code null}
      */
     private static void setTextOrFallback(TextView view, String text) {
-        view.setText((text == null || text.isEmpty()) ? "—" : text);
+        view.setText((text == null || text.isEmpty())
+            ? view.getContext().getString(R.string.placeholder_dash)
+            : text);
     }
 }
