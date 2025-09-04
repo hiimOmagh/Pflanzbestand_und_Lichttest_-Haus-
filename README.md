@@ -24,6 +24,15 @@ This will download dependencies and produce the app's APK in `app/build/outputs/
 4. Watch the main screen's live lux, PPFD, and DLI readings to test lighting conditions for your
    plants.
 
+## Species PPFD targets
+
+On first launch the app seeds the database with common species light requirements from
+`app/src/main/assets/targets.json`. Each entry defines a `speciesKey` along with its acceptable
+`ppfdMin` and `ppfdMax` values. To add or adjust species:
+
+1. Edit `app/src/main/assets/targets.json` and add another object to the list.
+2. Reinstall the app or clear its data so the database is recreated and picks up the changes.
+
 ## Background thread usage
 
 `PlantRepository` performs blocking database operations. Use an

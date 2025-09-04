@@ -1,0 +1,6 @@
+[
+    { "speciesKey": "basil", "ppfdMin": 150, "ppfdMax": 300 },
+    { "speciesKey": "lettuce", "ppfdMin": 100, "ppfdMax": 200 },
+    { "speciesKey": "tomato", "ppfdMin": 250, "ppfdMax": 400 },
+    { "speciesKey": "cucumber", "ppfdMin": 200, "ppfdMax": 350 }
+]
