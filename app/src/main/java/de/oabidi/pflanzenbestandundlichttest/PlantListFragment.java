@@ -9,9 +9,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
 /**
  * Fragment displaying the list of plants.
  */
@@ -26,6 +30,19 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private PlantListPresenter presenter;
     private PlantAdapter adapter;
     private List<Plant> plants = new ArrayList<>();
+    private ExportManager exportManager;
+
+    private final ActivityResultLauncher<String> exportLauncher =
+        registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
+            if (uri != null) {
+                exportManager.export(uri, success -> {
+                    int msg = success ? R.string.export_success : R.string.export_failure;
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
+            }
+        });
 
     @Nullable
     @Override
@@ -43,6 +60,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         recyclerView.setAdapter(adapter);
         presenter = new PlantListPresenter(this, requireContext().getApplicationContext());
         presenter.refreshPlants();
+        exportManager = new ExportManager(requireContext().getApplicationContext());
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
             (requestKey, bundle) -> {
@@ -107,7 +125,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             return true;
         } else if (itemId == R.id.action_species_targets) {
             navigateToSpeciesTargets();
-            return true;}
+            return true;
+        } else if (itemId == R.id.action_export_data) {
+            exportLauncher.launch("plant_data.csv");
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 

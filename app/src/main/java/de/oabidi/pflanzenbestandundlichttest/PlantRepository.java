@@ -227,6 +227,28 @@ public class PlantRepository {
     }
 
     /**
+     * Returns all measurements stored in the database.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @return list of all measurements
+     */
+    public List<Measurement> getAllMeasurementsSync() {
+        return measurementDao.getAll();
+    }
+
+    /**
+     * Returns all diary entries stored in the database.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @return list of all diary entries
+     */
+    public List<DiaryEntry> getAllDiaryEntriesSync() {
+        return diaryDao.getAll();
+    }
+
+    /**
      * Retrieves recent measurements for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant

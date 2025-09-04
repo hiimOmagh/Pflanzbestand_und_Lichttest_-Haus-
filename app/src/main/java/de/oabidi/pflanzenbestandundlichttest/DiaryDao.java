@@ -46,4 +46,12 @@ public interface DiaryDao {
      */
     @Query("SELECT id, plantId, timeEpoch, type, note, photoUri FROM DiaryEntry WHERE plantId = :plantId ORDER BY timeEpoch DESC")
     List<DiaryEntry> entriesForPlant(long plantId);
+
+    /**
+     * Retrieves all diary entries stored in the database.
+     *
+     * @return list of all diary entries
+     */
+    @Query("SELECT id, plantId, timeEpoch, type, note, photoUri FROM DiaryEntry")
+    List<DiaryEntry> getAll();
 }

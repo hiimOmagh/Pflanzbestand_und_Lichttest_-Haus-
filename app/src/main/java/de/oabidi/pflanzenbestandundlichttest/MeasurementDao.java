@@ -41,4 +41,12 @@ public interface MeasurementDao {
      */
     @Query("SELECT * FROM Measurement WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT :limit")
     List<Measurement> recentForPlant(long plantId, int limit);
+
+    /**
+     * Retrieves all stored measurements.
+     *
+     * @return list of all measurements in the database
+     */
+    @Query("SELECT * FROM Measurement")
+    List<Measurement> getAll();
 }

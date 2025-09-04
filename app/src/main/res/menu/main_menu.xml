@@ -17,4 +17,8 @@
         android:id="@+id/action_species_targets"
         android:title="@string/menu_species_targets"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_export_data"
+        android:title="@string/menu_export_data"
+        app:showAsAction="never" />
 </menu>

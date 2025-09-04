@@ -25,6 +25,7 @@
     <string name="menu_update_first_plant">Update First Plant</string>
     <string name="menu_delete_first_plant">Delete First Plant</string>
     <string name="menu_species_targets">Species Targets</string>
+    <string name="menu_export_data">Export Data</string>
     <string name="hint_positive_number">Positive number</string>
     <string name="error_positive_number">Value must be greater than 0</string>
     <string name="measurement_save">Save</string>
@@ -68,4 +69,6 @@
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
     <string name="action_add_photo">Add Photo</string>
+    <string name="export_success">Export successful</string>
+    <string name="export_failure">Export failed</string>
 </resources>
