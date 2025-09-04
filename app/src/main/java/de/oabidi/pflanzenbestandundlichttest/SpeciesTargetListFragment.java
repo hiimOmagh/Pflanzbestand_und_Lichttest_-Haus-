@@ -4,7 +4,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+
+import android.text.Editable;
+import android.text.TextWatcher;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -64,18 +68,81 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             maxEdit.setText(String.valueOf(target.getPpfdMax()));
         }
 
-        new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
             .setTitle(target == null ? R.string.action_add_target : R.string.action_edit_target)
             .setView(dialogView)
-            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                String key = keyEdit.getText().toString();
-                float min = parseFloat(minEdit.getText().toString());
-                float max = parseFloat(maxEdit.getText().toString());
-                SpeciesTarget newTarget = new SpeciesTarget(key, min, max);
-                repository.insertSpeciesTarget(newTarget, this::loadTargets);
-            })
+            .setPositiveButton(android.R.string.ok, null)
             .setNegativeButton(android.R.string.cancel, null)
-            .show();
+            .create();
+
+        dialog.setOnShowListener(d -> {
+            Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            TextWatcher watcher = new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    positive.setEnabled(isInputValid(
+                        keyEdit.getText().toString(),
+                        parseFloat(minEdit.getText().toString()),
+                        parseFloat(maxEdit.getText().toString())));
+                }
+            };
+
+            keyEdit.addTextChangedListener(watcher);
+            minEdit.addTextChangedListener(watcher);
+            maxEdit.addTextChangedListener(watcher);
+
+            positive.setOnClickListener(v -> {
+                if (validateInputs(keyEdit, minEdit, maxEdit)) {
+                    String key = keyEdit.getText().toString();
+                    float min = parseFloat(minEdit.getText().toString());
+                    float max = parseFloat(maxEdit.getText().toString());
+                    SpeciesTarget newTarget = new SpeciesTarget(key, min, max);
+                    repository.insertSpeciesTarget(newTarget, this::loadTargets);
+                    dialog.dismiss();
+                }
+            });
+
+            // initialize button state
+            positive.setEnabled(isInputValid(
+                keyEdit.getText().toString(),
+                parseFloat(minEdit.getText().toString()),
+                parseFloat(maxEdit.getText().toString())));
+        });
+
+        dialog.show();
+    }
+
+    static boolean isInputValid(String key, float min, float max) {
+        return !key.trim().isEmpty() && min < max;
+    }
+
+    private boolean validateInputs(EditText keyEdit, EditText minEdit, EditText maxEdit) {
+        String key = keyEdit.getText().toString();
+        float min = parseFloat(minEdit.getText().toString());
+        float max = parseFloat(maxEdit.getText().toString());
+        boolean valid = true;
+        if (key.trim().isEmpty()) {
+            keyEdit.setError(getString(R.string.error_required));
+            valid = false;
+        } else {
+            keyEdit.setError(null);
+        }
+        if (min >= max) {
+            String error = getString(R.string.error_ppfd_range);
+            minEdit.setError(error);
+            maxEdit.setError(error);
+            valid = false;
+        } else {
+            minEdit.setError(null);
+            maxEdit.setError(null);
+        }
+        return valid;
     }
 
     private float parseFloat(String value) {
