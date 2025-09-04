@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -163,7 +164,11 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
-                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli);
+                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli,
+                    () -> requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show()));
+            } else {
+                Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
             }
         });
 

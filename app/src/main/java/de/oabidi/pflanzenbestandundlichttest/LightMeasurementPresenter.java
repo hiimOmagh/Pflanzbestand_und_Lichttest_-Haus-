@@ -72,12 +72,12 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
     }
 
-    public void saveMeasurement(long plantId, float lux, float ppfd, float dli) {
+    public void saveMeasurement(long plantId, float lux, float ppfd, float dli, Runnable callback) {
         if (plantId < 0) {
             return;
         }
         Measurement measurement = new Measurement(plantId, System.currentTimeMillis(), lux, ppfd, dli);
-        plantRepository.insertMeasurement(measurement, null);
+        plantRepository.insertMeasurement(measurement, callback);
     }
 
     public void refreshPlants() {
