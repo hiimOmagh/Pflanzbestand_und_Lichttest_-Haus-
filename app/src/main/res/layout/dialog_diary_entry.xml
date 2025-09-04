@@ -15,4 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/diary_hint_note" />
+
+    <Button
+        android:id="@+id/diary_entry_add_photo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/action_add_photo" />
 </LinearLayout>

@@ -8,6 +8,8 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -28,7 +30,7 @@ import java.util.concurrent.Executors;
  * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
  * used to run operations asynchronously.</p>
  */
-@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class}, version = 2)
+@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class}, version = 3)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
@@ -36,6 +38,13 @@ public abstract class PlantDatabase extends RoomDatabase {
     private static final int NUMBER_OF_THREADS = 4;
     public static final ExecutorService databaseWriteExecutor =
         Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE DiaryEntry ADD COLUMN photoUri TEXT");
+        }
+    };
 
     public abstract PlantDao plantDao();
 
@@ -52,10 +61,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        // During development we simply reset the database whenever the
-                        // schema version changes. If data preservation becomes
-                        // important, replace this with explicit Migration objects for
-                        // each version step.
+                        .addMigrations(MIGRATION_2_3)
                         .fallbackToDestructiveMigration()
                         .addCallback(new RoomDatabase.Callback() {
                             @Override

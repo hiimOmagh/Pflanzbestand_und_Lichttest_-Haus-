@@ -1,18 +1,25 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -22,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 /**
  * Fragment showing diary entries.
@@ -35,8 +43,10 @@ public class DiaryFragment extends Fragment {
 
     private long plantId = -1;
     private PlantRepository repository;
-    private ArrayAdapter<String> adapter;
+    private ArrayAdapter<DiaryEntry> adapter;
     private final List<DiaryEntry> entries = new ArrayList<>();
+    private ActivityResultLauncher<String> photoPickerLauncher;
+    private Consumer<Uri> photoPickedCallback;
 
     /**
      * Creates a new instance of the fragment for the given plant.
@@ -57,6 +67,11 @@ public class DiaryFragment extends Fragment {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
         repository = new PlantRepository(requireContext().getApplicationContext());
+        photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (photoPickedCallback != null && uri != null) {
+                photoPickedCallback.accept(uri);
+            }
+        });
     }
 
     @Nullable
@@ -70,8 +85,38 @@ public class DiaryFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ListView listView = view.findViewById(R.id.diary_list);
-        adapter = new ArrayAdapter<>(requireContext(),
-            android.R.layout.simple_list_item_1, new ArrayList<>());
+        adapter = new ArrayAdapter<DiaryEntry>(requireContext(), R.layout.list_item_diary_entry, entries) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_diary_entry, parent, false);
+                }
+                DiaryEntry entry = getItem(position);
+                TextView text = convertView.findViewById(R.id.diary_entry_text);
+                ImageView photo = convertView.findViewById(R.id.diary_entry_photo);
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                String note = entry.getNote() != null ? entry.getNote() : "";
+                String item = df.format(new Date(entry.getTimeEpoch())) + " – " + labelFromCode(entry.getType());
+                if (!note.isEmpty()) {
+                    item += " – " + note;
+                }
+                text.setText(item);
+                if (entry.getPhotoUri() != null) {
+                    photo.setVisibility(View.VISIBLE);
+                    photo.setImageURI(Uri.parse(entry.getPhotoUri()));
+                    photo.setOnClickListener(v -> {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setDataAndType(Uri.parse(entry.getPhotoUri()), "image/*");
+                        startActivity(intent);
+                    });
+                } else {
+                    photo.setVisibility(View.GONE);
+                    photo.setOnClickListener(null);
+                }
+                return convertView;
+            }
+        };
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, v1, position, id) -> {
             DiaryEntry entry = entries.get(position);
@@ -79,6 +124,12 @@ public class DiaryFragment extends Fragment {
             View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
             Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
             EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+            Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
+            final String[] photoUri = new String[]{entry.getPhotoUri()};
+            photoButton.setOnClickListener(v2 -> {
+                photoPickedCallback = uri -> photoUri[0] = uri.toString();
+                photoPickerLauncher.launch("image/*");
+            });
 
             ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
@@ -101,6 +152,7 @@ public class DiaryFragment extends Fragment {
                     String selectedLabel = (String) typeSpinner.getSelectedItem();
                     entry.setType(codeFromLabel(selectedLabel));
                     entry.setNote(noteEdit.getText().toString());
+                    entry.setPhotoUri(photoUri[0]);
                     repository.updateDiaryEntry(entry, this::loadEntries);
                 })
                 .setNegativeButton(android.R.string.cancel, null)
@@ -140,6 +192,12 @@ public class DiaryFragment extends Fragment {
         View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
         Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
         EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+        Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
+        final String[] photoUri = new String[1];
+        photoButton.setOnClickListener(v -> {
+            photoPickedCallback = uri -> photoUri[0] = uri.toString();
+            photoPickerLauncher.launch("image/*");
+        });
 
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -156,6 +214,7 @@ public class DiaryFragment extends Fragment {
                 String type = codeFromLabel(label);
                 String note = noteEdit.getText().toString();
                 DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
+                entry.setPhotoUri(photoUri[0]);
                 repository.insertDiaryEntry(entry, this::loadEntries);
             })
             .setNegativeButton(android.R.string.cancel, null)
@@ -169,18 +228,7 @@ public class DiaryFragment extends Fragment {
         repository.diaryEntriesForPlant(plantId, result -> {
             entries.clear();
             entries.addAll(result);
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            List<String> items = new ArrayList<>();
-            for (DiaryEntry e : entries) {
-                String note = e.getNote() != null ? e.getNote() : "";
-                String item = df.format(new Date(e.getTimeEpoch())) + " – " + labelFromCode(e.getType());
-                if (!note.isEmpty()) {
-                    item += " – " + note;
-                }
-                items.add(item);
-            }
-            adapter.clear();
-            adapter.addAll(items);
+            adapter.notifyDataSetChanged();
         });
     }
 

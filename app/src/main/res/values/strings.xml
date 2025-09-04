@@ -67,4 +67,5 @@
     <string name="label_known_ppfd">Known PPFD:</string>
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
+    <string name="action_add_photo">Add Photo</string>
 </resources>

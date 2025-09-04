@@ -30,6 +30,7 @@ public class DiaryEntry {
     @NonNull
     private String type;
     private String note;
+    private String photoUri;
 
     /** Default constructor required by Room. */
     public DiaryEntry() {
@@ -88,5 +89,13 @@ public class DiaryEntry {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getPhotoUri() {
+        return photoUri;
+    }
+
+    public void setPhotoUri(String photoUri) {
+        this.photoUri = photoUri;
     }
 }
