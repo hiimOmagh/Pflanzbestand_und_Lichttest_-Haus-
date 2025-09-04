@@ -1,6 +1,5 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,10 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,15 +16,11 @@ import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AlertDialog;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -43,8 +35,7 @@ public class DiaryFragment extends Fragment {
 
     private long plantId = -1;
     private PlantRepository repository;
-    private ArrayAdapter<DiaryEntry> adapter;
-    private final List<DiaryEntry> entries = new ArrayList<>();
+    private DiaryEntryAdapter adapter;
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
 
@@ -84,42 +75,9 @@ public class DiaryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ListView listView = view.findViewById(R.id.diary_list);
-        adapter = new ArrayAdapter<DiaryEntry>(requireContext(), R.layout.list_item_diary_entry, entries) {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item_diary_entry, parent, false);
-                }
-                DiaryEntry entry = getItem(position);
-                TextView text = convertView.findViewById(R.id.diary_entry_text);
-                ImageView photo = convertView.findViewById(R.id.diary_entry_photo);
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                String note = entry.getNote() != null ? entry.getNote() : "";
-                String item = df.format(new Date(entry.getTimeEpoch())) + " – " + labelFromCode(entry.getType());
-                if (!note.isEmpty()) {
-                    item += " – " + note;
-                }
-                text.setText(item);
-                if (entry.getPhotoUri() != null) {
-                    photo.setVisibility(View.VISIBLE);
-                    photo.setImageURI(Uri.parse(entry.getPhotoUri()));
-                    photo.setOnClickListener(v -> {
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setDataAndType(Uri.parse(entry.getPhotoUri()), "image/*");
-                        startActivity(intent);
-                    });
-                } else {
-                    photo.setVisibility(View.GONE);
-                    photo.setOnClickListener(null);
-                }
-                return convertView;
-            }
-        };
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener((parent, v1, position, id) -> {
-            DiaryEntry entry = entries.get(position);
+        RecyclerView listView = view.findViewById(R.id.diary_list);
+        listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new DiaryEntryAdapter(entry -> {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
             Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
@@ -157,9 +115,7 @@ public class DiaryFragment extends Fragment {
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
-        });
-        listView.setOnItemLongClickListener((parent, v1, position, id) -> {
-            DiaryEntry entry = entries.get(position);
+        }, entry -> {
             new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.action_delete_diary_entry)
                 .setMessage(R.string.confirm_delete_diary_entry)
@@ -167,8 +123,8 @@ public class DiaryFragment extends Fragment {
                     repository.deleteDiaryEntry(entry, this::loadEntries))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
-            return true;
         });
+        listView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_entry);
 
@@ -236,11 +192,7 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.diaryEntriesForPlant(plantId, result -> {
-            entries.clear();
-            entries.addAll(result);
-            adapter.notifyDataSetChanged();
-        });
+        repository.diaryEntriesForPlant(plantId, result -> adapter.submitList(result));
     }
 
     private String codeFromLabel(String label) {
