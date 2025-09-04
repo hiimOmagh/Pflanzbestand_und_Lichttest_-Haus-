@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -172,11 +175,18 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
 
         presenter.refreshPlants();
+        setHasOptionsMenu(true);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        float k = preferences.getFloat(KEY_CALIBRATION, calibrationFactor);
+        if (k != calibrationFactor) {
+            calibrationFactor = k;
+            presenter.setCalibrationFactor(calibrationFactor);
+            kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
+        }
         presenter.start();
     }
 
@@ -184,6 +194,28 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onPause() {
         super.onPause();
         presenter.stop();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.light_measurement_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_calibrate) {
+            navigateToCalibration();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void navigateToCalibration() {
+        CalibrationFragment fragment = new CalibrationFragment();
+        getParentFragmentManager().beginTransaction()
+            .replace(R.id.nav_host_fragment, fragment)
+            .addToBackStack(null)
+            .commit();
     }
 
     @Override

@@ -63,4 +63,8 @@
     <string name="action_pick_photo">Pick Photo</string>
     <string name="action_save_plant">Save</string>
     <string name="error_required">Required</string>
+    <string name="calibration_instructions">Place the sensor under known lighting, enter the PPFD, then confirm.</string>
+    <string name="label_known_ppfd">Known PPFD:</string>
+    <string name="action_calibrate">Confirm</string>
+    <string name="menu_calibrate">Calibrate</string>
 </resources>
