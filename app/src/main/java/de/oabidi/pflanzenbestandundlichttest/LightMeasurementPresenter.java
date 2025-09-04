@@ -15,19 +15,24 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     }
 
     private final View view;
-    private final LightSensorHelper lightSensorHelper;
+    private final Context context;
+    private LightSensorHelper lightSensorHelper;
     private final PlantRepository plantRepository;
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
     private float calibrationFactor;
     private float lightHours;
+    private int sampleSize;
+    private boolean sensing = false;
 
-    public LightMeasurementPresenter(View view, Context context, float calibrationFactor, float lightHours) {
+    public LightMeasurementPresenter(View view, Context context, float calibrationFactor, float lightHours, int sampleSize) {
         this.view = view;
+        this.context = context.getApplicationContext();
         this.calibrationFactor = calibrationFactor;
         this.lightHours = lightHours;
-        lightSensorHelper = new LightSensorHelper(context, this, 10);
-        plantRepository = new PlantRepository(context);
+        this.sampleSize = sampleSize;
+        lightSensorHelper = new LightSensorHelper(this.context, this, sampleSize);
+        plantRepository = new PlantRepository(this.context);
     }
 
     public boolean hasLightSensor() {
@@ -36,11 +41,13 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     public void start() {
         if (hasLightSensor()) {
+            sensing = true;
             lightSensorHelper.start();
         }
     }
 
     public void stop() {
+        sensing = false;
         lightSensorHelper.stop();
     }
 
@@ -50,6 +57,19 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     public void setLightHours(float lightHours) {
         this.lightHours = lightHours;
+    }
+
+    public void setSampleSize(int sampleSize) {
+        if (sampleSize < 1 || sampleSize == this.sampleSize) {
+            return;
+        }
+        this.sampleSize = sampleSize;
+        boolean wasSensing = sensing;
+        lightSensorHelper.stop();
+        lightSensorHelper = new LightSensorHelper(context, this, sampleSize);
+        if (wasSensing && hasLightSensor()) {
+            lightSensorHelper.start();
+        }
     }
 
     public void saveMeasurement(long plantId, float lux, float ppfd, float dli) {

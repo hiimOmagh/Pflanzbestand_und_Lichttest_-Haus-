@@ -3,6 +3,7 @@
     <string name="no_light_sensor">No light sensor detected</string>
     <string name="label_calibration">Calibration k:</string>
     <string name="label_light_hours">Light hours:</string>
+    <string name="label_sample_size">Sample size:</string>
     <string name="lux_placeholder">Avg lux: --</string>
     <string name="ppfd_placeholder">PPFD: --</string>
     <string name="dli_placeholder">DLI: --</string>

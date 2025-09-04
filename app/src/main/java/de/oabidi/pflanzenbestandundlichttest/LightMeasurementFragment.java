@@ -28,6 +28,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private static final String PREFS_NAME = "settings";
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_LIGHT_HOURS = "light_hours";
+    private static final String KEY_SAMPLE_SIZE = "sample_size";
 
     private TextView luxRawView;
     private TextView luxView;
@@ -35,6 +36,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView dliView;
     private EditText kInput;
     private EditText hoursInput;
+    private EditText sampleSizeInput;
     private Spinner plantSelector;
     private Button saveMeasurementButton;
     private TextView locationCheckView;
@@ -43,6 +45,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private float lastLux;
     private float lastPpfd;
     private float lastDli;
+    private int sampleSize;
     private long selectedPlantId = -1;
     private List<Plant> plants;
     private SharedPreferences preferences;
@@ -64,6 +67,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         dliView = view.findViewById(R.id.dli_value);
         kInput = view.findViewById(R.id.k_input);
         hoursInput = view.findViewById(R.id.light_hours_input);
+        sampleSizeInput = view.findViewById(R.id.sample_size_input);
         plantSelector = view.findViewById(R.id.plant_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
@@ -72,11 +76,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
         lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f);
+        sampleSize = preferences.getInt(KEY_SAMPLE_SIZE, 10);
 
-        presenter = new LightMeasurementPresenter(this, context, calibrationFactor, lightHours);
+        presenter = new LightMeasurementPresenter(this, context, calibrationFactor, lightHours, sampleSize);
 
         kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
         hoursInput.setText(getString(R.string.format_light_hours, lightHours));
+        sampleSizeInput.setText(String.valueOf(sampleSize));
 
         kInput.addTextChangedListener(new SimpleTextWatcher() {
             @Override
@@ -112,6 +118,27 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
                     }
                 } catch (NumberFormatException e) {
                     hoursInput.setError(getString(R.string.error_positive_number));
+                }
+            }
+        });
+
+        sampleSizeInput.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                try {
+                    int value = Integer.parseInt(s.toString());
+                    if (value > 0) {
+                        if (value != sampleSize) {
+                            sampleSize = value;
+                            preferences.edit().putInt(KEY_SAMPLE_SIZE, sampleSize).apply();
+                            presenter.setSampleSize(sampleSize);
+                        }
+                        sampleSizeInput.setError(null);
+                    } else {
+                        sampleSizeInput.setError(getString(R.string.error_positive_number));
+                    }
+                } catch (NumberFormatException e) {
+                    sampleSizeInput.setError(getString(R.string.error_positive_number));
                 }
             }
         });
