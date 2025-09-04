@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.SearchView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -121,6 +122,21 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.main_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterPlants(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterPlants(newText);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -150,6 +166,22 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void filterPlants(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            adapter.submitList(new ArrayList<>(plants));
+            return;
+        }
+        String lower = query.toLowerCase();
+        List<Plant> filtered = new ArrayList<>();
+        for (Plant plant : plants) {
+            String name = plant.getName();
+            if (name != null && name.toLowerCase().contains(lower)) {
+                filtered.add(plant);
+            }
+        }
+        adapter.submitList(filtered);
     }
 
     private void navigateToEdit(@Nullable Plant plant) {
