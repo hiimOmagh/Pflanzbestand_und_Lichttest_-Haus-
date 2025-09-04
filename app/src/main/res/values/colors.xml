@@ -2,4 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Light theme colors -->
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorOnPrimary">#FFFFFFFF</color>
+    <color name="colorSecondary">#8BC34A</color>
+    <color name="colorOnSecondary">#FF000000</color>
 </resources>
