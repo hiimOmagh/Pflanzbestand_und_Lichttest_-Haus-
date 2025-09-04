@@ -28,23 +28,33 @@ public class ReminderReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (ACTION_MARK_DONE.equals(action)) {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
+            long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
+            PlantDatabase.databaseWriteExecutor.execute(() ->
+                PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
             return;
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
             ReminderScheduler.scheduleReminder(context, 1, message);
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
+            long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
+            PlantDatabase.databaseWriteExecutor.execute(() ->
+                PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
             return;
         }
 
         String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
+        long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
+        PlantDatabase.databaseWriteExecutor.execute(() ->
+            PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
         createChannel(context);
         int notificationId = (int) System.currentTimeMillis();
 
         Intent doneIntent = new Intent(context, ReminderReceiver.class);
         doneIntent.setAction(ACTION_MARK_DONE);
         doneIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+        doneIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
         PendingIntent donePending = PendingIntent.getBroadcast(
             context,
             notificationId,
@@ -56,6 +66,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         snoozeIntent.setAction(ACTION_SNOOZE);
         snoozeIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
         snoozeIntent.putExtra(ReminderScheduler.EXTRA_MESSAGE, message);
+        snoozeIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
         PendingIntent snoozePending = PendingIntent.getBroadcast(
             context,
             notificationId + 1,

@@ -16,6 +16,9 @@ public class ReminderScheduler {
     /** Extra containing the message to display in the notification. */
     public static final String EXTRA_MESSAGE = "extra_message";
 
+    /** Extra containing the reminder database identifier. */
+    public static final String EXTRA_ID = "extra_id";
+
     private ReminderScheduler() {
         // no instances
     }
@@ -29,13 +32,23 @@ public class ReminderScheduler {
      */
     public static void scheduleReminder(Context context, int days, String message) {
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            PlantDatabase db = PlantDatabase.getDatabase(context);
+            Reminder reminder = new Reminder(triggerAt, message);
+            long id = db.reminderDao().insert(reminder);
+            scheduleReminderAt(context, triggerAt, message, id);
+        });
+    }
+
+    static void scheduleReminderAt(Context context, long triggerAt, String message, long id) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, ReminderReceiver.class);
         intent.setAction(ACTION_SHOW_REMINDER);
         intent.putExtra(EXTRA_MESSAGE, message);
+        intent.putExtra(EXTRA_ID, id);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
             context,
-            (int) System.currentTimeMillis(),
+            (int) id,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );

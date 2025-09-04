@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
  * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
  * used to run operations asynchronously.</p>
  */
-@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class}, version = 3)
+@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class, Reminder.class}, version = 4)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
@@ -46,6 +46,13 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS Reminder (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, triggerAt INTEGER NOT NULL, message TEXT NOT NULL)");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     public abstract MeasurementDao measurementDao();
@@ -54,6 +61,8 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract SpeciesTargetDao speciesTargetDao();
 
+    public abstract ReminderDao reminderDao();
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -61,7 +70,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        .addMigrations(MIGRATION_2_3)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                         .fallbackToDestructiveMigration()
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
