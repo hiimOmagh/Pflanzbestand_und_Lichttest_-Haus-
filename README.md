@@ -30,6 +30,8 @@ Instrumentation tests require a connected Android device or emulator. They can b
 ./gradlew connectedAndroidTest
 ```
 
+This command runs the full Android test suite including the new database export/import and species target UI scenarios.
+
 ## Usage
 
 1. Install the generated APK on an Android device or emulator that has a light sensor.
