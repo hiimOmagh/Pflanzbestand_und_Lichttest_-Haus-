@@ -110,4 +110,7 @@
     <string name="measurement_deleted">Messung gelöscht</string>
     <string name="pref_calibration_factor">Kalibrierungsfaktor</string>
     <string name="pref_sample_size">Stichprobengröße</string>
+    <string name="pref_light_hours">Lichtstunden</string>
+    <string name="pref_light_hours_summary">Stunden Licht pro Tag</string>
+    <string name="hint_number">Zahl</string>
 </resources>

@@ -24,7 +24,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private int sampleSize;
     private boolean sensing = false;
 
-    private static final float DEFAULT_LIGHT_HOURS = 24f;
+    private float lightHours = 12f;
 
     public LightMeasurementPresenter(View view, Context context, float calibrationFactor, int sampleSize) {
         this.view = view;
@@ -68,6 +68,10 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
     }
 
+    public void setLightHours(float lightHours) {
+        this.lightHours = lightHours;
+    }
+
     public void saveMeasurement(long plantId, float lux, float ppfd, float dli, Runnable callback) {
         if (plantId < 0) {
             return;
@@ -100,7 +104,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     @Override
     public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
-        float dli = LightMath.dliFromPpfd(ppfd, DEFAULT_LIGHT_HOURS);
+        float dli = LightMath.dliFromPpfd(ppfd, lightHours);
         String status = "Unknown";
         if (speciesTarget != null) {
             status = LightMath.rangeCheck(ppfd, speciesTarget.getPpfdMin(), speciesTarget.getPpfdMax());

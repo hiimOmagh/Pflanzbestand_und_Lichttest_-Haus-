@@ -72,7 +72,7 @@ public class LightMeasurementInstrumentedTest {
 
             // Expected formatted values
             float ppfd = 500f * 0.0185f;
-            float dli = ppfd * 24f * 0.0036f;
+            float dli = ppfd * 12f * 0.0036f;
             String expectedPpfd = context.getString(R.string.format_ppfd, ppfd);
             String expectedDli = context.getString(R.string.format_dli, dli);
 

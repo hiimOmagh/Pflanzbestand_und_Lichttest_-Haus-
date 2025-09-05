@@ -29,6 +29,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private static final String PREFS_NAME = "settings";
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_SAMPLE_SIZE = "sample_size";
+    private static final String KEY_LIGHT_HOURS = "light_hours";
 
     private TextView luxRawView;
     private TextView luxView;
@@ -42,6 +43,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private float lastPpfd;
     private float lastDli;
     private int sampleSize;
+    private float lightHours = 12f;
     private long selectedPlantId = -1;
     private List<Plant> plants;
     private SharedPreferences preferences;
@@ -113,6 +115,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         super.onResume();
         float k = preferences.getFloat(KEY_CALIBRATION, calibrationFactor);
         int size = preferences.getInt(KEY_SAMPLE_SIZE, sampleSize);
+        float hours = preferences.getFloat(KEY_LIGHT_HOURS, lightHours);
         if (k != calibrationFactor) {
             calibrationFactor = k;
             presenter.setCalibrationFactor(calibrationFactor);
@@ -121,6 +124,10 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             sampleSize = size;
             presenter.setSampleSize(sampleSize);
         }
+        if (hours != lightHours) {
+            lightHours = hours;
+        }
+        presenter.setLightHours(lightHours);
         presenter.start();
     }
 

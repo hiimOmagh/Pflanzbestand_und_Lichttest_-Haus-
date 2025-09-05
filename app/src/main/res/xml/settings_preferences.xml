@@ -16,4 +16,13 @@
         app:useSimpleSummaryProvider="true"
         android:inputType="number" />
 
+    <EditTextPreference
+        app:key="light_hours"
+        app:title="@string/pref_light_hours"
+        app:summary="@string/pref_light_hours_summary"
+        app:defaultValue="12"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="number"
+        android:hint="@string/hint_number" />
+
 </PreferenceScreen>

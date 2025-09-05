@@ -109,4 +109,7 @@
     <string name="measurement_deleted">Measurement deleted</string>
     <string name="pref_calibration_factor">Calibration factor</string>
     <string name="pref_sample_size">Sample size</string>
+    <string name="pref_light_hours">Light hours</string>
+    <string name="pref_light_hours_summary">Hours of light per day</string>
+    <string name="hint_number">Number</string>
 </resources>
