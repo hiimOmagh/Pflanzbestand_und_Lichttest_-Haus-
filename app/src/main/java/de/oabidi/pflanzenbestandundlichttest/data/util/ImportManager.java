@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -281,20 +282,21 @@ public class ImportManager {
     }
 
     private Uri restoreImage(File exportedImage) throws IOException {
-        File destFile = new File(context.getCacheDir(), "imported_" + exportedImage.getName());
-        Uri destUri = Uri.fromFile(destFile);
-        try (InputStream in = context.getContentResolver().openInputStream(Uri.fromFile(exportedImage));
-             OutputStream out = context.getContentResolver().openOutputStream(destUri)) {
-            if (in == null || out == null) {
-                throw new IOException("Unable to open streams for image restoration");
-            }
+        File imagesDir = new File(context.getFilesDir(), "imported_images");
+        if (!imagesDir.exists() && !imagesDir.mkdirs()) {
+            throw new IOException("Unable to create destination directory");
+        }
+        File destFile = new File(imagesDir,
+            "imported_" + System.currentTimeMillis() + "_" + exportedImage.getName());
+        try (InputStream in = new FileInputStream(exportedImage);
+             OutputStream out = new FileOutputStream(destFile)) {
             byte[] buffer = new byte[8192];
             int len;
             while ((len = in.read(buffer)) != -1) {
                 out.write(buffer, 0, len);
             }
         }
-        return destUri;
+        return Uri.fromFile(destFile);
     }
 
     private void deleteRecursive(File file) {

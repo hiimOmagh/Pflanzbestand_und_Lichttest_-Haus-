@@ -165,4 +165,90 @@ public class DataImportExportInstrumentedTest {
         assertEquals("ExportReminder", scheduledIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
         assertEquals(restoredReminder.getId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_ID, -1));
     }
+
+    @Test
+    public void importedPhotosSurviveCacheClear() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        PlantRepository repository = new PlantRepository(context);
+
+        byte[] plantPhotoBytes = new byte[]{9, 8, 7};
+        File plantPhotoFile = new File(context.getCacheDir(), "persist_plant.jpg");
+        try (FileOutputStream fos = new FileOutputStream(plantPhotoFile)) {
+            fos.write(plantPhotoBytes);
+        }
+        Uri plantPhotoUri = Uri.fromFile(plantPhotoFile);
+
+        byte[] diaryPhotoBytes = new byte[]{6, 5, 4};
+        File diaryPhotoFile = new File(context.getCacheDir(), "persist_diary.jpg");
+        try (FileOutputStream fos = new FileOutputStream(diaryPhotoFile)) {
+            fos.write(diaryPhotoBytes);
+        }
+        Uri diaryPhotoUri = Uri.fromFile(diaryPhotoFile);
+
+        Plant plant = new Plant("PersistPlant", null, null, null, 0L, plantPhotoUri);
+        repository.insert(plant, null).get();
+
+        DiaryEntry entry = new DiaryEntry(plant.getId(), 1000L, "note", "import");
+        entry.setPhotoUri(diaryPhotoUri.toString());
+        repository.insertDiaryEntry(entry, null).get();
+
+        File export = new File(context.getCacheDir(), "persist_export.zip");
+        Uri exportUri = Uri.fromFile(export);
+        CountDownLatch exportLatch = new CountDownLatch(1);
+        new ExportManager(context).export(exportUri, success -> exportLatch.countDown());
+        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+
+        PlantDatabase.databaseWriteExecutor.submit(() ->
+            PlantDatabase.getDatabase(context).clearAllTables()
+        ).get();
+
+        CountDownLatch importLatch = new CountDownLatch(1);
+        new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE, success -> importLatch.countDown());
+        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+
+        Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllPlantsSync().get(0)
+        ).get();
+        Uri restoredPlantUri = restoredPlant.getPhotoUri();
+
+        DiaryEntry restoredDiary = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllDiaryEntriesSync().get(0)
+        ).get();
+        Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
+
+        clearDir(context.getCacheDir());
+
+        try (InputStream is = context.getContentResolver().openInputStream(restoredPlantUri)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = is.read(buf)) != -1) {
+                baos.write(buf, 0, len);
+            }
+            assertArrayEquals(plantPhotoBytes, baos.toByteArray());
+        }
+
+        try (InputStream is = context.getContentResolver().openInputStream(restoredDiaryUri)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = is.read(buf)) != -1) {
+                baos.write(buf, 0, len);
+            }
+            assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
+        }
+    }
+
+    private static void clearDir(File dir) {
+        File[] children = dir.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                if (child.isDirectory()) {
+                    clearDir(child);
+                }
+                //noinspection ResultOfMethodCallIgnored
+                child.delete();
+            }
+        }
+    }
 }
