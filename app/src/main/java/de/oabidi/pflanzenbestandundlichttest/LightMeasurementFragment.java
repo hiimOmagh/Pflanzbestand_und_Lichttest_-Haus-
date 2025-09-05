@@ -69,7 +69,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
+        calibrationFactor = Float.parseFloat(preferences.getString(KEY_CALIBRATION, "0.0185"));
         sampleSize = preferences.getInt(KEY_SAMPLE_SIZE, 10);
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
@@ -113,7 +113,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     @Override
     public void onResume() {
         super.onResume();
-        float k = preferences.getFloat(KEY_CALIBRATION, calibrationFactor);
+        float k = Float.parseFloat(preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor)));
         int size = preferences.getInt(KEY_SAMPLE_SIZE, sampleSize);
         float hours = preferences.getFloat(KEY_LIGHT_HOURS, lightHours);
         if (k != calibrationFactor) {

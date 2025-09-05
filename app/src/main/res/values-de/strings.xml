@@ -118,4 +118,6 @@
     <string name="pref_light_hours">Lichtstunden</string>
     <string name="pref_light_hours_summary">Stunden Licht pro Tag</string>
     <string name="hint_number">Zahl</string>
+    <string name="widget_no_reminders">Keine anstehenden Erinnerungen</string>
+    <string name="widget_measure_now">Jetzt messen</string>
 </resources>

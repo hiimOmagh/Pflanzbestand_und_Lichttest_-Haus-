@@ -50,7 +50,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
                 if (referencePpfd > 0f && lastLux > 0f) {
                     float k = referencePpfd / lastLux;
                     SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                    prefs.edit().putFloat(KEY_CALIBRATION, k).apply();
+                    prefs.edit().putString(KEY_CALIBRATION, Float.toString(k)).apply();
                     getParentFragmentManager().popBackStack();
                 } else {
                     ppfdInput.setError(getString(R.string.error_positive_number));

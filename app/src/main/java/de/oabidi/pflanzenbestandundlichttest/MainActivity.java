@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -14,18 +15,15 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
  * Activity hosting the main navigation of the app.
  */
 public class MainActivity extends AppCompatActivity {
+    /** Intent extra to navigate directly to the measurement screen. */
+    public static final String EXTRA_NAVIGATE_MEASURE =
+        "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, new PlantListFragment())
-                .commit();
-        }
-
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment fragment;
             int itemId = item.getItemId();
@@ -47,5 +45,25 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
             return true;
         });
+
+        if (savedInstanceState == null) {
+            if (getIntent().getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_measure);
+            } else {
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment, new PlantListFragment())
+                    .commit();
+            }
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent.getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
+            BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+            bottomNavigationView.setSelectedItemId(R.id.nav_measure);
+        }
     }
 }
