@@ -4,6 +4,9 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +15,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Fragment displaying all measurements for a plant.
@@ -22,6 +28,7 @@ public class MeasurementListFragment extends Fragment {
     private long plantId = -1;
     private PlantRepository repository;
     private MeasurementAdapter adapter;
+    private Spinner filterSpinner;
 
     /**
      * Creates a new instance showing measurements for the given plant.
@@ -56,6 +63,23 @@ public class MeasurementListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView listView = view.findViewById(R.id.measurement_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        filterSpinner = view.findViewById(R.id.measurement_filter_spinner);
+        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.measurement_filter_options,
+            android.R.layout.simple_spinner_item);
+        filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        filterSpinner.setAdapter(filterAdapter);
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view1, int position, long id) {
+                loadMeasurements();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
         adapter = new MeasurementAdapter(measurement -> new AlertDialog.Builder(requireContext())
             .setTitle(R.string.action_delete_measurement)
             .setMessage(R.string.confirm_delete_measurement)
@@ -76,7 +100,28 @@ public class MeasurementListFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.recentMeasurementsForPlant(plantId, Integer.MAX_VALUE,
-            result -> adapter.submitList(result));
+        repository.recentMeasurementsForPlant(plantId, Integer.MAX_VALUE, result -> {
+            if (filterSpinner != null) {
+                String selected = (String) filterSpinner.getSelectedItem();
+                long threshold = Long.MIN_VALUE;
+                long now = System.currentTimeMillis();
+                if (getString(R.string.filter_last_7_days).equals(selected)) {
+                    threshold = now - 7L * 24 * 60 * 60 * 1000;
+                } else if (getString(R.string.filter_last_30_days).equals(selected)) {
+                    threshold = now - 30L * 24 * 60 * 60 * 1000;
+                }
+                if (threshold != Long.MIN_VALUE) {
+                    List<Measurement> filtered = new ArrayList<>();
+                    for (Measurement m : result) {
+                        if (m.getTimeEpoch() >= threshold) {
+                            filtered.add(m);
+                        }
+                    }
+                    adapter.submitList(filtered);
+                    return;
+                }
+            }
+            adapter.submitList(result);
+        });
     }
 }

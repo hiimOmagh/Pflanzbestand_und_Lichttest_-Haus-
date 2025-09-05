@@ -61,6 +61,20 @@
         <item>@string/diary_type_fertilize</item>
         <item>@string/diary_type_prune</item>
     </string-array>
+    <string name="filter_all">All</string>
+    <string name="filter_last_7_days">Last 7 days</string>
+    <string name="filter_last_30_days">Last 30 days</string>
+    <string-array name="diary_filter_options">
+        <item>@string/filter_all</item>
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
+    </string-array>
+    <string-array name="measurement_filter_options">
+        <item>@string/filter_all</item>
+        <item>@string/filter_last_7_days</item>
+        <item>@string/filter_last_30_days</item>
+    </string-array>
     <string name="action_delete_diary_entry">Delete Entry</string>
     <string name="confirm_delete_diary_entry">Delete this entry?</string>
     <string name="action_delete_measurement">Delete Measurement</string>
