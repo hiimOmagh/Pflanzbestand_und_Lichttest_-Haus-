@@ -205,7 +205,7 @@ public class DiaryFragment extends Fragment {
                 if (!daysText.isEmpty()) {
                     try {
                         int days = Integer.parseInt(daysText);
-                        String message = note.isEmpty() ? label : label + " – " + note;
+                        String message = note.isEmpty() ? label : label + getString(R.string.note_separator) + note;
                         ReminderScheduler.scheduleReminder(requireContext(), days, message);
                     } catch (NumberFormatException ignored) {
                     }

@@ -179,7 +179,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             navigateToSpeciesTargets();
             return true;
         } else if (itemId == R.id.action_export_data) {
-            exportLauncher.launch("plant_data.csv");
+            exportLauncher.launch(getString(R.string.export_file_name));
             return true;
         } else if (itemId == R.id.action_import_data) {
             importLauncher.launch(new String[]{"text/csv"});

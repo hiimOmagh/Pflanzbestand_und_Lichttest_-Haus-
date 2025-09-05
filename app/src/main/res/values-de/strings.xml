@@ -21,6 +21,7 @@
     <string name="unknown">Unbekannt</string>
     <string name="unknown_date">Unbekanntes Datum</string>
     <string name="placeholder_dash">—</string>
+    <string name="note_separator"> – </string>
     <string name="updated_suffix"> (aktualisiert)</string>
     <string name="menu_add_plant">Pflanze hinzufügen</string>
     <string name="menu_update_first_plant">Erste Pflanze aktualisieren</string>
@@ -96,6 +97,7 @@
     <string name="action_calibrate">Bestätigen</string>
     <string name="menu_calibrate">Kalibrieren</string>
     <string name="action_add_photo">Foto hinzufügen</string>
+    <string name="export_file_name">pflanzendaten.csv</string>
     <string name="export_success">Export erfolgreich</string>
     <string name="export_failure">Export fehlgeschlagen</string>
     <string name="import_success">Import erfolgreich</string>

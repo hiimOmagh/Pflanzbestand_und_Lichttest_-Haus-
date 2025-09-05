@@ -20,6 +20,7 @@
     <string name="unknown">Unknown</string>
     <string name="unknown_date">Unknown date</string>
     <string name="placeholder_dash">—</string>
+    <string name="note_separator"> – </string>
     <string name="updated_suffix"> (updated)</string>
     <string name="menu_add_plant">Add Plant</string>
     <string name="menu_update_first_plant">Update First Plant</string>
@@ -95,6 +96,7 @@
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
     <string name="action_add_photo">Add Photo</string>
+    <string name="export_file_name">plant_data.csv</string>
     <string name="export_success">Export successful</string>
     <string name="export_failure">Export failed</string>
     <string name="import_success">Import successful</string>
