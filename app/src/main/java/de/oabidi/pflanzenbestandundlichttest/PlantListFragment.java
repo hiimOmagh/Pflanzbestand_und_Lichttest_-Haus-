@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,15 +36,22 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private List<Plant> plants = new ArrayList<>();
     private ExportManager exportManager;
     private ImportManager importManager;
+    private ProgressBar progressBar;
 
     private final ActivityResultLauncher<String> exportLauncher =
         registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
             if (uri != null) {
+                if (isAdded()) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
                 exportManager.export(uri, success -> {
-                    int msg = success ? R.string.export_success : R.string.export_failure;
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    if (isAdded()) {
+                        progressBar.setVisibility(View.GONE);
+                        int msg = success ? R.string.export_success : R.string.export_failure;
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
                 });
-            } else {
+            } else if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
             }
         });
@@ -51,11 +59,17 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private final ActivityResultLauncher<String[]> importLauncher =
         registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
             if (uri != null) {
+                if (isAdded()) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
                 importManager.importData(uri, success -> {
-                    int msg = success ? R.string.import_success : R.string.import_failure;
-                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    if (isAdded()) {
+                        progressBar.setVisibility(View.GONE);
+                        int msg = success ? R.string.import_success : R.string.import_failure;
+                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
                 });
-            } else {
+            } else if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.import_failure, Toast.LENGTH_SHORT).show();
             }
         });
@@ -78,6 +92,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         presenter.refreshPlants();
         exportManager = new ExportManager(requireContext().getApplicationContext());
         importManager = new ImportManager(requireContext().getApplicationContext());
+        progressBar = view.findViewById(R.id.progress);
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
             (requestKey, bundle) -> {
