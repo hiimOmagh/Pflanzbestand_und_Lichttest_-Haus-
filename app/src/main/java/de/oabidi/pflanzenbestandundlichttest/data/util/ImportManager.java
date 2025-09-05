@@ -14,13 +14,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
-import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
 /**
@@ -30,7 +28,6 @@ public class ImportManager {
     private static final String TAG = "ImportManager";
 
     private final Context context;
-    private final PlantRepository repository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /** Callback used to signal completion of the import operation. */
@@ -40,7 +37,6 @@ public class ImportManager {
 
     public ImportManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
-        this.repository = new PlantRepository(this.context);
     }
 
     /**
@@ -68,6 +64,7 @@ public class ImportManager {
         String line;
         Section section = Section.NONE;
         boolean importedAny = false;
+        PlantDatabase db = PlantDatabase.getDatabase(context);
         while ((line = reader.readLine()) != null) {
             if (line.trim().isEmpty()) {
                 continue;
@@ -106,7 +103,7 @@ public class ImportManager {
                         Uri photoUri = photo.isEmpty() ? null : Uri.parse(photo);
                         Plant p = new Plant(name, description, species, location, acquired, photoUri);
                         p.setId(id);
-                        repository.insert(p, null).get();
+                        db.plantDao().insert(p);
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed plant row: " + line);
@@ -117,7 +114,7 @@ public class ImportManager {
                         float ppfdMin = Float.parseFloat(parts.get(1));
                         float ppfdMax = Float.parseFloat(parts.get(2));
                         SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
-                        repository.insertSpeciesTarget(t, null).get();
+                        db.speciesTargetDao().insert(t);
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed species target row: " + line);
@@ -130,7 +127,7 @@ public class ImportManager {
                         float ppfd = Float.parseFloat(parts.get(4));
                         float dli = Float.parseFloat(parts.get(5));
                         Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
-                        repository.insertMeasurement(m, null).get();
+                        db.measurementDao().insert(m);
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed measurement row: " + line);
@@ -146,13 +143,13 @@ public class ImportManager {
                         if (!photoUri.isEmpty()) {
                             d.setPhotoUri(photoUri);
                         }
-                        repository.insertDiaryEntry(d, null).get();
+                        db.diaryDao().insert(d);
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed diary row: " + line);
                     }
                 }
-            } catch (NumberFormatException | ExecutionException | InterruptedException e) {
+            } catch (NumberFormatException e) {
                 Log.e(TAG, "Failed to parse row: " + line, e);
             }
         }
