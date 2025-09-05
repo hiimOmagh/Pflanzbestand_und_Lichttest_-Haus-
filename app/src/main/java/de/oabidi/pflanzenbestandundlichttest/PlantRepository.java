@@ -20,6 +20,7 @@ public class PlantRepository {
     private final MeasurementDao measurementDao;
     private final DiaryDao diaryDao;
     private final SpeciesTargetDao speciesTargetDao;
+    private final ReminderDao reminderDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /**
@@ -36,6 +37,7 @@ public class PlantRepository {
         measurementDao = db.measurementDao();
         diaryDao = db.diaryDao();
         speciesTargetDao = db.speciesTargetDao();
+        reminderDao = db.reminderDao();
     }
 
     /**
@@ -183,6 +185,54 @@ public class PlantRepository {
     }
 
     /**
+     * Retrieves all reminders asynchronously and delivers them on the main thread.
+     *
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void getAllReminders(Consumer<List<Reminder>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Reminder> result = reminderDao.getAll();
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
+     * Inserts a reminder into the database asynchronously and updates the entity
+     * with the generated primary key.
+     *
+     * @param reminder the {@link Reminder} to add
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> insertReminder(Reminder reminder, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            long id = reminderDao.insert(reminder);
+            reminder.setId(id);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
+     * Deletes the reminder identified by the given id asynchronously.
+     *
+     * @param id       identifier of the reminder to remove
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> deleteReminderById(long id, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            reminderDao.deleteById(id);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Retrieves the PPFD target range for the given species key asynchronously.
      *
      * @param speciesKey identifier of the species
@@ -285,6 +335,17 @@ public class PlantRepository {
      */
     public List<DiaryEntry> getAllDiaryEntriesSync() {
         return diaryDao.getAll();
+    }
+
+    /**
+     * Returns all reminders stored in the database.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @return list of all reminders
+     */
+    public List<Reminder> getAllRemindersSync() {
+        return reminderDao.getAll();
     }
 
     /**

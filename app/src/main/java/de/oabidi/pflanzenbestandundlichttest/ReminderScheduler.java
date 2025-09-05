@@ -32,12 +32,10 @@ public class ReminderScheduler {
      */
     public static void scheduleReminder(Context context, int days, String message) {
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            PlantDatabase db = PlantDatabase.getDatabase(context);
-            Reminder reminder = new Reminder(triggerAt, message);
-            long id = db.reminderDao().insert(reminder);
-            scheduleReminderAt(context, triggerAt, message, id);
-        });
+        PlantRepository repository = new PlantRepository(context.getApplicationContext());
+        Reminder reminder = new Reminder(triggerAt, message);
+        repository.insertReminder(reminder,
+            () -> scheduleReminderAt(context, triggerAt, message, reminder.getId()));
     }
 
     public static void scheduleReminderAt(Context context, long triggerAt, String message, long id) {

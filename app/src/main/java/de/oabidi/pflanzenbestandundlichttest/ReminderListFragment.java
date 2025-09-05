@@ -12,13 +12,12 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
-
 /**
  * Fragment displaying all scheduled reminders.
  */
 public class ReminderListFragment extends Fragment {
     private ReminderAdapter adapter;
+    private PlantRepository repository;
 
     @Nullable
     @Override
@@ -34,6 +33,7 @@ public class ReminderListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ReminderAdapter();
         recyclerView.setAdapter(adapter);
+        repository = new PlantRepository(requireContext().getApplicationContext());
 
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
             ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -49,9 +49,7 @@ public class ReminderListFragment extends Fragment {
                 int position = viewHolder.getAdapterPosition();
                 Reminder reminder = adapter.getCurrentList().get(position);
                 ReminderScheduler.cancelReminder(requireContext(), reminder.getId());
-                PlantDatabase.databaseWriteExecutor.execute(() ->
-                    PlantDatabase.getDatabase(requireContext()).reminderDao().deleteById(reminder.getId()));
-                loadReminders();
+                repository.deleteReminderById(reminder.getId(), ReminderListFragment.this::loadReminders);
             }
         });
         helper.attachToRecyclerView(recyclerView);
@@ -60,10 +58,9 @@ public class ReminderListFragment extends Fragment {
     }
 
     private void loadReminders() {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Reminder> reminders = PlantDatabase.getDatabase(requireContext()).reminderDao().getAll();
+        repository.getAllReminders(reminders -> {
             if (isAdded()) {
-                requireActivity().runOnUiThread(() -> adapter.submitList(reminders));
+                adapter.submitList(reminders);
             }
         });
     }
