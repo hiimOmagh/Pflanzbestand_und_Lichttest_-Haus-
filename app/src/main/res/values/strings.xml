@@ -2,13 +2,11 @@
     <string name="app_name">Pflanzenbestand und Lichttest</string>
     <string name="no_light_sensor">No light sensor detected</string>
     <string name="label_calibration">Calibration k:</string>
-    <string name="label_light_hours">Light hours:</string>
     <string name="label_sample_size">Sample size:</string>
     <string name="lux_placeholder">Avg lux: --</string>
     <string name="ppfd_placeholder">PPFD: --</string>
     <string name="dli_placeholder">DLI: --</string>
     <string name="format_calibration_factor">%.4f</string>
-    <string name="format_light_hours">%.1f</string>
     <string name="format_lux">Avg lux: %.2f</string>
     <string name="lux_raw_placeholder">Raw lux: --</string>
     <string name="format_raw_lux">Raw lux: %.2f</string>
@@ -110,6 +108,5 @@
     <string name="diary_entry_deleted">Entry deleted</string>
     <string name="measurement_deleted">Measurement deleted</string>
     <string name="pref_calibration_factor">Calibration factor</string>
-    <string name="pref_light_hours">Light hours</string>
     <string name="pref_sample_size">Sample size</string>
 </resources>

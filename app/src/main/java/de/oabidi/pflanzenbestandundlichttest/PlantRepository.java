@@ -303,6 +303,24 @@ public class PlantRepository {
     }
 
     /**
+     * Calculates the summed PPFD for a plant on a specific day and delivers
+     * the result on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param dayStart start of the day in epoch milliseconds
+     * @param callback invoked with the summed PPFD on the main thread
+     */
+    public void dliForDay(long plantId, long dayStart, Consumer<Float> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            Float result = measurementDao.dliForDay(plantId, dayStart);
+            float value = result != null ? result : 0f;
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(value));
+            }
+        });
+    }
+
+    /**
      * Retrieves all diary entries for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant

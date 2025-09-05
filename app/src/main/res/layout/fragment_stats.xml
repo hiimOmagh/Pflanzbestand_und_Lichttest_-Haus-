@@ -17,6 +17,14 @@
         android:layout_weight="1" />
 
     <TextView
+        android:id="@+id/stats_dli"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/dli_placeholder" />
+
+    <TextView
         android:id="@+id/stats_diary_counts"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

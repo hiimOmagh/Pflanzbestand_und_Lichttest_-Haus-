@@ -28,7 +28,6 @@ import java.util.List;
 public class LightMeasurementFragment extends Fragment implements LightMeasurementPresenter.View {
     private static final String PREFS_NAME = "settings";
     private static final String KEY_CALIBRATION = "calibration_factor";
-    private static final String KEY_LIGHT_HOURS = "light_hours";
     private static final String KEY_SAMPLE_SIZE = "sample_size";
 
     private TextView luxRawView;
@@ -39,7 +38,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private Button saveMeasurementButton;
     private TextView locationCheckView;
     private float calibrationFactor;
-    private float lightHours;
     private float lastLux;
     private float lastPpfd;
     private float lastDli;
@@ -70,10 +68,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         calibrationFactor = preferences.getFloat(KEY_CALIBRATION, 0.0185f);
-        lightHours = preferences.getFloat(KEY_LIGHT_HOURS, 24f);
         sampleSize = preferences.getInt(KEY_SAMPLE_SIZE, 10);
 
-        presenter = new LightMeasurementPresenter(this, context, calibrationFactor, lightHours, sampleSize);
+        presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -115,15 +112,10 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         float k = preferences.getFloat(KEY_CALIBRATION, calibrationFactor);
-        float hours = preferences.getFloat(KEY_LIGHT_HOURS, lightHours);
         int size = preferences.getInt(KEY_SAMPLE_SIZE, sampleSize);
         if (k != calibrationFactor) {
             calibrationFactor = k;
             presenter.setCalibrationFactor(calibrationFactor);
-        }
-        if (hours != lightHours) {
-            lightHours = hours;
-            presenter.setLightHours(lightHours);
         }
         if (size != sampleSize) {
             sampleSize = size;

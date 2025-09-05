@@ -43,6 +43,22 @@ public interface MeasurementDao {
     List<Measurement> recentForPlant(long plantId, int limit);
 
     /**
+     * Sums PPFD measurements for the given plant on a specific day.
+     *
+     * <p>The day is defined by its start time in epoch milliseconds and
+     * spans 24 hours. The resulting value represents the accumulated
+     * PPFD across all measurements of that day and can be converted to
+     * DLI by multiplying with {@code 0.0036}.</p>
+     *
+     * @param plantId  identifier of the plant
+     * @param dayStart start of the day in epoch milliseconds
+     * @return summed PPFD value for the given day or {@code null} if no
+     *         measurements exist
+     */
+    @Query("SELECT SUM(ppfd) FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :dayStart AND timeEpoch < :dayStart + 86400000")
+    Float dliForDay(long plantId, long dayStart);
+
+    /**
      * Retrieves all stored measurements.
      *
      * @return list of all measurements in the database

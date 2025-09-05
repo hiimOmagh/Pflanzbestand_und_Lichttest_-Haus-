@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import java.util.List;
+import java.util.Calendar;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
 
@@ -23,11 +24,13 @@ import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
 public class StatsFragment extends Fragment {
     private PlantRepository repository;
     private TextView diaryCountsView;
+    private TextView dliView;
     private Spinner plantSelector;
     private BarChartView chart;
     private List<Plant> plants;
     private long selectedPlantId = -1;
     private View viewMeasurementsButton;
+    private static final int DLI_DAYS = 7;
 
     @Nullable
     @Override
@@ -41,6 +44,7 @@ public class StatsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         chart = view.findViewById(R.id.stats_chart);
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
+        dliView = view.findViewById(R.id.stats_dli);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         repository = new PlantRepository(requireContext().getApplicationContext());
@@ -91,6 +95,36 @@ public class StatsFragment extends Fragment {
         repository.recentMeasurementsForPlant(plantId, 30,
             list -> chart.setMeasurements(list));
         repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
+        computeDli(plantId);
+    }
+
+    private void computeDli(long plantId) {
+        long now = System.currentTimeMillis();
+        long start = startOfDay(now);
+        final float[] total = {0f};
+        final int[] remaining = {DLI_DAYS};
+        for (int i = 0; i < DLI_DAYS; i++) {
+            long dayStart = start - i * 86400000L;
+            repository.dliForDay(plantId, dayStart, ppfdSum -> {
+                float dli = LightMath.dliFromPpfd(ppfdSum, 1f);
+                total[0] += dli;
+                remaining[0]--;
+                if (remaining[0] == 0) {
+                    float avg = total[0] / DLI_DAYS;
+                    dliView.setText(getString(R.string.format_dli, avg));
+                }
+            });
+        }
+    }
+
+    private static long startOfDay(long time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(time);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     private void updateDiaryCounts(List<DiaryEntry> entries) {

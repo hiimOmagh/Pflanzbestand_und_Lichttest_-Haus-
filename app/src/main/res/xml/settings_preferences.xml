@@ -10,13 +10,6 @@
         android:inputType="numberDecimal" />
 
     <EditTextPreference
-        app:key="light_hours"
-        app:title="@string/pref_light_hours"
-        app:defaultValue="24"
-        app:useSimpleSummaryProvider="true"
-        android:inputType="numberDecimal" />
-
-    <EditTextPreference
         app:key="sample_size"
         app:title="@string/pref_sample_size"
         app:defaultValue="10"

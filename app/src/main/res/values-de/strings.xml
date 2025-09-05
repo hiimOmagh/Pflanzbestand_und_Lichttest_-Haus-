@@ -3,13 +3,11 @@
     <string name="app_name">Pflanzenbestand und Lichttest</string>
     <string name="no_light_sensor">Kein Lichtsensor erkannt</string>
     <string name="label_calibration">Kalibrierung k:</string>
-    <string name="label_light_hours">Lichtstunden:</string>
     <string name="label_sample_size">Anzahl Proben:</string>
     <string name="lux_placeholder">Durchschn. Lux: --</string>
     <string name="ppfd_placeholder">PPFD: --</string>
     <string name="dli_placeholder">DLI: --</string>
     <string name="format_calibration_factor">%.4f</string>
-    <string name="format_light_hours">%.1f</string>
     <string name="format_lux">Durchschn. Lux: %.2f</string>
     <string name="lux_raw_placeholder">Lux roh: --</string>
     <string name="format_raw_lux">Lux roh: %.2f</string>
@@ -111,6 +109,5 @@
     <string name="diary_entry_deleted">Eintrag gelöscht</string>
     <string name="measurement_deleted">Messung gelöscht</string>
     <string name="pref_calibration_factor">Kalibrierungsfaktor</string>
-    <string name="pref_light_hours">Lichtstunden</string>
     <string name="pref_sample_size">Stichprobengröße</string>
 </resources>
