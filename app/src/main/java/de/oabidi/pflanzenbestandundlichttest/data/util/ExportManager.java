@@ -8,10 +8,17 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -47,49 +54,127 @@ public class ExportManager {
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
-            try (OutputStream os = context.getContentResolver().openOutputStream(uri);
-                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
-                List<Plant> plants = repository.getAllPlantsSync();
-                List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
-                List<Measurement> measurements = repository.getAllMeasurementsSync();
-                List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
+            File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
+            if (!tempDir.mkdirs()) {
+                tempDir = null;
+            }
+            if (tempDir != null) {
+                File csvFile = new File(tempDir, "data.csv");
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
+                    List<Plant> plants = repository.getAllPlantsSync();
+                    List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
+                    List<Measurement> measurements = repository.getAllMeasurementsSync();
+                    List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
 
-                writer.write("Plants\n");
-                writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
-                for (Plant p : plants) {
-                    writer.write(p.getId() + "," + escape(p.getName()) + "," +
-                        escape(p.getDescription()) + "," + escape(p.getSpecies()) + "," +
-                        escape(p.getLocationHint()) + "," + p.getAcquiredAtEpoch() + "," +
-                        escape(p.getPhotoUri() != null ? p.getPhotoUri().toString() : null) + "\n");
+                    writer.write("Plants\n");
+                    writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+                    for (Plant p : plants) {
+                        String photoName = "";
+                        if (p.getPhotoUri() != null) {
+                            photoName = "plant_" + p.getId() + "_" + getFileName(p.getPhotoUri());
+                            copyUriToFile(p.getPhotoUri(), new File(tempDir, photoName));
+                        }
+                        writer.write(p.getId() + "," + escape(p.getName()) + "," +
+                            escape(p.getDescription()) + "," + escape(p.getSpecies()) + "," +
+                            escape(p.getLocationHint()) + "," + p.getAcquiredAtEpoch() + "," +
+                            escape(photoName) + "\n");
+                    }
+
+                    writer.write("\nSpeciesTargets\n");
+                    writer.write("speciesKey,ppfdMin,ppfdMax\n");
+                    for (SpeciesTarget t : targets) {
+                        writer.write(escape(t.getSpeciesKey()) + "," + t.getPpfdMin() + "," + t.getPpfdMax() + "\n");
+                    }
+
+                    writer.write("\nMeasurements\n");
+                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli\n");
+                    for (Measurement m : measurements) {
+                        writer.write(m.getId() + "," + m.getPlantId() + "," + m.getTimeEpoch() + "," +
+                            m.getLuxAvg() + "," + m.getPpfd() + "," + m.getDli() + "\n");
+                    }
+
+                    writer.write("\nDiaryEntries\n");
+                    writer.write("id,plantId,timeEpoch,type,note,photoUri\n");
+                    for (DiaryEntry d : diaryEntries) {
+                        String photoName = "";
+                        if (d.getPhotoUri() != null && !d.getPhotoUri().isEmpty()) {
+                            Uri dUri = Uri.parse(d.getPhotoUri());
+                            photoName = "diary_" + d.getId() + "_" + getFileName(dUri);
+                            copyUriToFile(dUri, new File(tempDir, photoName));
+                        }
+                        writer.write(d.getId() + "," + d.getPlantId() + "," + d.getTimeEpoch() + "," +
+                            escape(d.getType()) + "," + escape(d.getNote()) + "," + escape(photoName) + "\n");
+                    }
+                    writer.flush();
+                } catch (IOException e) {
+                    success = false;
                 }
 
-                writer.write("\nSpeciesTargets\n");
-                writer.write("speciesKey,ppfdMin,ppfdMax\n");
-                for (SpeciesTarget t : targets) {
-                    writer.write(escape(t.getSpeciesKey()) + "," + t.getPpfdMin() + "," + t.getPpfdMax() + "\n");
+                if (!success) {
+                    deleteRecursive(tempDir);
+                    final boolean result = false;
+                    mainHandler.post(() -> callback.onComplete(result));
+                    return;
                 }
 
-                writer.write("\nMeasurements\n");
-                writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli\n");
-                for (Measurement m : measurements) {
-                    writer.write(m.getId() + "," + m.getPlantId() + "," + m.getTimeEpoch() + "," +
-                        m.getLuxAvg() + "," + m.getPpfd() + "," + m.getDli() + "\n");
+                try (OutputStream os = context.getContentResolver().openOutputStream(uri);
+                     ZipOutputStream zos = new ZipOutputStream(os)) {
+                    File[] files = tempDir.listFiles();
+                    if (files != null) {
+                        byte[] buffer = new byte[8192];
+                        for (File f : files) {
+                            try (InputStream fis = new FileInputStream(f)) {
+                                zos.putNextEntry(new ZipEntry(f.getName()));
+                                int len;
+                                while ((len = fis.read(buffer)) != -1) {
+                                    zos.write(buffer, 0, len);
+                                }
+                                zos.closeEntry();
+                            }
+                        }
+                    }
+                    success = true;
+                } catch (IOException e) {
+                    success = false;
+                } finally {
+                    deleteRecursive(tempDir);
                 }
-
-                writer.write("\nDiaryEntries\n");
-                writer.write("id,plantId,timeEpoch,type,note,photoUri\n");
-                for (DiaryEntry d : diaryEntries) {
-                    writer.write(d.getId() + "," + d.getPlantId() + "," + d.getTimeEpoch() + "," +
-                        escape(d.getType()) + "," + escape(d.getNote()) + "," + escape(d.getPhotoUri()) + "\n");
-                }
-                writer.flush();
-                success = true;
-            } catch (IOException e) {
-                success = false;
             }
             final boolean result = success;
             mainHandler.post(() -> callback.onComplete(result));
         });
+    }
+
+    private void copyUriToFile(Uri source, File dest) throws IOException {
+        try (InputStream in = context.getContentResolver().openInputStream(source);
+             OutputStream out = new FileOutputStream(dest)) {
+            if (in == null) {
+                throw new IOException("Cannot open source URI: " + source);
+            }
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        }
+    }
+
+    private String getFileName(Uri uri) {
+        String name = uri.getLastPathSegment();
+        return name != null ? name : "image";
+    }
+
+    private void deleteRecursive(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursive(child);
+                }
+            }
+        }
+        //noinspection ResultOfMethodCallIgnored
+        file.delete();
     }
 
     private static String escape(String value) {

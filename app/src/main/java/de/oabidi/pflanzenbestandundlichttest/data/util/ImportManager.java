@@ -9,11 +9,17 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -41,26 +47,55 @@ public class ImportManager {
 
     /**
      * Imports measurements and diary entries from the given URI.
+     * The URI is expected to point to a ZIP file produced by {@link ExportManager}.
      *
-     * @param uri      CSV source chosen by the user
+     * @param uri      ZIP source chosen by the user
      * @param callback invoked on the main thread with the result
      */
     public void importData(@NonNull Uri uri, @NonNull Callback callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
-            try (InputStream is = context.getContentResolver().openInputStream(uri);
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-                success = parseAndInsert(reader);
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to open import file", e);
-                success = false;
+            File tempDir = new File(context.getCacheDir(), "import_" + System.currentTimeMillis());
+            if (!tempDir.mkdirs()) {
+                tempDir = null;
+            }
+            if (tempDir != null) {
+                try (InputStream is = context.getContentResolver().openInputStream(uri);
+                     ZipInputStream zis = new ZipInputStream(is)) {
+                    ZipEntry entry;
+                    File csvFile = null;
+                    byte[] buffer = new byte[8192];
+                    while ((entry = zis.getNextEntry()) != null) {
+                        File outFile = new File(tempDir, entry.getName());
+                        try (OutputStream fos = new FileOutputStream(outFile)) {
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                        }
+                        if (entry.getName().endsWith(".csv")) {
+                            csvFile = outFile;
+                        }
+                        zis.closeEntry();
+                    }
+                    if (csvFile != null) {
+                        try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
+                            success = parseAndInsert(reader, tempDir);
+                        }
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to open import file", e);
+                    success = false;
+                } finally {
+                    deleteRecursive(tempDir);
+                }
             }
             final boolean result = success;
             mainHandler.post(() -> callback.onComplete(result));
         });
     }
 
-    private boolean parseAndInsert(BufferedReader reader) throws IOException {
+    private boolean parseAndInsert(BufferedReader reader, File baseDir) throws IOException {
         String line;
         Section section = Section.NONE;
         boolean importedAny = false;
@@ -69,25 +104,27 @@ public class ImportManager {
             if (line.trim().isEmpty()) {
                 continue;
             }
-            if (line.equals("Plants")) {
-                section = Section.PLANTS;
-                reader.readLine(); // skip header
-                continue;
-            }
-            if (line.equals("SpeciesTargets")) {
-                section = Section.SPECIES_TARGETS;
-                reader.readLine(); // skip header
-                continue;
-            }
-            if (line.equals("Measurements")) {
-                section = Section.MEASUREMENTS;
-                reader.readLine(); // skip header
-                continue;
-            }
-            if (line.equals("DiaryEntries")) {
-                section = Section.DIARY;
-                reader.readLine(); // skip header
-                continue;
+            switch (line) {
+                case "Plants":
+                    section = Section.PLANTS;
+                    reader.readLine(); // skip header
+
+                    continue;
+                case "SpeciesTargets":
+                    section = Section.SPECIES_TARGETS;
+                    reader.readLine(); // skip header
+
+                    continue;
+                case "Measurements":
+                    section = Section.MEASUREMENTS;
+                    reader.readLine(); // skip header
+
+                    continue;
+                case "DiaryEntries":
+                    section = Section.DIARY;
+                    reader.readLine(); // skip header
+
+                    continue;
             }
             List<String> parts = parseCsv(line);
             try {
@@ -100,7 +137,11 @@ public class ImportManager {
                         String location = parts.get(4).isEmpty() ? null : parts.get(4);
                         long acquired = Long.parseLong(parts.get(5));
                         String photo = parts.get(6);
-                        Uri photoUri = photo.isEmpty() ? null : Uri.parse(photo);
+                        Uri photoUri = null;
+                        if (!photo.isEmpty()) {
+                            Uri restored = restoreImage(new File(baseDir, photo));
+                            photoUri = restored;
+                        }
                         Plant p = new Plant(name, description, species, location, acquired, photoUri);
                         p.setId(id);
                         db.plantDao().insert(p);
@@ -141,7 +182,8 @@ public class ImportManager {
                         String photoUri = parts.get(5);
                         DiaryEntry d = new DiaryEntry(plantId, timeEpoch, type, note);
                         if (!photoUri.isEmpty()) {
-                            d.setPhotoUri(photoUri);
+                            Uri restored = restoreImage(new File(baseDir, photoUri));
+                            d.setPhotoUri(restored.toString());
                         }
                         db.diaryDao().insert(d);
                         importedAny = true;
@@ -180,6 +222,36 @@ public class ImportManager {
         return tokens;
     }
 
+    private Uri restoreImage(File exportedImage) throws IOException {
+        File destFile = new File(context.getCacheDir(), "imported_" + exportedImage.getName());
+        Uri destUri = Uri.fromFile(destFile);
+        try (InputStream in = context.getContentResolver().openInputStream(Uri.fromFile(exportedImage));
+             OutputStream out = context.getContentResolver().openOutputStream(destUri)) {
+            if (in == null || out == null) {
+                throw new IOException("Unable to open streams for image restoration");
+            }
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        }
+        return destUri;
+    }
+
+    private void deleteRecursive(File file) {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    deleteRecursive(child);
+                }
+            }
+        }
+        //noinspection ResultOfMethodCallIgnored
+        file.delete();
+    }
+    
     private enum Section {
         NONE,
         PLANTS,

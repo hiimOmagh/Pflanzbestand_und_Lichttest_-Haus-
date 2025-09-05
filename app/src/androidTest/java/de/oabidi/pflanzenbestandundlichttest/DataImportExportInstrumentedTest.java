@@ -9,14 +9,19 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -33,17 +38,33 @@ public class DataImportExportInstrumentedTest {
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
         repository.insertSpeciesTarget(target, null).get();
 
-        Plant plant = new Plant("ExportPlant", null, "ExportSpecies", null, 0L, null);
+        // Create dummy photos
+        byte[] plantPhotoBytes = new byte[]{1, 2, 3};
+        File plantPhotoFile = new File(context.getCacheDir(), "plant.jpg");
+        try (FileOutputStream fos = new FileOutputStream(plantPhotoFile)) {
+            fos.write(plantPhotoBytes);
+        }
+        Uri plantPhotoUri = Uri.fromFile(plantPhotoFile);
+
+        byte[] diaryPhotoBytes = new byte[]{4, 5, 6};
+        File diaryPhotoFile = new File(context.getCacheDir(), "diary.jpg");
+        try (FileOutputStream fos = new FileOutputStream(diaryPhotoFile)) {
+            fos.write(diaryPhotoBytes);
+        }
+        Uri diaryPhotoUri = Uri.fromFile(diaryPhotoFile);
+
+        Plant plant = new Plant("ExportPlant", null, "ExportSpecies", null, 0L, plantPhotoUri);
         repository.insert(plant, null).get();
 
         Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 3f);
         repository.insertMeasurement(m, null).get();
 
         DiaryEntry d = new DiaryEntry(plant.getId(), 2000L, "note", "hello");
+        d.setPhotoUri(diaryPhotoUri.toString());
         repository.insertDiaryEntry(d, null).get();
 
         // Export data to temporary file
-        File file = new File(context.getCacheDir(), "export.csv");
+        File file = new File(context.getCacheDir(), "export.zip");
         Uri uri = Uri.fromFile(file);
         CountDownLatch exportLatch = new CountDownLatch(1);
         new ExportManager(context).export(uri, success -> exportLatch.countDown());
@@ -77,5 +98,36 @@ public class DataImportExportInstrumentedTest {
         assertEquals(1, targetCount);
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
+
+        // Verify photos restored
+        Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllPlantsSync().get(0)
+        ).get();
+        Uri restoredPlantUri = restoredPlant.getPhotoUri();
+        assertNotNull(restoredPlantUri);
+        try (InputStream is = context.getContentResolver().openInputStream(restoredPlantUri)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = is.read(buf)) != -1) {
+                baos.write(buf, 0, len);
+            }
+            assertArrayEquals(plantPhotoBytes, baos.toByteArray());
+        }
+
+        DiaryEntry restoredDiary = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllDiaryEntriesSync().get(0)
+        ).get();
+        assertNotNull(restoredDiary.getPhotoUri());
+        Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
+        try (InputStream is = context.getContentResolver().openInputStream(restoredDiaryUri)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = is.read(buf)) != -1) {
+                baos.write(buf, 0, len);
+            }
+            assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
+        }
     }
 }
