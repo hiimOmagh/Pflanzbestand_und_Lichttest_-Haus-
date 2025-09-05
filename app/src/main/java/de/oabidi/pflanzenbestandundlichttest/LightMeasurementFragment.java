@@ -97,8 +97,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
                 presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli,
-                    () -> requireActivity().runOnUiThread(() ->
-                        Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show()));
+                    () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
             } else {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
             }

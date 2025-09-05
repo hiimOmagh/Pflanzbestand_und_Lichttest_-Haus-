@@ -12,7 +12,8 @@ import java.util.function.Consumer;
  * Repository providing asynchronous access to {@link Plant} entities.
  * <p>
  * All database operations are executed on {@link PlantDatabase#databaseWriteExecutor}
- * and results or completion callbacks are delivered on the Android main thread.
+ * and results or completion callbacks are delivered on the Android main thread,
+ * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository {
     private final PlantDao plantDao;

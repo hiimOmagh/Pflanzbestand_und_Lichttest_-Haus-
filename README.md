@@ -57,21 +57,23 @@ On first launch the app seeds the database with common species light requirement
 1. Edit `app/src/main/assets/targets.json` and add another object to the list.
 2. Reinstall the app or clear its data so the database is recreated and picks up the changes.
 
-## Background thread usage
+## Repository threading
 
-`PlantRepository` performs blocking database operations. Use an
-`ExecutorService` or similar mechanism to call its methods off the main thread:
+`PlantRepository` executes database work on a background executor and delivers
+results or completion callbacks on the Android main thread. This allows UI code
+to interact with returned data directly from the callback without additional
+thread switching:
 
 ```java
-ExecutorService executor = Executors.newSingleThreadExecutor();
-executor.
-
-execute(() ->{
 PlantRepository repository = new PlantRepository(context);
-List<Plant> plants = repository.getAllPlants();
-// Update UI on the main thread after retrieving data.
+repository.getAllPlants(plants -> {
+    // This code runs on the main thread.
+    // Update UI with the retrieved plants.
 });
 ```
+
+Synchronous methods ending with `Sync` still block and must be invoked from a
+background thread.
 
 ## Architecture
 
