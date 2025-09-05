@@ -3,8 +3,6 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -12,7 +10,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
@@ -38,9 +35,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView luxView;
     private TextView ppfdView;
     private TextView dliView;
-    private EditText kInput;
-    private EditText hoursInput;
-    private EditText sampleSizeInput;
     private Spinner plantSelector;
     private Button saveMeasurementButton;
     private TextView locationCheckView;
@@ -69,9 +63,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         luxView = view.findViewById(R.id.lux_value);
         ppfdView = view.findViewById(R.id.ppfd_value);
         dliView = view.findViewById(R.id.dli_value);
-        kInput = view.findViewById(R.id.k_input);
-        hoursInput = view.findViewById(R.id.light_hours_input);
-        sampleSizeInput = view.findViewById(R.id.sample_size_input);
         plantSelector = view.findViewById(R.id.plant_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
@@ -83,69 +74,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         sampleSize = preferences.getInt(KEY_SAMPLE_SIZE, 10);
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, lightHours, sampleSize);
-
-        kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
-        hoursInput.setText(getString(R.string.format_light_hours, lightHours));
-        sampleSizeInput.setText(String.valueOf(sampleSize));
-
-        kInput.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                try {
-                    float value = Float.parseFloat(s.toString());
-                    if (value > 0f) {
-                        calibrationFactor = value;
-                        preferences.edit().putFloat(KEY_CALIBRATION, calibrationFactor).apply();
-                        presenter.setCalibrationFactor(calibrationFactor);
-                        kInput.setError(null);
-                    } else {
-                        kInput.setError(getString(R.string.error_positive_number));
-                    }
-                } catch (NumberFormatException e) {
-                    kInput.setError(getString(R.string.error_positive_number));
-                }
-            }
-        });
-
-        hoursInput.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                try {
-                    float value = Float.parseFloat(s.toString());
-                    if (value > 0f) {
-                        lightHours = value;
-                        preferences.edit().putFloat(KEY_LIGHT_HOURS, lightHours).apply();
-                        presenter.setLightHours(lightHours);
-                        hoursInput.setError(null);
-                    } else {
-                        hoursInput.setError(getString(R.string.error_positive_number));
-                    }
-                } catch (NumberFormatException e) {
-                    hoursInput.setError(getString(R.string.error_positive_number));
-                }
-            }
-        });
-
-        sampleSizeInput.addTextChangedListener(new SimpleTextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                try {
-                    int value = Integer.parseInt(s.toString());
-                    if (value > 0) {
-                        if (value != sampleSize) {
-                            sampleSize = value;
-                            preferences.edit().putInt(KEY_SAMPLE_SIZE, sampleSize).apply();
-                            presenter.setSampleSize(sampleSize);
-                        }
-                        sampleSizeInput.setError(null);
-                    } else {
-                        sampleSizeInput.setError(getString(R.string.error_positive_number));
-                    }
-                } catch (NumberFormatException e) {
-                    sampleSizeInput.setError(getString(R.string.error_positive_number));
-                }
-            }
-        });
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -187,10 +115,19 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         float k = preferences.getFloat(KEY_CALIBRATION, calibrationFactor);
+        float hours = preferences.getFloat(KEY_LIGHT_HOURS, lightHours);
+        int size = preferences.getInt(KEY_SAMPLE_SIZE, sampleSize);
         if (k != calibrationFactor) {
             calibrationFactor = k;
             presenter.setCalibrationFactor(calibrationFactor);
-            kInput.setText(getString(R.string.format_calibration_factor, calibrationFactor));
+        }
+        if (hours != lightHours) {
+            lightHours = hours;
+            presenter.setLightHours(lightHours);
+        }
+        if (size != sampleSize) {
+            sampleSize = size;
+            presenter.setSampleSize(sampleSize);
         }
         presenter.start();
     }
@@ -257,10 +194,5 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         } else {
             selectedPlantId = -1;
         }
-    }
-
-    private abstract static class SimpleTextWatcher implements TextWatcher {
-        @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-        @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
     }
 }

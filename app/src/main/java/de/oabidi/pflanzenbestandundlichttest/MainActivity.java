@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 /**
@@ -33,8 +35,10 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new LightMeasurementFragment();
             } else if (itemId == R.id.nav_diary) {
                 fragment = new DiaryFragment();
-            } else {
+            } else if (itemId == R.id.nav_stats) {
                 fragment = new StatsFragment();
+            } else {
+                fragment = new SettingsFragment();
             }
             getSupportFragmentManager().beginTransaction()
                 .replace(R.id.nav_host_fragment, fragment)

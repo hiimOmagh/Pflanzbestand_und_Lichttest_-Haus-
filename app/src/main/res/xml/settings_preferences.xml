@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <EditTextPreference
+        app:key="calibration_factor"
+        app:title="@string/pref_calibration_factor"
+        app:defaultValue="0.0185"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="numberDecimal" />
+
+    <EditTextPreference
+        app:key="light_hours"
+        app:title="@string/pref_light_hours"
+        app:defaultValue="24"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="numberDecimal" />
+
+    <EditTextPreference
+        app:key="sample_size"
+        app:title="@string/pref_sample_size"
+        app:defaultValue="10"
+        app:useSimpleSummaryProvider="true"
+        android:inputType="number" />
+
+</PreferenceScreen>

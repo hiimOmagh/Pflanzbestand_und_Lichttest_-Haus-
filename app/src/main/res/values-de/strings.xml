@@ -50,6 +50,7 @@
     <string name="title_measure">Messen</string>
     <string name="title_diary">Tagebuch</string>
     <string name="title_stats">Statistiken</string>
+    <string name="title_settings">Einstellungen</string>
     <string name="stats_placeholder">Noch keine Statistiken</string>
     <string name="stats_no_diary_entries">Noch keine Tagebucheinträge</string>
     <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
@@ -108,4 +109,7 @@
     <string name="plant_deleted">Pflanze gelöscht</string>
     <string name="diary_entry_deleted">Eintrag gelöscht</string>
     <string name="measurement_deleted">Messung gelöscht</string>
+    <string name="pref_calibration_factor">Kalibrierungsfaktor</string>
+    <string name="pref_light_hours">Lichtstunden</string>
+    <string name="pref_sample_size">Stichprobengröße</string>
 </resources>

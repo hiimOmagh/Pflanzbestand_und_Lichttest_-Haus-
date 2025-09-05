@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.preference)
     implementation(libs.room.runtime)
     implementation(libs.ext.junit)
     implementation(libs.espresso.core)
