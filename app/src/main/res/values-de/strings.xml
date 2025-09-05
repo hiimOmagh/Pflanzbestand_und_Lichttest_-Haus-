@@ -49,6 +49,7 @@
     <string name="title_plants">Pflanzen</string>
     <string name="title_measure">Messen</string>
     <string name="title_diary">Tagebuch</string>
+    <string name="title_reminders">Erinnerungen</string>
     <string name="title_stats">Statistiken</string>
     <string name="title_settings">Einstellungen</string>
     <string name="stats_placeholder">Noch keine Statistiken</string>

@@ -56,4 +56,26 @@ public class ReminderScheduler {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         }
     }
+
+    /**
+     * Cancels a previously scheduled reminder alarm.
+     *
+     * @param context context used to access system services
+     * @param id      identifier of the reminder to cancel
+     */
+    public static void cancelReminder(Context context, long id) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) {
+            return;
+        }
+        Intent intent = new Intent(context, ReminderReceiver.class);
+        intent.setAction(ACTION_SHOW_REMINDER);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (int) id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+        alarmManager.cancel(pendingIntent);
+    }
 }

@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
                 fragment = new LightMeasurementFragment();
             } else if (itemId == R.id.nav_diary) {
                 fragment = new DiaryFragment();
+            } else if (itemId == R.id.nav_reminders) {
+                fragment = new ReminderListFragment();
             } else if (itemId == R.id.nav_stats) {
                 fragment = new StatsFragment();
             } else {

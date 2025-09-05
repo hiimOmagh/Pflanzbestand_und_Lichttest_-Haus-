@@ -13,6 +13,10 @@
         android:icon="@android:drawable/ic_menu_edit"
         android:title="@string/title_diary" />
     <item
+        android:id="@+id/nav_reminders"
+        android:icon="@android:drawable/ic_menu_my_calendar"
+        android:title="@string/title_reminders" />
+    <item
         android:id="@+id/nav_stats"
         android:icon="@android:drawable/ic_menu_agenda"
         android:title="@string/title_stats" />
