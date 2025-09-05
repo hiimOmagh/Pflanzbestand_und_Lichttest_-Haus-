@@ -26,6 +26,8 @@ import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -125,6 +127,11 @@ public class ImportManager {
                     reader.readLine(); // skip header
 
                     continue;
+                case "Reminders":
+                    section = Section.REMINDERS;
+                    reader.readLine(); // skip header
+
+                    continue;
             }
             List<String> parts = parseCsv(line);
             try {
@@ -189,6 +196,19 @@ public class ImportManager {
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed diary row: " + line);
+                    }
+                } else if (section == Section.REMINDERS) {
+                    if (parts.size() >= 3) {
+                        long id = Long.parseLong(parts.get(0));
+                        long triggerAt = Long.parseLong(parts.get(1));
+                        String message = parts.get(2);
+                        Reminder r = new Reminder(triggerAt, message);
+                        r.setId(id);
+                        db.reminderDao().insert(r);
+                        ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id);
+                        importedAny = true;
+                    } else {
+                        Log.e(TAG, "Malformed reminder row: " + line);
                     }
                 }
             } catch (NumberFormatException e) {
@@ -257,6 +277,7 @@ public class ImportManager {
         PLANTS,
         SPECIES_TARGETS,
         MEASUREMENTS,
-        DIARY
+        DIARY,
+        REMINDERS
     }
 }

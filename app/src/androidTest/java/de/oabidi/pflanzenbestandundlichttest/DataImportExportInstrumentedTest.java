@@ -15,9 +15,17 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import android.app.AlarmManager;
+import android.content.Intent;
+
+import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowAlarmManager;
+import org.robolectric.shadows.ShadowPendingIntent;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -33,6 +41,7 @@ public class DataImportExportInstrumentedTest {
     public void testExportImportRestoresData() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository repository = new PlantRepository(context);
+        ShadowAlarmManager.reset();
 
         // Insert species target and plant with measurement and diary entry
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
@@ -62,6 +71,13 @@ public class DataImportExportInstrumentedTest {
         DiaryEntry d = new DiaryEntry(plant.getId(), 2000L, "note", "hello");
         d.setPhotoUri(diaryPhotoUri.toString());
         repository.insertDiaryEntry(d, null).get();
+
+        long reminderTrigger = System.currentTimeMillis() + 5000;
+        Reminder reminder = new Reminder(reminderTrigger, "ExportReminder");
+        long reminderId = PlantDatabase.databaseWriteExecutor.submit(() ->
+            PlantDatabase.getDatabase(context).reminderDao().insert(reminder)
+        ).get();
+        reminder.setId(reminderId);
 
         // Export data to temporary file
         File file = new File(context.getCacheDir(), "export.zip");
@@ -93,11 +109,15 @@ public class DataImportExportInstrumentedTest {
         int diaryCount = PlantDatabase.databaseWriteExecutor.submit(
             () -> repository.getAllDiaryEntriesSync().size()
         ).get();
+        int reminderCount = PlantDatabase.databaseWriteExecutor.submit(
+            () -> PlantDatabase.getDatabase(context).reminderDao().getAll().size()
+        ).get();
 
         assertEquals(1, plantCount);
         assertEquals(1, targetCount);
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
+        assertEquals(1, reminderCount);
 
         // Verify photos restored
         Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
@@ -129,5 +149,20 @@ public class DataImportExportInstrumentedTest {
             }
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
         }
+
+        Reminder restoredReminder = PlantDatabase.databaseWriteExecutor.submit(
+            () -> PlantDatabase.getDatabase(context).reminderDao().getAll().get(0)
+        ).get();
+        assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
+        assertEquals("ExportReminder", restoredReminder.getMessage());
+
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+        ShadowAlarmManager.ScheduledAlarm alarm = shadowAm.getNextScheduledAlarm();
+        assertNotNull(alarm);
+        ShadowPendingIntent pending = Shadows.shadowOf(alarm.operation);
+        Intent scheduledIntent = pending.getSavedIntent();
+        assertEquals("ExportReminder", scheduledIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
+        assertEquals(restoredReminder.getId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_ID, -1));
     }
 }

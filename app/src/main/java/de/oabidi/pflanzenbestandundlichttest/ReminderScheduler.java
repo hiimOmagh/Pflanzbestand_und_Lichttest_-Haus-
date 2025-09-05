@@ -40,7 +40,7 @@ public class ReminderScheduler {
         });
     }
 
-    static void scheduleReminderAt(Context context, long triggerAt, String message, long id) {
+    public static void scheduleReminderAt(Context context, long triggerAt, String message, long id) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, ReminderReceiver.class);
         intent.setAction(ACTION_SHOW_REMINDER);

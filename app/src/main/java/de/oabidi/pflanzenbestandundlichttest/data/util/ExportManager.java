@@ -26,6 +26,7 @@ import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.Reminder;
 
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.
@@ -65,6 +66,7 @@ public class ExportManager {
                     List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
                     List<Measurement> measurements = repository.getAllMeasurementsSync();
                     List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
+                    List<Reminder> reminders = PlantDatabase.getDatabase(context).reminderDao().getAll();
 
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
@@ -104,6 +106,13 @@ public class ExportManager {
                         }
                         writer.write(d.getId() + "," + d.getPlantId() + "," + d.getTimeEpoch() + "," +
                             escape(d.getType()) + "," + escape(d.getNote()) + "," + escape(photoName) + "\n");
+                    }
+
+                    writer.write("\nReminders\n");
+                    writer.write("id,triggerAt,message\n");
+                    for (Reminder r : reminders) {
+                        writer.write(r.getId() + "," + r.getTriggerAt() + "," +
+                            escape(r.getMessage()) + "\n");
                     }
                     writer.flush();
                 } catch (IOException e) {
