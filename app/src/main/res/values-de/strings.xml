@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pflanzenbestand und Lichttest</string>
+    <string name="no_light_sensor">Kein Lichtsensor erkannt</string>
+    <string name="label_calibration">Kalibrierung k:</string>
+    <string name="label_light_hours">Lichtstunden:</string>
+    <string name="label_sample_size">Anzahl Proben:</string>
+    <string name="lux_placeholder">Durchschn. Lux: --</string>
+    <string name="ppfd_placeholder">PPFD: --</string>
+    <string name="dli_placeholder">DLI: --</string>
+    <string name="format_calibration_factor">%.4f</string>
+    <string name="format_light_hours">%.1f</string>
+    <string name="format_lux">Durchschn. Lux: %.2f</string>
+    <string name="lux_raw_placeholder">Lux roh: --</string>
+    <string name="format_raw_lux">Lux roh: %.2f</string>
+    <string name="format_ppfd">PPFD: %.2f µmol/m²/s</string>
+    <string name="format_dli">DLI: %.2f mol/m²/Tag</string>
+    <string name="location_check_placeholder">Standortprüfung: --</string>
+    <string name="format_location_check">Standortprüfung: %s</string>
+    <string name="new_plant_name">Neue Pflanze</string>
+    <string name="new_plant_description">Eine neu hinzugefügte Pflanze.</string>
+    <string name="default_description">Keine Beschreibung</string>
+    <string name="unknown">Unbekannt</string>
+    <string name="unknown_date">Unbekanntes Datum</string>
+    <string name="placeholder_dash">—</string>
+    <string name="updated_suffix"> (aktualisiert)</string>
+    <string name="menu_add_plant">Pflanze hinzufügen</string>
+    <string name="menu_update_first_plant">Erste Pflanze aktualisieren</string>
+    <string name="menu_delete_first_plant">Erste Pflanze löschen</string>
+    <string name="menu_species_targets">Artziele</string>
+    <string name="menu_export_data">Daten exportieren</string>
+    <string name="menu_import_data">Daten importieren</string>
+    <string name="menu_search">Suchen</string>
+    <string name="hint_positive_number">Positive Zahl</string>
+    <string name="error_positive_number">Wert muss größer als 0 sein</string>
+    <string name="measurement_save">Speichern</string>
+    <string name="measurement_saved">Messung gespeichert</string>
+    <string name="error_select_plant">Bitte eine Pflanze auswählen</string>
+    <string name="plant_photo">Pflanzenfoto</string>
+    <string name="action_view_diary">Tagebuch anzeigen</string>
+    <string name="action_view_measurements">Messungen anzeigen</string>
+    <string name="action_add_diary_entry">Eintrag hinzufügen</string>
+    <string name="action_edit_diary_entry">Eintrag bearbeiten</string>
+    <string name="action_add_target">Ziel hinzufügen</string>
+    <string name="action_edit_target">Ziel bearbeiten</string>
+    <string name="hint_species_key">Artenschlüssel</string>
+    <string name="hint_ppfd_min">Min PPFD</string>
+    <string name="hint_ppfd_max">Max PPFD</string>
+    <string name="title_plants">Pflanzen</string>
+    <string name="title_measure">Messen</string>
+    <string name="title_diary">Tagebuch</string>
+    <string name="title_stats">Statistiken</string>
+    <string name="stats_placeholder">Noch keine Statistiken</string>
+    <string name="stats_no_diary_entries">Noch keine Tagebucheinträge</string>
+    <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
+    <string name="diary_hint_note">Notiz</string>
+    <string name="diary_type_water">Wasser</string>
+    <string name="diary_type_fertilize">Düngen</string>
+    <string name="diary_type_prune">Schneiden</string>
+    <string-array name="diary_entry_types">
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
+    </string-array>
+    <string name="filter_all">Alle</string>
+    <string name="filter_last_7_days">Letzte 7 Tage</string>
+    <string name="filter_last_30_days">Letzte 30 Tage</string>
+    <string-array name="diary_filter_options">
+        <item>@string/filter_all</item>
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
+    </string-array>
+    <string-array name="measurement_filter_options">
+        <item>@string/filter_all</item>
+        <item>@string/filter_last_7_days</item>
+        <item>@string/filter_last_30_days</item>
+    </string-array>
+    <string name="action_delete_diary_entry">Eintrag löschen</string>
+    <string name="confirm_delete_diary_entry">Diesen Eintrag löschen?</string>
+    <string name="action_delete_measurement">Messung löschen</string>
+    <string name="confirm_delete_measurement">Diese Messung löschen?</string>
+    <string name="action_delete_target">Ziel löschen</string>
+    <string name="confirm_delete_target">Dieses Ziel löschen?</string>
+    <string name="hint_plant_name">Name</string>
+    <string name="hint_species">Art</string>
+    <string name="hint_location">Standort</string>
+    <string name="hint_acquired">Erworben</string>
+    <string name="hint_notes">Notizen</string>
+    <string name="action_pick_photo">Foto wählen</string>
+    <string name="action_save_plant">Speichern</string>
+    <string name="error_required">Erforderlich</string>
+    <string name="error_ppfd_range">Min muss kleiner als Max sein</string>
+    <string name="calibration_instructions">Sensor unter bekanntes Licht halten, PPFD eingeben und bestätigen.</string>
+    <string name="label_known_ppfd">Bekannter PPFD:</string>
+    <string name="action_calibrate">Bestätigen</string>
+    <string name="menu_calibrate">Kalibrieren</string>
+    <string name="action_add_photo">Foto hinzufügen</string>
+    <string name="export_success">Export erfolgreich</string>
+    <string name="export_failure">Export fehlgeschlagen</string>
+    <string name="import_success">Import erfolgreich</string>
+    <string name="import_failure">Import fehlgeschlagen</string>
+    <string name="hint_remind_days">In Tagen erinnern</string>
+    <string name="reminder_mark_done">Erledigt</string>
+    <string name="reminder_snooze">Erinnern</string>
+    <string name="reminder_channel">Erinnerungen</string>
+    <string name="action_undo">Rückgängig</string>
+    <string name="plant_deleted">Pflanze gelöscht</string>
+    <string name="diary_entry_deleted">Eintrag gelöscht</string>
+    <string name="measurement_deleted">Messung gelöscht</string>
+</resources>
