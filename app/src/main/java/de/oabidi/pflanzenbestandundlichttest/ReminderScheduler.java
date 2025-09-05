@@ -4,6 +4,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
+import android.widget.Toast;
 
 /**
  * Schedules reminder alarms using the {@link AlarmManager}.
@@ -31,6 +33,11 @@ public class ReminderScheduler {
      * @param message message displayed in the reminder notification
      */
     public static void scheduleReminder(Context context, int days, String message) {
+        if (days <= 0) {
+            Log.w("ReminderScheduler", "Days must be positive");
+            Toast.makeText(context, R.string.error_positive_number, Toast.LENGTH_SHORT).show();
+            return;
+        }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
         PlantRepository repository = new PlantRepository(context.getApplicationContext());
         Reminder reminder = new Reminder(triggerAt, message);
@@ -51,7 +58,7 @@ public class ReminderScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         if (alarmManager != null) {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         }
     }
 
