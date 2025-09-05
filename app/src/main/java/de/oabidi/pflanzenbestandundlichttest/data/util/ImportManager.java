@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -43,6 +45,9 @@ public class ImportManager {
         void onComplete(boolean success);
     }
 
+    /** Import mode determining how incoming data is applied. */
+    public enum Mode { MERGE, REPLACE }
+
     public ImportManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
     }
@@ -52,9 +57,10 @@ public class ImportManager {
      * The URI is expected to point to a ZIP file produced by {@link ExportManager}.
      *
      * @param uri      ZIP source chosen by the user
+     * @param mode     whether to merge or replace existing data
      * @param callback invoked on the main thread with the result
      */
-    public void importData(@NonNull Uri uri, @NonNull Callback callback) {
+    public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
             File tempDir = new File(context.getCacheDir(), "import_" + System.currentTimeMillis());
@@ -81,8 +87,11 @@ public class ImportManager {
                         zis.closeEntry();
                     }
                     if (csvFile != null) {
+                        if (mode == Mode.REPLACE) {
+                            PlantDatabase.getDatabase(context).clearAllTables();
+                        }
                         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                            success = parseAndInsert(reader, tempDir);
+                            success = parseAndInsert(reader, tempDir, mode);
                         }
                     }
                 } catch (IOException e) {
@@ -97,11 +106,12 @@ public class ImportManager {
         });
     }
 
-    private boolean parseAndInsert(BufferedReader reader, File baseDir) throws IOException {
+    private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode) throws IOException {
         String line;
         Section section = Section.NONE;
         boolean importedAny = false;
         PlantDatabase db = PlantDatabase.getDatabase(context);
+        Map<Long, Long> plantIdMap = new HashMap<>();
         while ((line = reader.readLine()) != null) {
             if (line.trim().isEmpty()) {
                 continue;
@@ -150,8 +160,14 @@ public class ImportManager {
                             photoUri = restored;
                         }
                         Plant p = new Plant(name, description, species, location, acquired, photoUri);
-                        p.setId(id);
-                        db.plantDao().insert(p);
+                        if (mode == Mode.MERGE) {
+                            p.setId(0);
+                            long newId = db.plantDao().insert(p);
+                            plantIdMap.put(id, newId);
+                        } else {
+                            p.setId(id);
+                            db.plantDao().insert(p);
+                        }
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed plant row: " + line);
@@ -170,6 +186,14 @@ public class ImportManager {
                 } else if (section == Section.MEASUREMENTS) {
                     if (parts.size() >= 6) {
                         long plantId = Long.parseLong(parts.get(1));
+                        if (mode == Mode.MERGE) {
+                            Long mappedId = plantIdMap.get(plantId);
+                            if (mappedId == null) {
+                                Log.w(TAG, "Skipping measurement for missing plant " + plantId);
+                                continue;
+                            }
+                            plantId = mappedId;
+                        }
                         long timeEpoch = Long.parseLong(parts.get(2));
                         float luxAvg = Float.parseFloat(parts.get(3));
                         float ppfd = Float.parseFloat(parts.get(4));
@@ -183,6 +207,14 @@ public class ImportManager {
                 } else if (section == Section.DIARY) {
                     if (parts.size() >= 6) {
                         long plantId = Long.parseLong(parts.get(1));
+                        if (mode == Mode.MERGE) {
+                            Long mappedId = plantIdMap.get(plantId);
+                            if (mappedId == null) {
+                                Log.w(TAG, "Skipping diary entry for missing plant " + plantId);
+                                continue;
+                            }
+                            plantId = mappedId;
+                        }
                         long timeEpoch = Long.parseLong(parts.get(2));
                         String type = parts.get(3);
                         String note = parts.get(4);
@@ -203,9 +235,15 @@ public class ImportManager {
                         long triggerAt = Long.parseLong(parts.get(1));
                         String message = parts.get(2);
                         Reminder r = new Reminder(triggerAt, message);
-                        r.setId(id);
-                        db.reminderDao().insert(r);
-                        ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id);
+                        long reminderId;
+                        if (mode == Mode.MERGE) {
+                            reminderId = db.reminderDao().insert(r);
+                        } else {
+                            r.setId(id);
+                            db.reminderDao().insert(r);
+                            reminderId = id;
+                        }
+                        ReminderScheduler.scheduleReminderAt(context, triggerAt, message, reminderId);
                         importedAny = true;
                     } else {
                         Log.e(TAG, "Malformed reminder row: " + line);

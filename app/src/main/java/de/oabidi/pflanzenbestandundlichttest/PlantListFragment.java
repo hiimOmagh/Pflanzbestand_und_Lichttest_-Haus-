@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,19 +62,33 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
             if (uri != null) {
                 if (isAdded()) {
-                    progressBar.setVisibility(View.VISIBLE);
+                    showImportChoiceDialog(uri);
                 }
-                importManager.importData(uri, success -> {
-                    if (isAdded()) {
-                        progressBar.setVisibility(View.GONE);
-                        int msg = success ? R.string.import_success : R.string.import_failure;
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-                    }
-                });
             } else if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.import_failure, Toast.LENGTH_SHORT).show();
             }
         });
+
+    private void showImportChoiceDialog(@NonNull Uri uri) {
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.menu_import_data)
+            .setMessage(R.string.import_choice_message)
+            .setPositiveButton(R.string.import_merge, (d, w) -> startImport(uri, ImportManager.Mode.MERGE))
+            .setNegativeButton(R.string.import_replace, (d, w) -> startImport(uri, ImportManager.Mode.REPLACE))
+            .setNeutralButton(android.R.string.cancel, null)
+            .show();
+    }
+
+    private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
+        progressBar.setVisibility(View.VISIBLE);
+        importManager.importData(uri, mode, success -> {
+            if (isAdded()) {
+                progressBar.setVisibility(View.GONE);
+                int msg = success ? R.string.import_success : R.string.import_failure;
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     @Nullable
     @Override

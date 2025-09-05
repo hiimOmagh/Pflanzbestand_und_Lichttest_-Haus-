@@ -101,6 +101,9 @@
     <string name="export_failure">Export failed</string>
     <string name="import_success">Import successful</string>
     <string name="import_failure">Import failed</string>
+    <string name="import_choice_message">How should the imported data be applied?</string>
+    <string name="import_merge">Merge</string>
+    <string name="import_replace">Replace</string>
     <string name="hint_remind_days">Remind me in days</string>
     <string name="reminder_mark_done">Done</string>
     <string name="reminder_snooze">Snooze</string>

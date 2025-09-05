@@ -102,6 +102,9 @@
     <string name="export_failure">Export fehlgeschlagen</string>
     <string name="import_success">Import erfolgreich</string>
     <string name="import_failure">Import fehlgeschlagen</string>
+    <string name="import_choice_message">Wie sollen die importierten Daten angewendet werden?</string>
+    <string name="import_merge">Zusammenführen</string>
+    <string name="import_replace">Ersetzen</string>
     <string name="hint_remind_days">In Tagen erinnern</string>
     <string name="reminder_mark_done">Erledigt</string>
     <string name="reminder_snooze">Erinnern</string>

@@ -41,6 +41,13 @@ This command runs the full Android test suite, including the light measurement s
 4. Watch the main screen's live lux, PPFD, and DLI readings to test lighting conditions for your
    plants.
 
+## Backups
+
+Data can be exported and imported via the menu. When importing a backup, you can choose to **merge**
+with existing content or **replace** it entirely. Merge discards original identifiers so new plants
+and their related records are added alongside current data. Replace wipes the database before
+restoring the backup, preserving the identifiers from the archive.
+
 ## Species PPFD targets
 
 On first launch the app seeds the database with common species light requirements from
