@@ -70,7 +70,12 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         calibrationFactor = Float.parseFloat(preferences.getString(KEY_CALIBRATION, "0.0185"));
-        sampleSize = preferences.getInt(KEY_SAMPLE_SIZE, 10);
+        String sampleSizeString = preferences.getString(KEY_SAMPLE_SIZE, "10");
+        try {
+            sampleSize = Integer.parseInt(sampleSizeString);
+        } catch (NumberFormatException e) {
+            sampleSize = 10;
+        }
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
 
@@ -114,8 +119,20 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         float k = Float.parseFloat(preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor)));
-        int size = preferences.getInt(KEY_SAMPLE_SIZE, sampleSize);
-        float hours = preferences.getFloat(KEY_LIGHT_HOURS, lightHours);
+        String sizeString = preferences.getString(KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
+        int size;
+        try {
+            size = Integer.parseInt(sizeString);
+        } catch (NumberFormatException e) {
+            size = sampleSize;
+        }
+        String hoursString = preferences.getString(KEY_LIGHT_HOURS, Float.toString(lightHours));
+        float hours;
+        try {
+            hours = Float.parseFloat(hoursString);
+        } catch (NumberFormatException e) {
+            hours = lightHours;
+        }
         if (k != calibrationFactor) {
             calibrationFactor = k;
             presenter.setCalibrationFactor(calibrationFactor);
