@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.SearchView;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -167,7 +168,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             return true;
         } else if (itemId == R.id.action_delete) {
             if (!plants.isEmpty()) {
-                presenter.deletePlant(plants.get(0));
+                Plant plant = plants.get(0);
+                presenter.deletePlant(plant);
+                Snackbar.make(requireView(), R.string.plant_deleted, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.action_undo, v -> presenter.insertPlant(plant))
+                    .show();
             }
             return true;
         } else if (itemId == R.id.action_species_targets) {

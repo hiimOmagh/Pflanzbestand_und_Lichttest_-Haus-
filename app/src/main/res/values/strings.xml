@@ -89,4 +89,8 @@
     <string name="reminder_mark_done">Done</string>
     <string name="reminder_snooze">Snooze</string>
     <string name="reminder_channel">Reminders</string>
+    <string name="action_undo">Undo</string>
+    <string name="plant_deleted">Plant deleted</string>
+    <string name="diary_entry_deleted">Entry deleted</string>
+    <string name="measurement_deleted">Measurement deleted</string>
 </resources>

@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.snackbar.Snackbar;
 
 /**
  * Fragment displaying all measurements for a plant.
@@ -59,7 +60,12 @@ public class MeasurementListFragment extends Fragment {
             .setTitle(R.string.action_delete_measurement)
             .setMessage(R.string.confirm_delete_measurement)
             .setPositiveButton(android.R.string.ok, (d, w) ->
-                repository.deleteMeasurement(measurement, this::loadMeasurements))
+                repository.deleteMeasurement(measurement, () -> {
+                    loadMeasurements();
+                    Snackbar.make(requireView(), R.string.measurement_deleted, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.action_undo, v -> repository.insertMeasurement(measurement, this::loadMeasurements))
+                        .show();
+                }))
             .setNegativeButton(android.R.string.cancel, null)
             .show());
         listView.setAdapter(adapter);

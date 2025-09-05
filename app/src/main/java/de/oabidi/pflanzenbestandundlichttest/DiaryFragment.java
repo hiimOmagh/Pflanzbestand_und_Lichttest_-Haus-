@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.function.Consumer;
 
@@ -120,7 +121,12 @@ public class DiaryFragment extends Fragment {
                 .setTitle(R.string.action_delete_diary_entry)
                 .setMessage(R.string.confirm_delete_diary_entry)
                 .setPositiveButton(android.R.string.ok, (d, w) ->
-                    repository.deleteDiaryEntry(entry, this::loadEntries))
+                    repository.deleteDiaryEntry(entry, () -> {
+                        loadEntries();
+                        Snackbar.make(requireView(), R.string.diary_entry_deleted, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_undo, v -> repository.insertDiaryEntry(entry, this::loadEntries))
+                            .show();
+                    }))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
         });
