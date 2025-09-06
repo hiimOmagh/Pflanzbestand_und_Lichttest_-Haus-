@@ -15,7 +15,6 @@ import java.io.FileReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.text.ParseException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
@@ -59,7 +59,8 @@ public class ImportManager {
 
     /**
      * Imports measurements and diary entries from the given URI.
-     * The URI is expected to point to a ZIP file produced by {@link ExportManager}.
+     * The URI is expected to point to a ZIP file produced by
+     * {@link de.oabidi.pflanzenbestandundlichttest.ExportManager}.
      *
      * @param uri      ZIP source chosen by the user
      * @param mode     whether to merge or replace existing data

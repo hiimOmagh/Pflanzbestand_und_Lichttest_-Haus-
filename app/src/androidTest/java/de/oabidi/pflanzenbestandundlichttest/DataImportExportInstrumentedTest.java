@@ -22,7 +22,6 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;

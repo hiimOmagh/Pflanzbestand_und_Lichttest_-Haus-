@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest.data.util;
+package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 import android.net.Uri;
@@ -15,19 +15,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
-import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.Reminder;
 
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.

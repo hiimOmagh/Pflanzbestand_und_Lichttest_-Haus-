@@ -16,7 +16,6 @@ import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 import static org.junit.Assert.*;

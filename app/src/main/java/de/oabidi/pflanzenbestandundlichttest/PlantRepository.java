@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.VisibleForTesting;
+
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -300,7 +302,8 @@ public class PlantRepository {
      *
      * @return list of all plants
      */
-    public List<Plant> getAllPlantsSync() {
+    @VisibleForTesting
+    List<Plant> getAllPlantsSync() {
         return plantDao.getAll();
     }
 
@@ -311,7 +314,8 @@ public class PlantRepository {
      *
      * @return list of all species targets
      */
-    public List<SpeciesTarget> getAllSpeciesTargetsSync() {
+    @VisibleForTesting
+    List<SpeciesTarget> getAllSpeciesTargetsSync() {
         return speciesTargetDao.getAll();
     }
 
@@ -322,7 +326,8 @@ public class PlantRepository {
      *
      * @return list of all measurements
      */
-    public List<Measurement> getAllMeasurementsSync() {
+    @VisibleForTesting
+    List<Measurement> getAllMeasurementsSync() {
         return measurementDao.getAll();
     }
 
@@ -333,7 +338,8 @@ public class PlantRepository {
      *
      * @return list of all diary entries
      */
-    public List<DiaryEntry> getAllDiaryEntriesSync() {
+    @VisibleForTesting
+    List<DiaryEntry> getAllDiaryEntriesSync() {
         return diaryDao.getAll();
     }
 
@@ -344,7 +350,8 @@ public class PlantRepository {
      *
      * @return list of all reminders
      */
-    public List<Reminder> getAllRemindersSync() {
+    @VisibleForTesting
+    List<Reminder> getAllRemindersSync() {
         return reminderDao.getAll();
     }
 
