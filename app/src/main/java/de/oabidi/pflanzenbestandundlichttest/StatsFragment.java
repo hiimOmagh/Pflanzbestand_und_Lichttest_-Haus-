@@ -49,6 +49,10 @@ public class StatsFragment extends Fragment {
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         repository = new PlantRepository(requireContext().getApplicationContext());
 
+        if (savedInstanceState != null) {
+            selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
+        }
+
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
@@ -86,9 +90,24 @@ public class StatsFragment extends Fragment {
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             plantSelector.setAdapter(spinnerAdapter);
             if (!plants.isEmpty()) {
-                plantSelector.setSelection(0);
+                int selection = 0;
+                if (selectedPlantId != -1) {
+                    for (int i = 0; i < plants.size(); i++) {
+                        if (plants.get(i).getId() == selectedPlantId) {
+                            selection = i;
+                            break;
+                        }
+                    }
+                }
+                plantSelector.setSelection(selection);
             }
         });
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("selectedPlantId", selectedPlantId);
     }
 
     private void loadDataForPlant(long plantId) {

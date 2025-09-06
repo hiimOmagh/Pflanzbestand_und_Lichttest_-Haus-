@@ -80,6 +80,10 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
 
+        if (savedInstanceState != null) {
+            selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
+        }
+
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
@@ -220,10 +224,26 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         plantSelector.setAdapter(adapter);
         if (!plants.isEmpty()) {
-            plantSelector.setSelection(0);
-            selectedPlantId = plants.get(0).getId();
+            int selection = 0;
+            if (selectedPlantId != -1) {
+                for (int i = 0; i < plants.size(); i++) {
+                    if (plants.get(i).getId() == selectedPlantId) {
+                        selection = i;
+                        break;
+                    }
+                }
+            } else {
+                selectedPlantId = plants.get(0).getId();
+            }
+            plantSelector.setSelection(selection);
         } else {
             selectedPlantId = -1;
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("selectedPlantId", selectedPlantId);
     }
 }
