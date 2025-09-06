@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -27,6 +28,14 @@ public interface ReminderDao {
      */
     @Query("DELETE FROM Reminder WHERE id = :id")
     void deleteById(long id);
+
+    /**
+     * Updates an existing reminder in the database.
+     *
+     * @param reminder the entity to update
+     */
+    @Update
+    void update(Reminder reminder);
 
     /**
      * Returns all reminders stored in the database.

@@ -248,6 +248,22 @@ public class PlantRepository {
     }
 
     /**
+     * Updates an existing reminder asynchronously.
+     *
+     * @param reminder the {@link Reminder} to update
+     * @param callback optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> updateReminder(Reminder reminder, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            reminderDao.update(reminder);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Deletes the reminder identified by the given id asynchronously.
      *
      * @param id       identifier of the reminder to remove

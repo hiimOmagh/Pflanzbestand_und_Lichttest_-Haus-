@@ -19,8 +19,16 @@ import java.util.Locale;
  * RecyclerView adapter displaying scheduled reminders.
  */
 public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewHolder> {
-    public ReminderAdapter() {
+    /** Listener invoked when a reminder is tapped. */
+    public interface OnReminderClickListener {
+        void onReminderClick(Reminder reminder);
+    }
+
+    private final OnReminderClickListener clickListener;
+
+    public ReminderAdapter(OnReminderClickListener clickListener) {
         super(DIFF_CALLBACK);
+        this.clickListener = clickListener;
     }
 
     private static final DiffUtil.ItemCallback<Reminder> DIFF_CALLBACK =
@@ -48,7 +56,7 @@ public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewH
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Reminder reminder = getItem(position);
-        holder.bind(reminder);
+        holder.bind(reminder, clickListener);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -60,9 +68,14 @@ public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewH
             textView = itemView.findViewById(R.id.reminder_text);
         }
 
-        void bind(Reminder reminder) {
+        void bind(Reminder reminder, OnReminderClickListener listener) {
             String text = df.format(new Date(reminder.getTriggerAt())) + " - " + reminder.getMessage();
             textView.setText(text);
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onReminderClick(reminder);
+                }
+            });
         }
     }
 }
