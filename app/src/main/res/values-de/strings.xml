@@ -122,6 +122,7 @@
     <string name="import_choice_message">Wie sollen die importierten Daten angewendet werden?</string>
     <string name="import_merge">Zusammenführen</string>
     <string name="import_replace">Ersetzen</string>
+    <string name="import_image_warning">Einige Bilder konnten nicht wiederhergestellt werden</string>
     <string name="hint_remind_days">In Tagen erinnern</string>
     <string name="reminder_mark_done">Erledigt</string>
     <string name="reminder_snooze">Erinnern</string>
