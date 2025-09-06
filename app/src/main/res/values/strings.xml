@@ -119,4 +119,7 @@
     <string name="hint_number">Number</string>
     <string name="widget_no_reminders">No pending reminders</string>
     <string name="widget_measure_now">Measure Now</string>
+    <string name="range_low">Low</string>
+    <string name="range_ok">OK</string>
+    <string name="range_high">High</string>
 </resources>

@@ -120,4 +120,7 @@
     <string name="hint_number">Zahl</string>
     <string name="widget_no_reminders">Keine anstehenden Erinnerungen</string>
     <string name="widget_measure_now">Jetzt messen</string>
+    <string name="range_low">Niedrig</string>
+    <string name="range_ok">OK</string>
+    <string name="range_high">Hoch</string>
 </resources>

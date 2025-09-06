@@ -105,11 +105,23 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
-        String status = context.getString(R.string.unknown);
+        String statusText = context.getString(R.string.unknown);
         if (speciesTarget != null) {
-            status = LightMath.rangeCheck(ppfd, speciesTarget.getPpfdMin(), speciesTarget.getPpfdMax());
+            LightMath.RangeStatus status = LightMath.rangeCheck(ppfd, speciesTarget.getPpfdMin(), speciesTarget.getPpfdMax());
+            switch (status) {
+                case LOW:
+                    statusText = context.getString(R.string.range_low);
+                    break;
+                case HIGH:
+                    statusText = context.getString(R.string.range_high);
+                    break;
+                case OK:
+                default:
+                    statusText = context.getString(R.string.range_ok);
+                    break;
+            }
         }
         view.showLightData(rawLux, lux, ppfd, dli);
-        view.showRangeStatus(status);
+        view.showRangeStatus(statusText);
     }
 }

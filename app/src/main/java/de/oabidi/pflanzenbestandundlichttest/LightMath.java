@@ -4,6 +4,12 @@ package de.oabidi.pflanzenbestandundlichttest;
  * Utility methods for light calculations.
  */
 public class LightMath {
+
+    public enum RangeStatus {
+        LOW,
+        OK,
+        HIGH
+    }
     /**
      * Convert a lux measurement to PPFD using a calibration factor.
      *
@@ -33,16 +39,17 @@ public class LightMath {
      * @param ppfd current PPFD in µmol·m⁻²·s⁻¹
      * @param min  lower bound of the target range
      * @param max  upper bound of the target range
-     * @return "Low" if {@code ppfd} is below {@code min}, "High" if above
-     * {@code max} and "OK" when the value lies within the range
+     * @return {@link RangeStatus#LOW} if {@code ppfd} is below {@code min},
+     * {@link RangeStatus#HIGH} if above {@code max} and
+     * {@link RangeStatus#OK} when the value lies within the range
      */
-    public static String rangeCheck(float ppfd, float min, float max) {
+    public static RangeStatus rangeCheck(float ppfd, float min, float max) {
         if (ppfd < min) {
-            return "Low";
+            return RangeStatus.LOW;
         } else if (ppfd > max) {
-            return "High";
+            return RangeStatus.HIGH;
         } else {
-            return "OK";
+            return RangeStatus.OK;
         }
     }
 }
