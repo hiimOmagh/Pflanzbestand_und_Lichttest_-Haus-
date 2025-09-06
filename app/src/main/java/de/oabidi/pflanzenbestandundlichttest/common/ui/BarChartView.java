@@ -13,6 +13,8 @@ import androidx.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.R;
@@ -22,6 +24,7 @@ import de.oabidi.pflanzenbestandundlichttest.R;
  */
 public class BarChartView extends View {
     private final List<Float> values = new ArrayList<>();
+    private final List<Long> timestamps = new ArrayList<>();
     private final Paint barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -52,13 +55,19 @@ public class BarChartView extends View {
 
     /**
      * Sets the measurements to display. Only PPFD values are visualised.
+     * A parallel list of timestamps is used for labelling the x-axis.
      */
-    public void setMeasurements(@Nullable List<Measurement> measurements) {
+    public void setMeasurements(@Nullable List<Measurement> measurements,
+                                @Nullable List<Long> times) {
         values.clear();
+        timestamps.clear();
         if (measurements != null) {
             for (Measurement m : measurements) {
                 values.add(m.getPpfd());
             }
+        }
+        if (times != null) {
+            timestamps.addAll(times);
         }
         if (values.isEmpty()) {
             maxValue = 0f;
@@ -118,10 +127,17 @@ public class BarChartView extends View {
 
         // X-axis ticks and labels
         textPaint.setTextAlign(Paint.Align.CENTER);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd", Locale.getDefault());
         for (int i = 0; i < values.size(); i++) {
             float x = originX + i * barWidth + (barWidth * 0.4f);
             canvas.drawLine(x, originY, x, originY + tick, axisPaint);
-            canvas.drawText(String.valueOf(i + 1), x, height - tick, textPaint);
+            String label;
+            if (i < timestamps.size()) {
+                label = dateFormat.format(new Date(timestamps.get(i)));
+            } else {
+                label = String.valueOf(i + 1);
+            }
+            canvas.drawText(label, x, height - tick, textPaint);
         }
     }
 }

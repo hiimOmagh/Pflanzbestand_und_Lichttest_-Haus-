@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 
 import java.util.List;
 import java.util.Calendar;
+import java.util.ArrayList;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
 
@@ -112,7 +113,13 @@ public class StatsFragment extends Fragment {
 
     private void loadDataForPlant(long plantId) {
         repository.recentMeasurementsForPlant(plantId, 30,
-            list -> chart.setMeasurements(list));
+            list -> {
+                List<Long> times = new ArrayList<>();
+                for (Measurement m : list) {
+                    times.add(m.getTimeEpoch());
+                }
+                chart.setMeasurements(list, times);
+            });
         repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
         computeDli(plantId);
     }
