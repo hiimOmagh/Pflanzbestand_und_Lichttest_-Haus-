@@ -33,7 +33,7 @@ public class ReminderListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ReminderAdapter();
         recyclerView.setAdapter(adapter);
-        repository = new PlantRepository(requireContext().getApplicationContext());
+        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
 
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
             ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {

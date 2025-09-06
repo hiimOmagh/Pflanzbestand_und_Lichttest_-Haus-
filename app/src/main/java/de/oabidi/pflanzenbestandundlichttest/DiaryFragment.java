@@ -63,7 +63,7 @@ public class DiaryFragment extends Fragment {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        repository = new PlantRepository(requireContext().getApplicationContext());
+        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(

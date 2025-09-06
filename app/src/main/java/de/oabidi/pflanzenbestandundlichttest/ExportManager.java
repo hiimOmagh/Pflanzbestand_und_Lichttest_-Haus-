@@ -35,7 +35,7 @@ public class ExportManager {
 
     public ExportManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
-        this.repository = new PlantRepository(this.context);
+        this.repository = ((PlantApp) this.context).getRepository();
     }
 
     /**

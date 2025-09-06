@@ -39,7 +39,7 @@ public class ReminderScheduler {
             return;
         }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
-        PlantRepository repository = new PlantRepository(context.getApplicationContext());
+        PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
         Reminder reminder = new Reminder(triggerAt, message);
         repository.insertReminder(reminder,
             () -> scheduleReminderAt(context, triggerAt, message, reminder.getId()));

@@ -32,7 +32,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.calibrationFactor = calibrationFactor;
         this.sampleSize = sampleSize;
         lightSensorHelper = new LightSensorHelper(this.context, this, sampleSize);
-        plantRepository = new PlantRepository(this.context);
+        plantRepository = ((PlantApp) this.context).getRepository();
     }
 
     public boolean hasLightSensor() {

@@ -47,7 +47,7 @@ public class StatsFragment extends Fragment {
         dliView = view.findViewById(R.id.stats_dli);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
-        repository = new PlantRepository(requireContext().getApplicationContext());
+        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);

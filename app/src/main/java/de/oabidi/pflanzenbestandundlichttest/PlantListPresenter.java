@@ -17,7 +17,7 @@ public class PlantListPresenter {
 
     public PlantListPresenter(View view, Context context) {
         this.view = view;
-        this.repository = new PlantRepository(context);
+        this.repository = ((PlantApp) context.getApplicationContext()).getRepository();
     }
 
     public void refreshPlants() {

@@ -49,7 +49,7 @@ public class MeasurementListFragment extends Fragment {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        repository = new PlantRepository(requireContext().getApplicationContext());
+        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
     }
 
     @Nullable
