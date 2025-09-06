@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Intent;
+import android.app.DatePickerDialog;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,8 +18,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -45,6 +46,7 @@ public class PlantEditFragment extends Fragment {
     private ImageView photoView;
 
     private Uri photoUri;
+    private long acquiredEpoch = System.currentTimeMillis();
 
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -83,8 +85,8 @@ public class PlantEditFragment extends Fragment {
             nameInput.setText(args.getString(ARG_NAME));
             speciesInput.setText(args.getString(ARG_SPECIES));
             locationInput.setText(args.getString(ARG_LOCATION));
-            long epoch = args.getLong(ARG_ACQUIRED, System.currentTimeMillis());
-            acquiredInput.setText(formatDate(epoch));
+            acquiredEpoch = args.getLong(ARG_ACQUIRED, System.currentTimeMillis());
+            acquiredInput.setText(formatDate(acquiredEpoch));
             notesInput.setText(args.getString(ARG_NOTES));
             String photo = args.getString(ARG_PHOTO);
             if (photo != null) {
@@ -93,6 +95,7 @@ public class PlantEditFragment extends Fragment {
             }
         }
 
+        acquiredInput.setOnClickListener(v -> showDatePicker());
         saveButton.setOnClickListener(v -> savePlant());
     }
 
@@ -105,9 +108,8 @@ public class PlantEditFragment extends Fragment {
         String species = emptyToNull(getText(speciesInput));
         String location = emptyToNull(getText(locationInput));
         String notes = emptyToNull(getText(notesInput));
-        long acquired = parseDate(getText(acquiredInput));
 
-        Plant plant = new Plant(name, notes, species, location, acquired, photoUri);
+        Plant plant = new Plant(name, notes, species, location, acquiredEpoch, photoUri);
         Bundle args = getArguments();
         if (args != null) {
             plant.setId(args.getLong(ARG_ID, 0));
@@ -136,22 +138,23 @@ public class PlantEditFragment extends Fragment {
         return s.isEmpty() ? null : s;
     }
 
-    private static String formatDate(long epoch) {
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(epoch));
+    private void showDatePicker() {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(acquiredEpoch);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        DatePickerDialog dialog = new DatePickerDialog(requireContext(), (view, y, m, d) -> {
+            Calendar c = Calendar.getInstance();
+            c.set(y, m, d, 0, 0, 0);
+            acquiredEpoch = c.getTimeInMillis();
+            acquiredInput.setText(formatDate(acquiredEpoch));
+        }, year, month, day);
+        dialog.show();
     }
 
-    private static long parseDate(String value) {
-        if (value.isEmpty()) {
-            return System.currentTimeMillis();
-        }
-        try {
-            Date date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(value);
-            if (date != null) {
-                return date.getTime();
-            }
-        } catch (ParseException ignored) {
-        }
-        return System.currentTimeMillis();
+    private static String formatDate(long epoch) {
+        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(epoch));
     }
 
     public static PlantEditFragment newInstance(@Nullable Plant plant) {
