@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -76,23 +77,36 @@ public class ExportManager {
                             photoName = "plant_" + p.getId() + "_" + getFileName(p.getPhotoUri());
                             copyUriToFile(p.getPhotoUri(), new File(tempDir, photoName));
                         }
-                        writer.write(p.getId() + "," + escape(p.getName()) + "," +
-                            escape(p.getDescription()) + "," + escape(p.getSpecies()) + "," +
-                            escape(p.getLocationHint()) + "," + p.getAcquiredAtEpoch() + "," +
-                            escape(photoName) + "\n");
+                        writer.write(String.format(Locale.US,
+                            "%d,%s,%s,%s,%s,%d,%s\n",
+                            p.getId(),
+                            escape(p.getName()),
+                            escape(p.getDescription()),
+                            escape(p.getSpecies()),
+                            escape(p.getLocationHint()),
+                            p.getAcquiredAtEpoch(),
+                            escape(photoName)));
                     }
 
                     writer.write("\nSpeciesTargets\n");
                     writer.write("speciesKey,ppfdMin,ppfdMax\n");
                     for (SpeciesTarget t : targets) {
-                        writer.write(escape(t.getSpeciesKey()) + "," + t.getPpfdMin() + "," + t.getPpfdMax() + "\n");
+                        writer.write(String.format(Locale.US, "%s,%f,%f\n",
+                            escape(t.getSpeciesKey()),
+                            t.getPpfdMin(),
+                            t.getPpfdMax()));
                     }
 
                     writer.write("\nMeasurements\n");
                     writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli\n");
                     for (Measurement m : measurements) {
-                        writer.write(m.getId() + "," + m.getPlantId() + "," + m.getTimeEpoch() + "," +
-                            m.getLuxAvg() + "," + m.getPpfd() + "," + m.getDli() + "\n");
+                        writer.write(String.format(Locale.US, "%d,%d,%d,%f,%f,%f\n",
+                            m.getId(),
+                            m.getPlantId(),
+                            m.getTimeEpoch(),
+                            m.getLuxAvg(),
+                            m.getPpfd(),
+                            m.getDli()));
                     }
 
                     writer.write("\nDiaryEntries\n");
@@ -104,15 +118,22 @@ public class ExportManager {
                             photoName = "diary_" + d.getId() + "_" + getFileName(dUri);
                             copyUriToFile(dUri, new File(tempDir, photoName));
                         }
-                        writer.write(d.getId() + "," + d.getPlantId() + "," + d.getTimeEpoch() + "," +
-                            escape(d.getType()) + "," + escape(d.getNote()) + "," + escape(photoName) + "\n");
+                        writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s\n",
+                            d.getId(),
+                            d.getPlantId(),
+                            d.getTimeEpoch(),
+                            escape(d.getType()),
+                            escape(d.getNote()),
+                            escape(photoName)));
                     }
 
                     writer.write("\nReminders\n");
                     writer.write("id,triggerAt,message\n");
                     for (Reminder r : reminders) {
-                        writer.write(r.getId() + "," + r.getTriggerAt() + "," +
-                            escape(r.getMessage()) + "\n");
+                        writer.write(String.format(Locale.US, "%d,%d,%s\n",
+                            r.getId(),
+                            r.getTriggerAt(),
+                            escape(r.getMessage())));
                     }
                     writer.flush();
                 } catch (IOException e) {

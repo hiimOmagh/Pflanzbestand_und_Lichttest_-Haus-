@@ -21,8 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.text.NumberFormat;
+import java.text.ParseException;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -111,6 +114,8 @@ public class ImportManager {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
+        final NumberFormat nf = NumberFormat.getInstance(Locale.US);
+        nf.setGroupingUsed(false);
         try {
             db.runInTransaction(() -> {
                 try {
@@ -174,11 +179,16 @@ public class ImportManager {
                         } else if (section == Section.SPECIES_TARGETS) {
                             if (parts.size() >= 3) {
                                 String speciesKey = parts.get(0);
-                                float ppfdMin = Float.parseFloat(parts.get(1));
-                                float ppfdMax = Float.parseFloat(parts.get(2));
-                                SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
-                                db.speciesTargetDao().insert(t);
-                                importedAny[0] = true;
+                                try {
+                                    float ppfdMin = nf.parse(parts.get(1)).floatValue();
+                                    float ppfdMax = nf.parse(parts.get(2)).floatValue();
+                                    SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
+                                    db.speciesTargetDao().insert(t);
+                                    importedAny[0] = true;
+                                } catch (ParseException e) {
+                                    Log.e(TAG, "Malformed species target row: " + line, e);
+                                    throw new RuntimeException("Malformed species target row", e);
+                                }
                             } else {
                                 Log.e(TAG, "Malformed species target row: " + line);
                                 throw new RuntimeException("Malformed species target row");
@@ -195,12 +205,17 @@ public class ImportManager {
                                     plantId = mappedId;
                                 }
                                 long timeEpoch = Long.parseLong(parts.get(2));
-                                float luxAvg = Float.parseFloat(parts.get(3));
-                                float ppfd = Float.parseFloat(parts.get(4));
-                                float dli = Float.parseFloat(parts.get(5));
-                                Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
-                                db.measurementDao().insert(m);
-                                importedAny[0] = true;
+                                try {
+                                    float luxAvg = nf.parse(parts.get(3)).floatValue();
+                                    float ppfd = nf.parse(parts.get(4)).floatValue();
+                                    float dli = nf.parse(parts.get(5)).floatValue();
+                                    Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
+                                    db.measurementDao().insert(m);
+                                    importedAny[0] = true;
+                                } catch (ParseException e) {
+                                    Log.e(TAG, "Malformed measurement row: " + line, e);
+                                    throw new RuntimeException("Malformed measurement row", e);
+                                }
                             } else {
                                 Log.e(TAG, "Malformed measurement row: " + line);
                                 throw new RuntimeException("Malformed measurement row");
@@ -253,7 +268,7 @@ public class ImportManager {
                             }
                         }
                     }
-                } catch (IOException e) {
+                } catch (IOException | ParseException e) {
                     throw new RuntimeException(e);
                 }
             });
