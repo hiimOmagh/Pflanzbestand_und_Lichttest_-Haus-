@@ -111,7 +111,7 @@ public class DataImportExportInstrumentedTest {
             () -> repository.getAllDiaryEntriesSync().size()
         ).get();
         int reminderCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> PlantDatabase.getDatabase(context).reminderDao().getAll().size()
+            () -> repository.getAllRemindersSync().size()
         ).get();
 
         assertEquals(1, plantCount);
@@ -152,7 +152,7 @@ public class DataImportExportInstrumentedTest {
         }
 
         Reminder restoredReminder = PlantDatabase.databaseWriteExecutor.submit(
-            () -> PlantDatabase.getDatabase(context).reminderDao().getAll().get(0)
+            () -> repository.getAllRemindersSync().get(0)
         ).get();
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());

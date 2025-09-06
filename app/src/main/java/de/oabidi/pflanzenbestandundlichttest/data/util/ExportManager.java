@@ -67,7 +67,7 @@ public class ExportManager {
                     List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
                     List<Measurement> measurements = repository.getAllMeasurementsSync();
                     List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
-                    List<Reminder> reminders = PlantDatabase.getDatabase(context).reminderDao().getAll();
+                    List<Reminder> reminders = repository.getAllRemindersSync();
 
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
