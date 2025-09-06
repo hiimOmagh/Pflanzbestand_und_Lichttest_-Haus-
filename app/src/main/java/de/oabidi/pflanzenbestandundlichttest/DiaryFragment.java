@@ -228,6 +228,16 @@ public class DiaryFragment extends Fragment {
             return;
         }
         repository.diaryEntriesForPlant(plantId, result -> {
+            for (DiaryEntry entry : result) {
+                String photo = entry.getPhotoUri();
+                if (photo != null && photo.startsWith("content:")) {
+                    try {
+                        requireContext().getContentResolver().takePersistableUriPermission(
+                            Uri.parse(photo), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } catch (SecurityException ignored) {
+                    }
+                }
+            }
             if (filterSpinner != null) {
                 String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
                 int pos = filterSpinner.getSelectedItemPosition();

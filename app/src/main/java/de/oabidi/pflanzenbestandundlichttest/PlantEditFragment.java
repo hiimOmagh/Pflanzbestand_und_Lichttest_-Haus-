@@ -91,6 +91,13 @@ public class PlantEditFragment extends Fragment {
             String photo = args.getString(ARG_PHOTO);
             if (photo != null) {
                 photoUri = Uri.parse(photo);
+                if ("content".equals(photoUri.getScheme())) {
+                    try {
+                        requireContext().getContentResolver().takePersistableUriPermission(
+                            photoUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    } catch (SecurityException ignored) {
+                    }
+                }
                 photoView.setImageURI(photoUri);
             }
         }

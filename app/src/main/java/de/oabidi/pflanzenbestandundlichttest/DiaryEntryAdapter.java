@@ -101,10 +101,12 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
 
             if (entry.getPhotoUri() != null) {
                 photoView.setVisibility(View.VISIBLE);
-                photoView.setImageURI(Uri.parse(entry.getPhotoUri()));
+                Uri uri = Uri.parse(entry.getPhotoUri());
+                photoView.setImageURI(uri);
                 photoView.setOnClickListener(v -> {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(Uri.parse(entry.getPhotoUri()), "image/*");
+                    intent.setDataAndType(uri, "image/*");
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     v.getContext().startActivity(intent);
                 });
             } else {

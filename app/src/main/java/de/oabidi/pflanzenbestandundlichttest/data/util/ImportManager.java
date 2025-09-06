@@ -1,9 +1,14 @@
 package de.oabidi.pflanzenbestandundlichttest.data.util;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -321,21 +326,39 @@ public class ImportManager {
 
     private Uri restoreImage(File exportedImage) {
         try {
-            File imagesDir = new File(context.getFilesDir(), "imported_images");
-            if (!imagesDir.exists() && !imagesDir.mkdirs()) {
-                throw new IOException("Unable to create destination directory");
+            String name = "imported_" + System.currentTimeMillis() + "_" + exportedImage.getName();
+
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, name);
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/*");
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.put(MediaStore.Images.Media.RELATIVE_PATH,
+                    Environment.DIRECTORY_PICTURES + "/PlantImports");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
             }
-            File destFile = new File(imagesDir,
-                "imported_" + System.currentTimeMillis() + "_" + exportedImage.getName());
+
+            ContentResolver resolver = context.getContentResolver();
+            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) {
+                throw new IOException("Failed to create MediaStore record");
+            }
+
             try (InputStream in = new FileInputStream(exportedImage);
-                 OutputStream out = new FileOutputStream(destFile)) {
+                 OutputStream out = resolver.openOutputStream(uri)) {
                 byte[] buffer = new byte[8192];
                 int len;
                 while ((len = in.read(buffer)) != -1) {
                     out.write(buffer, 0, len);
                 }
             }
-            return Uri.fromFile(destFile);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                values.clear();
+                values.put(MediaStore.Images.Media.IS_PENDING, 0);
+                resolver.update(uri, values, null, null);
+            }
+
+            return uri;
         } catch (IOException e) {
             Log.e(TAG, "Failed to restore image" , e);
             return null;
