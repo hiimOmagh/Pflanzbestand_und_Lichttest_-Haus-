@@ -11,6 +11,7 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            PendingResult result = goAsync();
             PlantRepository repository = new PlantRepository(context.getApplicationContext());
             repository.getAllReminders(reminders -> {
                 long now = System.currentTimeMillis();
@@ -21,6 +22,7 @@ public class BootReceiver extends BroadcastReceiver {
                         repository.deleteReminderById(reminder.getId(), null);
                     }
                 }
+                result.finish();
             });
         }
     }
