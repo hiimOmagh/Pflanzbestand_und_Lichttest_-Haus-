@@ -30,6 +30,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private static final String KEY_CALIBRATION = "calibration_factor";
     private static final String KEY_SAMPLE_SIZE = "sample_size";
     private static final String KEY_LIGHT_HOURS = "light_hours";
+    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
 
     private TextView luxRawView;
     private TextView luxView;
@@ -83,6 +84,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
         }
+        if (selectedPlantId == -1) {
+            selectedPlantId = preferences.getLong(KEY_SELECTED_PLANT, -1);
+        }
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -90,12 +94,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
                 if (plants != null && position >= 0 && position < plants.size()) {
                     selectedPlantId = plants.get(position).getId();
                     presenter.selectPlant(position);
+                    preferences.edit().putLong(KEY_SELECTED_PLANT, selectedPlantId).apply();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
+                preferences.edit().remove(KEY_SELECTED_PLANT).apply();
             }
         });
 

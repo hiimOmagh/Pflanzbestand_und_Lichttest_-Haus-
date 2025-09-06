@@ -1,5 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +34,9 @@ public class StatsFragment extends Fragment {
     private long selectedPlantId = -1;
     private View viewMeasurementsButton;
     private static final int DLI_DAYS = 7;
+    private static final String PREFS_NAME = "settings";
+    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
+    private SharedPreferences preferences;
 
     @Nullable
     @Override
@@ -48,10 +53,15 @@ public class StatsFragment extends Fragment {
         dliView = view.findViewById(R.id.stats_dli);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
-        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        Context context = requireContext().getApplicationContext();
+        repository = ((PlantApp) context).getRepository();
+        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
+        }
+        if (selectedPlantId == -1) {
+            selectedPlantId = preferences.getLong(KEY_SELECTED_PLANT, -1);
         }
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -60,12 +70,14 @@ public class StatsFragment extends Fragment {
                 if (plants != null && position >= 0 && position < plants.size()) {
                     selectedPlantId = plants.get(position).getId();
                     loadDataForPlant(selectedPlantId);
+                    preferences.edit().putLong(KEY_SELECTED_PLANT, selectedPlantId).apply();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
+                preferences.edit().remove(KEY_SELECTED_PLANT).apply();
             }
         });
 

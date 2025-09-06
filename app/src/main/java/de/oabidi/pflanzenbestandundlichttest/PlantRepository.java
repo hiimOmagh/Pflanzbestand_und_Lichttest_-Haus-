@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -21,6 +22,8 @@ import java.util.function.Consumer;
  */
 public class PlantRepository {
     private static final String TAG = "PlantRepository";
+    private static final String PREFS_NAME = "settings";
+    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
     private final PlantDao plantDao;
     private final MeasurementDao measurementDao;
     private final DiaryDao diaryDao;
@@ -113,6 +116,10 @@ public class PlantRepository {
                 }
             }
             plantDao.delete(plant);
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            if (prefs.getLong(KEY_SELECTED_PLANT, -1) == plant.getId()) {
+                prefs.edit().remove(KEY_SELECTED_PLANT).apply();
+            }
             if (callback != null) {
                 mainHandler.post(callback);
             }
