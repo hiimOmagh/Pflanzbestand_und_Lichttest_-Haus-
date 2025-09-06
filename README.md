@@ -31,7 +31,8 @@ Instrumentation tests require a connected Android device or emulator. They can b
 ```
 
 This command runs the full Android test suite, including the light measurement scenario covered by
-`LightMeasurementInstrumentedTest` and the reminder scheduling checks in `ReminderInstrumentedTest`.
+`LightMeasurementInstrumentedTest`, the reminder scheduling checks in `ReminderInstrumentedTest`, and
+the round-trip backup verification in `DataRoundTripInstrumentedTest`.
 
 ## Usage
 
