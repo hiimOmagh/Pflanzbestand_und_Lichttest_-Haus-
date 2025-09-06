@@ -108,153 +108,163 @@ public class ImportManager {
     }
 
     private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode) throws IOException {
-        String line;
-        Section section = Section.NONE;
-        boolean importedAny = false;
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
-        while ((line = reader.readLine()) != null) {
-            if (line.trim().isEmpty()) {
-                continue;
-            }
-            switch (line) {
-                case "Plants":
-                    section = Section.PLANTS;
-                    reader.readLine(); // skip header
-
-                    continue;
-                case "SpeciesTargets":
-                    section = Section.SPECIES_TARGETS;
-                    reader.readLine(); // skip header
-
-                    continue;
-                case "Measurements":
-                    section = Section.MEASUREMENTS;
-                    reader.readLine(); // skip header
-
-                    continue;
-                case "DiaryEntries":
-                    section = Section.DIARY;
-                    reader.readLine(); // skip header
-
-                    continue;
-                case "Reminders":
-                    section = Section.REMINDERS;
-                    reader.readLine(); // skip header
-
-                    continue;
-            }
-            List<String> parts = parseCsv(line);
-            try {
-                if (section == Section.PLANTS) {
-                    if (parts.size() >= 7) {
-                        long id = Long.parseLong(parts.get(0));
-                        String name = parts.get(1);
-                        String description = parts.get(2).isEmpty() ? null : parts.get(2);
-                        String species = parts.get(3).isEmpty() ? null : parts.get(3);
-                        String location = parts.get(4).isEmpty() ? null : parts.get(4);
-                        long acquired = Long.parseLong(parts.get(5));
-                        String photo = parts.get(6);
-                        Uri photoUri = null;
-                        if (!photo.isEmpty()) {
-                            Uri restored = restoreImage(new File(baseDir, photo));
-                            photoUri = restored;
+        final boolean[] importedAny = {false};
+        try {
+            db.runInTransaction(() -> {
+                try {
+                    String line;
+                    Section section = Section.NONE;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.trim().isEmpty()) {
+                            continue;
                         }
-                        Plant p = new Plant(name, description, species, location, acquired, photoUri);
-                        if (mode == Mode.MERGE) {
-                            p.setId(0);
-                            long newId = db.plantDao().insert(p);
-                            plantIdMap.put(id, newId);
-                        } else {
-                            p.setId(id);
-                            db.plantDao().insert(p);
-                        }
-                        importedAny = true;
-                    } else {
-                        Log.e(TAG, "Malformed plant row: " + line);
-                    }
-                } else if (section == Section.SPECIES_TARGETS) {
-                    if (parts.size() >= 3) {
-                        String speciesKey = parts.get(0);
-                        float ppfdMin = Float.parseFloat(parts.get(1));
-                        float ppfdMax = Float.parseFloat(parts.get(2));
-                        SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
-                        db.speciesTargetDao().insert(t);
-                        importedAny = true;
-                    } else {
-                        Log.e(TAG, "Malformed species target row: " + line);
-                    }
-                } else if (section == Section.MEASUREMENTS) {
-                    if (parts.size() >= 6) {
-                        long plantId = Long.parseLong(parts.get(1));
-                        if (mode == Mode.MERGE) {
-                            Long mappedId = plantIdMap.get(plantId);
-                            if (mappedId == null) {
-                                Log.w(TAG, "Skipping measurement for missing plant " + plantId);
+                        switch (line) {
+                            case "Plants":
+                                section = Section.PLANTS;
+                                reader.readLine(); // skip header
                                 continue;
-                            }
-                            plantId = mappedId;
-                        }
-                        long timeEpoch = Long.parseLong(parts.get(2));
-                        float luxAvg = Float.parseFloat(parts.get(3));
-                        float ppfd = Float.parseFloat(parts.get(4));
-                        float dli = Float.parseFloat(parts.get(5));
-                        Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
-                        db.measurementDao().insert(m);
-                        importedAny = true;
-                    } else {
-                        Log.e(TAG, "Malformed measurement row: " + line);
-                    }
-                } else if (section == Section.DIARY) {
-                    if (parts.size() >= 6) {
-                        long plantId = Long.parseLong(parts.get(1));
-                        if (mode == Mode.MERGE) {
-                            Long mappedId = plantIdMap.get(plantId);
-                            if (mappedId == null) {
-                                Log.w(TAG, "Skipping diary entry for missing plant " + plantId);
+                            case "SpeciesTargets":
+                                section = Section.SPECIES_TARGETS;
+                                reader.readLine(); // skip header
                                 continue;
+                            case "Measurements":
+                                section = Section.MEASUREMENTS;
+                                reader.readLine(); // skip header
+                                continue;
+                            case "DiaryEntries":
+                                section = Section.DIARY;
+                                reader.readLine(); // skip header
+                                continue;
+                            case "Reminders":
+                                section = Section.REMINDERS;
+                                reader.readLine(); // skip header
+                                continue;
+                        }
+                        List<String> parts = parseCsv(line);
+                        if (section == Section.PLANTS) {
+                            if (parts.size() >= 7) {
+                                long id = Long.parseLong(parts.get(0));
+                                String name = parts.get(1);
+                                String description = parts.get(2).isEmpty() ? null : parts.get(2);
+                                String species = parts.get(3).isEmpty() ? null : parts.get(3);
+                                String location = parts.get(4).isEmpty() ? null : parts.get(4);
+                                long acquired = Long.parseLong(parts.get(5));
+                                String photo = parts.get(6);
+                                Uri photoUri = null;
+                                if (!photo.isEmpty()) {
+                                    Uri restored = restoreImage(new File(baseDir, photo));
+                                    photoUri = restored;
+                                }
+                                Plant p = new Plant(name, description, species, location, acquired, photoUri);
+                                if (mode == Mode.MERGE) {
+                                    p.setId(0);
+                                    long newId = db.plantDao().insert(p);
+                                    plantIdMap.put(id, newId);
+                                } else {
+                                    p.setId(id);
+                                    db.plantDao().insert(p);
+                                }
+                                importedAny[0] = true;
+                            } else {
+                                Log.e(TAG, "Malformed plant row: " + line);
+                                throw new RuntimeException("Malformed plant row");
                             }
-                            plantId = mappedId;
+                        } else if (section == Section.SPECIES_TARGETS) {
+                            if (parts.size() >= 3) {
+                                String speciesKey = parts.get(0);
+                                float ppfdMin = Float.parseFloat(parts.get(1));
+                                float ppfdMax = Float.parseFloat(parts.get(2));
+                                SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
+                                db.speciesTargetDao().insert(t);
+                                importedAny[0] = true;
+                            } else {
+                                Log.e(TAG, "Malformed species target row: " + line);
+                                throw new RuntimeException("Malformed species target row");
+                            }
+                        } else if (section == Section.MEASUREMENTS) {
+                            if (parts.size() >= 6) {
+                                long plantId = Long.parseLong(parts.get(1));
+                                if (mode == Mode.MERGE) {
+                                    Long mappedId = plantIdMap.get(plantId);
+                                    if (mappedId == null) {
+                                        Log.w(TAG, "Skipping measurement for missing plant " + plantId);
+                                        continue;
+                                    }
+                                    plantId = mappedId;
+                                }
+                                long timeEpoch = Long.parseLong(parts.get(2));
+                                float luxAvg = Float.parseFloat(parts.get(3));
+                                float ppfd = Float.parseFloat(parts.get(4));
+                                float dli = Float.parseFloat(parts.get(5));
+                                Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
+                                db.measurementDao().insert(m);
+                                importedAny[0] = true;
+                            } else {
+                                Log.e(TAG, "Malformed measurement row: " + line);
+                                throw new RuntimeException("Malformed measurement row");
+                            }
+                        } else if (section == Section.DIARY) {
+                            if (parts.size() >= 6) {
+                                long plantId = Long.parseLong(parts.get(1));
+                                if (mode == Mode.MERGE) {
+                                    Long mappedId = plantIdMap.get(plantId);
+                                    if (mappedId == null) {
+                                        Log.w(TAG, "Skipping diary entry for missing plant " + plantId);
+                                        continue;
+                                    }
+                                    plantId = mappedId;
+                                }
+                                long timeEpoch = Long.parseLong(parts.get(2));
+                                String type = parts.get(3);
+                                String note = parts.get(4);
+                                String photoUri = parts.get(5);
+                                DiaryEntry d = new DiaryEntry(plantId, timeEpoch, type, note);
+                                if (!photoUri.isEmpty()) {
+                                    Uri restored = restoreImage(new File(baseDir, photoUri));
+                                    d.setPhotoUri(restored.toString());
+                                }
+                                db.diaryDao().insert(d);
+                                importedAny[0] = true;
+                            } else {
+                                Log.e(TAG, "Malformed diary row: " + line);
+                                throw new RuntimeException("Malformed diary row");
+                            }
+                        } else if (section == Section.REMINDERS) {
+                            if (parts.size() >= 3) {
+                                long id = Long.parseLong(parts.get(0));
+                                long triggerAt = Long.parseLong(parts.get(1));
+                                String message = parts.get(2);
+                                Reminder r = new Reminder(triggerAt, message);
+                                long reminderId;
+                                if (mode == Mode.MERGE) {
+                                    reminderId = db.reminderDao().insert(r);
+                                } else {
+                                    r.setId(id);
+                                    db.reminderDao().insert(r);
+                                    reminderId = id;
+                                }
+                                ReminderScheduler.scheduleReminderAt(context, triggerAt, message, reminderId);
+                                importedAny[0] = true;
+                            } else {
+                                Log.e(TAG, "Malformed reminder row: " + line);
+                                throw new RuntimeException("Malformed reminder row");
+                            }
                         }
-                        long timeEpoch = Long.parseLong(parts.get(2));
-                        String type = parts.get(3);
-                        String note = parts.get(4);
-                        String photoUri = parts.get(5);
-                        DiaryEntry d = new DiaryEntry(plantId, timeEpoch, type, note);
-                        if (!photoUri.isEmpty()) {
-                            Uri restored = restoreImage(new File(baseDir, photoUri));
-                            d.setPhotoUri(restored.toString());
-                        }
-                        db.diaryDao().insert(d);
-                        importedAny = true;
-                    } else {
-                        Log.e(TAG, "Malformed diary row: " + line);
                     }
-                } else if (section == Section.REMINDERS) {
-                    if (parts.size() >= 3) {
-                        long id = Long.parseLong(parts.get(0));
-                        long triggerAt = Long.parseLong(parts.get(1));
-                        String message = parts.get(2);
-                        Reminder r = new Reminder(triggerAt, message);
-                        long reminderId;
-                        if (mode == Mode.MERGE) {
-                            reminderId = db.reminderDao().insert(r);
-                        } else {
-                            r.setId(id);
-                            db.reminderDao().insert(r);
-                            reminderId = id;
-                        }
-                        ReminderScheduler.scheduleReminderAt(context, triggerAt, message, reminderId);
-                        importedAny = true;
-                    } else {
-                        Log.e(TAG, "Malformed reminder row: " + line);
-                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Failed to parse row: " + line, e);
+            });
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
             }
+            Log.e(TAG, "Failed to parse import", e);
+            return false;
         }
-        return importedAny;
+        return importedAny[0];
     }
 
     private static List<String> parseCsv(String line) {
