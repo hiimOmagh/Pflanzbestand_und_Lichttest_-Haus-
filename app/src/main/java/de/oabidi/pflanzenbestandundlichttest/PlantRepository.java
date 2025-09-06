@@ -398,6 +398,25 @@ public class PlantRepository {
     }
 
     /**
+     * Calculates the summed PPFD for a plant within the specified time range and delivers
+     * the result on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param start    start of the time range (inclusive)
+     * @param end      end of the time range (exclusive)
+     * @param callback invoked with the summed PPFD on the main thread
+     */
+    public void sumPpfdForRange(long plantId, long start, long end, Consumer<Float> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            Float result = measurementDao.sumPpfdForRange(plantId, start, end);
+            float value = result != null ? result : 0f;
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(value));
+            }
+        });
+    }
+
+    /**
      * Calculates the summed PPFD for a plant on a specific day and delivers
      * the result on the main thread.
      *

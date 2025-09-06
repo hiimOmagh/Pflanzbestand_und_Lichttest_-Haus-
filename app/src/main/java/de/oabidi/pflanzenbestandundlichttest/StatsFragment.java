@@ -100,21 +100,12 @@ public class StatsFragment extends Fragment {
 
     private void computeDli(long plantId) {
         long now = System.currentTimeMillis();
-        long start = startOfDay(now);
-        final float[] total = {0f};
-        final int[] remaining = {DLI_DAYS};
-        for (int i = 0; i < DLI_DAYS; i++) {
-            long dayStart = start - i * 86400000L;
-            repository.dliForDay(plantId, dayStart, ppfdSum -> {
-                float dli = LightMath.dliFromPpfd(ppfdSum, 1f);
-                total[0] += dli;
-                remaining[0]--;
-                if (remaining[0] == 0) {
-                    float avg = total[0] / DLI_DAYS;
-                    dliView.setText(getString(R.string.format_dli, avg));
-                }
-            });
-        }
+        long end = startOfDay(now) + 86400000L;
+        long start = end - DLI_DAYS * 86400000L;
+        repository.sumPpfdForRange(plantId, start, end, ppfdSum -> {
+            float avgDli = LightMath.dliFromPpfd(ppfdSum, 1f) / DLI_DAYS;
+            dliView.setText(getString(R.string.format_dli, avgDli));
+        });
     }
 
     private static long startOfDay(long time) {
