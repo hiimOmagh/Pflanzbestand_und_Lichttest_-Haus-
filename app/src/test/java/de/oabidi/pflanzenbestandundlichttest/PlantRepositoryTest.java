@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import static org.junit.Assert.*;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Looper;
 
 import androidx.room.Room;
@@ -16,6 +17,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 
 import java.lang.reflect.Field;
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -226,5 +228,46 @@ public class PlantRepositoryTest {
             queryLatch3.countDown();
         });
         awaitLatch(queryLatch3);
+    }
+
+    @Test
+    public void deletePlantRemovesPhoto() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Photo");
+        plant.setAcquiredAtEpoch(0L);
+        File image = File.createTempFile("plant", ".jpg");
+        plant.setPhotoUri(Uri.fromFile(image));
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insert(plant, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        assertTrue(image.exists());
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.delete(plant, deleteLatch::countDown);
+        awaitLatch(deleteLatch);
+        assertFalse(image.exists());
+    }
+
+    @Test
+    public void deleteDiaryEntryRemovesPhoto() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Diary");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        File image = File.createTempFile("entry", ".jpg");
+        DiaryEntry entry = new DiaryEntry(plant.getId(), 1L, DiaryEntry.TYPE_WATER, "note");
+        entry.setPhotoUri(Uri.fromFile(image).toString());
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insertDiaryEntry(entry, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        assertTrue(image.exists());
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.deleteDiaryEntry(entry, deleteLatch::countDown);
+        awaitLatch(deleteLatch);
+        assertFalse(image.exists());
     }
 }

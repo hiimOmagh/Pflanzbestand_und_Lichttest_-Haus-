@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
+import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+
 import androidx.annotation.VisibleForTesting;
 
 import java.util.List;
@@ -24,6 +26,7 @@ public class PlantRepository {
     private final SpeciesTargetDao speciesTargetDao;
     private final ReminderDao reminderDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Context context;
 
     /**
      * Creates a new repository instance.
@@ -34,7 +37,8 @@ public class PlantRepository {
      * @param context application context used to obtain the database
      */
     public PlantRepository(Context context) {
-        PlantDatabase db = PlantDatabase.getDatabase(context);
+        this.context = context.getApplicationContext();
+        PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
         measurementDao = db.measurementDao();
         diaryDao = db.diaryDao();
@@ -100,6 +104,7 @@ public class PlantRepository {
     public Future<?> delete(Plant plant, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
             plantDao.delete(plant);
+            PhotoManager.deletePhoto(context, plant.getPhotoUri());
             if (callback != null) {
                 mainHandler.post(callback);
             }
@@ -180,6 +185,7 @@ public class PlantRepository {
     public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
             diaryDao.delete(entry);
+            PhotoManager.deletePhoto(context, entry.getPhotoUri());
             if (callback != null) {
                 mainHandler.post(callback);
             }
