@@ -43,6 +43,27 @@ public interface MeasurementDao {
     List<Measurement> recentForPlant(long plantId, int limit);
 
     /**
+     * Retrieves all measurements for the given plant since the specified time.
+     *
+     * @param plantId identifier of the plant
+     * @param since   minimum timestamp (inclusive) of measurements to return
+     * @return list of measurements ordered by most recent first
+     */
+    @Query("SELECT * FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
+    List<Measurement> getForPlantSince(long plantId, long since);
+
+    /**
+     * Retrieves all measurements for the given plant within the specified time range.
+     *
+     * @param plantId identifier of the plant
+     * @param start   start of the time range (inclusive)
+     * @param end     end of the time range (exclusive)
+     * @return list of measurements ordered by most recent first
+     */
+    @Query("SELECT * FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :start AND timeEpoch < :end ORDER BY timeEpoch DESC")
+    List<Measurement> getForPlantInRange(long plantId, long start, long end);
+
+    /**
      * Sums PPFD measurements for the given plant on a specific day.
      *
      * <p>The day is defined by its start time in epoch milliseconds and

@@ -365,6 +365,39 @@ public class PlantRepository {
     }
 
     /**
+     * Retrieves measurements for a plant recorded since the given timestamp and delivers them on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param since    minimum timestamp (inclusive) of measurements to return
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void measurementsForPlantSince(long plantId, long since, Consumer<List<Measurement>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Measurement> result = measurementDao.getForPlantSince(plantId, since);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
+     * Retrieves measurements for a plant within the specified time range and delivers them on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param start    start of the time range (inclusive)
+     * @param end      end of the time range (exclusive)
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void measurementsForPlantInRange(long plantId, long start, long end, Consumer<List<Measurement>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Measurement> result = measurementDao.getForPlantInRange(plantId, start, end);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
      * Calculates the summed PPFD for a plant on a specific day and delivers
      * the result on the main thread.
      *

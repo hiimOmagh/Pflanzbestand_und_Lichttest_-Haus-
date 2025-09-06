@@ -135,13 +135,23 @@ public class PlantRepositoryTest {
 
         CountDownLatch queryLatch = new CountDownLatch(1);
         final List<Measurement>[] holder = new List[1];
-        repository.recentMeasurementsForPlant(plant.getId(), 10, ms -> {
+        repository.measurementsForPlantSince(plant.getId(), 0L, ms -> {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             holder[0] = ms;
             queryLatch.countDown();
         });
         awaitLatch(queryLatch);
         assertEquals(1, holder[0].size());
+
+        CountDownLatch rangeLatch = new CountDownLatch(1);
+        final List<Measurement>[] holder2 = new List[1];
+        repository.measurementsForPlantInRange(plant.getId(), 0L, 5L, ms -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            holder2[0] = ms;
+            rangeLatch.countDown();
+        });
+        awaitLatch(rangeLatch);
+        assertEquals(1, holder2[0].size());
 
         CountDownLatch deleteLatch = new CountDownLatch(1);
         repository.deleteMeasurement(holder[0].get(0), () -> {
@@ -151,7 +161,7 @@ public class PlantRepositoryTest {
         awaitLatch(deleteLatch);
 
         CountDownLatch queryLatch2 = new CountDownLatch(1);
-        repository.recentMeasurementsForPlant(plant.getId(), 10, ms -> {
+        repository.measurementsForPlantSince(plant.getId(), 0L, ms -> {
             assertTrue(ms.isEmpty());
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             queryLatch2.countDown();

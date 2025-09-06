@@ -16,9 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Fragment displaying all measurements for a plant.
  */
@@ -100,28 +97,20 @@ public class MeasurementListFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.recentMeasurementsForPlant(plantId, Integer.MAX_VALUE, result -> {
-            if (filterSpinner != null) {
-                String selected = (String) filterSpinner.getSelectedItem();
-                long threshold = Long.MIN_VALUE;
-                long now = System.currentTimeMillis();
-                if (getString(R.string.filter_last_7_days).equals(selected)) {
-                    threshold = now - 7L * 24 * 60 * 60 * 1000;
-                } else if (getString(R.string.filter_last_30_days).equals(selected)) {
-                    threshold = now - 30L * 24 * 60 * 60 * 1000;
-                }
-                if (threshold != Long.MIN_VALUE) {
-                    List<Measurement> filtered = new ArrayList<>();
-                    for (Measurement m : result) {
-                        if (m.getTimeEpoch() >= threshold) {
-                            filtered.add(m);
-                        }
-                    }
-                    adapter.submitList(filtered);
-                    return;
-                }
+        if (filterSpinner != null) {
+            String selected = (String) filterSpinner.getSelectedItem();
+            long now = System.currentTimeMillis();
+            if (getString(R.string.filter_last_7_days).equals(selected)) {
+                long since = now - 7L * 24 * 60 * 60 * 1000;
+                repository.measurementsForPlantSince(plantId, since, adapter::submitList);
+            } else if (getString(R.string.filter_last_30_days).equals(selected)) {
+                long since = now - 30L * 24 * 60 * 60 * 1000;
+                repository.measurementsForPlantSince(plantId, since, adapter::submitList);
+            } else {
+                repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
             }
-            adapter.submitList(result);
-        });
+        } else {
+            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
+        }
     }
 }
