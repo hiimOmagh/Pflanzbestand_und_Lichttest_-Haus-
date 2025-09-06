@@ -48,6 +48,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private List<Plant> plants;
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
+    private boolean hasValidReading = false;
 
     @Nullable
     @Override
@@ -103,6 +104,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             }
         });
 
+        resetSaveButton();
+
         if (!presenter.hasLightSensor()) {
             luxRawView.setText(R.string.no_light_sensor);
             luxView.setText("");
@@ -117,6 +120,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     @Override
     public void onResume() {
         super.onResume();
+        resetSaveButton();
         float k = Float.parseFloat(preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor)));
         String sizeString = preferences.getString(KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
         int size;
@@ -151,6 +155,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onPause() {
         super.onPause();
         presenter.stop();
+        resetSaveButton();
     }
 
     @Override
@@ -175,6 +180,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             .commit();
     }
 
+    private void resetSaveButton() {
+        hasValidReading = false;
+        if (saveMeasurementButton != null) {
+            saveMeasurementButton.setEnabled(false);
+        }
+    }
+
     @Override
     public void showLightData(float rawLux, float lux, float ppfd, float dli) {
         luxRawView.setText(getString(R.string.format_raw_lux, rawLux));
@@ -184,6 +196,10 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         lastLux = lux;
         lastPpfd = ppfd;
         lastDli = dli;
+        if (!hasValidReading) {
+            saveMeasurementButton.setEnabled(true);
+            hasValidReading = true;
+        }
     }
 
     @Override
