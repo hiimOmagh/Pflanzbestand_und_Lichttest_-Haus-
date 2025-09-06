@@ -21,6 +21,9 @@ public class ReminderScheduler {
     /** Extra containing the reminder database identifier. */
     public static final String EXTRA_ID = "extra_id";
 
+    /** Extra containing the associated plant identifier. */
+    public static final String EXTRA_PLANT_ID = "extra_plant_id";
+
     private ReminderScheduler() {
         // no instances
     }
@@ -31,8 +34,9 @@ public class ReminderScheduler {
      * @param context context used to access system services
      * @param days    number of days until the reminder should trigger
      * @param message message displayed in the reminder notification
+     * @param plantId identifier of the related plant
      */
-    public static void scheduleReminder(Context context, int days, String message) {
+    public static void scheduleReminder(Context context, int days, String message, long plantId) {
         if (days <= 0) {
             Log.w("ReminderScheduler", "Days must be positive");
             Toast.makeText(context, R.string.error_positive_number, Toast.LENGTH_SHORT).show();
@@ -40,17 +44,18 @@ public class ReminderScheduler {
         }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
         PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
-        Reminder reminder = new Reminder(triggerAt, message);
+        Reminder reminder = new Reminder(triggerAt, message, plantId);
         repository.insertReminder(reminder,
-            () -> scheduleReminderAt(context, triggerAt, message, reminder.getId()));
+            () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId));
     }
 
-    public static void scheduleReminderAt(Context context, long triggerAt, String message, long id) {
+    public static void scheduleReminderAt(Context context, long triggerAt, String message, long id, long plantId) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(context, ReminderReceiver.class);
         intent.setAction(ACTION_SHOW_REMINDER);
         intent.putExtra(EXTRA_MESSAGE, message);
         intent.putExtra(EXTRA_ID, id);
+        intent.putExtra(EXTRA_PLANT_ID, plantId);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
             context,
             (int) id,

@@ -265,11 +265,20 @@ public class ImportManager {
                                 throw new RuntimeException("Malformed diary row");
                             }
                         } else if (section == Section.REMINDERS) {
-                            if (parts.size() >= 3) {
+                            if (parts.size() >= 4) {
                                 long id = Long.parseLong(parts.get(0));
-                                long triggerAt = Long.parseLong(parts.get(1));
-                                String message = parts.get(2);
-                                Reminder r = new Reminder(triggerAt, message);
+                                long plantId = Long.parseLong(parts.get(1));
+                                if (mode == Mode.MERGE) {
+                                    Long mappedId = plantIdMap.get(plantId);
+                                    if (mappedId == null) {
+                                        Log.w(TAG, "Skipping reminder for missing plant " + plantId);
+                                        continue;
+                                    }
+                                    plantId = mappedId;
+                                }
+                                long triggerAt = Long.parseLong(parts.get(2));
+                                String message = parts.get(3);
+                                Reminder r = new Reminder(triggerAt, message, plantId);
                                 long reminderId;
                                 if (mode == Mode.MERGE) {
                                     reminderId = db.reminderDao().insert(r);
@@ -278,7 +287,7 @@ public class ImportManager {
                                     db.reminderDao().insert(r);
                                     reminderId = id;
                                 }
-                                ReminderScheduler.scheduleReminderAt(context, triggerAt, message, reminderId);
+                                ReminderScheduler.scheduleReminderAt(context, triggerAt, message, reminderId, plantId);
                                 importedAny[0] = true;
                             } else {
                                 Log.e(TAG, "Malformed reminder row: " + line);

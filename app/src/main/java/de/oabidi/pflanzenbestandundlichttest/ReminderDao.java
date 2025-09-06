@@ -33,6 +33,6 @@ public interface ReminderDao {
      *
      * @return list of reminders
      */
-    @Query("SELECT id, triggerAt, message FROM Reminder")
+    @Query("SELECT id, triggerAt, message, plantId FROM Reminder")
     List<Reminder> getAll();
 }

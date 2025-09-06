@@ -45,7 +45,7 @@ public class ReminderInstrumentedTest {
         Context context = ApplicationProvider.getApplicationContext();
         long triggerAt = System.currentTimeMillis() + 1000;
 
-        ReminderScheduler.scheduleReminderAt(context, triggerAt, "Water test", 1);
+        assertEquals(restoredReminder.getPlantId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1));
 
         ShadowSystemClock.advanceBy(Duration.ofSeconds(2));
 
@@ -61,7 +61,7 @@ public class ReminderInstrumentedTest {
     public void bootReceiverReschedulesReminder() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         long triggerAt = System.currentTimeMillis() + 60000;
-        Reminder reminder = new Reminder(triggerAt, "Water later");
+        Reminder reminder = new Reminder(triggerAt, "Water later", 1);
 
         CountDownLatch insertLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(() -> {
@@ -85,5 +85,6 @@ public class ReminderInstrumentedTest {
         ShadowPendingIntent pending = Shadows.shadowOf(alarm.operation);
         Intent scheduledIntent = pending.getSavedIntent();
         assertEquals("Message preserved", "Water later", scheduledIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
+        assertEquals("PlantId preserved", 1, scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1));
     }
 }

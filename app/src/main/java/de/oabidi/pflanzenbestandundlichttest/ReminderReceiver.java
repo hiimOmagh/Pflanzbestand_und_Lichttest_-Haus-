@@ -35,7 +35,8 @@ public class ReminderReceiver extends BroadcastReceiver {
             return;
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
-            ReminderScheduler.scheduleReminder(context, 1, message);
+            long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
+            ReminderScheduler.scheduleReminder(context, 1, message, plantId);
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
@@ -46,43 +47,70 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
         long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
-        PlantDatabase.databaseWriteExecutor.execute(() ->
-            PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
+        long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
         createChannel(context);
         int notificationId = (int) System.currentTimeMillis();
 
-        Intent doneIntent = new Intent(context, ReminderReceiver.class);
-        doneIntent.setAction(ACTION_MARK_DONE);
-        doneIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
-        doneIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
-        PendingIntent donePending = PendingIntent.getBroadcast(
-            context,
-            notificationId,
-            doneIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            PlantDatabase db = PlantDatabase.getDatabase(context);
+            db.reminderDao().deleteById(reminderId);
+            Plant plant = db.plantDao().findById(plantId);
 
-        Intent snoozeIntent = new Intent(context, ReminderReceiver.class);
-        snoozeIntent.setAction(ACTION_SNOOZE);
-        snoozeIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
-        snoozeIntent.putExtra(ReminderScheduler.EXTRA_MESSAGE, message);
-        snoozeIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
-        PendingIntent snoozePending = PendingIntent.getBroadcast(
-            context,
-            notificationId + 1,
-            snoozeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+            Intent doneIntent = new Intent(context, ReminderReceiver.class);
+            doneIntent.setAction(ACTION_MARK_DONE);
+            doneIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+            doneIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
+            PendingIntent donePending = PendingIntent.getBroadcast(
+                context,
+                notificationId,
+                doneIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(context.getString(R.string.app_name))
-            .setContentText(message)
-            .setAutoCancel(true)
-            .addAction(0, context.getString(R.string.reminder_mark_done), donePending)
-            .addAction(0, context.getString(R.string.reminder_snooze), snoozePending);
+            Intent snoozeIntent = new Intent(context, ReminderReceiver.class);
+            snoozeIntent.setAction(ACTION_SNOOZE);
+            snoozeIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
+            snoozeIntent.putExtra(ReminderScheduler.EXTRA_MESSAGE, message);
+            snoozeIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
+            snoozeIntent.putExtra(ReminderScheduler.EXTRA_PLANT_ID, plantId);
+            PendingIntent snoozePending = PendingIntent.getBroadcast(
+                context,
+                notificationId + 1,
+                snoozeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
 
-        NotificationManagerCompat.from(context).notify(notificationId, builder.build());
+            Intent contentIntent = new Intent(context, PlantDetailActivity.class);
+            if (plant != null) {
+                contentIntent.putExtra("plantId", plant.getId());
+                contentIntent.putExtra("name", plant.getName());
+                contentIntent.putExtra("description", plant.getDescription());
+                contentIntent.putExtra("species", plant.getSpecies());
+                contentIntent.putExtra("locationHint", plant.getLocationHint());
+                contentIntent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
+                String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
+                contentIntent.putExtra("photoUri", photo);
+            } else {
+                contentIntent.putExtra("plantId", plantId);
+            }
+            PendingIntent contentPending = PendingIntent.getActivity(
+                context,
+                notificationId + 2,
+                contentIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setContentIntent(contentPending)
+                .addAction(0, context.getString(R.string.reminder_mark_done), donePending)
+                .addAction(0, context.getString(R.string.reminder_snooze), snoozePending);
+
+            NotificationManagerCompat.from(context).notify(notificationId, builder.build());
+        });
     }
 
     private void createChannel(Context context) {

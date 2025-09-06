@@ -17,7 +17,7 @@ public class BootReceiver extends BroadcastReceiver {
                 long now = System.currentTimeMillis();
                 for (Reminder reminder : reminders) {
                     if (reminder.getTriggerAt() > now) {
-                        ReminderScheduler.scheduleReminderAt(context, reminder.getTriggerAt(), reminder.getMessage(), reminder.getId());
+                        ReminderScheduler.scheduleReminderAt(context, reminder.getTriggerAt(), reminder.getMessage(), reminder.getId(), reminder.getPlantId());
                     } else {
                         repository.deleteReminderById(reminder.getId(), null);
                     }

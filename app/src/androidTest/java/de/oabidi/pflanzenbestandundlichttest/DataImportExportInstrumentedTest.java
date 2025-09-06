@@ -72,7 +72,7 @@ public class DataImportExportInstrumentedTest {
         repository.insertDiaryEntry(d, null).get();
 
         long reminderTrigger = System.currentTimeMillis() + 5000;
-        Reminder reminder = new Reminder(reminderTrigger, "ExportReminder");
+        Reminder reminder = new Reminder(reminderTrigger, "ExportReminder", plant.getId());
         long reminderId = PlantDatabase.databaseWriteExecutor.submit(() ->
             PlantDatabase.getDatabase(context).reminderDao().insert(reminder)
         ).get();
@@ -155,6 +155,7 @@ public class DataImportExportInstrumentedTest {
         ).get();
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());
+        assertEquals(plant.getId(), restoredReminder.getPlantId());
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
@@ -164,6 +165,7 @@ public class DataImportExportInstrumentedTest {
         Intent scheduledIntent = pending.getSavedIntent();
         assertEquals("ExportReminder", scheduledIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
         assertEquals(restoredReminder.getId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_ID, -1));
+        assertEquals(restoredReminder.getPlantId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1));
     }
 
     @Test

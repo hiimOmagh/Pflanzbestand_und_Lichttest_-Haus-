@@ -53,4 +53,13 @@ public interface PlantDao {
      */
     @Delete
     void delete(Plant plant);
+
+    /**
+     * Finds a plant by its identifier.
+     *
+     * @param id database identifier
+     * @return the matching plant or {@code null} if not found
+     */
+    @Query("SELECT * FROM Plant WHERE id = :id")
+    Plant findById(long id);
 }

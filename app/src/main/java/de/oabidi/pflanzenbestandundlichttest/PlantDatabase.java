@@ -30,7 +30,7 @@ import java.util.concurrent.Executors;
  * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
  * used to run operations asynchronously.</p>
  */
-@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class, Reminder.class}, version = 4)
+@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class, Reminder.class}, version = 5)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
@@ -53,6 +53,13 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE Reminder ADD COLUMN plantId INTEGER NOT NULL DEFAULT -1");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     public abstract MeasurementDao measurementDao();
@@ -70,7 +77,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                         .fallbackToDestructiveMigration()
                         .addCallback(new RoomDatabase.Callback() {
                             @Override

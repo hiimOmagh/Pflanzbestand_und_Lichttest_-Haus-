@@ -119,10 +119,11 @@ public class ExportManager {
                     }
 
                     writer.write("\nReminders\n");
-                    writer.write("id,triggerAt,message\n");
+                    writer.write("id,plantId,triggerAt,message\n");
                     for (Reminder r : reminders) {
-                        writer.write(String.format(Locale.US, "%d,%d,%s\n",
+                        writer.write(String.format(Locale.US, "%d,%d,%d,%s\n",
                             r.getId(),
+                            r.getPlantId(),
                             r.getTriggerAt(),
                             escape(r.getMessage())));
                     }
