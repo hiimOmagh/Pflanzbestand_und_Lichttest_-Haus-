@@ -81,11 +81,14 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
         progressBar.setVisibility(View.VISIBLE);
-        importManager.importData(uri, mode, success -> {
+        importManager.importData(uri, mode, (success, hadWarnings) -> {
             if (isAdded()) {
                 progressBar.setVisibility(View.GONE);
                 int msg = success ? R.string.import_success : R.string.import_failure;
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                if (success && hadWarnings) {
+                    Toast.makeText(requireContext(), R.string.import_image_warning, Toast.LENGTH_LONG).show();
+                }
             }
         });
     }

@@ -26,6 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -46,7 +47,7 @@ public class ImportManager {
 
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
-        void onComplete(boolean success);
+        void onComplete(boolean success, boolean hadWarnings);
     }
 
     /** Import mode determining how incoming data is applied. */
@@ -67,6 +68,7 @@ public class ImportManager {
     public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
+            AtomicBoolean warning = new AtomicBoolean(false);
             File tempDir = new File(context.getCacheDir(), "import_" + System.currentTimeMillis());
             if (!tempDir.mkdirs()) {
                 tempDir = null;
@@ -95,7 +97,7 @@ public class ImportManager {
                             PlantDatabase.getDatabase(context).clearAllTables();
                         }
                         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                            success = parseAndInsert(reader, tempDir, mode);
+                            success = parseAndInsert(reader, tempDir, mode, warning);
                         }
                     }
                 } catch (IOException e) {
@@ -106,11 +108,13 @@ public class ImportManager {
                 }
             }
             final boolean result = success;
-            mainHandler.post(() -> callback.onComplete(result));
+            final boolean hadWarnings = warning.get();
+            mainHandler.post(() -> callback.onComplete(result, hadWarnings));
         });
     }
 
-    private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode) throws IOException {
+    private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
+                                   AtomicBoolean warning) throws IOException {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
@@ -160,7 +164,11 @@ public class ImportManager {
                                 Uri photoUri = null;
                                 if (!photo.isEmpty()) {
                                     Uri restored = restoreImage(new File(baseDir, photo));
-                                    photoUri = restored;
+                                    if (restored != null) {
+                                        photoUri = restored;
+                                    } else {
+                                        warning.set(true);
+                                    }
                                 }
                                 Plant p = new Plant(name, description, species, location, acquired, photoUri);
                                 if (mode == Mode.MERGE) {
@@ -238,7 +246,11 @@ public class ImportManager {
                                 DiaryEntry d = new DiaryEntry(plantId, timeEpoch, type, note);
                                 if (!photoUri.isEmpty()) {
                                     Uri restored = restoreImage(new File(baseDir, photoUri));
-                                    d.setPhotoUri(restored.toString());
+                                    if (restored != null) {
+                                        d.setPhotoUri(restored.toString());
+                                    } else {
+                                        warning.set(true);
+                                    }
                                 }
                                 db.diaryDao().insert(d);
                                 importedAny[0] = true;
@@ -306,22 +318,27 @@ public class ImportManager {
         return tokens;
     }
 
-    private Uri restoreImage(File exportedImage) throws IOException {
-        File imagesDir = new File(context.getFilesDir(), "imported_images");
-        if (!imagesDir.exists() && !imagesDir.mkdirs()) {
-            throw new IOException("Unable to create destination directory");
-        }
-        File destFile = new File(imagesDir,
-            "imported_" + System.currentTimeMillis() + "_" + exportedImage.getName());
-        try (InputStream in = new FileInputStream(exportedImage);
-             OutputStream out = new FileOutputStream(destFile)) {
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = in.read(buffer)) != -1) {
-                out.write(buffer, 0, len);
+    private Uri restoreImage(File exportedImage) {
+        try {
+            File imagesDir = new File(context.getFilesDir(), "imported_images");
+            if (!imagesDir.exists() && !imagesDir.mkdirs()) {
+                throw new IOException("Unable to create destination directory");
             }
+            File destFile = new File(imagesDir,
+                "imported_" + System.currentTimeMillis() + "_" + exportedImage.getName());
+            try (InputStream in = new FileInputStream(exportedImage);
+                 OutputStream out = new FileOutputStream(destFile)) {
+                byte[] buffer = new byte[8192];
+                int len;
+                while ((len = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, len);
+                }
+            }
+            return Uri.fromFile(destFile);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to restore image" , e);
+            return null;
         }
-        return Uri.fromFile(destFile);
     }
 
     private void deleteRecursive(File file) {

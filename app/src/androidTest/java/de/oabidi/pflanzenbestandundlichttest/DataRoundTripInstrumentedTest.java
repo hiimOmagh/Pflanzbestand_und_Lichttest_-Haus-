@@ -72,7 +72,8 @@ public class DataRoundTripInstrumentedTest {
         // Import data back
         CountDownLatch importLatch = new CountDownLatch(1);
         new ImportManager(context)
-            .importData(exportUri, ImportManager.Mode.REPLACE, success -> importLatch.countDown());
+            .importData(exportUri, ImportManager.Mode.REPLACE,
+                (success, warnings) -> importLatch.countDown());
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
 
         // Verify counts

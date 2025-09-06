@@ -93,7 +93,8 @@ public class DataImportExportInstrumentedTest {
 
         // Import data
         CountDownLatch importLatch = new CountDownLatch(1);
-        new ImportManager(context).importData(uri, ImportManager.Mode.REPLACE, success -> importLatch.countDown());
+        new ImportManager(context).importData(uri, ImportManager.Mode.REPLACE,
+            (success, warnings) -> importLatch.countDown());
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
 
         // Verify all data restored
@@ -203,7 +204,8 @@ public class DataImportExportInstrumentedTest {
         ).get();
 
         CountDownLatch importLatch = new CountDownLatch(1);
-        new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE, success -> importLatch.countDown());
+        new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE,
+            (success, warnings) -> importLatch.countDown());
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
 
         Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
