@@ -88,7 +88,7 @@ public class DiaryFragment extends Fragment {
         filterSpinner = view.findViewById(R.id.diary_filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
             requireContext(),
-            R.array.diary_filter_options,
+            R.array.diary_filter_labels,
             android.R.layout.simple_spinner_item);
         filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         filterSpinner.setAdapter(filterAdapter);
@@ -116,15 +116,16 @@ public class DiaryFragment extends Fragment {
 
             ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                R.array.diary_entry_types,
+                R.array.diary_entry_type_labels,
                 android.R.layout.simple_spinner_item);
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             typeSpinner.setAdapter(spinnerAdapter);
-
-            String label = labelFromCode(entry.getType());
-            int selection = spinnerAdapter.getPosition(label);
-            if (selection >= 0) {
-                typeSpinner.setSelection(selection);
+            String[] typeCodes = getResources().getStringArray(R.array.diary_entry_type_codes);
+            for (int i = 0; i < typeCodes.length; i++) {
+                if (typeCodes[i].equals(entry.getType())) {
+                    typeSpinner.setSelection(i);
+                    break;
+                }
             }
             noteEdit.setText(entry.getNote());
 
@@ -132,8 +133,9 @@ public class DiaryFragment extends Fragment {
                 .setTitle(R.string.action_edit_diary_entry)
                 .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    String selectedLabel = (String) typeSpinner.getSelectedItem();
-                    entry.setType(codeFromLabel(selectedLabel));
+                    String[] typeCodes1 = getResources().getStringArray(R.array.diary_entry_type_codes);
+                    int pos = typeSpinner.getSelectedItemPosition();
+                    entry.setType(typeCodes1[pos]);
                     entry.setNote(noteEdit.getText().toString());
                     entry.setPhotoUri(photoUri[0]);
                     repository.updateDiaryEntry(entry, this::loadEntries);
@@ -188,7 +190,7 @@ public class DiaryFragment extends Fragment {
 
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
             requireContext(),
-            R.array.diary_entry_types,
+            R.array.diary_entry_type_labels,
             android.R.layout.simple_spinner_item);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeSpinner.setAdapter(spinnerAdapter);
@@ -197,8 +199,11 @@ public class DiaryFragment extends Fragment {
             .setTitle(R.string.action_add_diary_entry)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                String label = (String) typeSpinner.getSelectedItem();
-                String type = codeFromLabel(label);
+                String[] typeCodes = getResources().getStringArray(R.array.diary_entry_type_codes);
+                String[] typeLabels = getResources().getStringArray(R.array.diary_entry_type_labels);
+                int pos = typeSpinner.getSelectedItemPosition();
+                String type = typeCodes[pos];
+                String label = typeLabels[pos];
                 String note = noteEdit.getText().toString();
                 DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
                 entry.setPhotoUri(photoUri[0]);
@@ -224,12 +229,13 @@ public class DiaryFragment extends Fragment {
         }
         repository.diaryEntriesForPlant(plantId, result -> {
             if (filterSpinner != null) {
-                String selected = (String) filterSpinner.getSelectedItem();
-                if (selected != null && !selected.equals(getString(R.string.filter_all))) {
-                    String type = codeFromLabel(selected);
+                String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
+                int pos = filterSpinner.getSelectedItemPosition();
+                String code = filterCodes[pos];
+                if (!code.isEmpty()) {
                     List<DiaryEntry> filtered = new ArrayList<>();
                     for (DiaryEntry entry : result) {
-                        if (entry.getType().equals(type)) {
+                        if (entry.getType().equals(code)) {
                             filtered.add(entry);
                         }
                     }
@@ -239,29 +245,5 @@ public class DiaryFragment extends Fragment {
             }
             adapter.submitList(result);
         });
-    }
-
-    private String codeFromLabel(String label) {
-        if (getString(R.string.diary_type_water).equals(label)) {
-            return DiaryEntry.TYPE_WATER;
-        } else if (getString(R.string.diary_type_fertilize).equals(label)) {
-            return DiaryEntry.TYPE_FERTILIZE;
-        } else if (getString(R.string.diary_type_prune).equals(label)) {
-            return DiaryEntry.TYPE_PRUNE;
-        }
-        return label;
-    }
-
-    private String labelFromCode(String code) {
-        switch (code) {
-            case DiaryEntry.TYPE_WATER:
-                return getString(R.string.diary_type_water);
-            case DiaryEntry.TYPE_FERTILIZE:
-                return getString(R.string.diary_type_fertilize);
-            case DiaryEntry.TYPE_PRUNE:
-                return getString(R.string.diary_type_prune);
-            default:
-                return code;
-        }
     }
 }

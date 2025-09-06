@@ -60,7 +60,12 @@
     <string name="diary_type_water">Wasser</string>
     <string name="diary_type_fertilize">Düngen</string>
     <string name="diary_type_prune">Schneiden</string>
-    <string-array name="diary_entry_types">
+    <string-array name="diary_entry_type_codes">
+        <item>WATER</item>
+        <item>FERTILIZE</item>
+        <item>PRUNE</item>
+    </string-array>
+    <string-array name="diary_entry_type_labels">
         <item>@string/diary_type_water</item>
         <item>@string/diary_type_fertilize</item>
         <item>@string/diary_type_prune</item>
@@ -68,7 +73,13 @@
     <string name="filter_all">Alle</string>
     <string name="filter_last_7_days">Letzte 7 Tage</string>
     <string name="filter_last_30_days">Letzte 30 Tage</string>
-    <string-array name="diary_filter_options">
+    <string-array name="diary_filter_codes">
+        <item></item>
+        <item>WATER</item>
+        <item>FERTILIZE</item>
+        <item>PRUNE</item>
+    </string-array>
+    <string-array name="diary_filter_labels">
         <item>@string/filter_all</item>
         <item>@string/diary_type_water</item>
         <item>@string/diary_type_fertilize</item>
