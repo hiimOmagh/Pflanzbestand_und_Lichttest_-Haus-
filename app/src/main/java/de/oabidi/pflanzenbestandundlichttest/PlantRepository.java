@@ -1,10 +1,10 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-
-import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import android.util.Log;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -20,6 +20,7 @@ import java.util.function.Consumer;
  * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository {
+    private static final String TAG = "PlantRepository";
     private final PlantDao plantDao;
     private final MeasurementDao measurementDao;
     private final DiaryDao diaryDao;
@@ -103,8 +104,15 @@ public class PlantRepository {
      */
     public Future<?> delete(Plant plant, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            Uri photo = plant.getPhotoUri();
+            if (photo != null) {
+                try {
+                    context.getContentResolver().delete(photo, null, null);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to delete photo " + photo, e);
+                }
+            }
             plantDao.delete(plant);
-            PhotoManager.deletePhoto(context, plant.getPhotoUri());
             if (callback != null) {
                 mainHandler.post(callback);
             }
@@ -184,8 +192,16 @@ public class PlantRepository {
      */
     public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            String photoUri = entry.getPhotoUri();
+            if (photoUri != null && !photoUri.isEmpty()) {
+                Uri uri = Uri.parse(photoUri);
+                try {
+                    context.getContentResolver().delete(uri, null, null);
+                } catch (Exception e) {
+                    Log.w(TAG, "Failed to delete photo " + uri, e);
+                }
+            }
             diaryDao.delete(entry);
-            PhotoManager.deletePhoto(context, entry.getPhotoUri());
             if (callback != null) {
                 mainHandler.post(callback);
             }
