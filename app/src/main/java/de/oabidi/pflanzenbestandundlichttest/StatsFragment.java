@@ -102,8 +102,8 @@ public class StatsFragment extends Fragment {
         long now = System.currentTimeMillis();
         long end = startOfDay(now) + 86400000L;
         long start = end - DLI_DAYS * 86400000L;
-        repository.sumPpfdForRange(plantId, start, end, ppfdSum -> {
-            float avgDli = LightMath.dliFromPpfd(ppfdSum, 1f) / DLI_DAYS;
+        repository.sumDliForRange(plantId, start, end, dliSum -> {
+            float avgDli = dliSum / DLI_DAYS;
             dliView.setText(getString(R.string.format_dli, avgDli));
         });
     }

@@ -75,6 +75,17 @@ public interface MeasurementDao {
     Float sumPpfdForRange(long plantId, long start, long end);
 
     /**
+     * Sums DLI measurements for the given plant within the specified time range.
+     *
+     * @param id    identifier of the plant
+     * @param start start of the time range (inclusive)
+     * @param end   end of the time range (exclusive)
+     * @return summed DLI value for the range or {@code null} if no measurements exist
+     */
+    @Query("SELECT SUM(dli) FROM Measurement WHERE plantId=:id AND timeEpoch>=:start AND timeEpoch<:end")
+    Float sumDliForRange(long id, long start, long end);
+
+    /**
      * Sums PPFD measurements for the given plant on a specific day.
      *
      * <p>The day is defined by its start time in epoch milliseconds and
