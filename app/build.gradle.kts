@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 android {
@@ -41,6 +43,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.ext.junit)
     implementation(libs.espresso.core)
+    implementation(libs.firebase.crashlytics)
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
