@@ -141,4 +141,7 @@
     <string name="range_low">Niedrig</string>
     <string name="range_ok">OK</string>
     <string name="range_high">Hoch</string>
+    <string name="action_edit_reminder">Erinnerung bearbeiten</string>
+    <string name="hint_reminder_message">Nachricht</string>
+    <string name="hint_reminder_time">Datum (JJJJ-MM-TT HH:mm)</string>
 </resources>
