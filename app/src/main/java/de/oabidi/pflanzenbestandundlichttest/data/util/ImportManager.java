@@ -99,7 +99,42 @@ public class ImportManager {
                     }
                     if (csvFile != null) {
                         if (mode == Mode.REPLACE) {
-                            PlantDatabase.getDatabase(context).clearAllTables();
+                            // When replacing, clean up resources referenced by existing data
+                            // before wiping the database to avoid leaking photos or reminders.
+                            PlantDatabase db = PlantDatabase.getDatabase(context);
+
+                            // Remove plant photos
+                            for (Plant plant : db.plantDao().getAll()) {
+                                Uri photo = plant.getPhotoUri();
+                                if (photo != null) {
+                                    try {
+                                        context.getContentResolver().delete(photo, null, null);
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Failed to delete photo " + photo, e);
+                                    }
+                                }
+                            }
+
+                            // Remove diary entry photos
+                            for (DiaryEntry entry : db.diaryDao().getAll()) {
+                                String photoUri = entry.getPhotoUri();
+                                if (photoUri != null && !photoUri.isEmpty()) {
+                                    Uri uri = Uri.parse(photoUri);
+                                    try {
+                                        context.getContentResolver().delete(uri, null, null);
+                                    } catch (Exception e) {
+                                        Log.w(TAG, "Failed to delete photo " + uri, e);
+                                    }
+                                }
+                            }
+
+                            // Cancel any scheduled reminders
+                            for (Reminder reminder : db.reminderDao().getAll()) {
+                                ReminderScheduler.cancelReminder(context, reminder.getId());
+                            }
+
+                            // Now remove all database entries
+                            db.clearAllTables();
                         }
                         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
                             success = parseAndInsert(reader, tempDir, mode, warning);
