@@ -22,6 +22,10 @@ import com.google.android.material.snackbar.Snackbar;
 public class MeasurementListFragment extends Fragment {
     private static final String ARG_PLANT_ID = "plantId";
 
+    private static final int FILTER_ALL = 0;
+    private static final int FILTER_LAST_7_DAYS = 1;
+    private static final int FILTER_LAST_30_DAYS = 2;
+
     private long plantId = -1;
     private PlantRepository repository;
     private MeasurementAdapter adapter;
@@ -97,18 +101,19 @@ public class MeasurementListFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        if (filterSpinner != null) {
-            String selected = (String) filterSpinner.getSelectedItem();
-            long now = System.currentTimeMillis();
-            if (getString(R.string.filter_last_7_days).equals(selected)) {
-                long since = now - 7L * 24 * 60 * 60 * 1000;
-                repository.measurementsForPlantSince(plantId, since, adapter::submitList);
-            } else if (getString(R.string.filter_last_30_days).equals(selected)) {
-                long since = now - 30L * 24 * 60 * 60 * 1000;
-                repository.measurementsForPlantSince(plantId, since, adapter::submitList);
-            } else {
-                repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
-            }
+        if (filterSpinner == null) {
+            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
+            return;
+        }
+
+        int position = filterSpinner.getSelectedItemPosition();
+        long now = System.currentTimeMillis();
+        if (position == FILTER_LAST_7_DAYS) {
+            long since = now - 7L * 24 * 60 * 60 * 1000;
+            repository.measurementsForPlantSince(plantId, since, adapter::submitList);
+        } else if (position == FILTER_LAST_30_DAYS) {
+            long since = now - 30L * 24 * 60 * 60 * 1000;
+            repository.measurementsForPlantSince(plantId, since, adapter::submitList);
         } else {
             repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
         }

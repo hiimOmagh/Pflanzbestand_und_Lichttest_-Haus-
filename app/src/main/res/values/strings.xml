@@ -73,9 +73,13 @@
         <item>@string/diary_type_fertilize</item>
         <item>@string/diary_type_prune</item>
     </string-array>
+    <!-- Order matches MeasurementListFragment FILTER_* constants -->
     <string-array name="measurement_filter_options">
+        <!-- 0: show all measurements -->
         <item>@string/filter_all</item>
+        <!-- 1: show measurements from the last 7 days -->
         <item>@string/filter_last_7_days</item>
+        <!-- 2: show measurements from the last 30 days -->
         <item>@string/filter_last_30_days</item>
     </string-array>
     <string name="action_delete_diary_entry">Delete Entry</string>
