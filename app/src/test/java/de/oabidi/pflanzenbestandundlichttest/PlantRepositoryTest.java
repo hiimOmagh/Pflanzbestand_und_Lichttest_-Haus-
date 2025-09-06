@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.*;
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
@@ -15,6 +16,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.lang.reflect.Field;
 import java.io.File;
@@ -269,5 +271,40 @@ public class PlantRepositoryTest {
         repository.deleteDiaryEntry(entry, deleteLatch::countDown);
         awaitLatch(deleteLatch);
         assertFalse(image.exists());
+    }
+
+    /**
+     * Deleting a plant cancels and removes all associated reminders.
+     */
+    @Test
+    public void deletePlantCancelsReminders() throws Exception {
+        ShadowAlarmManager.reset();
+        Context context = ApplicationProvider.getApplicationContext();
+
+        Plant plant = new Plant();
+        plant.setName("Reminder");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        long triggerAt = System.currentTimeMillis() + 1000;
+        Reminder reminder = new Reminder(triggerAt, "Water", plant.getId());
+        CountDownLatch reminderLatch = new CountDownLatch(1);
+        repository.insertReminder(reminder, reminderLatch::countDown);
+        awaitLatch(reminderLatch);
+
+        ReminderScheduler.scheduleReminderAt(context, triggerAt, "Water", reminder.getId(), plant.getId());
+
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+        assertNotNull("Alarm scheduled", shadowAm.getNextScheduledAlarm());
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.delete(plant, deleteLatch::countDown);
+        awaitLatch(deleteLatch);
+
+        assertTrue("Reminders removed from DB", repository.getAllRemindersSync().isEmpty());
+        assertNull("Alarm cancelled", shadowAm.getNextScheduledAlarm());
     }
 }

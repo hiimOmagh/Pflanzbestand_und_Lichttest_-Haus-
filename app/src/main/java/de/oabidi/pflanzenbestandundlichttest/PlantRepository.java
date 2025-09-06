@@ -115,6 +115,10 @@ public class PlantRepository {
                     Log.w(TAG, "Failed to delete photo " + photo, e);
                 }
             }
+            List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
+            for (Reminder reminder : reminders) {
+                ReminderScheduler.cancelReminder(context, reminder.getId());
+            }
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             if (prefs.getLong(KEY_SELECTED_PLANT, -1) == plant.getId()) {

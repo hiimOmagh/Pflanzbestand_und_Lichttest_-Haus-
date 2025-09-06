@@ -197,7 +197,7 @@ public class ImportManager {
                         } else if (section == Section.SPECIES_TARGETS) {
                             if (parts.size() >= 3) {
                                 try {
-                                    warning.set(true);
+                                    String speciesKey = parts.get(0);
                                     float ppfdMin = nf.parse(parts.get(1)).floatValue();
                                     float ppfdMax = nf.parse(parts.get(2)).floatValue();
                                     SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);

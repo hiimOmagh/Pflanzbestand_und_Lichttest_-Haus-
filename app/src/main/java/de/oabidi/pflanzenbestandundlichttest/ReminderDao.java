@@ -44,4 +44,13 @@ public interface ReminderDao {
      */
     @Query("SELECT id, triggerAt, message, plantId FROM Reminder")
     List<Reminder> getAll();
+
+    /**
+     * Returns reminders for a specific plant.
+     *
+     * @param plantId identifier of the plant
+     * @return list of reminders associated with the plant
+     */
+    @Query("SELECT id, triggerAt, message, plantId FROM Reminder WHERE plantId = :plantId")
+    List<Reminder> getForPlant(long plantId);
 }
