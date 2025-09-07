@@ -145,6 +145,7 @@ public class ImportManager {
         final boolean[] importedAny = {false};
         final NumberFormat nf = NumberFormat.getInstance(Locale.US);
         nf.setGroupingUsed(false);
+        List<Uri> restoredUris = new ArrayList<>();
         try {
             db.runInTransaction(() -> {
                 try {
@@ -192,6 +193,7 @@ public class ImportManager {
                                         Uri restored = restoreImage(new File(baseDir, photo));
                                         if (restored != null) {
                                             photoUri = restored;
+                                            restoredUris.add(restored);
                                         } else {
                                             warning.set(true);
                                         }
@@ -278,6 +280,7 @@ public class ImportManager {
                                         Uri restored = restoreImage(new File(baseDir, photoUri));
                                         if (restored != null) {
                                             d.setPhotoUri(restored.toString());
+                                            restoredUris.add(restored);
                                         } else {
                                             warning.set(true);
                                         }
@@ -333,11 +336,15 @@ public class ImportManager {
                 }
             });
         } catch (RuntimeException e) {
+            cleanupUris(restoredUris);
             if (e.getCause() instanceof IOException) {
                 throw (IOException) e.getCause();
             }
             Log.e(TAG, "Failed to parse import", e);
             return false;
+        }
+        if (!importedAny[0]) {
+            cleanupUris(restoredUris);
         }
         return importedAny[0];
     }
@@ -364,6 +371,13 @@ public class ImportManager {
         }
         tokens.add(sb.toString());
         return tokens;
+    }
+
+    private void cleanupUris(List<Uri> uris) {
+        ContentResolver resolver = context.getContentResolver();
+        for (Uri uri : uris) {
+            resolver.delete(uri, null, null);
+        }
     }
 
     private Uri restoreImage(File exportedImage) {
