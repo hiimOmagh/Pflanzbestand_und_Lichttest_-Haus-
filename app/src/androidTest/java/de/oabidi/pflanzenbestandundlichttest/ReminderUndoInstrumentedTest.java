@@ -1,0 +1,60 @@
+package de.oabidi.pflanzenbestandundlichttest;
+
+import android.content.Context;
+import android.os.SystemClock;
+
+import androidx.test.core.app.ActivityScenario;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.swipeLeft;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.containsString;
+
+/**
+ * Instrumentation test verifying reminder deletion can be undone via Snackbar.
+ */
+@RunWith(AndroidJUnit4.class)
+public class ReminderUndoInstrumentedTest {
+
+    @Test
+    public void swipeReminderShowsUndoAndRestoresItem() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+
+        // Ensure a plant and reminder exist in the database
+        PlantDatabase db = PlantDatabase.getDatabase(context);
+        Plant plant = new Plant("Undo Plant", null, null, null, 0, null);
+        long plantId = PlantDatabase.databaseWriteExecutor
+            .submit(() -> db.plantDao().insert(plant)).get();
+        Reminder reminder = new Reminder(System.currentTimeMillis() + 60000,
+            "Undo me", plantId);
+        long reminderId = PlantDatabase.databaseWriteExecutor
+            .submit(() -> db.reminderDao().insert(reminder)).get();
+        reminder.setId(reminderId);
+
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            // Navigate to the reminder list
+            onView(withId(R.id.nav_reminders)).perform(click());
+            SystemClock.sleep(500);
+
+            // Swipe away the reminder to trigger deletion
+            onView(withText(containsString("Undo me"))).perform(swipeLeft());
+            SystemClock.sleep(500);
+
+            // Tap the undo action in the Snackbar
+            onView(withText(R.string.action_undo)).perform(click());
+            SystemClock.sleep(500);
+
+            // Verify the reminder is shown again in the list
+            onView(withText(containsString("Undo me"))).check(matches(isDisplayed()));
+        }
+    }
+}
