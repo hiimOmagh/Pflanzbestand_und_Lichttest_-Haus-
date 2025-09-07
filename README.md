@@ -50,12 +50,15 @@ To execute only the statistics fragment test, run:
    plants.
 5. Use the search action to filter plants by name, species, or location hint.
 
-## Backups
+## Data Backup
 
 Data can be exported and imported via the menu. When importing a backup, you can choose to **merge**
 with existing content or **replace** it entirely. Merge discards original identifiers so new plants
 and their related records are added alongside current data. Replace wipes the database before
 restoring the backup, preserving the identifiers from the archive.
+
+Individual plants can also be exported from the detail screen. Use the **Export Plant Data** menu
+action while viewing a plant to save only its measurements, diary entries, and reminders.
 
 ## Species PPFD targets
 

@@ -406,6 +406,58 @@ public class PlantRepository {
     }
 
     /**
+     * Returns a plant by its identifier.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @param id database identifier
+     * @return the matching plant or {@code null} if not found
+     */
+    @VisibleForTesting
+    Plant getPlantSync(long id) {
+        return plantDao.findById(id);
+    }
+
+    /**
+     * Returns all measurements for the given plant.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @param plantId identifier of the plant
+     * @return list of measurements associated with the plant
+     */
+    @VisibleForTesting
+    List<Measurement> getMeasurementsForPlantSync(long plantId) {
+        return measurementDao.getAllForPlant(plantId);
+    }
+
+    /**
+     * Returns all diary entries for the given plant.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @param plantId identifier of the plant
+     * @return list of diary entries associated with the plant
+     */
+    @VisibleForTesting
+    List<DiaryEntry> getDiaryEntriesForPlantSync(long plantId) {
+        return diaryDao.entriesForPlant(plantId);
+    }
+
+    /**
+     * Returns all reminders for the given plant.
+     * <p>
+     * This method must be invoked on a background thread.
+     *
+     * @param plantId identifier of the plant
+     * @return list of reminders associated with the plant
+     */
+    @VisibleForTesting
+    List<Reminder> getRemindersForPlantSync(long plantId) {
+        return reminderDao.getForPlant(plantId);
+    }
+
+    /**
      * Retrieves recent measurements for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant

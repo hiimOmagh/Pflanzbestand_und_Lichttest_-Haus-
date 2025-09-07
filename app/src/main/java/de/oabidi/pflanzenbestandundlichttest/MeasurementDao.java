@@ -138,4 +138,13 @@ public interface MeasurementDao {
      */
     @Query("SELECT * FROM Measurement")
     List<Measurement> getAll();
+
+    /**
+     * Retrieves all measurements for the given plant.
+     *
+     * @param plantId identifier of the plant
+     * @return list of measurements associated with the plant
+     */
+    @Query("SELECT * FROM Measurement WHERE plantId = :plantId")
+    List<Measurement> getAllForPlant(long plantId);
 }

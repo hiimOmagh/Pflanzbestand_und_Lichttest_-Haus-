@@ -29,6 +29,7 @@
     <string name="menu_species_targets">Artziele</string>
     <string name="menu_export_data">Daten exportieren</string>
     <string name="menu_import_data">Daten importieren</string>
+    <string name="menu_export_plant_data">Pflanzendaten exportieren</string>
     <string name="menu_search">Suchen</string>
     <string name="hint_positive_number">Positive Zahl</string>
     <string name="error_positive_number">Wert muss größer als 0 sein</string>

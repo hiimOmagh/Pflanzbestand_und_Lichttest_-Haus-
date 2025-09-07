@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipEntry;
@@ -45,6 +46,21 @@ public class ExportManager {
      * @param callback invoked on the main thread with the result
      */
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
+        exportInternal(uri, -1, callback);
+    }
+
+    /**
+     * Exports measurements and diary entries for a single plant to the given destination URI.
+     *
+     * @param uri      destination chosen by the user
+     * @param plantId  identifier of the plant to export
+     * @param callback invoked on the main thread with the result
+     */
+    public void export(@NonNull Uri uri, long plantId, @NonNull Callback callback) {
+        exportInternal(uri, plantId, callback);
+    }
+
+    private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
             File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
@@ -54,11 +70,23 @@ public class ExportManager {
             if (tempDir != null) {
                 File csvFile = new File(tempDir, "data.csv");
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
-                    List<Plant> plants = repository.getAllPlantsSync();
+                    List<Plant> plants;
+                    List<Measurement> measurements;
+                    List<DiaryEntry> diaryEntries;
+                    List<Reminder> reminders;
+                    if (plantId >= 0) {
+                        Plant p = repository.getPlantSync(plantId);
+                        plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
+                        measurements = repository.getMeasurementsForPlantSync(plantId);
+                        diaryEntries = repository.getDiaryEntriesForPlantSync(plantId);
+                        reminders = repository.getRemindersForPlantSync(plantId);
+                    } else {
+                        plants = repository.getAllPlantsSync();
+                        measurements = repository.getAllMeasurementsSync();
+                        diaryEntries = repository.getAllDiaryEntriesSync();
+                        reminders = repository.getAllRemindersSync();
+                    }
                     List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
-                    List<Measurement> measurements = repository.getAllMeasurementsSync();
-                    List<DiaryEntry> diaryEntries = repository.getAllDiaryEntriesSync();
-                    List<Reminder> reminders = repository.getAllRemindersSync();
 
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");

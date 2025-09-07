@@ -2,15 +2,22 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.util.Date;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -33,6 +40,9 @@ import androidx.core.view.WindowInsetsCompat;
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity {
+    private long plantId;
+    private ExportManager exportManager;
+    private ActivityResultLauncher<String> exportLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +51,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
 
-        long plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
+        plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
         String description = getIntent().getStringExtra("description"); // Additional notes about the plant
         String species = getIntent().getStringExtra("species"); // Botanical species identifier
@@ -57,6 +67,18 @@ public class PlantDetailActivity extends AppCompatActivity {
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
+
+        exportManager = new ExportManager(this);
+        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
+            if (uri != null) {
+                exportManager.export(uri, plantId, success -> {
+                    int msg = success ? R.string.export_success : R.string.export_failure;
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                Toast.makeText(this, R.string.export_failure, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         setTextOrFallback(nameView, name);
         setTextOrFallback(descriptionView, description);
@@ -91,6 +113,22 @@ public class PlantDetailActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.plant_detail_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_export_plant) {
+            exportLauncher.launch(getString(R.string.export_file_name));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
