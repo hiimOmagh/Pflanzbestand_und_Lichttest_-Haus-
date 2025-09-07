@@ -32,8 +32,14 @@ Instrumentation tests require a connected Android device or emulator. They can b
 
 This command runs the full Android test suite, including the light measurement scenario covered by
 `LightMeasurementInstrumentedTest`, the reminder scheduling checks in `ReminderInstrumentedTest`, the
-widget update validation in `ReminderWidgetInstrumentedTest`, and the round-trip backup verification in
-`DataRoundTripInstrumentedTest`.
+widget update validation in `ReminderWidgetInstrumentedTest`, the round-trip backup verification in
+`DataRoundTripInstrumentedTest`, and the DLI/PPFD chart validation in `StatsFragmentInstrumentedTest`.
+
+To execute only the statistics fragment test, run:
+
+```bash
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=de.oabidi.pflanzenbestandundlichttest.StatsFragmentInstrumentedTest
+```
 
 ## Usage
 
