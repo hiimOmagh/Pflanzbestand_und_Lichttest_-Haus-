@@ -493,6 +493,24 @@ public class PlantRepository {
     }
 
     /**
+     * Counts the number of days with DLI measurements greater than zero for a plant
+     * within the specified time range and delivers the result on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param start    start of the time range (inclusive)
+     * @param end      end of the time range (inclusive)
+     * @param callback invoked with the day count on the main thread
+     */
+    public void countDaysWithData(long plantId, long start, long end, Consumer<Integer> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            int result = measurementDao.countDaysWithData(plantId, start, end);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
      * Aggregates DLI values and counts days with data for a plant within a time range,
      * delivering the result on the main thread.
      *

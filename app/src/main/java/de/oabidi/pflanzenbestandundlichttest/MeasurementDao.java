@@ -86,6 +86,18 @@ public interface MeasurementDao {
     Float sumDliForRange(long id, long start, long end);
 
     /**
+     * Counts distinct days within the specified time range that contain
+     * DLI measurements greater than zero for the given plant.
+     *
+     * @param id    identifier of the plant
+     * @param start start of the time range (inclusive)
+     * @param end   end of the time range (inclusive)
+     * @return number of days with DLI data
+     */
+    @Query("SELECT COUNT(DISTINCT date(timeEpoch/86400000)) FROM Measurement WHERE plantId=:id AND timeEpoch BETWEEN :start AND :end AND dli>0")
+    int countDaysWithData(long id, long start, long end);
+
+    /**
      * Aggregates DLI measurements for the given plant within the specified time range
      * and counts the number of days that contain data.
      *

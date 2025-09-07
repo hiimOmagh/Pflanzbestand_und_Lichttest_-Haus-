@@ -174,6 +174,44 @@ public class PlantRepositoryTest {
     }
 
     @Test
+    public void dliAggregationMatchesManualComputation() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("DLI");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        long dayMillis = 86400000L;
+        Measurement m1 = new Measurement(plant.getId(), 0L, 0f, 0f, 12f);
+        Measurement m2 = new Measurement(plant.getId(), dayMillis, 0f, 0f, 6f);
+        CountDownLatch insertLatch = new CountDownLatch(2);
+        repository.insertMeasurement(m1, insertLatch::countDown);
+        repository.insertMeasurement(m2, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        float[] sumHolder = new float[1];
+        CountDownLatch sumLatch = new CountDownLatch(1);
+        repository.sumDliForRange(plant.getId(), 0L, dayMillis * 2, value -> {
+            sumHolder[0] = value;
+            sumLatch.countDown();
+        });
+        awaitLatch(sumLatch);
+
+        int[] countHolder = new int[1];
+        CountDownLatch countLatch = new CountDownLatch(1);
+        repository.countDaysWithData(plant.getId(), 0L, dayMillis * 2, value -> {
+            countHolder[0] = value;
+            countLatch.countDown();
+        });
+        awaitLatch(countLatch);
+
+        assertEquals(18f, sumHolder[0], 0.001f);
+        assertEquals(2, countHolder[0]);
+        assertEquals(9f, sumHolder[0] / countHolder[0], 0.001f);
+    }
+
+    @Test
     public void diaryEntryOperations() throws Exception {
         Plant plant = new Plant();
         plant.setName("Cactus");

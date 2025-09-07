@@ -166,14 +166,16 @@ public class StatsFragment extends Fragment {
         long now = System.currentTimeMillis();
         long end = startOfDay(now) + 86400000L;
         long start = end - DLI_DAYS * 86400000L;
-        repository.aggregateDliForRange(plantId, start, end, aggregate -> {
-            if (aggregate.getDayCount() > 0) {
-                float avgDli = aggregate.getTotalDli() / aggregate.getDayCount();
-                dliView.setText(getString(R.string.format_dli, avgDli));
-            } else {
-                dliView.setText(getString(R.string.dli_placeholder));
-            }
-        });
+        repository.sumDliForRange(plantId, start, end, sumDli ->
+            repository.countDaysWithData(plantId, start, end, dayCount -> {
+                if (dayCount > 0) {
+                    float avgDli = sumDli / dayCount;
+                    dliView.setText(getString(R.string.format_dli, avgDli));
+                } else {
+                    dliView.setText(getString(R.string.dli_placeholder));
+                }
+            })
+        );
     }
 
     private static long startOfDay(long time) {

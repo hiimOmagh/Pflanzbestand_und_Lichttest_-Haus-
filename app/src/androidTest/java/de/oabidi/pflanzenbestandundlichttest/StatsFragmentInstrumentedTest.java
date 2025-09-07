@@ -33,19 +33,23 @@ public class StatsFragmentInstrumentedTest {
         plant.setName("Stats Test Plant");
         repository.insert(plant, null).get();
 
-        // Insert a measurement with known PPFD and DLI values
+        // Insert measurements on two different days with known PPFD and DLI values
         long now = System.currentTimeMillis();
         float ppfd = 100f;
-        float dli = 12f;
-        Measurement measurement = new Measurement(plant.getId(), now, 0f, ppfd, dli);
-        repository.insertMeasurement(measurement, null).get();
+        float dli1 = 12f;
+        float dli2 = 6f;
+        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd, dli1);
+        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f, dli2);
+        repository.insertMeasurement(measurement1, null).get();
+        repository.insertMeasurement(measurement2, null).get();
 
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             // Navigate to stats screen
             onView(withId(R.id.nav_stats)).perform(click());
             SystemClock.sleep(500);
 
-            String expectedDli = context.getString(R.string.format_dli, dli);
+            float expectedAvg = (dli1 + dli2) / 2f;
+            String expectedDli = context.getString(R.string.format_dli, expectedAvg);
             onView(withId(R.id.stats_dli)).check(matches(withText(expectedDli)));
 
             String expectedDesc = context.getString(R.string.format_stats_chart_content_description, ppfd);
