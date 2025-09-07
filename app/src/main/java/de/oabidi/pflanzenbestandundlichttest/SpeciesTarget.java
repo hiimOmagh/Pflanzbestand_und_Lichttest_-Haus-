@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -18,6 +19,7 @@ public class SpeciesTarget {
     /**
      * Convenience constructor to create fully initialised instances.
      */
+    @Ignore
     public SpeciesTarget(@NonNull String speciesKey, float ppfdMin, float ppfdMax) {
         this.speciesKey = speciesKey;
         this.ppfdMin = ppfdMin;
