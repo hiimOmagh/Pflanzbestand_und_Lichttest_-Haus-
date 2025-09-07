@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -65,6 +67,7 @@ public class ReminderScheduler {
         if (alarmManager != null) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         }
+        sendWidgetUpdateBroadcast(context);
     }
 
     /**
@@ -87,5 +90,15 @@ public class ReminderScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
         alarmManager.cancel(pendingIntent);
+        sendWidgetUpdateBroadcast(context);
+    }
+
+    private static void sendWidgetUpdateBroadcast(Context context) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] ids = appWidgetManager.getAppWidgetIds(new ComponentName(context, ReminderWidgetProvider.class));
+        Intent update = new Intent(context, ReminderWidgetProvider.class);
+        update.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        update.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        context.sendBroadcast(update);
     }
 }

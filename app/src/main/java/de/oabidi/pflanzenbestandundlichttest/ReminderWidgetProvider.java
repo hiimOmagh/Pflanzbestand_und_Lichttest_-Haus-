@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
@@ -13,6 +14,16 @@ import java.util.List;
  * Home screen widget provider showing the next pending reminder.
  */
 public class ReminderWidgetProvider extends AppWidgetProvider {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        if (AppWidgetManager.ACTION_APPWIDGET_UPDATE.equals(intent.getAction())) {
+            AppWidgetManager manager = AppWidgetManager.getInstance(context);
+            int[] appWidgetIds = manager.getAppWidgetIds(
+                new ComponentName(context, ReminderWidgetProvider.class));
+            onUpdate(context, manager, appWidgetIds);
+        }
+    }
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
