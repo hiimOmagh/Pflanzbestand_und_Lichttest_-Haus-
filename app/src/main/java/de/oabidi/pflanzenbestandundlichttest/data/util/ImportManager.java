@@ -81,18 +81,18 @@ public class ImportManager {
             if (tempDir != null) {
                 try (InputStream is = context.getContentResolver().openInputStream(uri);
                      ZipInputStream zis = new ZipInputStream(is)) {
-                    ZipEntry entry;
+                    ZipEntry zipEntry;
                     File csvFile = null;
                     byte[] buffer = new byte[8192];
-                    while ((entry = zis.getNextEntry()) != null) {
-                        File outFile = new File(tempDir, entry.getName());
+                    while ((zipEntry = zis.getNextEntry()) != null) {
+                        File outFile = new File(tempDir, zipEntry.getName());
                         try (OutputStream fos = new FileOutputStream(outFile)) {
                             int len;
                             while ((len = zis.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
                             }
                         }
-                        if (entry.getName().endsWith(".csv")) {
+                        if (zipEntry.getName().endsWith(".csv")) {
                             csvFile = outFile;
                         }
                         zis.closeEntry();
