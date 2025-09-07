@@ -144,5 +144,6 @@
     <string name="action_edit_reminder">Erinnerung bearbeiten</string>
     <string name="hint_reminder_message">Nachricht</string>
     <string name="hint_reminder_time">Datum (JJJJ-MM-TT HH:mm)</string>
+    <string name="error_invalid_date">Ungültiges Datum</string>
     <string name="notification_permission_denied">Benachrichtigungsberechtigung verweigert. Erinnerungen werden nicht angezeigt.</string>
 </resources>

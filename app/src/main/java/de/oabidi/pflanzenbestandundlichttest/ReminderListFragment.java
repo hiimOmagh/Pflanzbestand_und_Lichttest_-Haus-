@@ -1,6 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Calendar;
 import java.util.Locale;
 
 /**
@@ -80,22 +84,48 @@ public class ReminderListFragment extends Fragment {
         EditText dateEdit = dialogView.findViewById(R.id.reminder_edit_date);
         messageEdit.setText(reminder.getMessage());
         dateEdit.setText(df.format(new Date(reminder.getTriggerAt())));
-        new AlertDialog.Builder(requireContext())
+
+        dateEdit.setInputType(InputType.TYPE_NULL);
+        dateEdit.setOnClickListener(v -> {
+            Calendar cal = Calendar.getInstance();
+            try {
+                cal.setTime(df.parse(dateEdit.getText().toString()));
+            } catch (ParseException ignored) {
+            }
+            new DatePickerDialog(requireContext(), (view1, year, month, day) -> {
+                cal.set(Calendar.YEAR, year);
+                cal.set(Calendar.MONTH, month);
+                cal.set(Calendar.DAY_OF_MONTH, day);
+                new TimePickerDialog(requireContext(), (view2, hour, minute) -> {
+                    cal.set(Calendar.HOUR_OF_DAY, hour);
+                    cal.set(Calendar.MINUTE, minute);
+                    dateEdit.setText(df.format(cal.getTime()));
+                }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
+            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+        });
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
             .setTitle(R.string.action_edit_reminder)
             .setView(dialogView)
-            .setPositiveButton(android.R.string.ok, (d, w) -> {
-                String message = messageEdit.getText().toString();
-                String dateStr = dateEdit.getText().toString();
-                try {
-                    long triggerAt = df.parse(dateStr).getTime();
-                    reminder.setMessage(message);
-                    reminder.setTriggerAt(triggerAt);
-                    ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
-                    repository.updateReminder(reminder, this::loadReminders);
-                } catch (ParseException ignored) {
-                }
-            })
+            .setPositiveButton(android.R.string.ok, null)
             .setNegativeButton(android.R.string.cancel, null)
-            .show();
+            .create();
+
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String message = messageEdit.getText().toString();
+            String dateStr = dateEdit.getText().toString();
+            try {
+                long triggerAt = df.parse(dateStr).getTime();
+                reminder.setMessage(message);
+                reminder.setTriggerAt(triggerAt);
+                ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
+                repository.updateReminder(reminder, this::loadReminders);
+                dialog.dismiss();
+            } catch (ParseException e) {
+                dateEdit.setError(getString(R.string.error_invalid_date));
+            }
+        }));
+
+        dialog.show();
     }
 }
