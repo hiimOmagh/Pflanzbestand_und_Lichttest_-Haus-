@@ -244,7 +244,6 @@ public class ImportManager {
                                 }
                             } else {
                                 Log.e(TAG, "Malformed species target row: " + line);
-                                warning.set(true);
                             }
                         } else if (section == Section.MEASUREMENTS) {
                             if (parts.size() >= 6) {
