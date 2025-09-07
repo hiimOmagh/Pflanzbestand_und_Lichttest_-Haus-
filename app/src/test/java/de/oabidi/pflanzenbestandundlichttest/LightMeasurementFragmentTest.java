@@ -15,7 +15,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.lang.reflect.Field;
 
 /**
- * Tests for LightMeasurementFragment ensuring sample size preference is clamped.
+ * Tests for LightMeasurementFragment ensuring preferences are validated.
  */
 @RunWith(RobolectricTestRunner.class)
 public class LightMeasurementFragmentTest {
@@ -38,5 +38,31 @@ public class LightMeasurementFragmentTest {
         Field sampleSizeField = LightMeasurementFragment.class.getDeclaredField("sampleSize");
         sampleSizeField.setAccessible(true);
         assertEquals(1, sampleSizeField.getInt(fragment));
+    }
+
+    @Test
+    public void fragmentUsesDefaultWhenCalibrationPreferenceMalformed() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        // Write malformed calibration factor to preferences
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit().putString("calibration_factor", "invalid").apply();
+
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        LightMeasurementFragment fragment = new LightMeasurementFragment();
+        activity.getSupportFragmentManager().beginTransaction()
+            .replace(android.R.id.content, fragment)
+            .commitNow();
+
+        // Verify default calibration factor was used
+        Field calibrationField = LightMeasurementFragment.class.getDeclaredField("calibrationFactor");
+        calibrationField.setAccessible(true);
+        assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);
+
+        // Inject another malformed value and trigger onResume()
+        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .edit().putString("calibration_factor", "NaN").apply();
+        fragment.onPause();
+        fragment.onResume();
+        assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);
     }
 }

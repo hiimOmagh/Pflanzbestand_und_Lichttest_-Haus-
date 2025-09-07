@@ -71,7 +71,12 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        calibrationFactor = Float.parseFloat(preferences.getString(KEY_CALIBRATION, "0.0185"));
+        String calibrationString = preferences.getString(KEY_CALIBRATION, "0.0185");
+        try {
+            calibrationFactor = Float.parseFloat(calibrationString);
+        } catch (NumberFormatException e) {
+            calibrationFactor = 0.0185f;
+        }
         String sampleSizeString = preferences.getString(KEY_SAMPLE_SIZE, "10");
         try {
             sampleSize = Integer.parseInt(sampleSizeString);
@@ -134,7 +139,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         resetSaveButton();
-        float k = Float.parseFloat(preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor)));
+        String calibrationString = preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor));
+        float k;
+        try {
+            k = Float.parseFloat(calibrationString);
+        } catch (NumberFormatException e) {
+            k = 0.0185f;
+        }
         String sizeString = preferences.getString(KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
         int size;
         try {
