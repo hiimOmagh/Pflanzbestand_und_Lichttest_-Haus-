@@ -152,4 +152,10 @@
     <string name="hint_reminder_time">Date (yyyy-MM-dd HH:mm)</string>
     <string name="error_invalid_date">Invalid date</string>
     <string name="notification_permission_denied">Notification permission denied. Reminders will not appear.</string>
+    <string name="date_time_pattern">yyyy-MM-dd HH:mm</string>
+    <string name="date_pattern">yyyy-MM-dd</string>
+    <string name="chart_date_pattern">MM-dd</string>
+    <string name="list_separator">, </string>
+    <string name="format_species_target">%1$s: %2$s - %3$s</string>
+    <string name="format_reminder_item">%1$s - %2$s</string>
 </resources>

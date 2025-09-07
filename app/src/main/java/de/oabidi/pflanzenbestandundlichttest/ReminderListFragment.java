@@ -32,7 +32,7 @@ import java.util.Locale;
 public class ReminderListFragment extends Fragment {
     private ReminderAdapter adapter;
     private PlantRepository repository;
-    private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    private SimpleDateFormat df;
 
     @Nullable
     @Override
@@ -49,6 +49,7 @@ public class ReminderListFragment extends Fragment {
         adapter = new ReminderAdapter(this::showEditDialog);
         recyclerView.setAdapter(adapter);
         repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        df = new SimpleDateFormat(getString(R.string.date_time_pattern), Locale.getDefault());
 
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
             ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {

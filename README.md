@@ -69,6 +69,12 @@ On first launch the app seeds the database with common species light requirement
 1. Edit `app/src/main/assets/targets.json` and add another object to the list.
 2. Reinstall the app or clear its data so the database is recreated and picks up the changes.
 
+## Localization
+
+The project currently provides English and Spanish translations. To contribute another language,
+copy `app/src/main/res/values/strings.xml` into a new `values-xx` directory, translate all
+strings, and open a pull request.
+
 ## Repository threading
 
 `PlantRepository` executes database work on a background executor and delivers

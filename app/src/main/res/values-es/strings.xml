@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inventario de Plantas y Prueba de Luz</string>
+    <string name="no_light_sensor">No se detectó sensor de luz</string>
+    <string name="label_calibration">Calibración k:</string>
+    <string name="label_sample_size">Tamaño de muestra:</string>
+    <string name="lux_placeholder">Lux promedio: --</string>
+    <string name="ppfd_placeholder">PPFD: --</string>
+    <string name="dli_placeholder">DLI: --</string>
+    <string name="format_calibration_factor">%.4f</string>
+    <string name="format_lux">Lux promedio: %.2f</string>
+    <string name="lux_raw_placeholder">Lux sin procesar: --</string>
+    <string name="format_raw_lux">Lux sin procesar: %.2f</string>
+    <string name="format_ppfd">PPFD: %.2f µmol/m²/s</string>
+    <string name="format_dli">DLI: %.2f mol/m²/día</string>
+    <string name="location_check_placeholder">Verificación de ubicación: --</string>
+    <string name="format_location_check">Verificación de ubicación: %s</string>
+    <string name="new_plant_name">Planta nueva</string>
+    <string name="new_plant_description">Una planta recién agregada.</string>
+    <string name="default_description">Sin descripción</string>
+    <string name="unknown">Desconocido</string>
+    <string name="unknown_date">Fecha desconocida</string>
+    <string name="placeholder_dash">—</string>
+    <string name="note_separator"> – </string>
+    <string name="format_diary_entry">%1$s – %2$s – %3$s</string>
+    <string name="updated_suffix"> (actualizado)</string>
+    <string name="menu_add_plant">Agregar planta</string>
+    <string name="menu_update_first_plant">Actualizar primera planta</string>
+    <string name="menu_delete_first_plant">Eliminar primera planta</string>
+    <string name="menu_species_targets">Objetivos por especie</string>
+    <string name="menu_export_data">Exportar datos</string>
+    <string name="menu_import_data">Importar datos</string>
+    <string name="menu_export_plant_data">Exportar datos de la planta</string>
+    <string name="menu_search">Buscar</string>
+    <string name="hint_positive_number">Número positivo</string>
+    <string name="error_positive_number">El valor debe ser mayor que 0</string>
+    <string name="measurement_save">Guardar</string>
+    <string name="measurement_saved">Medición guardada</string>
+    <string name="error_select_plant">Seleccione una planta</string>
+    <string name="plant_photo_desc">Foto de la planta</string>
+    <string name="action_view_diary">Ver diario</string>
+    <string name="action_view_measurements">Ver mediciones</string>
+    <string name="action_add_diary_entry">Agregar entrada</string>
+    <string name="action_edit_diary_entry">Editar entrada</string>
+    <string name="action_add_target">Agregar objetivo</string>
+    <string name="action_edit_target">Editar objetivo</string>
+    <string name="hint_species_key">Clave de especie</string>
+    <string name="hint_ppfd_min">PPFD mín</string>
+    <string name="hint_ppfd_max">PPFD máx</string>
+    <string name="title_plants">Plantas</string>
+    <string name="title_measure">Medir</string>
+    <string name="title_diary">Diario</string>
+    <string name="title_reminders">Recordatorios</string>
+    <string name="title_stats">Estadísticas</string>
+    <string name="title_settings">Configuración</string>
+    <string name="stats_placeholder">Sin estadísticas aún</string>
+    <string name="stats_no_diary_entries">Sin entradas en el diario aún</string>
+    <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
+    <string name="stats_chart_default_content_description">Gráfico de barras PPFD</string>
+    <string name="format_stats_chart_content_description">Gráfico de barras PPFD, máx %.1f µmol/m²/s</string>
+    <string name="select_plants">Seleccionar plantas</string>
+    <string name="diary_hint_note">Nota</string>
+    <string name="diary_search_hint">Buscar entradas</string>
+    <string name="diary_type_water">Riego</string>
+    <string name="diary_type_fertilize">Fertilizar</string>
+    <string name="diary_type_prune">Poda</string>
+    <string-array name="diary_entry_type_codes">
+        <item>WATER</item>
+        <item>FERTILIZE</item>
+        <item>PRUNE</item>
+    </string-array>
+    <string-array name="diary_entry_type_labels">
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
+    </string-array>
+    <string name="filter_all">Todos</string>
+    <string name="filter_last_7_days">Últimos 7 días</string>
+    <string name="filter_last_30_days">Últimos 30 días</string>
+    <string-array name="diary_filter_codes">
+        <item></item>
+        <item>WATER</item>
+        <item>FERTILIZE</item>
+        <item>PRUNE</item>
+    </string-array>
+    <string-array name="diary_filter_labels">
+        <item>@string/filter_all</item>
+        <item>@string/diary_type_water</item>
+        <item>@string/diary_type_fertilize</item>
+        <item>@string/diary_type_prune</item>
+    </string-array>
+    <!-- Order matches MeasurementListFragment FILTER_* constants -->
+    <string-array name="measurement_filter_options">
+        <!-- 0: show all measurements -->
+        <item>@string/filter_all</item>
+        <!-- 1: show measurements from the last 7 days -->
+        <item>@string/filter_last_7_days</item>
+        <!-- 2: show measurements from the last 30 days -->
+        <item>@string/filter_last_30_days</item>
+    </string-array>
+    <string name="action_delete_diary_entry">Eliminar entrada</string>
+    <string name="confirm_delete_diary_entry">¿Eliminar esta entrada?</string>
+    <string name="action_delete_measurement">Eliminar medición</string>
+    <string name="confirm_delete_measurement">¿Eliminar esta medición?</string>
+    <string name="action_delete_target">Eliminar objetivo</string>
+    <string name="confirm_delete_target">¿Eliminar este objetivo?</string>
+    <string name="hint_plant_name">Nombre</string>
+    <string name="hint_species">Especie</string>
+    <string name="hint_location">Ubicación</string>
+    <string name="hint_acquired">Adquirida</string>
+    <string name="hint_notes">Notas</string>
+    <string name="action_pick_photo">Elegir foto</string>
+    <string name="action_save_plant">Guardar</string>
+    <string name="error_required">Obligatorio</string>
+    <string name="error_ppfd_range">El mínimo debe ser menor que el máximo</string>
+    <string name="calibration_instructions">Coloque el sensor bajo una iluminación conocida, introduzca el PPFD y luego confirme.</string>
+    <string name="label_known_ppfd">PPFD conocido:</string>
+    <string name="action_calibrate">Confirmar</string>
+    <string name="menu_calibrate">Calibrar</string>
+    <string name="action_add_photo">Agregar foto</string>
+    <string name="export_file_name">plant_data.csv</string>
+    <string name="export_success">Exportación exitosa</string>
+    <string name="export_failure">Fallo en la exportación</string>
+    <string name="import_success">Importación exitosa</string>
+    <string name="import_failure">Fallo en la importación</string>
+    <string name="import_image_warning">Algunas imágenes no se pudieron restaurar</string>
+    <string name="import_choice_message">¿Cómo se deben aplicar los datos importados?</string>
+    <string name="import_merge">Combinar</string>
+    <string name="import_replace">Reemplazar</string>
+    <string name="hint_remind_days">Recordarme en días</string>
+    <string name="reminder_mark_done">Hecho</string>
+    <string name="reminder_snooze">Posponer</string>
+    <string name="reminder_channel">Recordatorios</string>
+    <string name="action_undo">Deshacer</string>
+    <string name="plant_deleted">Planta eliminada</string>
+    <string name="diary_entry_deleted">Entrada eliminada</string>
+    <string name="measurement_deleted">Medición eliminada</string>
+    <string name="measurement_add_note">Agregar nota</string>
+    <string name="action_skip">Omitir</string>
+    <string name="reminder_deleted">Recordatorio eliminado</string>
+    <string name="pref_calibration_factor">Factor de calibración</string>
+    <string name="pref_sample_size">Tamaño de muestra</string>
+    <string name="pref_light_hours">Horas de luz</string>
+    <string name="pref_light_hours_summary">Horas de luz por día</string>
+    <string name="hint_number">Número</string>
+    <string name="widget_no_reminders">Sin recordatorios pendientes</string>
+    <string name="widget_measure_now">Medir ahora</string>
+    <string name="range_low">Bajo</string>
+    <string name="range_ok">OK</string>
+    <string name="range_high">Alto</string>
+    <string name="action_edit_reminder">Editar recordatorio</string>
+    <string name="hint_reminder_message">Mensaje</string>
+    <string name="hint_reminder_time">Fecha (dd/MM/yyyy HH:mm)</string>
+    <string name="error_invalid_date">Fecha inválida</string>
+    <string name="notification_permission_denied">Permiso de notificación denegado. Los recordatorios no aparecerán.</string>
+    <string name="date_time_pattern">dd/MM/yyyy HH:mm</string>
+    <string name="date_pattern">dd/MM/yyyy</string>
+    <string name="chart_date_pattern">dd-MM</string>
+    <string name="list_separator">, </string>
+    <string name="format_species_target">%1$s: %2$s - %3$s</string>
+    <string name="format_reminder_item">%1$s - %2$s</string>
+</resources>

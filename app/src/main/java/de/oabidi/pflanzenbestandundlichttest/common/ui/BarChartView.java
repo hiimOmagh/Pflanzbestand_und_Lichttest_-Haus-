@@ -169,7 +169,8 @@ public class BarChartView extends View {
 
         // X-axis ticks and labels
         textPaint.setTextAlign(Paint.Align.CENTER);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd", Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+            getResources().getString(R.string.chart_date_pattern), Locale.getDefault());
         for (int i = 0; i < entryCount; i++) {
             float x = originX + i * groupWidth + (groupWidth * 0.5f);
             canvas.drawLine(x, originY, x, originY + tick, axisPaint);

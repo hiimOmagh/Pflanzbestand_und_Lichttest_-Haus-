@@ -160,8 +160,9 @@ public class PlantEditFragment extends Fragment {
         dialog.show();
     }
 
-    private static String formatDate(long epoch) {
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date(epoch));
+    private String formatDate(long epoch) {
+        return new SimpleDateFormat(getString(R.string.date_pattern), Locale.getDefault())
+            .format(new Date(epoch));
     }
 
     public static PlantEditFragment newInstance(@Nullable Plant plant) {

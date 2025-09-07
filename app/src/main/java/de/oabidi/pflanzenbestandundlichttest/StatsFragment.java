@@ -218,7 +218,7 @@ public class StatsFragment extends Fragment {
             for (long id : selectedPlantIds) {
                 names.add(findPlantName(id));
             }
-            plantSelectorButton.setText(TextUtils.join(", ", names));
+            plantSelectorButton.setText(TextUtils.join(getString(R.string.list_separator), names));
         }
     }
 

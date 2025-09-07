@@ -65,7 +65,8 @@ public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTarg
         }
 
         void bind(SpeciesTarget target, OnTargetClickListener listener) {
-            String display = target.getSpeciesKey() + ": " + target.getPpfdMin() + " - " + target.getPpfdMax();
+            String display = itemView.getContext().getString(R.string.format_species_target,
+                target.getSpeciesKey(), target.getPpfdMin(), target.getPpfdMax());
             textView.setText(display);
             itemView.setOnClickListener(v -> listener.onTargetClick(target));
             itemView.setOnLongClickListener(v -> {

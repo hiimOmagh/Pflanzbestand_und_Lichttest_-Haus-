@@ -61,15 +61,18 @@ public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewH
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
-        private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+        private final DateFormat df;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             textView = itemView.findViewById(R.id.reminder_text);
+            df = new SimpleDateFormat(itemView.getContext().getString(R.string.date_time_pattern),
+                Locale.getDefault());
         }
 
         void bind(Reminder reminder, OnReminderClickListener listener) {
-            String text = df.format(new Date(reminder.getTriggerAt())) + " - " + reminder.getMessage();
+            String text = itemView.getContext().getString(R.string.format_reminder_item,
+                df.format(new Date(reminder.getTriggerAt())), reminder.getMessage());
             textView.setText(text);
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
