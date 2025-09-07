@@ -19,7 +19,6 @@ public class SpeciesTarget {
     /**
      * Convenience constructor to create fully initialised instances.
      */
-    @Ignore
     public SpeciesTarget(@NonNull String speciesKey, float ppfdMin, float ppfdMax) {
         this.speciesKey = speciesKey;
         this.ppfdMin = ppfdMin;
