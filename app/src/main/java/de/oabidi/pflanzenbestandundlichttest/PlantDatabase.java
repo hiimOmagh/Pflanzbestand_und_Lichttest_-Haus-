@@ -30,7 +30,17 @@ import java.util.concurrent.Executors;
  * should be executed on {@link #databaseWriteExecutor}, a fixed thread pool
  * used to run operations asynchronously.</p>
  */
-@Database(entities = {Plant.class, Measurement.class, DiaryEntry.class, SpeciesTarget.class, Reminder.class}, version = 5, exportSchema = false)
+@Database(
+    entities = {
+        Plant.class,
+        Measurement.class,
+        DiaryEntry.class,
+        SpeciesTarget.class,
+        Reminder.class
+    },
+    version = 5,
+    exportSchema = true
+)
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static volatile PlantDatabase INSTANCE;
