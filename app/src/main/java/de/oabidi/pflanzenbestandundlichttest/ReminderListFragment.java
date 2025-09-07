@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -63,6 +65,17 @@ public class ReminderListFragment extends Fragment {
                 Reminder reminder = adapter.getCurrentList().get(position);
                 ReminderScheduler.cancelReminder(requireContext(), reminder.getId());
                 repository.deleteReminderById(reminder.getId(), ReminderListFragment.this::loadReminders);
+                Snackbar.make(requireView(), R.string.reminder_deleted, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.action_undo, v ->
+                        repository.insertReminder(reminder, () -> {
+                            ReminderScheduler.scheduleReminderAt(requireContext(),
+                                reminder.getTriggerAt(),
+                                reminder.getMessage(),
+                                reminder.getId(),
+                                reminder.getPlantId());
+                            loadReminders();
+                        }))
+                    .show();
             }
         });
         helper.attachToRecyclerView(recyclerView);

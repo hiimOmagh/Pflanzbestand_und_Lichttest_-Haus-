@@ -130,6 +130,7 @@
     <string name="plant_deleted">Plant deleted</string>
     <string name="diary_entry_deleted">Entry deleted</string>
     <string name="measurement_deleted">Measurement deleted</string>
+    <string name="reminder_deleted">Reminder deleted</string>
     <string name="pref_calibration_factor">Calibration factor</string>
     <string name="pref_sample_size">Sample size</string>
     <string name="pref_light_hours">Light hours</string>
