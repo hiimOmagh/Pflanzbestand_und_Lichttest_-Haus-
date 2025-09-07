@@ -40,15 +40,25 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private ImportManager importManager;
     private ProgressBar progressBar;
 
+    private void showProgress() {
+        if (isAdded()) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideProgress() {
+        if (isAdded()) {
+            progressBar.setVisibility(View.GONE);
+        }
+    }
+    
     private final ActivityResultLauncher<String> exportLauncher =
         registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
             if (uri != null) {
-                if (isAdded()) {
-                    progressBar.setVisibility(View.VISIBLE);
-                }
+                showProgress();
                 exportManager.export(uri, success -> {
+                    hideProgress();
                     if (isAdded()) {
-                        progressBar.setVisibility(View.GONE);
                         int msg = success ? R.string.export_success : R.string.export_failure;
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
                     }
@@ -80,10 +90,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
-        progressBar.setVisibility(View.VISIBLE);
+        showProgress();
         importManager.importData(uri, mode, (success, hadWarnings) -> {
+            hideProgress();
             if (isAdded()) {
-                progressBar.setVisibility(View.GONE);
                 int msg = success ? R.string.import_success : R.string.import_failure;
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
                 if (success && hadWarnings) {
