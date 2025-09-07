@@ -41,6 +41,7 @@ the round-trip backup verification in `DataRoundTripInstrumentedTest`.
 3. Tap a plant to view its details.
 4. Watch the main screen's live lux, PPFD, and DLI readings to test lighting conditions for your
    plants.
+5. Use the search action to filter plants by name, species, or location hint.
 
 ## Backups
 

@@ -214,7 +214,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         List<Plant> filtered = new ArrayList<>();
         for (Plant plant : plants) {
             String name = plant.getName();
-            if (name != null && name.toLowerCase().contains(lower)) {
+            String species = plant.getSpecies();
+            String location = plant.getLocationHint();
+            if ((name != null && name.toLowerCase().contains(lower))
+                || (species != null && species.toLowerCase().contains(lower))
+                || (location != null && location.toLowerCase().contains(lower))) {
                 filtered.add(plant);
             }
         }
