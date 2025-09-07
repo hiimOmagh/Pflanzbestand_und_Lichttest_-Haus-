@@ -2,12 +2,12 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.VisibleForTesting;
+
+import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.List;
 import java.util.concurrent.Future;
@@ -21,7 +21,6 @@ import java.util.function.Consumer;
  * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository {
-    private static final String TAG = "PlantRepository";
     private static final String PREFS_NAME = "settings";
     private static final String KEY_SELECTED_PLANT = "selectedPlantId";
     private final PlantDao plantDao;
@@ -107,14 +106,7 @@ public class PlantRepository {
      */
     public Future<?> delete(Plant plant, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            Uri photo = plant.getPhotoUri();
-            if (photo != null) {
-                try {
-                    context.getContentResolver().delete(photo, null, null);
-                } catch (Exception e) {
-                    Log.w(TAG, "Failed to delete photo " + photo, e);
-                }
-            }
+            PhotoManager.deletePhoto(context, plant.getPhotoUri());
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
             for (Reminder reminder : reminders) {
                 ReminderScheduler.cancelReminder(context, reminder.getId());
@@ -203,15 +195,7 @@ public class PlantRepository {
      */
     public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            String photoUri = entry.getPhotoUri();
-            if (photoUri != null && !photoUri.isEmpty()) {
-                Uri uri = Uri.parse(photoUri);
-                try {
-                    context.getContentResolver().delete(uri, null, null);
-                } catch (Exception e) {
-                    Log.w(TAG, "Failed to delete photo " + uri, e);
-                }
-            }
+            PhotoManager.deletePhoto(context, entry.getPhotoUri());
             diaryDao.delete(entry);
             if (callback != null) {
                 mainHandler.post(callback);

@@ -105,27 +105,12 @@ public class ImportManager {
 
                             // Remove plant photos
                             for (Plant plant : db.plantDao().getAll()) {
-                                Uri photo = plant.getPhotoUri();
-                                if (photo != null) {
-                                    try {
-                                        context.getContentResolver().delete(photo, null, null);
-                                    } catch (Exception e) {
-                                        Log.w(TAG, "Failed to delete photo " + photo, e);
-                                    }
-                                }
+                                PhotoManager.deletePhoto(context, plant.getPhotoUri());
                             }
 
                             // Remove diary entry photos
                             for (DiaryEntry entry : db.diaryDao().getAll()) {
-                                String photoUri = entry.getPhotoUri();
-                                if (photoUri != null && !photoUri.isEmpty()) {
-                                    Uri uri = Uri.parse(photoUri);
-                                    try {
-                                        context.getContentResolver().delete(uri, null, null);
-                                    } catch (Exception e) {
-                                        Log.w(TAG, "Failed to delete photo " + uri, e);
-                                    }
-                                }
+                                PhotoManager.deletePhoto(context, entry.getPhotoUri());
                             }
 
                             // Cancel any scheduled reminders
