@@ -25,6 +25,7 @@ import org.robolectric.shadows.ShadowPendingIntent;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
+import de.oabidi.pflanzenbestandundlichttest.Measurement;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -64,7 +65,7 @@ public class DataImportExportInstrumentedTest {
         Plant plant = new Plant("ExportPlant", null, "ExportSpecies", null, 0L, plantPhotoUri);
         repository.insert(plant, null).get();
 
-        Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 3f);
+        Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 3f, "note");
         repository.insertMeasurement(m, null).get();
 
         DiaryEntry d = new DiaryEntry(plant.getId(), 2000L, "note", "hello");
@@ -118,6 +119,11 @@ public class DataImportExportInstrumentedTest {
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
         assertEquals(1, reminderCount);
+
+        Measurement restoredMeasurement = PlantDatabase.databaseWriteExecutor.submit(
+            () -> repository.getAllMeasurementsSync().get(0)
+        ).get();
+        assertEquals("note", restoredMeasurement.getNote());
 
         // Verify photos restored
         Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(

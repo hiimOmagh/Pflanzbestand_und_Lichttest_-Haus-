@@ -39,7 +39,7 @@ public interface MeasurementDao {
      * @param limit   maximum number of results to return
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT * FROM Measurement WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT :limit")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT :limit")
     List<Measurement> recentForPlant(long plantId, int limit);
 
     /**
@@ -49,7 +49,7 @@ public interface MeasurementDao {
      * @param since   minimum timestamp (inclusive) of measurements to return
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT * FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
     List<Measurement> getForPlantSince(long plantId, long since);
 
     /**
@@ -60,7 +60,7 @@ public interface MeasurementDao {
      * @param end     end of the time range (exclusive)
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT * FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :start AND timeEpoch < :end ORDER BY timeEpoch DESC")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
     List<Measurement> getForPlantInRange(long plantId, long start, long end);
 
     /**
@@ -136,7 +136,7 @@ public interface MeasurementDao {
      *
      * @return list of all measurements in the database
      */
-    @Query("SELECT * FROM Measurement")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement")
     List<Measurement> getAll();
 
     /**
@@ -145,6 +145,6 @@ public interface MeasurementDao {
      * @param plantId identifier of the plant
      * @return list of measurements associated with the plant
      */
-    @Query("SELECT * FROM Measurement WHERE plantId = :plantId")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId")
     List<Measurement> getAllForPlant(long plantId);
 }

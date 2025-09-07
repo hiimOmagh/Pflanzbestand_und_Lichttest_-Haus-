@@ -38,7 +38,7 @@ import java.util.concurrent.Executors;
         SpeciesTarget.class,
         Reminder.class
     },
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -70,6 +70,13 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE Measurement ADD COLUMN note TEXT");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     public abstract MeasurementDao measurementDao();
@@ -88,7 +95,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {

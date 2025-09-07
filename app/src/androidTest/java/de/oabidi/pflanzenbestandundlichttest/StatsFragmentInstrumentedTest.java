@@ -38,8 +38,8 @@ public class StatsFragmentInstrumentedTest {
         float ppfd = 100f;
         float dli1 = 12f;
         float dli2 = 6f;
-        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd, dli1);
-        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f, dli2);
+        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd, dli1, null);
+        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f, dli2, null);
         repository.insertMeasurement(measurement1, null).get();
         repository.insertMeasurement(measurement2, null).get();
 

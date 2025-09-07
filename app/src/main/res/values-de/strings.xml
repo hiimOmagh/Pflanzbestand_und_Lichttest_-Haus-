@@ -135,6 +135,8 @@
     <string name="plant_deleted">Pflanze gelöscht</string>
     <string name="diary_entry_deleted">Eintrag gelöscht</string>
     <string name="measurement_deleted">Messung gelöscht</string>
+    <string name="measurement_add_note">Notiz hinzufügen</string>
+    <string name="action_skip">Überspringen</string>
     <string name="pref_calibration_factor">Kalibrierungsfaktor</string>
     <string name="pref_sample_size">Stichprobengröße</string>
     <string name="pref_light_hours">Lichtstunden</string>

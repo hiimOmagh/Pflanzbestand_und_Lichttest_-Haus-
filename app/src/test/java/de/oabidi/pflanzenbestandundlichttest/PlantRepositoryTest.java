@@ -129,7 +129,7 @@ public class PlantRepositoryTest {
         repository.insert(plant, plantLatch::countDown);
         awaitLatch(plantLatch);
 
-        Measurement measurement = new Measurement(plant.getId(), 1L, 2f, 3f, 4f);
+        Measurement measurement = new Measurement(plant.getId(), 1L, 2f, 3f, 4f, null);
         CountDownLatch insertLatch = new CountDownLatch(1);
         repository.insertMeasurement(measurement, () -> {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
@@ -183,8 +183,8 @@ public class PlantRepositoryTest {
         awaitLatch(plantLatch);
 
         long dayMillis = 86400000L;
-        Measurement m1 = new Measurement(plant.getId(), 0L, 0f, 0f, 12f);
-        Measurement m2 = new Measurement(plant.getId(), dayMillis, 0f, 0f, 6f);
+        Measurement m1 = new Measurement(plant.getId(), 0L, 0f, 0f, 12f, null);
+        Measurement m2 = new Measurement(plant.getId(), dayMillis, 0f, 0f, 6f, null);
         CountDownLatch insertLatch = new CountDownLatch(2);
         repository.insertMeasurement(m1, insertLatch::countDown);
         repository.insertMeasurement(m2, insertLatch::countDown);

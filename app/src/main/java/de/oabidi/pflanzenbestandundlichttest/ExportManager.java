@@ -165,15 +165,16 @@ public class ExportManager {
                     }
 
                     writer.write("\nMeasurements\n");
-                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli\n");
+                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli,note\n");
                     for (Measurement m : measurements) {
-                        writer.write(String.format(Locale.US, "%d,%d,%d,%f,%f,%f\n",
+                        writer.write(String.format(Locale.US, "%d,%d,%d,%f,%f,%f,%s\n",
                             m.getId(),
                             m.getPlantId(),
                             m.getTimeEpoch(),
                             m.getLuxAvg(),
                             m.getPpfd(),
-                            m.getDli()));
+                            m.getDli(),
+                            escape(m.getNote())));
                     }
 
                     progress[0]++;

@@ -14,11 +14,13 @@ import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -112,8 +114,19 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
-                presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli,
-                    () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
+                EditText input = new EditText(requireContext());
+                input.setHint(R.string.diary_hint_note);
+                new AlertDialog.Builder(requireContext())
+                    .setTitle(R.string.measurement_add_note)
+                    .setView(input)
+                    .setPositiveButton(R.string.measurement_save, (d, w) -> {
+                        String note = input.getText().toString();
+                        presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli, note,
+                            () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
+                    })
+                    .setNegativeButton(R.string.action_skip, (d, w) -> presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli, null,
+                        () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show()))
+                    .show();
             } else {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
             }

@@ -317,7 +317,8 @@ public class ImportManager {
                                     float luxAvg = nf.parse(parts.get(3)).floatValue();
                                     float ppfd = nf.parse(parts.get(4)).floatValue();
                                     float dli = nf.parse(parts.get(5)).floatValue();
-                                    Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli);
+                                    String note = parts.size() > 6 ? parts.get(6) : null;
+                                    Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli, note);
                                     db.measurementDao().insert(m);
                                     importedAny[0] = true;
                                 } catch (Exception e) {

@@ -81,18 +81,24 @@ public class MeasurementListFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-        adapter = new MeasurementAdapter(measurement -> new AlertDialog.Builder(requireContext())
-            .setTitle(R.string.action_delete_measurement)
-            .setMessage(R.string.confirm_delete_measurement)
-            .setPositiveButton(android.R.string.ok, (d, w) ->
-                repository.deleteMeasurement(measurement, () -> {
-                    loadMeasurements();
-                    Snackbar.make(requireView(), R.string.measurement_deleted, Snackbar.LENGTH_LONG)
-                        .setAction(R.string.action_undo, v -> repository.insertMeasurement(measurement, this::loadMeasurements))
-                        .show();
-                }))
-            .setNegativeButton(android.R.string.cancel, null)
-            .show());
+        adapter = new MeasurementAdapter(measurement -> {
+            String message = getString(R.string.confirm_delete_measurement);
+            if (measurement.getNote() != null && !measurement.getNote().isEmpty()) {
+                message = message + "\n" + measurement.getNote();
+            }
+            new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.action_delete_measurement)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, (d, w) ->
+                    repository.deleteMeasurement(measurement, () -> {
+                        loadMeasurements();
+                        Snackbar.make(requireView(), R.string.measurement_deleted, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.action_undo, v -> repository.insertMeasurement(measurement, this::loadMeasurements))
+                            .show();
+                    }))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+        });
         listView.setAdapter(adapter);
         loadMeasurements();
     }

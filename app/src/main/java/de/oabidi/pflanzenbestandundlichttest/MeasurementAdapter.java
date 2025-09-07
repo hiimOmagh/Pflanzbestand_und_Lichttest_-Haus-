@@ -44,7 +44,9 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
                     && oldItem.getTimeEpoch() == newItem.getTimeEpoch()
                     && Float.compare(oldItem.getLuxAvg(), newItem.getLuxAvg()) == 0
                     && Float.compare(oldItem.getPpfd(), newItem.getPpfd()) == 0
-                    && Float.compare(oldItem.getDli(), newItem.getDli()) == 0;
+                    && Float.compare(oldItem.getDli(), newItem.getDli()) == 0
+                    && ((oldItem.getNote() == null && newItem.getNote() == null)
+                    || (oldItem.getNote() != null && oldItem.getNote().equals(newItem.getNote())));
             }
         };
 
@@ -64,6 +66,12 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         holder.dliView.setText(dliText);
         String timeText = DateFormat.getDateTimeInstance().format(new Date(m.getTimeEpoch()));
         holder.timeView.setText(timeText);
+        if (m.getNote() != null && !m.getNote().isEmpty()) {
+            holder.noteView.setVisibility(View.VISIBLE);
+            holder.noteView.setText(m.getNote());
+        } else {
+            holder.noteView.setVisibility(View.GONE);
+        }
         holder.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onMeasurementLongClick(m);
@@ -76,12 +84,14 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         final TextView ppfdView;
         final TextView dliView;
         final TextView timeView;
+        final TextView noteView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             ppfdView = itemView.findViewById(R.id.measurement_ppfd);
             dliView = itemView.findViewById(R.id.measurement_dli);
             timeView = itemView.findViewById(R.id.measurement_time);
+            noteView = itemView.findViewById(R.id.measurement_note);
         }
     }
 }
