@@ -8,6 +8,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <androidx.appcompat.widget.SearchView
+            android:id="@+id/diary_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:queryHint="@string/diary_search_hint" />
+
         <Spinner
             android:id="@+id/diary_filter_spinner"
             android:layout_width="match_parent"

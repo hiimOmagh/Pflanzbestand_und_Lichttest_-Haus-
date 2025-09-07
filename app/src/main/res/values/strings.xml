@@ -56,6 +56,7 @@
     <string name="stats_chart_default_content_description">PPFD bar chart</string>
     <string name="format_stats_chart_content_description">PPFD bar chart, max %.1f µmol/m²/s</string>
     <string name="diary_hint_note">Note</string>
+    <string name="diary_search_hint">Search entries</string>
     <string name="diary_type_water">Water</string>
     <string name="diary_type_fertilize">Fertilize</string>
     <string name="diary_type_prune">Prune</string>

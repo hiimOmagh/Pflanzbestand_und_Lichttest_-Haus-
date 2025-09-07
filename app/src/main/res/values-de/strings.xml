@@ -57,6 +57,7 @@
     <string name="stats_chart_default_content_description">PPFD-Balkendiagramm</string>
     <string name="format_stats_chart_content_description">PPFD-Balkendiagramm, max %.1f µmol/m²/s</string>
     <string name="diary_hint_note">Notiz</string>
+    <string name="diary_search_hint">Einträge suchen</string>
     <string name="diary_type_water">Wasser</string>
     <string name="diary_type_fertilize">Düngen</string>
     <string name="diary_type_prune">Schneiden</string>

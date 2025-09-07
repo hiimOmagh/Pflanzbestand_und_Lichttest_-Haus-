@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import androidx.appcompat.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -44,6 +46,7 @@ public class DiaryFragment extends Fragment {
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
     private Spinner filterSpinner;
+    private String searchQuery = "";
 
     /**
      * Creates a new instance of the fragment for the given plant.
@@ -85,6 +88,22 @@ public class DiaryFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView listView = view.findViewById(R.id.diary_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        SearchView searchView = view.findViewById(R.id.diary_search);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchQuery = query.toLowerCase(Locale.ROOT);
+                loadEntries();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                searchQuery = newText.toLowerCase(Locale.ROOT);
+                loadEntries();
+                return true;
+            }
+        });
         filterSpinner = view.findViewById(R.id.diary_filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
             requireContext(),
@@ -238,22 +257,32 @@ public class DiaryFragment extends Fragment {
                     }
                 }
             }
+            List<DiaryEntry> filtered = new ArrayList<>(result);
             if (filterSpinner != null) {
                 String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
                 int pos = filterSpinner.getSelectedItemPosition();
                 String code = filterCodes[pos];
                 if (!code.isEmpty()) {
-                    List<DiaryEntry> filtered = new ArrayList<>();
-                    for (DiaryEntry entry : result) {
+                    List<DiaryEntry> byType = new ArrayList<>();
+                    for (DiaryEntry entry : filtered) {
                         if (entry.getType().equals(code)) {
-                            filtered.add(entry);
+                            byType.add(entry);
                         }
                     }
-                    adapter.submitList(filtered);
-                    return;
+                    filtered = byType;
                 }
             }
-            adapter.submitList(result);
+            if (!searchQuery.isEmpty()) {
+                List<DiaryEntry> byQuery = new ArrayList<>();
+                for (DiaryEntry entry : filtered) {
+                    String note = entry.getNote() != null ? entry.getNote() : "";
+                    if (note.toLowerCase(Locale.ROOT).contains(searchQuery)) {
+                        byQuery.add(entry);
+                    }
+                }
+                filtered = byQuery;
+            }
+            adapter.submitList(filtered);
         });
     }
 }
