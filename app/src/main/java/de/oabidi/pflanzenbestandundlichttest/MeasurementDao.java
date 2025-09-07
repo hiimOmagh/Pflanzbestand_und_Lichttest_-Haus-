@@ -86,6 +86,24 @@ public interface MeasurementDao {
     Float sumDliForRange(long id, long start, long end);
 
     /**
+     * Aggregates DLI measurements for the given plant within the specified time range
+     * and counts the number of days that contain data.
+     *
+     * <p>The query groups measurements by day (based on the start of the day in epoch
+     * milliseconds) and only counts days where the summed DLI is greater than zero.</p>
+     *
+     * @param id    identifier of the plant
+     * @param start start of the time range (inclusive)
+     * @param end   end of the time range (exclusive)
+     * @return aggregate containing total DLI and day count
+     */
+    @Query("SELECT COUNT(*) AS dayCount, SUM(dliSum) AS totalDli FROM (" +
+        "SELECT SUM(dli) AS dliSum FROM Measurement " +
+        "WHERE plantId = :id AND timeEpoch >= :start AND timeEpoch < :end " +
+        "GROUP BY timeEpoch / 86400000 HAVING SUM(dli) > 0)")
+    DliAggregate aggregateDliForRange(long id, long start, long end);
+
+    /**
      * Sums PPFD measurements for the given plant on a specific day.
      *
      * <p>The day is defined by its start time in epoch milliseconds and

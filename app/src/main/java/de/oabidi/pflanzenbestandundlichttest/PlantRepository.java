@@ -476,6 +476,28 @@ public class PlantRepository {
     }
 
     /**
+     * Aggregates DLI values and counts days with data for a plant within a time range,
+     * delivering the result on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param start    start of the time range (inclusive)
+     * @param end      end of the time range (exclusive)
+     * @param callback invoked with the aggregation result on the main thread
+     */
+    public void aggregateDliForRange(long plantId, long start, long end, Consumer<DliAggregate> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            DliAggregate result = measurementDao.aggregateDliForRange(plantId, start, end);
+            if (result == null) {
+                result = new DliAggregate();
+            }
+            if (callback != null) {
+                DliAggregate finalResult = result;
+                mainHandler.post(() -> callback.accept(finalResult));
+            }
+        });
+    }
+
+    /**
      * Calculates the summed PPFD for a plant on a specific day and delivers
      * the result on the main thread.
      *
