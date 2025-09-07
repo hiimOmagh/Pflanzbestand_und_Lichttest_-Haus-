@@ -8,4 +8,6 @@
     <color name="colorOnPrimary">#FFFFFFFF</color>
     <color name="colorSecondary">#8BC34A</color>
     <color name="colorOnSecondary">#FF000000</color>
+    <color name="chartBar">#4CAF50</color>
+    <color name="chartAxis">#FF000000</color>
 </resources>

@@ -9,6 +9,7 @@ import android.view.View;
 import java.util.Locale;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,10 +47,12 @@ public class BarChartView extends View {
     }
 
     private void init() {
-        barPaint.setColor(0xFF4CAF50); // green bars
-        axisPaint.setColor(0xFF000000); // black axes
+        Context context = getContext();
+        barPaint.setColor(ContextCompat.getColor(context, R.color.chartBar));
+        int axisColor = ContextCompat.getColor(context, R.color.chartAxis);
+        axisPaint.setColor(axisColor);
         axisPaint.setStrokeWidth(getResources().getDisplayMetrics().density);
-        textPaint.setColor(0xFF000000);
+        textPaint.setColor(axisColor);
         textPaint.setTextSize(12 * getResources().getDisplayMetrics().scaledDensity);
     }
 
