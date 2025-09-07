@@ -14,13 +14,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+
 /**
  * Fragment allowing users to calibrate the light sensor by entering a known PPFD
  * value and calculating the calibration factor k.
  */
 public class CalibrationFragment extends Fragment implements LightSensorHelper.OnLuxChangedListener {
-    private static final String PREFS_NAME = "settings";
-    private static final String KEY_CALIBRATION = "calibration_factor";
 
     private TextView luxView;
     private EditText ppfdInput;
@@ -49,8 +49,8 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
                 float referencePpfd = Float.parseFloat(ppfdInput.getText().toString());
                 if (referencePpfd > 0f && lastLux > 0f) {
                     float k = referencePpfd / lastLux;
-                    SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                    prefs.edit().putString(KEY_CALIBRATION, Float.toString(k)).apply();
+                    SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+                    prefs.edit().putString(SettingsKeys.KEY_CALIBRATION, Float.toString(k)).apply();
                     getParentFragmentManager().popBackStack();
                 } else {
                     ppfdInput.setError(getString(R.string.error_positive_number));

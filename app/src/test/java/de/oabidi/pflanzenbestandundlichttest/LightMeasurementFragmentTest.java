@@ -14,6 +14,8 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.lang.reflect.Field;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+
 /**
  * Tests for LightMeasurementFragment ensuring preferences are validated.
  */
@@ -24,8 +26,8 @@ public class LightMeasurementFragmentTest {
     public void fragmentStartsWithZeroSampleSizePreference() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         // Write invalid sample size to preferences
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit().putString("sample_size", "0").apply();
+        context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString(SettingsKeys.KEY_SAMPLE_SIZE, "0").apply();
 
         // Start fragment inside an activity
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
@@ -44,8 +46,8 @@ public class LightMeasurementFragmentTest {
     public void fragmentUsesDefaultWhenCalibrationPreferenceMalformed() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         // Write malformed calibration factor to preferences
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit().putString("calibration_factor", "invalid").apply();
+        context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString(SettingsKeys.KEY_CALIBRATION, "invalid").apply();
 
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
         LightMeasurementFragment fragment = new LightMeasurementFragment();
@@ -59,8 +61,8 @@ public class LightMeasurementFragmentTest {
         assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);
 
         // Inject another malformed value and trigger onResume()
-        context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .edit().putString("calibration_factor", "NaN").apply();
+        context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit().putString(SettingsKeys.KEY_CALIBRATION, "NaN").apply();
         fragment.onPause();
         fragment.onResume();
         assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);

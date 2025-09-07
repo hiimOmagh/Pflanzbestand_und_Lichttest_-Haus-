@@ -8,29 +8,29 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**
  * Fragment displaying application settings.
  */
 public class SettingsFragment extends PreferenceFragmentCompat {
-    private static final String PREFS_NAME = "settings";
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-        getPreferenceManager().setSharedPreferencesName(PREFS_NAME);
+        getPreferenceManager().setSharedPreferencesName(SettingsKeys.PREFS_NAME);
         setPreferencesFromResource(R.xml.settings_preferences, rootKey);
 
-        EditTextPreference calibrationPreference = findPreference("calibration_factor");
+        EditTextPreference calibrationPreference = findPreference(SettingsKeys.KEY_CALIBRATION);
         if (calibrationPreference != null) {
             calibrationPreference.setOnPreferenceChangeListener(this::validatePositiveFloat);
         }
 
-        EditTextPreference sampleSizePreference = findPreference("sample_size");
+        EditTextPreference sampleSizePreference = findPreference(SettingsKeys.KEY_SAMPLE_SIZE);
         if (sampleSizePreference != null) {
             sampleSizePreference.setOnPreferenceChangeListener(this::validateSampleSize);
         }
 
-        EditTextPreference lightHoursPreference = findPreference("light_hours");
+        EditTextPreference lightHoursPreference = findPreference(SettingsKeys.KEY_LIGHT_HOURS);
         if (lightHoursPreference != null) {
             lightHoursPreference.setOnPreferenceChangeListener(this::validatePositiveFloat);
         }

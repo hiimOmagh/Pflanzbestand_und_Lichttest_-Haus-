@@ -7,6 +7,8 @@ import android.os.Looper;
 
 import androidx.annotation.VisibleForTesting;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.List;
@@ -21,8 +23,6 @@ import java.util.function.Consumer;
  * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository {
-    private static final String PREFS_NAME = "settings";
-    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
     private final PlantDao plantDao;
     private final MeasurementDao measurementDao;
     private final DiaryDao diaryDao;
@@ -129,9 +129,9 @@ public class PlantRepository {
                 ReminderScheduler.cancelReminder(context, reminder.getId());
             }
             plantDao.delete(plant);
-            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            if (prefs.getLong(KEY_SELECTED_PLANT, -1) == plant.getId()) {
-                prefs.edit().remove(KEY_SELECTED_PLANT).apply();
+            SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+            if (prefs.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1) == plant.getId()) {
+                prefs.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
             }
             if (callback != null) {
                 mainHandler.post(callback);

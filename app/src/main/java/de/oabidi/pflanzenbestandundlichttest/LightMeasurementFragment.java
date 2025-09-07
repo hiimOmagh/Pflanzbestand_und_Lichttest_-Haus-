@@ -20,17 +20,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+
 import java.util.List;
 
 /**
  * Fragment responsible for displaying live light measurements.
  */
 public class LightMeasurementFragment extends Fragment implements LightMeasurementPresenter.View {
-    private static final String PREFS_NAME = "settings";
-    private static final String KEY_CALIBRATION = "calibration_factor";
-    private static final String KEY_SAMPLE_SIZE = "sample_size";
-    private static final String KEY_LIGHT_HOURS = "light_hours";
-    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
 
     private TextView luxRawView;
     private TextView luxView;
@@ -70,14 +67,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         locationCheckView = view.findViewById(R.id.location_check_value);
 
         Context context = requireContext().getApplicationContext();
-        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String calibrationString = preferences.getString(KEY_CALIBRATION, "0.0185");
+        preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+        String calibrationString = preferences.getString(SettingsKeys.KEY_CALIBRATION, "0.0185");
         try {
             calibrationFactor = Float.parseFloat(calibrationString);
         } catch (NumberFormatException e) {
             calibrationFactor = 0.0185f;
         }
-        String sampleSizeString = preferences.getString(KEY_SAMPLE_SIZE, "10");
+        String sampleSizeString = preferences.getString(SettingsKeys.KEY_SAMPLE_SIZE, "10");
         try {
             sampleSize = Integer.parseInt(sampleSizeString);
         } catch (NumberFormatException e) {
@@ -93,7 +90,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
         }
         if (selectedPlantId == -1) {
-            selectedPlantId = preferences.getLong(KEY_SELECTED_PLANT, -1);
+            selectedPlantId = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
         }
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -102,14 +99,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
                 if (plants != null && position >= 0 && position < plants.size()) {
                     selectedPlantId = plants.get(position).getId();
                     presenter.selectPlant(position);
-                    preferences.edit().putLong(KEY_SELECTED_PLANT, selectedPlantId).apply();
+                    preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
-                preferences.edit().remove(KEY_SELECTED_PLANT).apply();
+                preferences.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
             }
         });
 
@@ -139,14 +136,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         resetSaveButton();
-        String calibrationString = preferences.getString(KEY_CALIBRATION, Float.toString(calibrationFactor));
+        String calibrationString = preferences.getString(SettingsKeys.KEY_CALIBRATION, Float.toString(calibrationFactor));
         float k;
         try {
             k = Float.parseFloat(calibrationString);
         } catch (NumberFormatException e) {
             k = 0.0185f;
         }
-        String sizeString = preferences.getString(KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
+        String sizeString = preferences.getString(SettingsKeys.KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
         int size;
         try {
             size = Integer.parseInt(sizeString);
@@ -156,7 +153,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         if (size < 1) {
             size = 1;
         }
-        String hoursString = preferences.getString(KEY_LIGHT_HOURS, Float.toString(lightHours));
+        String hoursString = preferences.getString(SettingsKeys.KEY_LIGHT_HOURS, Float.toString(lightHours));
         float hours;
         try {
             hours = Float.parseFloat(hoursString);

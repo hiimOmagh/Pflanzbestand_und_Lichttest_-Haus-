@@ -15,6 +15,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+
 import java.util.List;
 import java.util.Calendar;
 import java.util.ArrayList;
@@ -35,8 +37,6 @@ public class StatsFragment extends Fragment {
     private View viewMeasurementsButton;
     private TextView placeholderView;
     private static final int DLI_DAYS = 7;
-    private static final String PREFS_NAME = "settings";
-    private static final String KEY_SELECTED_PLANT = "selectedPlantId";
     private SharedPreferences preferences;
 
     @Nullable
@@ -57,13 +57,13 @@ public class StatsFragment extends Fragment {
         placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
         repository = ((PlantApp) context).getRepository();
-        preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
         }
         if (selectedPlantId == -1) {
-            selectedPlantId = preferences.getLong(KEY_SELECTED_PLANT, -1);
+            selectedPlantId = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
         }
 
         plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -72,14 +72,14 @@ public class StatsFragment extends Fragment {
                 if (plants != null && position >= 0 && position < plants.size()) {
                     selectedPlantId = plants.get(position).getId();
                     loadDataForPlant(selectedPlantId);
-                    preferences.edit().putLong(KEY_SELECTED_PLANT, selectedPlantId).apply();
+                    preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
-                preferences.edit().remove(KEY_SELECTED_PLANT).apply();
+                preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
             }
         });
 
