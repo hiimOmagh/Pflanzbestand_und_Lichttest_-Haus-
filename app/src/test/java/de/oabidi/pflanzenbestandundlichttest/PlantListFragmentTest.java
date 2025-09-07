@@ -4,18 +4,25 @@ import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import android.content.Context;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import androidx.test.core.app.ApplicationProvider;
+import org.robolectric.annotation.Config;
 
 /**
  * Tests for PlantListFragment filtering logic ensuring species and location are matched.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(application = PlantListFragmentTest.TestApp.class)
 public class PlantListFragmentTest {
 
     private static class RecordingPlantAdapter extends PlantAdapter {
@@ -29,8 +36,55 @@ public class PlantListFragmentTest {
         }
     }
 
+    public static class TestApp extends PlantApp {
+        PlantRepository repository;
+        @Override
+        public synchronized PlantRepository getRepository() {
+            return repository;
+        }
+        void setRepository(PlantRepository repo) {
+            this.repository = repo;
+        }
+    }
+
+    private static class StubPlantRepository extends PlantRepository {
+        private final List<Plant> data;
+        StubPlantRepository(Context context, List<Plant> data) {
+            super(context);
+            this.data = data;
+        }
+        @Override
+        public void searchPlants(String query, java.util.function.Consumer<List<Plant>> cb) {
+            String lower = query.toLowerCase(Locale.ROOT);
+            List<Plant> result = new ArrayList<>();
+            for (Plant plant : data) {
+                String name = plant.getName();
+                String species = plant.getSpecies();
+                String location = plant.getLocationHint();
+                if ((name != null && name.toLowerCase(Locale.ROOT).contains(lower))
+                    || (species != null && species.toLowerCase(Locale.ROOT).contains(lower))
+                    || (location != null && location.toLowerCase(Locale.ROOT).contains(lower))) {
+                    result.add(plant);
+                }
+            }
+            if (cb != null) {
+                cb.accept(result);
+            }
+        }
+
+        @Override
+        public void getAllPlants(java.util.function.Consumer<List<Plant>> callback) {
+            if (callback != null) {
+                callback.accept(new ArrayList<>(data));
+            }
+        }
+    }
+
     private List<Plant> invokeFilter(List<Plant> plants, String query) throws Exception {
-        PlantListFragment fragment = new PlantListFragment();
+        Context context = ApplicationProvider.getApplicationContext();
+        ((TestApp) context).setRepository(new StubPlantRepository(context, plants));
+
+        PlantListFragment fragment = Robolectric.buildFragment(PlantListFragment.class).create().start().resume().get();
         RecordingPlantAdapter adapter = new RecordingPlantAdapter();
         Field plantsField = PlantListFragment.class.getDeclaredField("plants");
         plantsField.setAccessible(true);

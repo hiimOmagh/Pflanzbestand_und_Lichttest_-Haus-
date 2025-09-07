@@ -21,6 +21,15 @@ public interface PlantDao {
     List<Plant> getAll();
 
     /**
+     * Searches plants whose name, species or location hint matches the given query.
+     *
+     * @param q search pattern with wildcards
+     * @return list of matching plants ordered by name
+     */
+    @Query("SELECT * FROM Plant WHERE name LIKE :q OR species LIKE :q OR locationHint LIKE :q ORDER BY name")
+    List<Plant> search(String q);
+
+    /**
      * Inserts the given {@link Plant} into the database.
      * <p>
      * Note: Should be called off the main thread for production usage. Returns the

@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import android.widget.ProgressBar;
+import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,7 +26,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -211,19 +211,16 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             adapter.submitList(new ArrayList<>(plants));
             return;
         }
-        String lower = query.toLowerCase(Locale.ROOT);
-        List<Plant> filtered = new ArrayList<>();
-        for (Plant plant : plants) {
-            String name = plant.getName();
-            String species = plant.getSpecies();
-            String location = plant.getLocationHint();
-            if ((name != null && name.toLowerCase(Locale.ROOT).contains(lower))
-                || (species != null && species.toLowerCase(Locale.ROOT).contains(lower))
-                || (location != null && location.toLowerCase(Locale.ROOT).contains(lower))) {
-                filtered.add(plant);
-            }
+        Context ctx = getContext();
+        if (ctx == null) {
+            return;
         }
-        adapter.submitList(filtered);
+        PlantRepository repository = ((PlantApp) ctx.getApplicationContext()).getRepository();
+        repository.searchPlants(query, result -> {
+            if (isAdded()) {
+                adapter.submitList(result);
+            }
+        });
     }
 
     private void navigateToEdit(@Nullable Plant plant) {
