@@ -78,6 +78,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         } catch (NumberFormatException e) {
             sampleSize = 10;
         }
+        if (sampleSize < 1) {
+            sampleSize = 1;
+        }
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
 
@@ -138,6 +141,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             size = Integer.parseInt(sizeString);
         } catch (NumberFormatException e) {
             size = sampleSize;
+        }
+        if (size < 1) {
+            size = 1;
         }
         String hoursString = preferences.getString(KEY_LIGHT_HOURS, Float.toString(lightHours));
         float hours;
