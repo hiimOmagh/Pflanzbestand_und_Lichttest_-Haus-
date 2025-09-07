@@ -6,10 +6,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.widget.Button;
 import android.widget.TextView;
+import android.text.TextUtils;
+import androidx.appcompat.app.AlertDialog;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,8 +20,15 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import java.util.List;
 import java.util.Calendar;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
+import de.oabidi.pflanzenbestandundlichttest.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.MeasurementListFragment;
 
 /**
  * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
@@ -30,10 +37,10 @@ public class StatsFragment extends Fragment {
     private PlantRepository repository;
     private TextView diaryCountsView;
     private TextView dliView;
-    private Spinner plantSelector;
+    private Button plantSelectorButton;
     private BarChartView chart;
     private List<Plant> plants;
-    private long selectedPlantId = -1;
+    private final List<Long> selectedPlantIds = new ArrayList<>();
     private View viewMeasurementsButton;
     private TextView placeholderView;
     private static final int DLI_DAYS = 7;
@@ -52,7 +59,7 @@ public class StatsFragment extends Fragment {
         chart = view.findViewById(R.id.stats_chart);
         diaryCountsView = view.findViewById(R.id.stats_diary_counts);
         dliView = view.findViewById(R.id.stats_dli);
-        plantSelector = view.findViewById(R.id.stats_plant_selector);
+        plantSelectorButton = view.findViewById(R.id.stats_select_plants);
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
@@ -60,32 +67,30 @@ public class StatsFragment extends Fragment {
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
 
         if (savedInstanceState != null) {
-            selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
-        }
-        if (selectedPlantId == -1) {
-            selectedPlantId = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
-        }
-
-        plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
-                if (plants != null && position >= 0 && position < plants.size()) {
-                    selectedPlantId = plants.get(position).getId();
-                    loadDataForPlant(selectedPlantId);
-                    preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
+            long[] ids = savedInstanceState.getLongArray("selectedPlantIds");
+            if (ids != null) {
+                for (long id : ids) {
+                    selectedPlantIds.add(id);
                 }
             }
+        }
+        if (selectedPlantIds.isEmpty()) {
+            long id = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
+            if (id != -1) {
+                selectedPlantIds.add(id);
+            }
+        }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedPlantId = -1;
-                preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
+        plantSelectorButton.setOnClickListener(v -> {
+            if (plants != null && !plants.isEmpty()) {
+                showPlantSelectionDialog();
             }
         });
 
         viewMeasurementsButton.setOnClickListener(v -> {
-            if (selectedPlantId >= 0) {
-                MeasurementListFragment fragment = MeasurementListFragment.newInstance(selectedPlantId);
+            if (selectedPlantIds.size() == 1) {
+                long id = selectedPlantIds.get(0);
+                MeasurementListFragment fragment = MeasurementListFragment.newInstance(id);
                 requireActivity().getSupportFragmentManager().beginTransaction()
                     .replace(R.id.nav_host_fragment, fragment)
                     .addToBackStack(null)
@@ -94,6 +99,7 @@ public class StatsFragment extends Fragment {
         });
 
         loadPlants();
+        updateButtonText();
     }
 
     @Override
@@ -105,61 +111,126 @@ public class StatsFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putLong("selectedPlantId", selectedPlantId);
+        long[] ids = new long[selectedPlantIds.size()];
+        for (int i = 0; i < selectedPlantIds.size(); i++) {
+            ids[i] = selectedPlantIds.get(i);
+        }
+        outState.putLongArray("selectedPlantIds", ids);
     }
 
     private void loadPlants() {
         repository.getAllPlants(result -> {
             plants = result;
             if (plants.isEmpty()) {
-                plantSelector.setAdapter(null);
-                plantSelector.setVisibility(View.GONE);
+                plantSelectorButton.setVisibility(View.GONE);
                 chart.setVisibility(View.GONE);
                 placeholderView.setVisibility(View.VISIBLE);
                 viewMeasurementsButton.setEnabled(false);
                 dliView.setText(getString(R.string.dli_placeholder));
                 diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
-                selectedPlantId = -1;
+                selectedPlantIds.clear();
+                updateButtonText();
             } else {
-                String[] names = new String[plants.size()];
-                for (int i = 0; i < plants.size(); i++) {
-                    names[i] = plants.get(i).getName();
-                }
-                ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_spinner_item,
-                    names);
-                spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                plantSelector.setAdapter(spinnerAdapter);
-                plantSelector.setVisibility(View.VISIBLE);
+                plantSelectorButton.setVisibility(View.VISIBLE);
                 chart.setVisibility(View.VISIBLE);
                 placeholderView.setVisibility(View.GONE);
-                viewMeasurementsButton.setEnabled(true);
-
-                int selection = 0;
-                if (selectedPlantId != -1) {
-                    for (int i = 0; i < plants.size(); i++) {
-                        if (plants.get(i).getId() == selectedPlantId) {
-                            selection = i;
-                            break;
-                        }
-                    }
+                if (selectedPlantIds.isEmpty()) {
+                    selectedPlantIds.add(plants.get(0).getId());
                 }
-                plantSelector.setSelection(selection);
+                updateButtonText();
+                loadDataForPlants(selectedPlantIds);
             }
         });
     }
 
-    private void loadDataForPlant(long plantId) {
-        repository.recentMeasurementsForPlant(plantId, 30,
-            list -> {
-                List<Long> times = new ArrayList<>();
-                for (Measurement m : list) {
-                    times.add(m.getTimeEpoch());
+    private void loadDataForPlants(List<Long> plantIds) {
+        if (plantIds.isEmpty()) {
+            chart.setMeasurements(null);
+            dliView.setText(getString(R.string.dli_placeholder));
+            diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
+            viewMeasurementsButton.setEnabled(false);
+            return;
+        }
+
+        Map<String, List<Measurement>> data = new HashMap<>();
+        Set<Long> remaining = new HashSet<>(plantIds);
+        for (Long id : plantIds) {
+            repository.recentMeasurementsForPlant(id, 30, list -> {
+                String name = findPlantName(id);
+                data.put(name, list);
+                remaining.remove(id);
+                if (remaining.isEmpty()) {
+                    chart.setMeasurements(data);
                 }
-                chart.setMeasurements(list, times);
             });
-        repository.diaryEntriesForPlant(plantId, entries -> updateDiaryCounts(entries));
-        computeDli(plantId);
+        }
+
+        if (plantIds.size() == 1) {
+            long id = plantIds.get(0);
+            repository.diaryEntriesForPlant(id, entries -> updateDiaryCounts(entries));
+            computeDli(id);
+            viewMeasurementsButton.setEnabled(true);
+        } else {
+            dliView.setText(getString(R.string.dli_placeholder));
+            diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
+            viewMeasurementsButton.setEnabled(false);
+        }
+    }
+
+    private void showPlantSelectionDialog() {
+        String[] names = new String[plants.size()];
+        boolean[] checked = new boolean[plants.size()];
+        for (int i = 0; i < plants.size(); i++) {
+            Plant p = plants.get(i);
+            names[i] = p.getName();
+            checked[i] = selectedPlantIds.contains(p.getId());
+        }
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.select_plants)
+            .setMultiChoiceItems(names, checked, (dialog, which, isChecked) -> {
+                long id = plants.get(which).getId();
+                if (isChecked) {
+                    if (!selectedPlantIds.contains(id)) {
+                        selectedPlantIds.add(id);
+                    }
+                } else {
+                    selectedPlantIds.remove(id);
+                }
+            })
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                updateButtonText();
+                loadDataForPlants(selectedPlantIds);
+                long first = selectedPlantIds.isEmpty() ? -1 : selectedPlantIds.get(0);
+                preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, first).apply();
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+    }
+
+    private void updateButtonText() {
+        if (plantSelectorButton == null) {
+            return;
+        }
+        if (plants == null || selectedPlantIds.isEmpty()) {
+            plantSelectorButton.setText(R.string.select_plants);
+        } else {
+            List<String> names = new ArrayList<>();
+            for (long id : selectedPlantIds) {
+                names.add(findPlantName(id));
+            }
+            plantSelectorButton.setText(TextUtils.join(", ", names));
+        }
+    }
+
+    private String findPlantName(long id) {
+        if (plants != null) {
+            for (Plant p : plants) {
+                if (p.getId() == id) {
+                    return p.getName();
+                }
+            }
+        }
+        return "";
     }
 
     private void computeDli(long plantId) {

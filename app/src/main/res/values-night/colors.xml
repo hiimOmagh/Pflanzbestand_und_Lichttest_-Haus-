@@ -10,4 +10,8 @@
     <color name="colorOnSecondary">#003300</color>
     <color name="chartBar">#81C784</color>
     <color name="chartAxis">#FFFFFFFF</color>
+    <color name="chartSeries1">#81C784</color>
+    <color name="chartSeries2">#64B5F6</color>
+    <color name="chartSeries3">#FFB74D</color>
+    <color name="chartSeries4">#F06292</color>
 </resources>

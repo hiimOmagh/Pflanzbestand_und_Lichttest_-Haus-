@@ -57,6 +57,7 @@
     <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
     <string name="stats_chart_default_content_description">PPFD bar chart</string>
     <string name="format_stats_chart_content_description">PPFD bar chart, max %.1f µmol/m²/s</string>
+    <string name="select_plants">Select Plants</string>
     <string name="diary_hint_note">Note</string>
     <string name="diary_search_hint">Search entries</string>
     <string name="diary_type_water">Water</string>

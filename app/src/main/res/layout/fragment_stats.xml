@@ -4,11 +4,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <Spinner
-        android:id="@+id/stats_plant_selector"
+    <Button
+        android:id="@+id/stats_select_plants"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="32dp" />
+        android:minHeight="32dp"
+        android:text="@string/select_plants" />
 
     <de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView
         android:id="@+id/stats_chart"

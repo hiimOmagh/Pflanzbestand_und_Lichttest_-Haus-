@@ -14,6 +14,10 @@ import androidx.core.content.ContextCompat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -24,12 +28,19 @@ import de.oabidi.pflanzenbestandundlichttest.R;
  * Very small custom view drawing a bar chart for PPFD values of measurements.
  */
 public class BarChartView extends View {
-    private final List<Float> values = new ArrayList<>();
+    private final List<List<Float>> seriesValues = new ArrayList<>();
+    private final List<String> seriesLabels = new ArrayList<>();
+    private final List<Paint> seriesPaints = new ArrayList<>();
     private final List<Long> timestamps = new ArrayList<>();
-    private final Paint barPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float maxValue = 0f;
+    private static final int[] SERIES_COLORS = {
+        R.color.chartSeries1,
+        R.color.chartSeries2,
+        R.color.chartSeries3,
+        R.color.chartSeries4
+    };
 
     public BarChartView(Context context) {
         super(context);
@@ -48,7 +59,6 @@ public class BarChartView extends View {
 
     private void init() {
         Context context = getContext();
-        barPaint.setColor(ContextCompat.getColor(context, R.color.chartBar));
         int axisColor = ContextCompat.getColor(context, R.color.chartAxis);
         axisPaint.setColor(axisColor);
         axisPaint.setStrokeWidth(getResources().getDisplayMetrics().density);
@@ -57,28 +67,51 @@ public class BarChartView extends View {
     }
 
     /**
-     * Sets the measurements to display. Only PPFD values are visualised.
-     * A parallel list of timestamps is used for labelling the x-axis.
+     * Sets the measurements to display grouped by series label. Only PPFD values are visualised.
      */
-    public void setMeasurements(@Nullable List<Measurement> measurements,
-                                @Nullable List<Long> times) {
-        values.clear();
+    public void setMeasurements(@Nullable Map<String, List<Measurement>> measurements) {
+        seriesValues.clear();
+        seriesLabels.clear();
+        seriesPaints.clear();
         timestamps.clear();
-        if (measurements != null) {
-            for (Measurement m : measurements) {
-                values.add(m.getPpfd());
+        maxValue = 0f;
+        if (measurements != null && !measurements.isEmpty()) {
+            Set<Long> timeSet = new HashSet<>();
+            for (List<Measurement> list : measurements.values()) {
+                for (Measurement m : list) {
+                    timeSet.add(m.getTimeEpoch());
+                    if (m.getPpfd() > maxValue) {
+                        maxValue = m.getPpfd();
+                    }
+                }
             }
-        }
-        if (times != null) {
-            timestamps.addAll(times);
-        }
-        if (values.isEmpty()) {
-            maxValue = 0f;
-            setContentDescription(getContext().getString(R.string.stats_chart_default_content_description));
-        } else {
-            maxValue = Collections.max(values);
+            timestamps.addAll(timeSet);
+            Collections.sort(timestamps);
+
+            Context context = getContext();
+            int colorIndex = 0;
+            for (Map.Entry<String, List<Measurement>> entry : measurements.entrySet()) {
+                Map<Long, Float> map = new HashMap<>();
+                for (Measurement m : entry.getValue()) {
+                    map.put(m.getTimeEpoch(), m.getPpfd());
+                }
+                List<Float> vals = new ArrayList<>();
+                for (Long t : timestamps) {
+                    Float v = map.get(t);
+                    vals.add(v != null ? v : 0f);
+                }
+                seriesValues.add(vals);
+                seriesLabels.add(entry.getKey());
+                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+                int colorRes = SERIES_COLORS[colorIndex % SERIES_COLORS.length];
+                p.setColor(ContextCompat.getColor(context, colorRes));
+                seriesPaints.add(p);
+                colorIndex++;
+            }
             setContentDescription(getContext().getString(
                 R.string.format_stats_chart_content_description, maxValue));
+        } else {
+            setContentDescription(getContext().getString(R.string.stats_chart_default_content_description));
         }
         invalidate();
     }
@@ -86,7 +119,7 @@ public class BarChartView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (values.isEmpty() || maxValue <= 0) {
+        if (seriesValues.isEmpty() || timestamps.isEmpty() || maxValue <= 0) {
             return;
         }
         float width = getWidth();
@@ -95,20 +128,26 @@ public class BarChartView extends View {
         // Reserve space for labels
         float textHeight = textPaint.getTextSize();
         float leftPadding = textHeight * 3f;
-        float bottomPadding = textHeight * 2f;
+        float bottomPadding = textHeight * 4f;
         float chartWidth = width - leftPadding;
         float chartHeight = height - bottomPadding;
         float originX = leftPadding;
         float originY = chartHeight;
 
-        float barWidth = chartWidth / values.size();
-        for (int i = 0; i < values.size(); i++) {
-            float v = values.get(i);
-            float barHeight = (v / maxValue) * chartHeight;
-            float left = originX + i * barWidth;
-            float right = left + barWidth * 0.8f; // small gap between bars
-            float top = originY - barHeight;
-            canvas.drawRect(left, top, right, originY, barPaint);
+        int entryCount = timestamps.size();
+        int seriesCount = seriesValues.size();
+        float groupWidth = chartWidth / entryCount;
+        float barWidth = groupWidth / seriesCount;
+        for (int i = 0; i < entryCount; i++) {
+            for (int s = 0; s < seriesCount; s++) {
+                List<Float> vals = seriesValues.get(s);
+                float v = i < vals.size() ? vals.get(i) : 0f;
+                float barHeight = (v / maxValue) * chartHeight;
+                float left = originX + i * groupWidth + s * barWidth;
+                float right = left + barWidth * 0.8f; // small gap between bars
+                float top = originY - barHeight;
+                canvas.drawRect(left, top, right, originY, seriesPaints.get(s));
+            }
         }
 
         // Draw axes
@@ -131,16 +170,26 @@ public class BarChartView extends View {
         // X-axis ticks and labels
         textPaint.setTextAlign(Paint.Align.CENTER);
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd", Locale.getDefault());
-        for (int i = 0; i < values.size(); i++) {
-            float x = originX + i * barWidth + (barWidth * 0.4f);
+        for (int i = 0; i < entryCount; i++) {
+            float x = originX + i * groupWidth + (groupWidth * 0.5f);
             canvas.drawLine(x, originY, x, originY + tick, axisPaint);
             String label;
-            if (i < timestamps.size()) {
-                label = dateFormat.format(new Date(timestamps.get(i)));
-            } else {
-                label = String.valueOf(i + 1);
-            }
+            label = dateFormat.format(new Date(timestamps.get(i)));
             canvas.drawText(label, x, height - tick, textPaint);
+        }
+
+        // Legend
+        float legendY = originY + textHeight * 1.5f;
+        float legendX = originX;
+        float box = textHeight;
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        for (int s = 0; s < seriesCount; s++) {
+            Paint p = seriesPaints.get(s);
+            canvas.drawRect(legendX, legendY, legendX + box, legendY + box, p);
+            float textX = legendX + box + tick;
+            float textY = legendY + box * 0.8f;
+            canvas.drawText(seriesLabels.get(s), textX, textY, textPaint);
+            legendX += box + textPaint.measureText(seriesLabels.get(s)) + tick * 4;
         }
     }
 }
