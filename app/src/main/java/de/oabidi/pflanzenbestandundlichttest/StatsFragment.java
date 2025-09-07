@@ -33,6 +33,7 @@ public class StatsFragment extends Fragment {
     private List<Plant> plants;
     private long selectedPlantId = -1;
     private View viewMeasurementsButton;
+    private TextView placeholderView;
     private static final int DLI_DAYS = 7;
     private static final String PREFS_NAME = "settings";
     private static final String KEY_SELECTED_PLANT = "selectedPlantId";
@@ -53,6 +54,7 @@ public class StatsFragment extends Fragment {
         dliView = view.findViewById(R.id.stats_dli);
         plantSelector = view.findViewById(R.id.stats_plant_selector);
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
+        placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
         repository = ((PlantApp) context).getRepository();
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -91,18 +93,48 @@ public class StatsFragment extends Fragment {
             }
         });
 
+        loadPlants();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadPlants();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("selectedPlantId", selectedPlantId);
+    }
+
+    private void loadPlants() {
         repository.getAllPlants(result -> {
             plants = result;
-            String[] names = new String[plants.size()];
-            for (int i = 0; i < plants.size(); i++) {
-                names[i] = plants.get(i).getName();
-            }
-            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item,
-                names);
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            plantSelector.setAdapter(spinnerAdapter);
-            if (!plants.isEmpty()) {
+            if (plants.isEmpty()) {
+                plantSelector.setAdapter(null);
+                plantSelector.setVisibility(View.GONE);
+                chart.setVisibility(View.GONE);
+                placeholderView.setVisibility(View.VISIBLE);
+                viewMeasurementsButton.setEnabled(false);
+                dliView.setText(getString(R.string.dli_placeholder));
+                diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
+                selectedPlantId = -1;
+            } else {
+                String[] names = new String[plants.size()];
+                for (int i = 0; i < plants.size(); i++) {
+                    names[i] = plants.get(i).getName();
+                }
+                ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(),
+                    android.R.layout.simple_spinner_item,
+                    names);
+                spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                plantSelector.setAdapter(spinnerAdapter);
+                plantSelector.setVisibility(View.VISIBLE);
+                chart.setVisibility(View.VISIBLE);
+                placeholderView.setVisibility(View.GONE);
+                viewMeasurementsButton.setEnabled(true);
+
                 int selection = 0;
                 if (selectedPlantId != -1) {
                     for (int i = 0; i < plants.size(); i++) {
@@ -115,12 +147,6 @@ public class StatsFragment extends Fragment {
                 plantSelector.setSelection(selection);
             }
         });
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putLong("selectedPlantId", selectedPlantId);
     }
 
     private void loadDataForPlant(long plantId) {

@@ -23,6 +23,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.allOf;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Instrumented tests covering basic plant CRUD operations and diary entries.
@@ -112,6 +114,19 @@ public class PlantDiaryInstrumentedTest {
             onView(withText(R.string.measurement_saved))
                 .inRoot(new ToastMatcher())
                 .check(matches(isDisplayed()));
+        }
+    }
+
+    @Test
+    public void testStatsFragmentShowsPlaceholderWhenNoPlants() {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            onView(withId(R.id.nav_stats)).perform(click());
+            SystemClock.sleep(500);
+
+            onView(withId(R.id.stats_placeholder)).check(matches(isDisplayed()));
+            onView(withId(R.id.stats_plant_selector)).check(matches(not(isDisplayed())));
+            onView(withId(R.id.stats_chart)).check(matches(not(isDisplayed())));
+            onView(withId(R.id.stats_view_measurements)).check(matches(not(isEnabled())));
         }
     }
 
