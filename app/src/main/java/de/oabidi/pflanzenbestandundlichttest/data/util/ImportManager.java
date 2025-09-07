@@ -109,8 +109,8 @@ public class ImportManager {
                             }
 
                             // Remove diary entry photos
-                            for (DiaryEntry entry : db.diaryDao().getAll()) {
-                                PhotoManager.deletePhoto(context, entry.getPhotoUri());
+                            for (DiaryEntry diaryEntry : db.diaryDao().getAll()) {
+                                PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
                             }
 
                             // Cancel any scheduled reminders
