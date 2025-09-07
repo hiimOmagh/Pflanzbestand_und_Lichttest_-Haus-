@@ -41,8 +41,6 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.preference)
     implementation(libs.room.runtime)
-    implementation(libs.ext.junit)
-    implementation(libs.espresso.core)
     implementation(libs.firebase.crashlytics)
     annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
