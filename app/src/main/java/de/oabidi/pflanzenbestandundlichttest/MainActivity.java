@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -72,8 +74,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        SharedPreferences prefs = getSharedPreferences(SettingsKeys.PREFS_NAME, MODE_PRIVATE);
+        boolean hasOnboarded = prefs.getBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false);
+
         if (savedInstanceState == null) {
-            if (getIntent().getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
+            if (!hasOnboarded) {
+                getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.nav_host_fragment, new OnboardingFragment())
+                    .commit();
+            } else if (getIntent().getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_measure);
             } else {
                 getSupportFragmentManager().beginTransaction()

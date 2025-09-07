@@ -14,6 +14,7 @@ preference = "1.2.1"
 firebaseCrashlytics = "20.0.1"
 googleGmsGoogleServices = "4.4.3"
 googleFirebaseCrashlytics = "3.0.6"
+viewpager2 = "1.1.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -29,6 +30,7 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
+viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

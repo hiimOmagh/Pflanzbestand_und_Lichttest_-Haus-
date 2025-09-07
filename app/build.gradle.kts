@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.preference)
+    implementation(libs.viewpager2)
     implementation(libs.room.runtime)
     implementation(libs.firebase.crashlytics)
     annotationProcessor(libs.room.compiler)

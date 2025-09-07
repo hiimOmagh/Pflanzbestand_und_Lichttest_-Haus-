@@ -32,4 +32,9 @@ public final class SettingsKeys {
      * Identifier of the plant currently selected by the user.
      */
     public static final String KEY_SELECTED_PLANT = "selectedPlantId";
+
+    /**
+     * Flag indicating whether the user has completed the onboarding flow.
+     */
+    public static final String KEY_HAS_ONBOARDED = "has_onboarded";
 }

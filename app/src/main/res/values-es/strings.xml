@@ -159,4 +159,9 @@
     <string name="list_separator">, </string>
     <string name="format_species_target">%1$s: %2$s - %3$s</string>
     <string name="format_reminder_item">%1$s - %2$s</string>
+    <string name="menu_help">Ayuda</string>
+    <string name="onboarding_plant_setup">Agrega tus plantas y llévalas fácilmente.</string>
+    <string name="onboarding_measurement">Mide la luz para que tus plantas prosperen.</string>
+    <string name="onboarding_diary">Registra el cuidado en el diario.</string>
+    <string name="action_done">Entendido</string>
 </resources>

@@ -152,4 +152,9 @@
     <string name="hint_reminder_time">Datum (JJJJ-MM-TT HH:mm)</string>
     <string name="error_invalid_date">Ungültiges Datum</string>
     <string name="notification_permission_denied">Benachrichtigungsberechtigung verweigert. Erinnerungen werden nicht angezeigt.</string>
+    <string name="menu_help">Hilfe</string>
+    <string name="onboarding_plant_setup">Füge deine Pflanzen hinzu und behalte den Überblick.</string>
+    <string name="onboarding_measurement">Miss die Lichtwerte, damit deine Pflanzen gedeihen.</string>
+    <string name="onboarding_diary">Halte Pflegeaktivitäten im Tagebuch fest.</string>
+    <string name="action_done">Verstanden</string>
 </resources>
