@@ -25,6 +25,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -210,15 +211,15 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             adapter.submitList(new ArrayList<>(plants));
             return;
         }
-        String lower = query.toLowerCase();
+        String lower = query.toLowerCase(Locale.ROOT);
         List<Plant> filtered = new ArrayList<>();
         for (Plant plant : plants) {
             String name = plant.getName();
             String species = plant.getSpecies();
             String location = plant.getLocationHint();
-            if ((name != null && name.toLowerCase().contains(lower))
-                || (species != null && species.toLowerCase().contains(lower))
-                || (location != null && location.toLowerCase().contains(lower))) {
+            if ((name != null && name.toLowerCase(Locale.ROOT).contains(lower))
+                || (species != null && species.toLowerCase(Locale.ROOT).contains(lower))
+                || (location != null && location.toLowerCase(Locale.ROOT).contains(lower))) {
                 filtered.add(plant);
             }
         }

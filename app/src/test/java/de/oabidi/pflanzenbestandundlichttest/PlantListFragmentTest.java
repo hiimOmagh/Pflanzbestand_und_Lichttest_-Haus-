@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,5 +60,19 @@ public class PlantListFragmentTest {
         List<Plant> result = invokeFilter(Arrays.asList(p1, p2), "living");
         assertEquals(1, result.size());
         assertSame(p2, result.get(0));
+    }
+
+    @Test
+    public void filterMatchesTurkishI() throws Exception {
+        Locale prev = Locale.getDefault();
+        Locale.setDefault(new Locale("tr"));
+        try {
+            Plant p = new Plant("İnci", null, null, null, 0L, null);
+            List<Plant> result = invokeFilter(Arrays.asList(p), "I");
+            assertEquals(1, result.size());
+            assertSame(p, result.get(0));
+        } finally {
+            Locale.setDefault(prev);
+        }
     }
 }
