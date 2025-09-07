@@ -45,8 +45,10 @@
 
     <Button
         android:id="@+id/stats_view_measurements"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/action_view_measurements" />
+        android:gravity="center"
+        android:text="@string/action_view_measurements"
+        android:textColor="#263238" />
 
 </LinearLayout>

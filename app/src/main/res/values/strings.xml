@@ -143,4 +143,5 @@
     <string name="action_edit_reminder">Edit Reminder</string>
     <string name="hint_reminder_message">Message</string>
     <string name="hint_reminder_time">Date (yyyy-MM-dd HH:mm)</string>
+    <string name="notification_permission_denied">Notification permission denied. Reminders will not appear.</string>
 </resources>
