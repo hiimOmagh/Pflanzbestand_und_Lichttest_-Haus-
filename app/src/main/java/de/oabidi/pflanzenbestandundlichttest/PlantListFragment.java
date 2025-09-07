@@ -42,6 +42,8 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void showProgress() {
         if (isAdded()) {
+            progressBar.setIndeterminate(false);
+            progressBar.setProgress(0);
             progressBar.setVisibility(View.VISIBLE);
         }
     }
@@ -49,6 +51,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private void hideProgress() {
         if (isAdded()) {
             progressBar.setVisibility(View.GONE);
+            progressBar.setProgress(0);
         }
     }
     
@@ -61,6 +64,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                     if (isAdded()) {
                         int msg = success ? R.string.export_success : R.string.export_failure;
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    }
+                }, (current, total) -> {
+                    if (isAdded()) {
+                        progressBar.setMax(total);
+                        progressBar.setProgress(current);
                     }
                 });
             } else if (isAdded()) {
@@ -99,6 +107,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                 if (success && hadWarnings) {
                     Toast.makeText(requireContext(), R.string.import_image_warning, Toast.LENGTH_LONG).show();
                 }
+            }
+        }, (current, total) -> {
+            if (isAdded()) {
+                progressBar.setMax(total);
+                progressBar.setProgress(current);
             }
         });
     }

@@ -12,6 +12,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,6 +31,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
@@ -54,6 +56,11 @@ public class ImportManager {
         void onComplete(boolean success, boolean hadWarnings);
     }
 
+    /** Callback used to report incremental progress. */
+    public interface ProgressCallback {
+        void onProgress(int current, int total);
+    }
+
     /** Import mode determining how incoming data is applied. */
     public enum Mode { MERGE, REPLACE }
 
@@ -71,6 +78,11 @@ public class ImportManager {
      * @param callback invoked on the main thread with the result
      */
     public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback) {
+        importData(uri, mode, callback, null);
+    }
+
+    public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback,
+                           @Nullable ProgressCallback progressCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
             AtomicBoolean warning = new AtomicBoolean(false);
@@ -79,6 +91,20 @@ public class ImportManager {
                 tempDir = null;
             }
             if (tempDir != null) {
+                int zipEntries = 0;
+                try (InputStream countIs = context.getContentResolver().openInputStream(uri);
+                     ZipInputStream countZis = new ZipInputStream(countIs)) {
+                    while (countZis.getNextEntry() != null) {
+                        zipEntries++;
+                        countZis.closeEntry();
+                    }
+                } catch (IOException e) {
+                    Log.e(TAG, "Failed to count import entries", e);
+                }
+
+                final int totalSteps = zipEntries + 5; // files + sections
+                final AtomicInteger progress = new AtomicInteger(0);
+
                 try (InputStream is = context.getContentResolver().openInputStream(uri);
                      ZipInputStream zis = new ZipInputStream(is)) {
                     ZipEntry zipEntry;
@@ -91,6 +117,10 @@ public class ImportManager {
                             while ((len = zis.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
                             }
+                        }
+                        int cur = progress.incrementAndGet();
+                        if (progressCallback != null) {
+                            mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
                         }
                         if (zipEntry.getName().endsWith(".csv")) {
                             csvFile = outFile;
@@ -122,7 +152,8 @@ public class ImportManager {
                             db.clearAllTables();
                         }
                         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                            success = parseAndInsert(reader, tempDir, mode, warning);
+                            success = parseAndInsert(reader, tempDir, mode, warning,
+                                progressCallback, progress, totalSteps);
                         }
                     }
                 } catch (IOException e) {
@@ -139,7 +170,9 @@ public class ImportManager {
     }
 
     private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
-                                   AtomicBoolean warning) throws IOException {
+                                   AtomicBoolean warning, @Nullable ProgressCallback progressCallback,
+                                   AtomicInteger progress,
+                                   int totalSteps) throws IOException {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
@@ -151,29 +184,65 @@ public class ImportManager {
                 try {
                     String line;
                     Section section = Section.NONE;
+                    Section lastSection = Section.NONE;
                     while ((line = reader.readLine()) != null) {
                         if (line.trim().isEmpty()) {
                             continue;
                         }
                         switch (line) {
                             case "Plants":
+                                if (lastSection != Section.NONE) {
+                                    int cur = progress.incrementAndGet();
+                                    if (progressCallback != null) {
+                                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                    }
+                                }
                                 section = Section.PLANTS;
+                                lastSection = Section.PLANTS;
                                 reader.readLine(); // skip header
                                 continue;
                             case "SpeciesTargets":
+                                if (lastSection != Section.NONE) {
+                                    int cur = progress.incrementAndGet();
+                                    if (progressCallback != null) {
+                                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                    }
+                                }
                                 section = Section.SPECIES_TARGETS;
+                                lastSection = Section.SPECIES_TARGETS;
                                 reader.readLine(); // skip header
                                 continue;
                             case "Measurements":
+                                if (lastSection != Section.NONE) {
+                                    int cur = progress.incrementAndGet();
+                                    if (progressCallback != null) {
+                                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                    }
+                                }
                                 section = Section.MEASUREMENTS;
+                                lastSection = Section.MEASUREMENTS;
                                 reader.readLine(); // skip header
                                 continue;
                             case "DiaryEntries":
+                                if (lastSection != Section.NONE) {
+                                    int cur = progress.incrementAndGet();
+                                    if (progressCallback != null) {
+                                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                    }
+                                }
                                 section = Section.DIARY;
+                                lastSection = Section.DIARY;
                                 reader.readLine(); // skip header
                                 continue;
                             case "Reminders":
+                                if (lastSection != Section.NONE) {
+                                    int cur = progress.incrementAndGet();
+                                    if (progressCallback != null) {
+                                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                    }
+                                }
                                 section = Section.REMINDERS;
+                                lastSection = Section.REMINDERS;
                                 reader.readLine(); // skip header
                                 continue;
                         }
@@ -329,6 +398,12 @@ public class ImportManager {
                                 Log.e(TAG, "Malformed reminder row: " + line);
                                 warning.set(true);
                             }
+                        }
+                    }
+                    if (lastSection != Section.NONE) {
+                        int cur = progress.incrementAndGet();
+                        if (progressCallback != null) {
+                            mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
                         }
                     }
                 } catch (IOException e) {

@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,6 +35,11 @@ public class ExportManager {
         void onComplete(boolean success);
     }
 
+    /** Callback used to report incremental progress. */
+    public interface ProgressCallback {
+        void onProgress(int current, int total);
+    }
+
     public ExportManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
         this.repository = ((PlantApp) this.context).getRepository();
@@ -46,7 +52,7 @@ public class ExportManager {
      * @param callback invoked on the main thread with the result
      */
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
-        exportInternal(uri, -1, callback);
+        exportInternal(uri, -1, callback, null);
     }
 
     /**
@@ -57,10 +63,26 @@ public class ExportManager {
      * @param callback invoked on the main thread with the result
      */
     public void export(@NonNull Uri uri, long plantId, @NonNull Callback callback) {
-        exportInternal(uri, plantId, callback);
+        exportInternal(uri, plantId, callback, null);
     }
 
-    private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback) {
+    /**
+     * Exports all measurements and diary entries to the given destination URI with progress.
+     */
+    public void export(@NonNull Uri uri, @NonNull Callback callback,
+                       @Nullable ProgressCallback progressCallback) {
+        exportInternal(uri, -1, callback, progressCallback);
+    }
+
+    /**
+     * Exports measurements and diary entries for a single plant with progress reporting.
+     */
+    public void export(@NonNull Uri uri, long plantId, @NonNull Callback callback,
+                       @Nullable ProgressCallback progressCallback) {
+        exportInternal(uri, plantId, callback, progressCallback);
+    }
+    private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
+                                @Nullable ProgressCallback progressCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
             File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
@@ -88,6 +110,20 @@ public class ExportManager {
                     }
                     List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
 
+                    int photoCount = 0;
+                    for (Plant p : plants) {
+                        if (p.getPhotoUri() != null) {
+                            photoCount++;
+                        }
+                    }
+                    for (DiaryEntry d : diaryEntries) {
+                        if (d.getPhotoUri() != null && !d.getPhotoUri().isEmpty()) {
+                            photoCount++;
+                        }
+                    }
+                    final int totalSteps = 5 + photoCount + 1; // sections + files
+                    final int[] progress = {0};
+
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
                     for (Plant p : plants) {
@@ -107,6 +143,12 @@ public class ExportManager {
                             escape(photoName)));
                     }
 
+                    progress[0]++;
+                    if (progressCallback != null) {
+                        int cur = progress[0];
+                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                    }
+
                     writer.write("\nSpeciesTargets\n");
                     writer.write("speciesKey,ppfdMin,ppfdMax\n");
                     for (SpeciesTarget t : targets) {
@@ -114,6 +156,12 @@ public class ExportManager {
                             escape(t.getSpeciesKey()),
                             t.getPpfdMin(),
                             t.getPpfdMax()));
+                    }
+
+                    progress[0]++;
+                    if (progressCallback != null) {
+                        int cur = progress[0];
+                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
                     }
 
                     writer.write("\nMeasurements\n");
@@ -126,6 +174,12 @@ public class ExportManager {
                             m.getLuxAvg(),
                             m.getPpfd(),
                             m.getDli()));
+                    }
+
+                    progress[0]++;
+                    if (progressCallback != null) {
+                        int cur = progress[0];
+                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
                     }
 
                     writer.write("\nDiaryEntries\n");
@@ -146,6 +200,12 @@ public class ExportManager {
                             escape(photoName)));
                     }
 
+                    progress[0]++;
+                    if (progressCallback != null) {
+                        int cur = progress[0];
+                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                    }
+
                     writer.write("\nReminders\n");
                     writer.write("id,plantId,triggerAt,message\n");
                     for (Reminder r : reminders) {
@@ -156,6 +216,12 @@ public class ExportManager {
                             escape(r.getMessage())));
                     }
                     writer.flush();
+
+                    progress[0]++;
+                    if (progressCallback != null) {
+                        int cur = progress[0];
+                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                    }
                 } catch (IOException e) {
                     success = false;
                 }
@@ -180,6 +246,11 @@ public class ExportManager {
                                     zos.write(buffer, 0, len);
                                 }
                                 zos.closeEntry();
+                            }
+                            progress[0]++;
+                            if (progressCallback != null) {
+                                int cur = progress[0];
+                                mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
                             }
                         }
                     }
