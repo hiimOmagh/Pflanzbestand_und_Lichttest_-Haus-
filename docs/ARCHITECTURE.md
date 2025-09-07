@@ -21,12 +21,12 @@ Each feature will be isolated in its own fragment and associated resources:
 
 ## Feature / fragment map
 
-| Feature area | Expected fragments | Key files / resources |
-|--------------|-------------------|-----------------------|
-| Plants | `PlantListFragment`, `PlantDetailFragment` | `fragment_plant_list.xml`, `fragment_plant_detail.xml`, `PlantRepository.java`, `Plant.java` |
-| Measurement | `LightMeasurementFragment` | `fragment_measurement.xml`, `LightSensorHelper.java` |
-| Diary | `DiaryFragment` | `fragment_diary.xml`, `DiaryEntry.java`, `DiaryRepository.java` |
-| Stats | `StatsFragment` | `fragment_stats.xml`, `StatisticsCalculator.java` |
+| Feature area | Expected fragments                         | Key files / resources                                                                        |
+|--------------|--------------------------------------------|----------------------------------------------------------------------------------------------|
+| Plants       | `PlantListFragment`, `PlantDetailFragment` | `fragment_plant_list.xml`, `fragment_plant_detail.xml`, `PlantRepository.java`, `Plant.java` |
+| Measurement  | `LightMeasurementFragment`                 | `fragment_measurement.xml`, `LightSensorHelper.java`                                         |
+| Diary        | `DiaryFragment`                            | `fragment_diary.xml`, `DiaryEntry.java`, `DiaryRepository.java`                              |
+| Stats        | `StatsFragment`                            | `fragment_stats.xml`, `StatisticsCalculator.java`                                            |
 
 ## TODO markers and style guides
 - Use `TODO(name): description` comments to flag follow-up work. Link to issue numbers when available.
