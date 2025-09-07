@@ -15,10 +15,6 @@ public class SpeciesTarget {
     private float ppfdMin;
     private float ppfdMax;
 
-    /** Default constructor required by Room. */
-    public SpeciesTarget() {
-    }
-
     /**
      * Convenience constructor to create fully initialised instances.
      */
