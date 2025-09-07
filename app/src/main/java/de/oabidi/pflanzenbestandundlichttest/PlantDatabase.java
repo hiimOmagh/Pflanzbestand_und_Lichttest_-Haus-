@@ -87,8 +87,8 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
+                        // Migrations must be supplied for all future schema changes
                         .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-                        .fallbackToDestructiveMigration()
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {
