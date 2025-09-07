@@ -22,6 +22,7 @@
     <string name="unknown_date">Unbekanntes Datum</string>
     <string name="placeholder_dash">—</string>
     <string name="note_separator"> – </string>
+    <string name="format_diary_entry">%1$s – %2$s – %3$s</string>
     <string name="updated_suffix"> (aktualisiert)</string>
     <string name="menu_add_plant">Pflanze hinzufügen</string>
     <string name="menu_update_first_plant">Erste Pflanze aktualisieren</string>

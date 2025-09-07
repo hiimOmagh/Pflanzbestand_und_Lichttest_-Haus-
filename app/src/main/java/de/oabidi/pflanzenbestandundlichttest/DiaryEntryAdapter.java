@@ -14,9 +14,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -81,7 +79,7 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
     static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
         private final ImageView photoView;
-        private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        private final DateFormat df = DateFormat.getDateInstance();
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -92,11 +90,10 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
         void bind(DiaryEntry entry, OnEntryClickListener clickListener,
                   OnEntryLongClickListener longClickListener) {
             String note = entry.getNote() != null ? entry.getNote() : "";
-            String item = df.format(new Date(entry.getTimeEpoch())) + " – "
-                + labelFromCode(itemView.getContext(), entry.getType());
-            if (!note.isEmpty()) {
-                item += " – " + note;
-            }
+            String date = df.format(new Date(entry.getTimeEpoch()));
+            String label = labelFromCode(itemView.getContext(), entry.getType());
+            String item = itemView.getContext()
+                .getString(R.string.format_diary_entry, date, label, note);
             textView.setText(item);
 
             if (entry.getPhotoUri() != null) {
