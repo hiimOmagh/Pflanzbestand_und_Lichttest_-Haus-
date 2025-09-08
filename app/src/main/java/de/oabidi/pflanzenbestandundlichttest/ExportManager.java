@@ -45,52 +45,39 @@ public class ExportManager {
         this.repository = ((PlantApp) this.context).getRepository();
     }
 
-    /**
-     * Exports all measurements and diary entries to the given destination URI.
-     *
-     * @param uri      destination chosen by the user
-     * @param callback invoked on the main thread with the result
-     */
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
         exportInternal(uri, -1, callback, null);
     }
 
-    /**
-     * Exports measurements and diary entries for a single plant to the given destination URI.
-     *
-     * @param uri      destination chosen by the user
-     * @param plantId  identifier of the plant to export
-     * @param callback invoked on the main thread with the result
-     */
     public void export(@NonNull Uri uri, long plantId, @NonNull Callback callback) {
         exportInternal(uri, plantId, callback, null);
     }
 
-    /**
-     * Exports all measurements and diary entries to the given destination URI with progress.
-     */
     public void export(@NonNull Uri uri, @NonNull Callback callback,
                        @Nullable ProgressCallback progressCallback) {
         exportInternal(uri, -1, callback, progressCallback);
     }
 
-    /**
-     * Exports measurements and diary entries for a single plant with progress reporting.
-     */
     public void export(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                        @Nullable ProgressCallback progressCallback) {
         exportInternal(uri, plantId, callback, progressCallback);
     }
+
     private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                                 @Nullable ProgressCallback progressCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            boolean success = false;
+            boolean success = false; // Overall success flag
             File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
             if (!tempDir.mkdirs()) {
                 tempDir = null;
             }
+
+            final int[] progress = {0}; // Moved to outer scope
+            final int[] totalStepsHolder = {0}; // Holder for totalSteps in outer scope
+
             if (tempDir != null) {
                 File csvFile = new File(tempDir, "data.csv");
+                boolean csvPhaseOk = false; // Tracks success of CSV writing phase
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
                     List<Plant> plants;
                     List<Measurement> measurements;
@@ -121,8 +108,7 @@ public class ExportManager {
                             photoCount++;
                         }
                     }
-                    final int totalSteps = 5 + photoCount + 1; // sections + files
-                    final int[] progress = {0};
+                    totalStepsHolder[0] = 5 + photoCount + 1; // Assign to holder
 
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
@@ -142,11 +128,9 @@ public class ExportManager {
                             p.getAcquiredAtEpoch(),
                             escape(photoName)));
                     }
-
                     progress[0]++;
                     if (progressCallback != null) {
-                        int cur = progress[0];
-                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
                     }
 
                     writer.write("\nSpeciesTargets\n");
@@ -157,11 +141,9 @@ public class ExportManager {
                             t.getPpfdMin(),
                             t.getPpfdMax()));
                     }
-
                     progress[0]++;
                     if (progressCallback != null) {
-                        int cur = progress[0];
-                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
                     }
 
                     writer.write("\nMeasurements\n");
@@ -174,11 +156,9 @@ public class ExportManager {
                             m.getLuxAvg(),
                             m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""));
                     }
-
                     progress[0]++;
                     if (progressCallback != null) {
-                        int cur = progress[0];
-                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
                     }
 
                     writer.write("\nDiaryEntries\n");
@@ -198,11 +178,9 @@ public class ExportManager {
                             escape(d.getNote()),
                             escape(photoName)));
                     }
-
                     progress[0]++;
                     if (progressCallback != null) {
-                        int cur = progress[0];
-                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
                     }
 
                     writer.write("\nReminders\n");
@@ -215,50 +193,53 @@ public class ExportManager {
                             escape(r.getMessage())));
                     }
                     writer.flush();
-
                     progress[0]++;
                     if (progressCallback != null) {
-                        int cur = progress[0];
-                        mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
                     }
+                    csvPhaseOk = true; // CSV writing successful
                 } catch (IOException e) {
-                    success = false;
+                    // csvPhaseOk remains false, error logged if necessary
                 }
 
-                if (!success) {
-                    deleteRecursive(tempDir);
-                    final boolean result = false;
-                    mainHandler.post(() -> callback.onComplete(result));
-                    return;
-                }
-
-                try (OutputStream os = context.getContentResolver().openOutputStream(uri);
-                     ZipOutputStream zos = new ZipOutputStream(os)) {
-                    File[] files = tempDir.listFiles();
-                    if (files != null) {
-                        byte[] buffer = new byte[8192];
-                        for (File f : files) {
-                            try (InputStream fis = new FileInputStream(f)) {
-                                zos.putNextEntry(new ZipEntry(f.getName()));
-                                int len;
-                                while ((len = fis.read(buffer)) != -1) {
-                                    zos.write(buffer, 0, len);
+                if (csvPhaseOk) {
+                    boolean zipPhaseOk = false; // Tracks success of zipping phase
+                    try (OutputStream os = context.getContentResolver().openOutputStream(uri);
+                         ZipOutputStream zos = new ZipOutputStream(os)) {
+                        File[] files = tempDir.listFiles();
+                        if (files != null) {
+                            byte[] buffer = new byte[8192];
+                            for (File f : files) {
+                                try (InputStream fis = new FileInputStream(f)) {
+                                    zos.putNextEntry(new ZipEntry(f.getName()));
+                                    int len;
+                                    while ((len = fis.read(buffer)) != -1) {
+                                        zos.write(buffer, 0, len);
+                                    }
+                                    zos.closeEntry();
                                 }
-                                zos.closeEntry();
-                            }
-                            progress[0]++;
-                            if (progressCallback != null) {
-                                int cur = progress[0];
-                                mainHandler.post(() -> progressCallback.onProgress(cur, totalSteps));
+                                progress[0]++; // Now in scope
+                                if (progressCallback != null) {
+                                    mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0])); // Now in scope
+                                }
                             }
                         }
+                        zipPhaseOk = true; // Zipping successful
+                    } catch (IOException e) {
+                        // zipPhaseOk remains false, error logged if necessary
+                    } finally {
+                        deleteRecursive(tempDir); // Delete tempDir after zipping attempt
                     }
-                    success = true;
-                } catch (IOException e) {
-                    success = false;
-                } finally {
-                    deleteRecursive(tempDir);
+                    success = zipPhaseOk; // Overall success depends on zipping success
+                } else {
+                    // CSV phase failed
+                    if (tempDir.exists()) { // tempDir might exist even if CSV writing failed partway
+                        deleteRecursive(tempDir);
+                    }
+                    success = false; // Ensure overall success is false
                 }
+            } else { // tempDir creation failed
+                success = false;
             }
             final boolean result = success;
             mainHandler.post(() -> callback.onComplete(result));
@@ -281,12 +262,16 @@ public class ExportManager {
 
     private String getFileName(Uri uri) {
         String name = uri.getLastPathSegment();
+        // Basic sanitization, consider more robust solution if needed for security
+        if (name != null) {
+            name = name.replaceAll("[/:*?\"<>|]", "_");
+        }
         return name != null ? name : "image";
     }
 
-    private void deleteRecursive(File file) {
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
+    private void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory()) {
+            File[] children = fileOrDirectory.listFiles();
             if (children != null) {
                 for (File child : children) {
                     deleteRecursive(child);
@@ -294,7 +279,7 @@ public class ExportManager {
             }
         }
         //noinspection ResultOfMethodCallIgnored
-        file.delete();
+        fileOrDirectory.delete();
     }
 
     private static String escape(String value) {
@@ -302,7 +287,7 @@ public class ExportManager {
             return "";
         }
         String escaped = value.replace("\"", "\"\"");
-        if (escaped.contains(",") || escaped.contains("\n")) {
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"")) {
             escaped = "\"" + escaped + "\"";
         }
         return escaped;

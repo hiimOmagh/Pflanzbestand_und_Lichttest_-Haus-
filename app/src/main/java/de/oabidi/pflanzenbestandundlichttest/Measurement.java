@@ -16,8 +16,7 @@ import androidx.room.PrimaryKey;
         childColumns = "plantId",
         onDelete = ForeignKey.CASCADE
     ),
-    indices = @Index("plantId"),
-    ignoredColumns = {"dli", "note"}
+    indices = @Index("plantId")
 )
 public class Measurement {
     @PrimaryKey(autoGenerate = true)
