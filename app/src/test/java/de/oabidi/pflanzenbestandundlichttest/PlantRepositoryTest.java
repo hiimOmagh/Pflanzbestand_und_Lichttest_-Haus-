@@ -129,7 +129,7 @@ public class PlantRepositoryTest {
         repository.insert(plant, plantLatch::countDown);
         awaitLatch(plantLatch);
 
-        Measurement measurement = new Measurement(plant.getId(), 1L, 2f, 3f, 4f, null);
+        Measurement measurement = new Measurement(plant.getId(), 1L, 2f, 3f);
         CountDownLatch insertLatch = new CountDownLatch(1);
         repository.insertMeasurement(measurement, () -> {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
@@ -174,7 +174,7 @@ public class PlantRepositoryTest {
     }
 
     @Test
-    public void dliAggregationMatchesManualComputation() throws Exception {
+    public void ppfdAggregationMatchesManualComputation() throws Exception {
         Plant plant = new Plant();
         plant.setName("DLI");
         plant.setAcquiredAtEpoch(0L);
@@ -183,8 +183,8 @@ public class PlantRepositoryTest {
         awaitLatch(plantLatch);
 
         long dayMillis = 86400000L;
-        Measurement m1 = new Measurement(plant.getId(), 0L, 0f, 0f, 12f, null);
-        Measurement m2 = new Measurement(plant.getId(), dayMillis, 0f, 0f, 6f, null);
+        Measurement m1 = new Measurement(plant.getId(), 0L, 0f, 12f);
+        Measurement m2 = new Measurement(plant.getId(), dayMillis, 0f, 6f);
         CountDownLatch insertLatch = new CountDownLatch(2);
         repository.insertMeasurement(m1, insertLatch::countDown);
         repository.insertMeasurement(m2, insertLatch::countDown);
@@ -192,7 +192,7 @@ public class PlantRepositoryTest {
 
         float[] sumHolder = new float[1];
         CountDownLatch sumLatch = new CountDownLatch(1);
-        repository.sumDliForRange(plant.getId(), 0L, dayMillis * 2, value -> {
+        repository.sumPpfdForRange(plant.getId(), 0L, dayMillis * 2, value -> {
             sumHolder[0] = value;
             sumLatch.countDown();
         });

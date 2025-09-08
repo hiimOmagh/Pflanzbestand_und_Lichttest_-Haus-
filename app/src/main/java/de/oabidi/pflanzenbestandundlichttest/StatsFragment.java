@@ -237,10 +237,11 @@ public class StatsFragment extends Fragment {
         long now = System.currentTimeMillis();
         long end = startOfDay(now) + 86400000L;
         long start = end - DLI_DAYS * 86400000L;
-        repository.sumDliForRange(plantId, start, end, sumDli ->
+        repository.sumPpfdForRange(plantId, start, end, sumPpfd ->
             repository.countDaysWithData(plantId, start, end, dayCount -> {
                 if (dayCount > 0) {
-                    float avgDli = sumDli / dayCount;
+                    float totalDli = (sumPpfd != null ? sumPpfd : 0f) * 0.0036f;
+                    float avgDli = totalDli / dayCount;
                     dliView.setText(getString(R.string.format_dli, avgDli));
                 } else {
                     dliView.setText(getString(R.string.dli_placeholder));

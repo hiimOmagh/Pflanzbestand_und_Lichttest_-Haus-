@@ -83,9 +83,6 @@ public class MeasurementListFragment extends Fragment {
         });
         adapter = new MeasurementAdapter(measurement -> {
             String message = getString(R.string.confirm_delete_measurement);
-            if (measurement.getNote() != null && !measurement.getNote().isEmpty()) {
-                message = message + "\n" + measurement.getNote();
-            }
             new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.action_delete_measurement)
                 .setMessage(message)

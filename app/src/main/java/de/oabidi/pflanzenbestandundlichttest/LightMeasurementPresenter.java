@@ -72,14 +72,6 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.lightHours = lightHours;
     }
 
-    public void saveMeasurement(long plantId, float lux, float ppfd, float dli, String note, Runnable callback) {
-        if (plantId < 0) {
-            return;
-        }
-        Measurement measurement = new Measurement(plantId, System.currentTimeMillis(), lux, ppfd, dli, note);
-        plantRepository.insertMeasurement(measurement, callback);
-    }
-
     public void refreshPlants() {
         plantRepository.getAllPlants(plants -> {
             this.plants = plants;

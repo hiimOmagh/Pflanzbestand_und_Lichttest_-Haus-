@@ -72,14 +72,13 @@ public class LightMeasurementInstrumentedTest {
 
             // Expected formatted values
             float ppfd = 500f * 0.0185f;
-            float dli = ppfd * 12f * 0.0036f;
+            String expectedLux = context.getString(R.string.format_lux, 500f);
             String expectedPpfd = context.getString(R.string.format_ppfd, ppfd);
-            String expectedDli = context.getString(R.string.format_dli, dli);
 
             // Verify measurement entry is displayed
-            onView(allOf(withId(R.id.measurement_ppfd), withText(expectedPpfd)))
+            onView(allOf(withId(R.id.measurement_lux), withText(expectedLux)))
                 .check(matches(isDisplayed()));
-            onView(allOf(withId(R.id.measurement_dli), withText(expectedDli)))
+            onView(allOf(withId(R.id.measurement_ppfd), withText(expectedPpfd)))
                 .check(matches(isDisplayed()));
         }
     }

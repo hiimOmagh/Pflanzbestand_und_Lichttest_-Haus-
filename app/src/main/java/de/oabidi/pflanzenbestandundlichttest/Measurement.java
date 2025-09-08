@@ -16,7 +16,8 @@ import androidx.room.PrimaryKey;
         childColumns = "plantId",
         onDelete = ForeignKey.CASCADE
     ),
-    indices = @Index("plantId")
+    indices = @Index("plantId"),
+    ignoredColumns = {"dli", "note"}
 )
 public class Measurement {
     @PrimaryKey(autoGenerate = true)
@@ -24,9 +25,7 @@ public class Measurement {
     private long plantId;
     private long timeEpoch;
     private float luxAvg;
-    private float ppfd;
-    private float dli;
-    private String note;
+    private Float ppfd;
 
     /** Default constructor required by Room. */
     public Measurement() {
@@ -36,13 +35,11 @@ public class Measurement {
      * Convenience constructor to create fully initialised measurement instances.
      */
     @Ignore
-    public Measurement(long plantId, long timeEpoch, float luxAvg, float ppfd, float dli, String note) {
+    public Measurement(long plantId, long timeEpoch, float luxAvg, Float ppfd) {
         this.plantId = plantId;
         this.timeEpoch = timeEpoch;
         this.luxAvg = luxAvg;
         this.ppfd = ppfd;
-        this.dli = dli;
-        this.note = note;
     }
 
     public long getId() {
@@ -77,27 +74,11 @@ public class Measurement {
         this.luxAvg = luxAvg;
     }
 
-    public float getPpfd() {
+    public Float getPpfd() {
         return ppfd;
     }
 
-    public void setPpfd(float ppfd) {
+    public void setPpfd(Float ppfd) {
         this.ppfd = ppfd;
-    }
-
-    public float getDli() {
-        return dli;
-    }
-
-    public void setDli(float dli) {
-        this.dli = dli;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
     }
 }

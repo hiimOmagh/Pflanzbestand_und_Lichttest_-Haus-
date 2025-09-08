@@ -14,13 +14,11 @@ import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -41,13 +39,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private float calibrationFactor;
     private float lastLux;
     private float lastPpfd;
-    private float lastDli;
     private int sampleSize;
     private float lightHours = 12f;
     private long selectedPlantId = -1;
     private List<Plant> plants;
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
+    private PlantRepository repository;
     private boolean hasValidReading = false;
 
     @Nullable
@@ -87,6 +85,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
+        repository = ((PlantApp) context).getRepository();
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
@@ -114,19 +113,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
-                EditText input = new EditText(requireContext());
-                input.setHint(R.string.diary_hint_note);
-                new AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.measurement_add_note)
-                    .setView(input)
-                    .setPositiveButton(R.string.measurement_save, (d, w) -> {
-                        String note = input.getText().toString();
-                        presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli, note,
-                            () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
-                    })
-                    .setNegativeButton(R.string.action_skip, (d, w) -> presenter.saveMeasurement(selectedPlantId, lastLux, lastPpfd, lastDli, null,
-                        () -> Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show()))
-                    .show();
+                Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd);
+                repository.insertMeasurement(m, () ->
+                    Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
             } else {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
             }
@@ -232,7 +221,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         dliView.setText(getString(R.string.format_dli, dli));
         lastLux = lux;
         lastPpfd = ppfd;
-        lastDli = dli;
         if (!hasValidReading) {
             saveMeasurementButton.setEnabled(true);
             hasValidReading = true;

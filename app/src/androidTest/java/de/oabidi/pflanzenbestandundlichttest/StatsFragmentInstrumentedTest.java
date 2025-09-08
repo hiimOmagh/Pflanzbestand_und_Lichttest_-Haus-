@@ -36,10 +36,8 @@ public class StatsFragmentInstrumentedTest {
         // Insert measurements on two different days with known PPFD and DLI values
         long now = System.currentTimeMillis();
         float ppfd = 100f;
-        float dli1 = 12f;
-        float dli2 = 6f;
-        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd, dli1, null);
-        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f, dli2, null);
+        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd);
+        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f);
         repository.insertMeasurement(measurement1, null).get();
         repository.insertMeasurement(measurement2, null).get();
 
@@ -48,7 +46,7 @@ public class StatsFragmentInstrumentedTest {
             onView(withId(R.id.nav_stats)).perform(click());
             SystemClock.sleep(500);
 
-            float expectedAvg = (dli1 + dli2) / 2f;
+            float expectedAvg = ((ppfd + 50f) * 0.0036f) / 2f;
             String expectedDli = context.getString(R.string.format_dli, expectedAvg);
             onView(withId(R.id.stats_dli)).check(matches(withText(expectedDli)));
 

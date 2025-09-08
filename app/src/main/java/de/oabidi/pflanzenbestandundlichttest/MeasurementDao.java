@@ -39,7 +39,7 @@ public interface MeasurementDao {
      * @param limit   maximum number of results to return
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT :limit")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd FROM Measurement WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT :limit")
     List<Measurement> recentForPlant(long plantId, int limit);
 
     /**
@@ -49,7 +49,7 @@ public interface MeasurementDao {
      * @param since   minimum timestamp (inclusive) of measurements to return
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
     List<Measurement> getForPlantSince(long plantId, long since);
 
     /**
@@ -60,7 +60,7 @@ public interface MeasurementDao {
      * @param end     end of the time range (exclusive)
      * @return list of measurements ordered by most recent first
      */
-    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :since ORDER BY timeEpoch DESC")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :start AND timeEpoch < :end ORDER BY timeEpoch DESC")
     List<Measurement> getForPlantInRange(long plantId, long start, long end);
 
     /**
@@ -75,17 +75,6 @@ public interface MeasurementDao {
     Float sumPpfdForRange(long plantId, long start, long end);
 
     /**
-     * Sums DLI measurements for the given plant within the specified time range.
-     *
-     * @param id    identifier of the plant
-     * @param start start of the time range (inclusive)
-     * @param end   end of the time range (exclusive)
-     * @return summed DLI value for the range or {@code null} if no measurements exist
-     */
-    @Query("SELECT SUM(dli) FROM Measurement WHERE plantId=:id AND timeEpoch>=:start AND timeEpoch<:end")
-    Float sumDliForRange(long id, long start, long end);
-
-    /**
      * Counts distinct days within the specified time range that contain
      * DLI measurements greater than zero for the given plant.
      *
@@ -94,49 +83,15 @@ public interface MeasurementDao {
      * @param end   end of the time range (inclusive)
      * @return number of days with DLI data
      */
-    @Query("SELECT COUNT(DISTINCT date(timeEpoch/86400000)) FROM Measurement WHERE plantId=:id AND timeEpoch BETWEEN :start AND :end AND dli>0")
+    @Query("SELECT COUNT(DISTINCT date(timeEpoch/86400000)) FROM Measurement WHERE plantId=:id AND timeEpoch BETWEEN :start AND :end AND ppfd>0")
     int countDaysWithData(long id, long start, long end);
-
-    /**
-     * Aggregates DLI measurements for the given plant within the specified time range
-     * and counts the number of days that contain data.
-     *
-     * <p>The query groups measurements by day (based on the start of the day in epoch
-     * milliseconds) and only counts days where the summed DLI is greater than zero.</p>
-     *
-     * @param id    identifier of the plant
-     * @param start start of the time range (inclusive)
-     * @param end   end of the time range (exclusive)
-     * @return aggregate containing total DLI and day count
-     */
-    @Query("SELECT COUNT(*) AS dayCount, SUM(dliSum) AS totalDli FROM (" +
-        "SELECT SUM(dli) AS dliSum FROM Measurement " +
-        "WHERE plantId = :id AND timeEpoch >= :start AND timeEpoch < :end " +
-        "GROUP BY timeEpoch / 86400000 HAVING SUM(dli) > 0)")
-    DliAggregate aggregateDliForRange(long id, long start, long end);
-
-    /**
-     * Sums PPFD measurements for the given plant on a specific day.
-     *
-     * <p>The day is defined by its start time in epoch milliseconds and
-     * spans 24 hours. The resulting value represents the accumulated
-     * PPFD across all measurements of that day and can be converted to
-     * DLI by multiplying with {@code 0.0036}.</p>
-     *
-     * @param plantId  identifier of the plant
-     * @param dayStart start of the day in epoch milliseconds
-     * @return summed PPFD value for the given day or {@code null} if no
-     *         measurements exist
-     */
-    @Query("SELECT SUM(ppfd) FROM Measurement WHERE plantId = :plantId AND timeEpoch >= :dayStart AND timeEpoch < :dayStart + 86400000")
-    Float dliForDay(long plantId, long dayStart);
 
     /**
      * Retrieves all stored measurements.
      *
      * @return list of all measurements in the database
      */
-    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd FROM Measurement")
     List<Measurement> getAll();
 
     /**
@@ -145,6 +100,6 @@ public interface MeasurementDao {
      * @param plantId identifier of the plant
      * @return list of measurements associated with the plant
      */
-    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId")
+    @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd FROM Measurement WHERE plantId = :plantId")
     List<Measurement> getAllForPlant(long plantId);
 }

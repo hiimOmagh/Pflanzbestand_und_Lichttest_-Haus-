@@ -14,7 +14,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 /**
- * RecyclerView adapter displaying recent PPFD and DLI measurements.
+ * RecyclerView adapter displaying recent light measurements.
  */
 public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdapter.ViewHolder> {
     /** Listener invoked when a measurement is long-pressed. */
@@ -43,10 +43,8 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
                 return oldItem.getPlantId() == newItem.getPlantId()
                     && oldItem.getTimeEpoch() == newItem.getTimeEpoch()
                     && Float.compare(oldItem.getLuxAvg(), newItem.getLuxAvg()) == 0
-                    && Float.compare(oldItem.getPpfd(), newItem.getPpfd()) == 0
-                    && Float.compare(oldItem.getDli(), newItem.getDli()) == 0
-                    && ((oldItem.getNote() == null && newItem.getNote() == null)
-                    || (oldItem.getNote() != null && oldItem.getNote().equals(newItem.getNote())));
+                    && ((oldItem.getPpfd() == null && newItem.getPpfd() == null)
+                    || (oldItem.getPpfd() != null && newItem.getPpfd() != null && Float.compare(oldItem.getPpfd(), newItem.getPpfd()) == 0));
             }
         };
 
@@ -60,18 +58,17 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Measurement m = getItem(position);
-        String ppfdText = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
-        String dliText = holder.itemView.getContext().getString(R.string.format_dli, m.getDli());
-        holder.ppfdView.setText(ppfdText);
-        holder.dliView.setText(dliText);
+        String luxText = holder.itemView.getContext().getString(R.string.format_lux, m.getLuxAvg());
+        holder.luxView.setText(luxText);
+        if (m.getPpfd() != null) {
+            String ppfdText = holder.itemView.getContext().getString(R.string.format_ppfd, m.getPpfd());
+            holder.ppfdView.setText(ppfdText);
+            holder.ppfdView.setVisibility(View.VISIBLE);
+        } else {
+            holder.ppfdView.setVisibility(View.GONE);
+        }
         String timeText = DateFormat.getDateTimeInstance().format(new Date(m.getTimeEpoch()));
         holder.timeView.setText(timeText);
-        if (m.getNote() != null && !m.getNote().isEmpty()) {
-            holder.noteView.setVisibility(View.VISIBLE);
-            holder.noteView.setText(m.getNote());
-        } else {
-            holder.noteView.setVisibility(View.GONE);
-        }
         holder.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onMeasurementLongClick(m);
@@ -81,17 +78,15 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        final TextView luxView;
         final TextView ppfdView;
-        final TextView dliView;
         final TextView timeView;
-        final TextView noteView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            luxView = itemView.findViewById(R.id.measurement_lux);
             ppfdView = itemView.findViewById(R.id.measurement_ppfd);
-            dliView = itemView.findViewById(R.id.measurement_dli);
             timeView = itemView.findViewById(R.id.measurement_time);
-            noteView = itemView.findViewById(R.id.measurement_note);
         }
     }
 }

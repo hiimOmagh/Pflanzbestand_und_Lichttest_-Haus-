@@ -526,26 +526,7 @@ public class PlantRepository {
     }
 
     /**
-     * Calculates the summed DLI for a plant within the specified time range and delivers
-     * the result on the main thread.
-     *
-     * @param plantId  identifier of the plant
-     * @param start    start of the time range (inclusive)
-     * @param end      end of the time range (exclusive)
-     * @param callback invoked with the summed DLI on the main thread
-     */
-    public void sumDliForRange(long plantId, long start, long end, Consumer<Float> callback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            Float result = measurementDao.sumDliForRange(plantId, start, end);
-            float value = result != null ? result : 0f;
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(value));
-            }
-        });
-    }
-
-    /**
-     * Counts the number of days with DLI measurements greater than zero for a plant
+     * Counts the number of days with measurement data greater than zero for a plant
      * within the specified time range and delivers the result on the main thread.
      *
      * @param plantId  identifier of the plant
@@ -558,46 +539,6 @@ public class PlantRepository {
             int result = measurementDao.countDaysWithData(plantId, start, end);
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
-            }
-        });
-    }
-
-    /**
-     * Aggregates DLI values and counts days with data for a plant within a time range,
-     * delivering the result on the main thread.
-     *
-     * @param plantId  identifier of the plant
-     * @param start    start of the time range (inclusive)
-     * @param end      end of the time range (exclusive)
-     * @param callback invoked with the aggregation result on the main thread
-     */
-    public void aggregateDliForRange(long plantId, long start, long end, Consumer<DliAggregate> callback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            DliAggregate result = measurementDao.aggregateDliForRange(plantId, start, end);
-            if (result == null) {
-                result = new DliAggregate();
-            }
-            if (callback != null) {
-                DliAggregate finalResult = result;
-                mainHandler.post(() -> callback.accept(finalResult));
-            }
-        });
-    }
-
-    /**
-     * Calculates the summed PPFD for a plant on a specific day and delivers
-     * the result on the main thread.
-     *
-     * @param plantId  identifier of the plant
-     * @param dayStart start of the day in epoch milliseconds
-     * @param callback invoked with the summed PPFD on the main thread
-     */
-    public void dliForDay(long plantId, long dayStart, Consumer<Float> callback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            Float result = measurementDao.dliForDay(plantId, dayStart);
-            float value = result != null ? result : 0f;
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(value));
             }
         });
     }
