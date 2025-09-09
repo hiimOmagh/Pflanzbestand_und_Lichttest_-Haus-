@@ -3,7 +3,9 @@ package de.oabidi.pflanzenbestandundlichttest;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 import androidx.room.Update;
 
 import java.util.List;
@@ -21,12 +23,12 @@ public interface PlantDao {
     List<Plant> getAll();
 
     /**
-     * Searches plants whose name, species or location hint matches the given query.
+     * Searches plants whose name or notes match the given FTS query.
      *
-     * @param q search pattern with wildcards
+     * @param q full-text search query
      * @return list of matching plants ordered by name
      */
-    @Query("SELECT * FROM Plant WHERE name LIKE :q OR species LIKE :q OR locationHint LIKE :q ORDER BY name")
+    @Query("SELECT Plant.* FROM Plant JOIN PlantFts ON Plant.id = PlantFts.rowid WHERE PlantFts MATCH :q ORDER BY Plant.name")
     List<Plant> search(String q);
 
     /**
@@ -39,7 +41,17 @@ public interface PlantDao {
      * @return the database identifier for the inserted plant
      */
     @Insert
-    long insert(Plant plant);
+    long insertInternal(Plant plant);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertFts(PlantFts plantFts);
+
+    @Transaction
+    default long insert(Plant plant) {
+        long id = insertInternal(plant);
+        insertFts(new PlantFts(id, plant.getName(), plant.getDescription() == null ? "" : plant.getDescription()));
+        return id;
+    }
 
     /**
      * Updates the given {@link Plant} in the database.
@@ -50,7 +62,13 @@ public interface PlantDao {
      * @param plant the plant entity to update
      */
     @Update
-    void update(Plant plant);
+    void updateInternal(Plant plant);
+
+    @Transaction
+    default void update(Plant plant) {
+        updateInternal(plant);
+        insertFts(new PlantFts(plant.getId(), plant.getName(), plant.getDescription() == null ? "" : plant.getDescription()));
+    }
 
     /**
      * Deletes the given {@link Plant} from the database.
@@ -61,7 +79,16 @@ public interface PlantDao {
      * @param plant the plant entity to delete
      */
     @Delete
-    void delete(Plant plant);
+    void deleteInternal(Plant plant);
+
+    @Query("DELETE FROM PlantFts WHERE rowid = :rowid")
+    void deleteFts(long rowid);
+
+    @Transaction
+    default void delete(Plant plant) {
+        deleteInternal(plant);
+        deleteFts(plant.getId());
+    }
 
     /**
      * Finds a plant by its identifier.

@@ -36,9 +36,11 @@ import java.util.concurrent.Executors;
         Measurement.class,
         DiaryEntry.class,
         SpeciesTarget.class,
-        Reminder.class
+        Reminder.class,
+        PlantFts.class,
+        DiaryEntryFts.class
     },
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -84,6 +86,16 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS PlantFts USING FTS4(name, description)");
+            database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS DiaryEntryFts USING FTS4(note)");
+            database.execSQL("INSERT INTO PlantFts(rowid, name, description) SELECT id, name, IFNULL(description, '') FROM Plant");
+            database.execSQL("INSERT INTO DiaryEntryFts(rowid, note) SELECT id, IFNULL(note, '') FROM DiaryEntry");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     public abstract MeasurementDao measurementDao();
@@ -102,7 +114,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {

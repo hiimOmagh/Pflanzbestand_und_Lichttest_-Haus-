@@ -67,13 +67,18 @@ public class PlantRepository {
      * Searches plants matching the given query asynchronously and delivers
      * results on the main thread.
      *
-     * @param query    text to match against name, species or location
+     * @param query    text to match against name or notes
      * @param callback invoked with the resulting list on the main thread
      */
     public void searchPlants(String query, Consumer<List<Plant>> callback) {
-        final String q = "%" + query + "%";
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Plant> result = plantDao.search(q);
+            List<Plant> result;
+            if (query == null || query.isEmpty()) {
+                result = plantDao.getAll();
+            } else {
+                String q = query + "*";
+                result = plantDao.search(q);
+            }
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
             }
@@ -552,6 +557,30 @@ public class PlantRepository {
     public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             List<DiaryEntry> result = diaryDao.entriesForPlant(plantId);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
+     * Retrieves diary entries for a plant matching the given type and query.
+     * Results are delivered on the main thread.
+     *
+     * @param plantId identifier of the plant
+     * @param type    optional entry type to filter or {@code null} for all types
+     * @param query   text to search in notes; empty string returns all entries
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void searchDiaryEntries(long plantId, String type, String query, Consumer<List<DiaryEntry>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<DiaryEntry> result;
+            if (query == null || query.isEmpty()) {
+                result = diaryDao.entriesForPlantFiltered(plantId, type);
+            } else {
+                String q = query + "*";
+                result = diaryDao.searchForPlant(plantId, type, q);
+            }
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
             }

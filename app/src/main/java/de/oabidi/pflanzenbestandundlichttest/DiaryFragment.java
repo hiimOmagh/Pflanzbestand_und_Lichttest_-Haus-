@@ -25,9 +25,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -92,14 +89,14 @@ public class DiaryFragment extends Fragment {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                searchQuery = query.toLowerCase(Locale.ROOT);
+                searchQuery = query;
                 loadEntries();
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                searchQuery = newText.toLowerCase(Locale.ROOT);
+                searchQuery = newText;
                 loadEntries();
                 return true;
             }
@@ -246,7 +243,14 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.diaryEntriesForPlant(plantId, result -> {
+        String type = null;
+        if (filterSpinner != null) {
+            String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
+            int pos = filterSpinner.getSelectedItemPosition();
+            String code = filterCodes[pos];
+            type = code.isEmpty() ? null : code;
+        }
+        repository.searchDiaryEntries(plantId, type, searchQuery, result -> {
             for (DiaryEntry entry : result) {
                 String photo = entry.getPhotoUri();
                 if (photo != null && photo.startsWith("content:")) {
@@ -257,32 +261,7 @@ public class DiaryFragment extends Fragment {
                     }
                 }
             }
-            List<DiaryEntry> filtered = new ArrayList<>(result);
-            if (filterSpinner != null) {
-                String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
-                int pos = filterSpinner.getSelectedItemPosition();
-                String code = filterCodes[pos];
-                if (!code.isEmpty()) {
-                    List<DiaryEntry> byType = new ArrayList<>();
-                    for (DiaryEntry entry : filtered) {
-                        if (entry.getType().equals(code)) {
-                            byType.add(entry);
-                        }
-                    }
-                    filtered = byType;
-                }
-            }
-            if (!searchQuery.isEmpty()) {
-                List<DiaryEntry> byQuery = new ArrayList<>();
-                for (DiaryEntry entry : filtered) {
-                    String note = entry.getNote() != null ? entry.getNote() : "";
-                    if (note.toLowerCase(Locale.ROOT).contains(searchQuery)) {
-                        byQuery.add(entry);
-                    }
-                }
-                filtered = byQuery;
-            }
-            adapter.submitList(filtered);
+            adapter.submitList(result);
         });
     }
 }
