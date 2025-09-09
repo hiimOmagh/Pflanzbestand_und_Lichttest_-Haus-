@@ -11,7 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 import android.widget.ProgressBar;
-import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -56,7 +55,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
     
     private final ActivityResultLauncher<String> exportLauncher =
-        registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
+        registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
             if (uri != null) {
                 showProgress();
                 exportManager.export(uri, success -> {
@@ -64,6 +63,14 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                     if (isAdded()) {
                         int msg = success ? R.string.export_success : R.string.export_failure;
                         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                        if (success) {
+                            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                            shareIntent.setType("application/zip");
+                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(Intent.createChooser(shareIntent,
+                                getString(R.string.share_backup)));
+                        }
                     }
                 }, (current, total) -> {
                     if (isAdded()) {

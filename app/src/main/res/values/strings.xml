@@ -122,6 +122,7 @@
     <string name="export_file_name">plant_data.csv</string>
     <string name="export_success">Export successful</string>
     <string name="export_failure">Export failed</string>
+    <string name="share_backup">Share backup</string>
     <string name="import_success">Import successful</string>
     <string name="import_failure">Import failed</string>
     <string name="import_image_warning">Some images could not be restored</string>

@@ -123,6 +123,7 @@
     <string name="export_file_name">plant_data.csv</string>
     <string name="export_success">Exportación exitosa</string>
     <string name="export_failure">Fallo en la exportación</string>
+    <string name="share_backup">Compartir respaldo</string>
     <string name="import_success">Importación exitosa</string>
     <string name="import_failure">Fallo en la importación</string>
     <string name="import_image_warning">Algunas imágenes no se pudieron restaurar</string>

@@ -123,6 +123,7 @@
     <string name="export_file_name">pflanzendaten.csv</string>
     <string name="export_success">Export erfolgreich</string>
     <string name="export_failure">Export fehlgeschlagen</string>
+    <string name="share_backup">Backup teilen</string>
     <string name="import_success">Import erfolgreich</string>
     <string name="import_failure">Import fehlgeschlagen</string>
     <string name="import_choice_message">Wie sollen die importierten Daten angewendet werden?</string>

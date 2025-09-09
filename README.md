@@ -57,6 +57,11 @@ with existing content or **replace** it entirely. Merge discards original identi
 and their related records are added alongside current data. Replace wipes the database before
 restoring the backup, preserving the identifiers from the archive.
 
+After a successful export you can immediately share the resulting archive using the system share
+sheet.
+
+![Share backup screenshot](docs/share_backup.png)
+
 Automatic weekly backups can be enabled in Settings. When active, the app writes a ZIP archive
 named `backup-YYYYMMDD-HHmmss.zip` to its external files directory, typically
 `Android/data/de.oabidi.pflanzenbestandundlichttest/files/`.
