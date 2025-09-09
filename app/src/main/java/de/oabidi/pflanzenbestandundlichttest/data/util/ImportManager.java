@@ -302,7 +302,7 @@ public class ImportManager {
                                 Log.e(TAG, "Malformed species target row: " + line);
                             }
                         } else if (section == Section.MEASUREMENTS) {
-                            if (parts.size() >= 5) {
+                            if (parts.size() >= 7) {
                                 try {
                                     long plantId = Long.parseLong(parts.get(1));
                                     if (mode == Mode.MERGE) {
@@ -319,7 +319,12 @@ public class ImportManager {
                                     if (!parts.get(4).isEmpty()) {
                                         ppfd = nf.parse(parts.get(4)).floatValue();
                                     }
-                                    Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd);
+                                    Float dli = null;
+                                    if (!parts.get(5).isEmpty()) {
+                                        dli = nf.parse(parts.get(5)).floatValue();
+                                    }
+                                    String note = parts.get(6).isEmpty() ? null : parts.get(6);
+                                    Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli, note);
                                     db.measurementDao().insert(m);
                                     importedAny[0] = true;
                                 } catch (Exception e) {

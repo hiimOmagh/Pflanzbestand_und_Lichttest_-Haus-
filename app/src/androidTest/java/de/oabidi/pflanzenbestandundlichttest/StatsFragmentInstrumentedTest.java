@@ -36,8 +36,8 @@ public class StatsFragmentInstrumentedTest {
         // Insert measurements on two different days with known PPFD and DLI values
         long now = System.currentTimeMillis();
         float ppfd = 100f;
-        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd);
-        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f);
+        Measurement measurement1 = new Measurement(plant.getId(), now, 0f, ppfd, ppfd * 0.0036f, null);
+        Measurement measurement2 = new Measurement(plant.getId(), now - 86400000L, 0f, 50f, 50f * 0.0036f, null);
         repository.insertMeasurement(measurement1, null).get();
         repository.insertMeasurement(measurement2, null).get();
 

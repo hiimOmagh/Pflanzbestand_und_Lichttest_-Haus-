@@ -62,6 +62,7 @@ public class LightMeasurementInstrumentedTest {
 
             // Save the measurement
             onView(withId(R.id.measurement_save_button)).perform(click());
+            onView(withText(R.string.action_skip)).perform(click());
             SystemClock.sleep(500);
 
             // Navigate to stats and open measurements list

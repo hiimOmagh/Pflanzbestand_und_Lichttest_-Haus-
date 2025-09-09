@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.List;
 
 /**
- * Verifies that migrating from database version 4 to 5 preserves existing plants.
+ * Verifies that migrating from database version 4 to the current version preserves existing plants.
  */
 @RunWith(RobolectricTestRunner.class)
 public class PlantDatabaseMigrationTest {
@@ -35,7 +35,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate4To5_keepsPlants() {
+    public void migrate4To7_keepsPlants() {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Create database in version 4 and insert a sample plant.
@@ -50,7 +50,7 @@ public class PlantDatabaseMigrationTest {
 
         // Open database with latest version and run migration.
         PlantDatabase migrated = Room.databaseBuilder(context, PlantDatabase.class, DB_NAME)
-            .addMigrations(PlantDatabase.MIGRATION_4_5)
+            .addMigrations(PlantDatabase.MIGRATION_4_5, PlantDatabase.MIGRATION_5_6, PlantDatabase.MIGRATION_6_7)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();
@@ -66,7 +66,7 @@ public class PlantDatabaseMigrationTest {
     @Database(
         entities = {
             Plant.class,
-            Measurement.class,
+            MeasurementV4.class,
             DiaryEntry.class,
             SpeciesTarget.class,
             ReminderV4.class
@@ -77,6 +77,17 @@ public class PlantDatabaseMigrationTest {
     @TypeConverters({Converters.class})
     abstract static class PlantDatabaseV4 extends RoomDatabase {
         public abstract PlantDao plantDao();
+    }
+
+    /** Measurement entity used in version 4 without DLI or note columns. */
+    @Entity
+    static class MeasurementV4 {
+        @PrimaryKey(autoGenerate = true)
+        public long id;
+        public long plantId;
+        public long timeEpoch;
+        public float luxAvg;
+        public Float ppfd;
     }
 
     /** Reminder entity prior to version 5 without the {@code plantId} reference. */

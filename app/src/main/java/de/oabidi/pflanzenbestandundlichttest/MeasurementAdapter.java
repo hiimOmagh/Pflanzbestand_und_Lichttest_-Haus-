@@ -44,7 +44,11 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
                     && oldItem.getTimeEpoch() == newItem.getTimeEpoch()
                     && Float.compare(oldItem.getLuxAvg(), newItem.getLuxAvg()) == 0
                     && ((oldItem.getPpfd() == null && newItem.getPpfd() == null)
-                    || (oldItem.getPpfd() != null && newItem.getPpfd() != null && Float.compare(oldItem.getPpfd(), newItem.getPpfd()) == 0));
+                    || (oldItem.getPpfd() != null && newItem.getPpfd() != null && Float.compare(oldItem.getPpfd(), newItem.getPpfd()) == 0))
+                    && ((oldItem.getDli() == null && newItem.getDli() == null)
+                    || (oldItem.getDli() != null && newItem.getDli() != null && Float.compare(oldItem.getDli(), newItem.getDli()) == 0))
+                    && ((oldItem.getNote() == null && newItem.getNote() == null)
+                    || (oldItem.getNote() != null && newItem.getNote() != null && oldItem.getNote().equals(newItem.getNote())));
             }
         };
 
