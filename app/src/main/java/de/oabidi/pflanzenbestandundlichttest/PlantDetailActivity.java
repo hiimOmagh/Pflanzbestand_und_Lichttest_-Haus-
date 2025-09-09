@@ -36,7 +36,7 @@ import androidx.core.view.WindowInsetsCompat;
  *   <li>{@code locationHint} – where the plant is located (defaults to a placeholder dash)</li>
  *   <li>{@code acquiredAtEpoch} – acquisition time in milliseconds since the Unix epoch;
  *       {@code 0} results in an unknown date</li>
- *   <li>{@code photoUri} – string form of the plant photo URI (defaults to a placeholder dash)</li>
+ *   <li>{@code photoUri} – string form of the plant photo URI; empty string when unavailable</li>
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity {
@@ -58,7 +58,10 @@ public class PlantDetailActivity extends AppCompatActivity {
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
-        Uri photoUri = (photoUriStr == null || photoUriStr.isEmpty()) ? null : Uri.parse(photoUriStr);
+        Uri photoUri = null;
+        if (photoUriStr != null && !photoUriStr.isEmpty()) {
+            photoUri = Uri.parse(photoUriStr);
+        }
 
         TextView nameView = findViewById(R.id.detail_name);
         TextView descriptionView = findViewById(R.id.detail_description);

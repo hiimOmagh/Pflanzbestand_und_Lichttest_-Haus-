@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -100,5 +101,25 @@ public class MainActivity extends AppCompatActivity {
             BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
             bottomNavigationView.setSelectedItemId(R.id.nav_measure);
         }
+    }
+
+    /**
+     * Creates an intent pre-filled with the given plant's details.
+     *
+     * @param context the context used to create the intent
+     * @param plant   the plant whose details should be shown
+     * @return an intent for {@link PlantDetailActivity}
+     */
+    public static Intent createPlantDetailIntent(Context context, Plant plant) {
+        Intent intent = new Intent(context, PlantDetailActivity.class);
+        intent.putExtra("plantId", plant.getId());
+        intent.putExtra("name", plant.getName());
+        intent.putExtra("description", plant.getDescription());
+        intent.putExtra("species", plant.getSpecies());
+        intent.putExtra("locationHint", plant.getLocationHint());
+        intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
+        String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
+        intent.putExtra("photoUri", photo);
+        return intent;
     }
 }
