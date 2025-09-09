@@ -17,15 +17,23 @@ import java.util.Date;
  * RecyclerView adapter displaying recent light measurements.
  */
 public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdapter.ViewHolder> {
+    /** Listener invoked when a measurement is clicked. */
+    public interface OnMeasurementClickListener {
+        void onMeasurementClick(Measurement measurement);
+    }
+
     /** Listener invoked when a measurement is long-pressed. */
     public interface OnMeasurementLongClickListener {
         void onMeasurementLongClick(Measurement measurement);
     }
 
+    private final OnMeasurementClickListener clickListener;
     private final OnMeasurementLongClickListener longClickListener;
 
-    public MeasurementAdapter(OnMeasurementLongClickListener longClickListener) {
+    public MeasurementAdapter(OnMeasurementClickListener clickListener,
+                              OnMeasurementLongClickListener longClickListener) {
         super(DIFF_CALLBACK);
+        this.clickListener = clickListener;
         this.longClickListener = longClickListener;
     }
 
@@ -73,6 +81,17 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         }
         String timeText = DateFormat.getDateTimeInstance().format(new Date(m.getTimeEpoch()));
         holder.timeView.setText(timeText);
+        if (m.getNote() != null && !m.getNote().isEmpty()) {
+            holder.noteView.setText(m.getNote());
+            holder.noteView.setVisibility(View.VISIBLE);
+        } else {
+            holder.noteView.setVisibility(View.GONE);
+        }
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onMeasurementClick(m);
+            }
+        });
         holder.itemView.setOnLongClickListener(v -> {
             if (longClickListener != null) {
                 longClickListener.onMeasurementLongClick(m);
@@ -85,12 +104,14 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
         final TextView luxView;
         final TextView ppfdView;
         final TextView timeView;
+        final TextView noteView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             luxView = itemView.findViewById(R.id.measurement_lux);
             ppfdView = itemView.findViewById(R.id.measurement_ppfd);
             timeView = itemView.findViewById(R.id.measurement_time);
+            noteView = itemView.findViewById(R.id.measurement_note);
         }
     }
 }

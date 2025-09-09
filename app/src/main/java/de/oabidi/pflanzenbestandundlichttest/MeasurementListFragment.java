@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -82,6 +83,20 @@ public class MeasurementListFragment extends Fragment {
             }
         });
         adapter = new MeasurementAdapter(measurement -> {
+            EditText input = new EditText(requireContext());
+            input.setHint(R.string.measurement_add_note);
+            input.setText(measurement.getNote());
+            new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.measurement_add_note)
+                .setView(input)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String note = input.getText().toString().trim();
+                    measurement.setNote(note.isEmpty() ? null : note);
+                    repository.updateMeasurement(measurement, this::loadMeasurements);
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+        }, measurement -> {
             String message = getString(R.string.confirm_delete_measurement);
             new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.action_delete_measurement)

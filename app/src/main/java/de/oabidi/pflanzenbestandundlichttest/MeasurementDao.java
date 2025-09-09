@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -31,6 +32,14 @@ public interface MeasurementDao {
      */
     @Delete
     void delete(Measurement measurement);
+
+    /**
+     * Updates an existing measurement.
+     *
+     * @param measurement the entity to update
+     */
+    @Update
+    void update(Measurement measurement);
 
     /**
      * Retrieves the most recent measurements for the given plant.

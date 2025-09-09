@@ -161,6 +161,22 @@ public class PlantRepository {
     }
 
     /**
+     * Updates an existing measurement asynchronously.
+     *
+     * @param measurement the {@link Measurement} to update
+     * @param callback    optional callback invoked on the main thread when done
+     * @return a {@link Future} representing the pending operation
+     */
+    public Future<?> updateMeasurement(Measurement measurement, Runnable callback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            measurementDao.update(measurement);
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+        });
+    }
+
+    /**
      * Deletes a measurement from the database asynchronously.
      *
      * @param measurement the {@link Measurement} to remove
