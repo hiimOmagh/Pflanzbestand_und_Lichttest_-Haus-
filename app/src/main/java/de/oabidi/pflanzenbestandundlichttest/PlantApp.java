@@ -1,12 +1,19 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.app.Application;
+import com.google.android.material.color.DynamicColors;
 
 /**
  * Application subclass providing a single {@link PlantRepository} instance.
  */
 public class PlantApp extends Application {
     private PlantRepository repository;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        DynamicColors.applyToActivitiesIfAvailable(this);
+    }
 
     /**
      * Returns the shared {@link PlantRepository} instance for the application.
