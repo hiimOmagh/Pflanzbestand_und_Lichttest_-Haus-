@@ -31,4 +31,11 @@
         app:defaultValue="false"
         app:summary="@string/pref_auto_backup_summary" />
 
+    <ListPreference
+        app:key="theme"
+        app:title="@string/pref_theme"
+        app:entries="@array/theme_entries"
+        app:entryValues="@array/theme_values"
+        app:defaultValue="system" />
+
 </PreferenceScreen>

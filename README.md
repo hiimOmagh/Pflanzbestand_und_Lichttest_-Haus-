@@ -69,6 +69,11 @@ named `backup-YYYYMMDD-HHmmss.zip` to its external files directory, typically
 Individual plants can also be exported from the detail screen. Use the **Export Plant Data** menu
 action while viewing a plant to save only its measurements, diary entries, and reminders.
 
+## Appearance
+
+The Settings screen includes a **Theme** option with Light, Dark, and System default modes. The
+selected mode is stored in shared preferences and applied whenever the app starts.
+
 ## Species PPFD targets
 
 On first launch the app seeds the database with common species light requirements from

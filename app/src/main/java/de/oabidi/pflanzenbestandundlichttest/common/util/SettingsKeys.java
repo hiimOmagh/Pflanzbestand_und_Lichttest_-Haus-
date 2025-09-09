@@ -42,4 +42,9 @@ public final class SettingsKeys {
      * Enables weekly automatic backups.
      */
     public static final String KEY_AUTO_BACKUP = "auto_backup";
+
+    /**
+     * Selected application theme (light, dark, or system default).
+     */
+    public static final String KEY_THEME = "theme";
 }

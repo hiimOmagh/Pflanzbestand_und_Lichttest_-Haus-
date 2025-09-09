@@ -147,6 +147,20 @@
     <string name="hint_number">Number</string>
     <string name="pref_auto_backup">Automatic backups</string>
     <string name="pref_auto_backup_summary">Export data weekly to app storage</string>
+    <string name="pref_theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System default</string>
+    <string-array name="theme_entries">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+        <item>@string/theme_system</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>light</item>
+        <item>dark</item>
+        <item>system</item>
+    </string-array>
     <string name="widget_no_reminders">No pending reminders</string>
     <string name="widget_measure_now">Measure Now</string>
     <string name="range_low">Low</string>

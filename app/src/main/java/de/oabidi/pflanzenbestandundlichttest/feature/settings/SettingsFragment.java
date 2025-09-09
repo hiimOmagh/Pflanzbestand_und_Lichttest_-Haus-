@@ -7,6 +7,8 @@ import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
+import androidx.preference.ListPreference;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
@@ -48,6 +50,29 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
+
+        ListPreference themePref = findPreference(SettingsKeys.KEY_THEME);
+        if (themePref != null) {
+            themePref.setOnPreferenceChangeListener((pref, newValue) -> {
+                applyTheme((String) newValue);
+                return true;
+            });
+        }
+    }
+
+    private void applyTheme(String value) {
+        int mode;
+        switch (value) {
+            case "light":
+                mode = AppCompatDelegate.MODE_NIGHT_NO;
+                break;
+            case "dark":
+                mode = AppCompatDelegate.MODE_NIGHT_YES;
+                break;
+            default:
+                mode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+        }
+        AppCompatDelegate.setDefaultNightMode(mode);
     }
 
     private boolean validatePositiveFloat(Preference preference, Object newValue) {
