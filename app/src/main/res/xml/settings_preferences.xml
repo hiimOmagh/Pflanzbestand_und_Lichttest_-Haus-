@@ -25,4 +25,10 @@
         android:inputType="number"
         android:hint="@string/hint_number" />
 
+    <SwitchPreferenceCompat
+        app:key="auto_backup"
+        app:title="@string/pref_auto_backup"
+        app:defaultValue="false"
+        app:summary="@string/pref_auto_backup_summary" />
+
 </PreferenceScreen>

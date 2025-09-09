@@ -6,9 +6,11 @@ import android.widget.Toast;
 import androidx.preference.EditTextPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.BackupScheduler;
 
 /**
  * Fragment displaying application settings.
@@ -33,6 +35,18 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         EditTextPreference lightHoursPreference = findPreference(SettingsKeys.KEY_LIGHT_HOURS);
         if (lightHoursPreference != null) {
             lightHoursPreference.setOnPreferenceChangeListener(this::validatePositiveFloat);
+        }
+
+        SwitchPreferenceCompat backupPref = findPreference(SettingsKeys.KEY_AUTO_BACKUP);
+        if (backupPref != null) {
+            backupPref.setOnPreferenceChangeListener((pref, newValue) -> {
+                if ((Boolean) newValue) {
+                    BackupScheduler.schedule(requireContext());
+                } else {
+                    BackupScheduler.cancel(requireContext());
+                }
+                return true;
+            });
         }
     }
 

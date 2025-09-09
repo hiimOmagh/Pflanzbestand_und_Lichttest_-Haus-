@@ -37,4 +37,9 @@ public final class SettingsKeys {
      * Flag indicating whether the user has completed the onboarding flow.
      */
     public static final String KEY_HAS_ONBOARDED = "has_onboarded";
+
+    /**
+     * Enables weekly automatic backups.
+     */
+    public static final String KEY_AUTO_BACKUP = "auto_backup";
 }
