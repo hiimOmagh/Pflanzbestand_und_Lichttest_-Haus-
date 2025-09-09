@@ -48,7 +48,7 @@ public interface PlantDao {
 
     @Transaction
     default long insert(Plant plant) {
-        long id = insertInternal(plant);
+        final long id = insertInternal(plant);
         insertFts(new PlantFts(id, plant.getName(), plant.getDescription() == null ? "" : plant.getDescription()));
         return id;
     }

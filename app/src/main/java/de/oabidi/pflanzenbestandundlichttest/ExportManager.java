@@ -147,16 +147,15 @@ public class ExportManager {
                     }
 
                     writer.write("\nMeasurements\n");
-                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli,note\n");
+                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd\n"); // Corrected header
                     for (Measurement m : measurements) {
-                        writer.write("id,plantId,timeEpoch,luxAvg,ppfd,dli,note\n");
+                        writer.write(String.format(Locale.US, "%d,%d,%d,%f,%s\n",
                             m.getId(),
                             m.getPlantId(),
                             m.getTimeEpoch(),
                             m.getLuxAvg(),
-                                m.getPpfd() != null ? Float.toString(m.getPpfd()) : "",
-                                m.getDli() != null ? Float.toString(m.getDli()) : "",
-                                escape(m.getNote())));
+                            m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""
+                        ));
                     }
                     progress[0]++;
                     if (progressCallback != null) {
