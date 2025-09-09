@@ -6,12 +6,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import androidx.appcompat.widget.SearchView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,7 +44,6 @@ public class DiaryFragment extends Fragment {
     private DiaryEntryAdapter adapter;
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
-    private Spinner filterSpinner;
     private String searchQuery = "";
 
     /**
@@ -59,6 +60,7 @@ public class DiaryFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         Bundle args = getArguments();
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
@@ -85,39 +87,7 @@ public class DiaryFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView listView = view.findViewById(R.id.diary_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        SearchView searchView = view.findViewById(R.id.diary_search);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchQuery = query;
-                loadEntries();
-                return true;
-            }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                searchQuery = newText;
-                loadEntries();
-                return true;
-            }
-        });
-        filterSpinner = view.findViewById(R.id.diary_filter_spinner);
-        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.diary_filter_labels,
-            android.R.layout.simple_spinner_item);
-        filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        filterSpinner.setAdapter(filterAdapter);
-        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view1, int position, long id) {
-                loadEntries();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
         adapter = new DiaryEntryAdapter(entry -> {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
@@ -186,6 +156,28 @@ public class DiaryFragment extends Fragment {
 
         loadEntries();
     }
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.diary_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.diary_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setQueryHint(getString(R.string.diary_search_hint));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchQuery = query;
+                loadEntries();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                searchQuery = newText;
+                loadEntries();
+                return true;
+            }
+        });
+    }
 
     private void addEntry() {
         if (plantId < 0) {
@@ -243,14 +235,7 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        String type = null;
-        if (filterSpinner != null) {
-            String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
-            int pos = filterSpinner.getSelectedItemPosition();
-            String code = filterCodes[pos];
-            type = code.isEmpty() ? null : code;
-        }
-        repository.searchDiaryEntries(plantId, type, searchQuery, result -> {
+        repository.searchDiaryEntries(plantId, searchQuery, result -> {
             for (DiaryEntry entry : result) {
                 String photo = entry.getPhotoUri();
                 if (photo != null && photo.startsWith("content:")) {

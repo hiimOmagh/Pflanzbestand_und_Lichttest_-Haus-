@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -104,9 +106,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        addContentView(crashButton, new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
+        // Get the root FrameLayout
+        FrameLayout rootView = (FrameLayout) findViewById(android.R.id.content);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        params.bottomMargin = 180; // Increased from 100 to 180
+        rootView.addView(crashButton, params);
+
     }
 
     @Override

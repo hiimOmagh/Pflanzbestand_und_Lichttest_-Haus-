@@ -564,22 +564,21 @@ public class PlantRepository {
     }
 
     /**
-     * Retrieves diary entries for a plant matching the given type and query.
+     * Retrieves diary entries for a plant matching the given query.
      * Results are delivered on the main thread.
      *
      * @param plantId identifier of the plant
-     * @param type    optional entry type to filter or {@code null} for all types
      * @param query   text to search in notes; empty string returns all entries
      * @param callback invoked with the resulting list on the main thread
      */
-    public void searchDiaryEntries(long plantId, String type, String query, Consumer<List<DiaryEntry>> callback) {
+    public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             List<DiaryEntry> result;
             if (query == null || query.isEmpty()) {
-                result = diaryDao.entriesForPlantFiltered(plantId, type);
+                result = diaryDao.entriesForPlant(plantId);
             } else {
                 String q = query + "*";
-                result = diaryDao.searchForPlant(plantId, type, q);
+                result = diaryDao.searchDiaryEntries(plantId, q);
             }
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
