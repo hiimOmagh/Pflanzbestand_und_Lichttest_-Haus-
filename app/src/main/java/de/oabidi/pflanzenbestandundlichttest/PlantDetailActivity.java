@@ -96,6 +96,11 @@ public class PlantDetailActivity extends AppCompatActivity {
         } else {
             photoView.setImageURI(photoUri);
             photoView.setVisibility(View.VISIBLE);
+            String cdName = (name == null || name.isEmpty())
+                ? getString(R.string.unknown)
+                : name;
+            photoView.setContentDescription(
+                getString(R.string.plant_photo_desc_format, cdName));
         }
 
         diaryButton.setOnClickListener(v -> {

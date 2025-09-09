@@ -38,6 +38,8 @@
     <string name="measurement_saved">Medición guardada</string>
     <string name="error_select_plant">Seleccione una planta</string>
     <string name="plant_photo_desc">Foto de la planta</string>
+    <string name="plant_photo_desc_format">Foto de %1$s</string>
+    <string name="diary_entry_photo_desc">Foto del diario</string>
     <string name="action_view_diary">Ver diario</string>
     <string name="action_view_measurements">Ver mediciones</string>
     <string name="action_add_diary_entry">Agregar entrada</string>

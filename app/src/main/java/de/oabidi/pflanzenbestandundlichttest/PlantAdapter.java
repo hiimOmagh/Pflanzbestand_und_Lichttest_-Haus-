@@ -91,6 +91,7 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
          */
         void bind(Plant plant, OnPlantClickListener listener) {
             nameView.setText(plant.getName());
+            itemView.setContentDescription(plant.getName());
             itemView.setOnClickListener(v -> listener.onPlantClick(plant));
         }
     }

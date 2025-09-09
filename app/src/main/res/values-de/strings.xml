@@ -38,6 +38,8 @@
     <string name="measurement_saved">Messung gespeichert</string>
     <string name="error_select_plant">Bitte eine Pflanze auswählen</string>
     <string name="plant_photo_desc">Pflanzenfoto</string>
+    <string name="plant_photo_desc_format">Foto von %1$s</string>
+    <string name="diary_entry_photo_desc">Tagebucheintragsfoto</string>
     <string name="plant_photo">Pflanzenfoto</string>
     <string name="action_view_diary">Tagebuch anzeigen</string>
     <string name="action_view_measurements">Messungen anzeigen</string>
