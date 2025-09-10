@@ -73,15 +73,18 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                 exportManager.export(uri, success -> {
                     hideProgress();
                     if (isAdded()) {
-                        int msg = success ? R.string.export_success : R.string.export_failure;
-                        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
                         if (success) {
                             Intent shareIntent = new Intent(Intent.ACTION_SEND);
                             shareIntent.setType("application/zip");
                             shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(Intent.createChooser(shareIntent,
-                                getString(R.string.share_backup)));
+                            Snackbar.make(requireView(), R.string.export_success, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.share_backup, v -> startActivity(
+                                    Intent.createChooser(shareIntent,
+                                        getString(R.string.share_backup))))
+                                .show();
+                        } else {
+                            Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, (current, total) -> {

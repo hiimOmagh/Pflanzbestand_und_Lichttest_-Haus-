@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 
 import java.io.File;
+import java.util.Arrays;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -18,12 +19,14 @@ import java.util.Locale;
 public class BackupScheduler extends BroadcastReceiver {
     private static final int REQUEST_CODE = 42;
     private static final long WEEK_INTERVAL = AlarmManager.INTERVAL_DAY * 7;
+    private static final int RETENTION_COUNT = 5;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         PendingResult result = goAsync();
         File dir = context.getExternalFilesDir(null);
         if (dir != null) {
+            cleanupOldBackups(dir);
             String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
                 .format(new Date());
             File out = new File(dir, "backup-" + timestamp + ".zip");
@@ -31,6 +34,16 @@ public class BackupScheduler extends BroadcastReceiver {
             new ExportManager(context).export(uri, success -> result.finish());
         } else {
             result.finish();
+        }
+    }
+
+    private static void cleanupOldBackups(File dir) {
+        File[] backups = dir.listFiles((d, name) -> name.startsWith("backup-") && name.endsWith(".zip"));
+        if (backups == null) return;
+        Arrays.sort(backups, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        for (int i = RETENTION_COUNT - 1; i < backups.length; i++) {
+            //noinspection ResultOfMethodCallIgnored
+            backups[i].delete();
         }
     }
 

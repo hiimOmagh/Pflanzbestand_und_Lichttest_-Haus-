@@ -64,7 +64,8 @@ sheet.
 
 Automatic weekly backups can be enabled in Settings. When active, the app writes a ZIP archive
 named `backup-YYYYMMDD-HHmmss.zip` to its external files directory, typically
-`Android/data/de.oabidi.pflanzenbestandundlichttest/files/`.
+`Android/data/de.oabidi.pflanzenbestandundlichttest/files/`. Only the five most recent automatic
+backups are retained; older archives are deleted before creating a new one.
 
 Individual plants can also be exported from the detail screen. Use the **Export Plant Data** menu
 action while viewing a plant to save only its measurements, diary entries, and reminders.
