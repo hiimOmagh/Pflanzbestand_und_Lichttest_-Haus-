@@ -218,10 +218,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         } else if (itemId == R.id.action_delete) {
             if (!plants.isEmpty()) {
                 Plant plant = plants.get(0);
-                presenter.deletePlant(plant);
-                Snackbar.make(requireView(), R.string.plant_deleted, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.action_undo, v -> presenter.insertPlant(plant))
-                    .show();
+                presenter.deletePlant(plant, () ->
+                    Snackbar.make(requireView(), R.string.plant_deleted, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.action_undo, v -> presenter.insertPlant(plant))
+                        .show());
             }
             return true;
         } else if (itemId == R.id.action_species_targets) {

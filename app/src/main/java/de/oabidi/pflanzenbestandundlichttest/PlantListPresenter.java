@@ -33,6 +33,15 @@ public class PlantListPresenter {
     }
 
     public void deletePlant(Plant plant) {
-        repository.delete(plant, this::refreshPlants);
+        deletePlant(plant, null);
+    }
+
+    public void deletePlant(Plant plant, Runnable afterDelete) {
+        repository.delete(plant, () -> {
+            refreshPlants();
+            if (afterDelete != null) {
+                afterDelete.run();
+            }
+        });
     }
 }
