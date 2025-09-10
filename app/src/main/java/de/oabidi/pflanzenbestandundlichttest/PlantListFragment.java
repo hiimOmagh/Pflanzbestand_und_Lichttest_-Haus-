@@ -39,18 +39,29 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private ExportManager exportManager;
     private ImportManager importManager;
     private ProgressBar progressBar;
+    private AlertDialog progressDialog;
 
     private void showProgress() {
-        if (isAdded()) {
-            progressBar.setIndeterminate(false);
-            progressBar.setProgress(0);
-            progressBar.setVisibility(View.VISIBLE);
+        if (!isAdded()) {
+            return;
         }
+        if (progressDialog == null) {
+            View dialogView = LayoutInflater.from(requireContext()).inflate(
+                R.layout.dialog_progress, null);
+            progressBar = dialogView.findViewById(R.id.progress_bar);
+            progressDialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+        }
+        progressBar.setIndeterminate(false);
+        progressBar.setProgress(0);
+        progressDialog.show();
     }
 
     private void hideProgress() {
-        if (isAdded()) {
-            progressBar.setVisibility(View.GONE);
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
             progressBar.setProgress(0);
         }
     }
@@ -142,7 +153,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         presenter.refreshPlants();
         exportManager = new ExportManager(requireContext().getApplicationContext());
         importManager = new ImportManager(requireContext().getApplicationContext());
-        progressBar = view.findViewById(R.id.progress);
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
             (requestKey, bundle) -> {
@@ -162,6 +172,16 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             });
 
         setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
+        progressBar = null;
+        progressDialog = null;
+        super.onDestroyView();
     }
 
     @Override
