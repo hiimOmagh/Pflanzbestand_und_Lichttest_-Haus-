@@ -36,11 +36,11 @@ import java.util.function.Consumer;
  * provided plant. If no plant ID is supplied the fragment simply shows an empty
  * view, making it suitable as a top-level destination as well.</p>
  */
-public class DiaryFragment extends Fragment {
+public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private static final String ARG_PLANT_ID = "plantId";
 
     private long plantId = -1;
-    private PlantRepository repository;
+    private DiaryPresenter presenter;
     private DiaryEntryAdapter adapter;
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
@@ -65,7 +65,7 @@ public class DiaryFragment extends Fragment {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        presenter = new DiaryPresenter(this, requireContext().getApplicationContext(), plantId);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(
@@ -124,7 +124,7 @@ public class DiaryFragment extends Fragment {
                     entry.setType(typeCodes1[pos]);
                     entry.setNote(noteEdit.getText().toString());
                     entry.setPhotoUri(photoUri[0]);
-                    repository.updateDiaryEntry(entry, this::loadEntries);
+                    presenter.updateEntry(entry);
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
@@ -133,12 +133,11 @@ public class DiaryFragment extends Fragment {
                 .setTitle(R.string.action_delete_diary_entry)
                 .setMessage(R.string.confirm_delete_diary_entry)
                 .setPositiveButton(android.R.string.ok, (d, w) ->
-                    repository.deleteDiaryEntry(entry, () -> {
-                        loadEntries();
+                    presenter.deleteEntry(entry, () ->
                         Snackbar.make(requireView(), R.string.diary_entry_deleted, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.action_undo, v -> repository.insertDiaryEntry(entry, this::loadEntries))
-                            .show();
-                    }))
+                            .setAction(R.string.action_undo, v -> presenter.insertEntry(entry))
+                            .show()
+                    ))
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
         });
@@ -215,7 +214,7 @@ public class DiaryFragment extends Fragment {
                 String note = noteEdit.getText().toString();
                 DiaryEntry entry = new DiaryEntry(plantId, System.currentTimeMillis(), type, note);
                 entry.setPhotoUri(photoUri[0]);
-                repository.insertDiaryEntry(entry, this::loadEntries);
+                presenter.insertEntry(entry);
 
                 String daysText = remindEdit.getText().toString().trim();
                 if (!daysText.isEmpty()) {
@@ -235,18 +234,21 @@ public class DiaryFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        repository.searchDiaryEntries(plantId, searchQuery, result -> {
-            for (DiaryEntry entry : result) {
-                String photo = entry.getPhotoUri();
-                if (photo != null && photo.startsWith("content:")) {
-                    try {
-                        requireContext().getContentResolver().takePersistableUriPermission(
-                            Uri.parse(photo), Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    } catch (SecurityException ignored) {
-                    }
+        presenter.loadEntries(searchQuery);
+    }
+
+    @Override
+    public void showEntries(java.util.List<DiaryEntry> entries) {
+        for (DiaryEntry entry : entries) {
+            String photo = entry.getPhotoUri();
+            if (photo != null && photo.startsWith("content:")) {
+                try {
+                    requireContext().getContentResolver().takePersistableUriPermission(
+                        Uri.parse(photo), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (SecurityException ignored) {
                 }
             }
-            adapter.submitList(result);
-        });
+        }
+        adapter.submitList(entries);
     }
 }

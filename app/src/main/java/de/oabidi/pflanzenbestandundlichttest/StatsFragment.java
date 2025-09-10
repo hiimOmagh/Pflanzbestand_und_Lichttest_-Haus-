@@ -18,23 +18,19 @@ import androidx.fragment.app.Fragment;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import java.util.List;
-import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.MeasurementListFragment;
 
 /**
  * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
  */
-public class StatsFragment extends Fragment {
-    private PlantRepository repository;
+public class StatsFragment extends Fragment implements StatsPresenter.View {
+    private StatsPresenter presenter;
     private TextView diaryCountsView;
     private TextView dliView;
     private Button plantSelectorButton;
@@ -43,7 +39,6 @@ public class StatsFragment extends Fragment {
     private final List<Long> selectedPlantIds = new ArrayList<>();
     private View viewMeasurementsButton;
     private TextView placeholderView;
-    private static final int DLI_DAYS = 7;
     private SharedPreferences preferences;
 
     @Nullable
@@ -63,7 +58,7 @@ public class StatsFragment extends Fragment {
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
-        repository = ((PlantApp) context).getRepository();
+        presenter = new StatsPresenter(this, context);
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
 
         if (savedInstanceState != null) {
@@ -98,14 +93,14 @@ public class StatsFragment extends Fragment {
             }
         });
 
-        loadPlants();
+        presenter.loadPlants();
         updateButtonText();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        loadPlants();
+        presenter.loadPlants();
     }
 
     @Override
@@ -118,63 +113,53 @@ public class StatsFragment extends Fragment {
         outState.putLongArray("selectedPlantIds", ids);
     }
 
-    private void loadPlants() {
-        repository.getAllPlants(result -> {
-            plants = result;
-            if (plants.isEmpty()) {
-                plantSelectorButton.setVisibility(View.GONE);
-                chart.setVisibility(View.GONE);
-                placeholderView.setVisibility(View.VISIBLE);
-                viewMeasurementsButton.setEnabled(false);
-                dliView.setText(getString(R.string.dli_placeholder));
-                diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
-                selectedPlantIds.clear();
-                updateButtonText();
-            } else {
-                plantSelectorButton.setVisibility(View.VISIBLE);
-                chart.setVisibility(View.VISIBLE);
-                placeholderView.setVisibility(View.GONE);
-                if (selectedPlantIds.isEmpty()) {
-                    selectedPlantIds.add(plants.get(0).getId());
-                }
-                updateButtonText();
-                loadDataForPlants(selectedPlantIds);
+    @Override
+    public void showPlants(List<Plant> result) {
+        plants = result;
+        if (plants.isEmpty()) {
+            plantSelectorButton.setVisibility(View.GONE);
+            chart.setVisibility(View.GONE);
+            placeholderView.setVisibility(View.VISIBLE);
+            viewMeasurementsButton.setEnabled(false);
+            dliView.setText(getString(R.string.dli_placeholder));
+            diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
+            selectedPlantIds.clear();
+            updateButtonText();
+        } else {
+            plantSelectorButton.setVisibility(View.VISIBLE);
+            chart.setVisibility(View.VISIBLE);
+            placeholderView.setVisibility(View.GONE);
+            if (selectedPlantIds.isEmpty()) {
+                selectedPlantIds.add(plants.get(0).getId());
             }
-        });
+            updateButtonText();
+            presenter.loadDataForPlants(selectedPlantIds);
+            viewMeasurementsButton.setEnabled(selectedPlantIds.size() == 1);
+        }
     }
 
-    private void loadDataForPlants(List<Long> plantIds) {
-        if (plantIds.isEmpty()) {
+    @Override
+    public void showMeasurements(Map<Long, List<Measurement>> data) {
+        if (data == null) {
             chart.setMeasurements(null);
-            dliView.setText(getString(R.string.dli_placeholder));
-            diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
-            viewMeasurementsButton.setEnabled(false);
             return;
         }
-
-        Map<String, List<Measurement>> data = new HashMap<>();
-        Set<Long> remaining = new HashSet<>(plantIds);
-        for (Long id : plantIds) {
-            repository.recentMeasurementsForPlant(id, 30, list -> {
-                String name = findPlantName(id);
-                data.put(name, list);
-                remaining.remove(id);
-                if (remaining.isEmpty()) {
-                    chart.setMeasurements(data);
-                }
-            });
+        Map<String, List<Measurement>> named = new HashMap<>();
+        for (Map.Entry<Long, List<Measurement>> e : data.entrySet()) {
+            String name = findPlantName(e.getKey());
+            named.put(name, e.getValue());
         }
+        chart.setMeasurements(named);
+    }
 
-        if (plantIds.size() == 1) {
-            long id = plantIds.get(0);
-            repository.diaryEntriesForPlant(id, entries -> updateDiaryCounts(entries));
-            computeDli(id);
-            viewMeasurementsButton.setEnabled(true);
-        } else {
-            dliView.setText(getString(R.string.dli_placeholder));
-            diaryCountsView.setText(getString(R.string.stats_no_diary_entries));
-            viewMeasurementsButton.setEnabled(false);
-        }
+    @Override
+    public void showDiaryCounts(String text) {
+        diaryCountsView.setText(text);
+    }
+
+    @Override
+    public void showDli(String text) {
+        dliView.setText(text);
     }
 
     private void showPlantSelectionDialog() {
@@ -199,7 +184,8 @@ public class StatsFragment extends Fragment {
             })
             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                 updateButtonText();
-                loadDataForPlants(selectedPlantIds);
+                presenter.loadDataForPlants(selectedPlantIds);
+                viewMeasurementsButton.setEnabled(selectedPlantIds.size() == 1);
                 long first = selectedPlantIds.isEmpty() ? -1 : selectedPlantIds.get(0);
                 preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, first).apply();
             })
@@ -231,61 +217,5 @@ public class StatsFragment extends Fragment {
             }
         }
         return "";
-    }
-
-    private void computeDli(long plantId) {
-        long now = System.currentTimeMillis();
-        long end = startOfDay(now) + 86400000L;
-        long start = end - DLI_DAYS * 86400000L;
-        repository.sumPpfdForRange(plantId, start, end, sumPpfd ->
-            repository.countDaysWithData(plantId, start, end, dayCount -> {
-                if (dayCount > 0) {
-                    float totalDli = (sumPpfd != null ? sumPpfd : 0f) * 0.0036f;
-                    float avgDli = totalDli / dayCount;
-                    dliView.setText(getString(R.string.format_dli, avgDli));
-                } else {
-                    dliView.setText(getString(R.string.dli_placeholder));
-                }
-            })
-        );
-    }
-
-    private static long startOfDay(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
-    }
-
-    private void updateDiaryCounts(List<DiaryEntry> entries) {
-        int water = 0;
-        int fertilize = 0;
-        int prune = 0;
-        for (DiaryEntry e : entries) {
-            String type = e.getType();
-            if (DiaryEntry.TYPE_WATER.equals(type)) {
-                water++;
-            } else if (DiaryEntry.TYPE_FERTILIZE.equals(type)) {
-                fertilize++;
-            } else if (DiaryEntry.TYPE_PRUNE.equals(type)) {
-                prune++;
-            }
-        }
-        String text;
-        if (entries.isEmpty()) {
-            text = getString(R.string.stats_no_diary_entries);
-        } else {
-            String waterLabel = getString(R.string.diary_type_water);
-            String fertilizeLabel = getString(R.string.diary_type_fertilize);
-            String pruneLabel = getString(R.string.diary_type_prune);
-            text = getString(R.string.format_diary_counts,
-                waterLabel, water,
-                fertilizeLabel, fertilize,
-                pruneLabel, prune);
-        }
-        diaryCountsView.setText(text);
     }
 }
