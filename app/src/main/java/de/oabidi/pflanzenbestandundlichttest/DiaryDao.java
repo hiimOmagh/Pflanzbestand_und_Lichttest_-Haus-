@@ -64,7 +64,7 @@ public interface DiaryDao {
     @Transaction
     default void update(DiaryEntry entry) {
         updateInternal(entry);
-        insertFts(new DiaryEntryFts(entry.getId(), entry.getNote() == null ? "" : entry.getNote()));
+        insertFts(new DiaryEntryFts(entry.getId(), entry.getNote() == null ? "" : entry.getNote(), entry.getType()));
     }
 
     /**
