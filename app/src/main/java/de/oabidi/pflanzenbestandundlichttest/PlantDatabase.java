@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
         PlantFts.class,
         DiaryEntryFts.class
     },
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -89,9 +89,10 @@ public abstract class PlantDatabase extends RoomDatabase {
     static final Migration MIGRATION_7_8 = new Migration(7, 8) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS PlantFts USING FTS4(name, description)");
+            database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS PlantFts USING FTS4(name, species, locationHint, description)");
             database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS DiaryEntryFts USING FTS4(note, type)");
-            database.execSQL("INSERT INTO PlantFts(rowid, name, description) SELECT id, name, IFNULL(description, '') FROM Plant");
+            database.execSQL("INSERT INTO PlantFts(rowid, name, species, locationHint, description) " +
+                "SELECT id, name, IFNULL(species, ''), IFNULL(locationHint, ''), IFNULL(description, '') FROM Plant");
             database.execSQL("INSERT INTO DiaryEntryFts(rowid, note, type) SELECT id, IFNULL(note, ''), type FROM DiaryEntry");
         }
     };
@@ -102,6 +103,16 @@ public abstract class PlantDatabase extends RoomDatabase {
             database.execSQL("DROP TABLE IF EXISTS DiaryEntryFts");
             database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS DiaryEntryFts USING FTS4(note, type)");
             database.execSQL("INSERT INTO DiaryEntryFts(rowid, note, type) SELECT id, IFNULL(note, ''), type FROM DiaryEntry");
+        }
+    };
+
+    static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("DROP TABLE IF EXISTS PlantFts");
+            database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS PlantFts USING FTS4(name, species, locationHint, description)");
+            database.execSQL("INSERT INTO PlantFts(rowid, name, species, locationHint, description) " +
+                "SELECT id, name, IFNULL(species, ''), IFNULL(locationHint, ''), IFNULL(description, '') FROM Plant");
         }
     };
 
@@ -124,7 +135,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {

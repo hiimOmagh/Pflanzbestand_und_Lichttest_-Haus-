@@ -49,7 +49,13 @@ public interface PlantDao {
     @Transaction
     default long insert(Plant plant) {
         final long id = insertInternal(plant);
-        insertFts(new PlantFts(id, plant.getName(), plant.getDescription() == null ? "" : plant.getDescription()));
+        insertFts(new PlantFts(
+            id,
+            plant.getName(),
+            plant.getSpecies() == null ? "" : plant.getSpecies(),
+            plant.getLocationHint() == null ? "" : plant.getLocationHint(),
+            plant.getDescription() == null ? "" : plant.getDescription()
+        ));
         return id;
     }
 
@@ -67,7 +73,13 @@ public interface PlantDao {
     @Transaction
     default void update(Plant plant) {
         updateInternal(plant);
-        insertFts(new PlantFts(plant.getId(), plant.getName(), plant.getDescription() == null ? "" : plant.getDescription()));
+        insertFts(new PlantFts(
+            plant.getId(),
+            plant.getName(),
+            plant.getSpecies() == null ? "" : plant.getSpecies(),
+            plant.getLocationHint() == null ? "" : plant.getLocationHint(),
+            plant.getDescription() == null ? "" : plant.getDescription()
+        ));
     }
 
     /**

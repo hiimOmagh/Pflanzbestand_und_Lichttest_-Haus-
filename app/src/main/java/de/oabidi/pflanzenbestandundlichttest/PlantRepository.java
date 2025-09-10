@@ -68,7 +68,7 @@ public class PlantRepository {
      * Searches plants matching the given query asynchronously and delivers
      * results on the main thread.
      *
-     * @param query    text to match against name or notes
+     * @param query    text to match against name, notes, species or location
      * @param callback invoked with the resulting list on the main thread
      */
     public void searchPlants(String query, Consumer<List<Plant>> callback) {

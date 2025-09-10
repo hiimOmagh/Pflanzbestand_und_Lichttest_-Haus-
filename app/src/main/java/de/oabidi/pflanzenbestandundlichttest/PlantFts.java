@@ -6,7 +6,7 @@ import androidx.room.Fts4;
 import androidx.room.PrimaryKey;
 
 /**
- * Full-text search entity indexing plant names and notes.
+ * Full-text search entity indexing plant names, species, locations and notes.
  * <p>
  * The {@code rowid} of this table mirrors the {@link Plant#id} allowing fast
  * joins between the FTS index and the content table.
@@ -18,11 +18,15 @@ public class PlantFts {
     @ColumnInfo(name = "rowid")
     public long rowId;
     public String name;
+    public String species;
+    public String locationHint;
     public String description;
 
-    public PlantFts(long rowId, String name, String description) {
+    public PlantFts(long rowId, String name, String species, String locationHint, String description) {
         this.rowId = rowId;
         this.name = name;
+        this.species = species;
+        this.locationHint = locationHint;
         this.description = description;
     }
 }
