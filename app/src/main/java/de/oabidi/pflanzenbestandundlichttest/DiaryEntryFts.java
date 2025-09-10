@@ -18,9 +18,11 @@ public class DiaryEntryFts {
     @ColumnInfo(name = "rowid")
     public long rowId;
     public String note;
+    public String type;
 
-    public DiaryEntryFts(long rowId, String note) {
+    public DiaryEntryFts(long rowId, String note, String type) {
         this.rowId = rowId;
         this.note = note;
+        this.type = type;
     }
 }

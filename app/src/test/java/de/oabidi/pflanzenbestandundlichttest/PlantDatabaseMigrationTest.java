@@ -35,7 +35,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate4To7_keepsPlants() {
+    public void migrate4To9_keepsPlants() {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Create database in version 4 and insert a sample plant.
@@ -50,7 +50,12 @@ public class PlantDatabaseMigrationTest {
 
         // Open database with latest version and run migration.
         PlantDatabase migrated = Room.databaseBuilder(context, PlantDatabase.class, DB_NAME)
-            .addMigrations(PlantDatabase.MIGRATION_4_5, PlantDatabase.MIGRATION_5_6, PlantDatabase.MIGRATION_6_7)
+            .addMigrations(
+                PlantDatabase.MIGRATION_4_5,
+                PlantDatabase.MIGRATION_5_6,
+                PlantDatabase.MIGRATION_6_7,
+                PlantDatabase.MIGRATION_7_8,
+                PlantDatabase.MIGRATION_8_9)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();

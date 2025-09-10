@@ -30,7 +30,9 @@ public interface DiaryDao {
     @Transaction
     default long insert(DiaryEntry entry) {
         long id = insertInternal(entry);
-        insertFts(new DiaryEntryFts(id, entry.getNote() == null ? "" : entry.getNote()));
+        insertFts(new DiaryEntryFts(id,
+            entry.getNote() == null ? "" : entry.getNote(),
+            entry.getType()));
         return id;
     }
 
