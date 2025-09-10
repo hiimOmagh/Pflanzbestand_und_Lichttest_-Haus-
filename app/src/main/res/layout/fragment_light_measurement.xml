@@ -70,4 +70,13 @@
         app:layout_constraintStart_toStartOf="@id/measurement_save_button"
         app:layout_constraintTop_toBottomOf="@id/measurement_save_button" />
 
+    <Button
+        android:id="@+id/measurement_calibrate_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/menu_calibrate"
+        app:layout_constraintStart_toStartOf="@id/location_check_value"
+        app:layout_constraintTop_toBottomOf="@id/location_check_value" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
