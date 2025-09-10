@@ -96,6 +96,17 @@ public interface MeasurementDao {
     int countDaysWithData(long id, long start, long end);
 
     /**
+     * Sums PPFD measurements and counts distinct days within the specified time range.
+     *
+     * @param id    identifier of the plant
+     * @param start start of the time range (inclusive)
+     * @param end   end of the time range (inclusive)
+     * @return aggregated result containing the summed PPFD and day count
+     */
+    @Query("SELECT SUM(ppfd) AS sum, COUNT(DISTINCT date(timeEpoch/86400000)) AS days FROM Measurement WHERE plantId=:id AND timeEpoch BETWEEN :start AND :end")
+    SumAndDays sumPpfdAndCountDays(long id, long start, long end);
+
+    /**
      * Retrieves all stored measurements.
      *
      * @return list of all measurements in the database
@@ -111,4 +122,10 @@ public interface MeasurementDao {
      */
     @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId")
     List<Measurement> getAllForPlant(long plantId);
+
+    /** Simple container for PPFD sum and day count results. */
+    class SumAndDays {
+        public Float sum;
+        public int days;
+    }
 }

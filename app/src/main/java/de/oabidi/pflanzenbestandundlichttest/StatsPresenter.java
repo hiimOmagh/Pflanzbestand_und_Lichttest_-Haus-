@@ -72,17 +72,15 @@ public class StatsPresenter {
         long now = System.currentTimeMillis();
         long end = startOfDay(now) + 86400000L;
         long start = end - DLI_DAYS * 86400000L;
-        repository.sumPpfdForRange(plantId, start, end, sumPpfd ->
-            repository.countDaysWithData(plantId, start, end, dayCount -> {
-                if (dayCount > 0) {
-                    float totalDli = (sumPpfd != null ? sumPpfd : 0f) * 0.0036f;
-                    float avgDli = totalDli / dayCount;
-                    view.showDli(context.getString(R.string.format_dli, avgDli));
-                } else {
-                    view.showDli(context.getString(R.string.dli_placeholder));
-                }
-            })
-        );
+        repository.sumPpfdAndCountDays(plantId, start, end, result -> {
+            if (result.days > 0) {
+                float totalDli = result.sum * 0.0036f;
+                float avgDli = totalDli / result.days;
+                view.showDli(context.getString(R.string.format_dli, avgDli));
+            } else {
+                view.showDli(context.getString(R.string.dli_placeholder));
+            }
+        });
     }
 
     private long startOfDay(long time) {

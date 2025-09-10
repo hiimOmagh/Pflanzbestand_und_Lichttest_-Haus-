@@ -679,6 +679,31 @@ public class PlantRepository {
     }
 
     /**
+     * Calculates the summed PPFD and day count for a plant within the specified time range
+     * and delivers the result on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param start    start of the time range (inclusive)
+     * @param end      end of the time range (inclusive)
+     * @param callback invoked with the aggregated result on the main thread
+     */
+    public void sumPpfdAndCountDays(long plantId, long start, long end, Consumer<MeasurementDao.SumAndDays> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            MeasurementDao.SumAndDays result = measurementDao.sumPpfdAndCountDays(plantId, start, end);
+            if (result == null) {
+                result = new MeasurementDao.SumAndDays();
+            }
+            if (result.sum == null) {
+                result.sum = 0f;
+            }
+            MeasurementDao.SumAndDays finalResult = result;
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(finalResult));
+            }
+        });
+    }
+
+    /**
      * Retrieves all diary entries for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant
