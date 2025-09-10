@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -45,6 +46,8 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
     private String searchQuery = "";
+    private Spinner filterSpinner;
+    private String typeFilter = "";
 
     /**
      * Creates a new instance of the fragment for the given plant.
@@ -87,6 +90,26 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView listView = view.findViewById(R.id.diary_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        filterSpinner = view.findViewById(R.id.diary_filter_spinner);
+        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.diary_filter_labels,
+            android.R.layout.simple_spinner_item);
+        filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        filterSpinner.setAdapter(filterAdapter);
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view1, int position, long id) {
+                String[] typeCodes = getResources().getStringArray(R.array.diary_filter_codes);
+                typeFilter = typeCodes[position];
+                loadEntries();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
 
         adapter = new DiaryEntryAdapter(entry -> {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
@@ -234,7 +257,16 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         if (plantId < 0) {
             return;
         }
-        presenter.loadEntries(searchQuery);
+        String query = searchQuery.trim();
+        if (!typeFilter.isEmpty()) {
+            String typeQuery = "type:" + typeFilter;
+            if (query.isEmpty()) {
+                query = typeQuery;
+            } else {
+                query = typeQuery + " AND " + query;
+            }
+        }
+        presenter.loadEntries(query);
     }
 
     @Override
