@@ -15,7 +15,7 @@ public class LightMathTest {
      * yield 150 µmol·m⁻²·s⁻¹.
      */
     @Test
-    public void ppfdFromLux_calculatesPPFD() {
+    public void ppfdFromLux_returnsExpectedValue() {
         float lux = 10_000f;
         float k = 0.015f; // Approx. 15 µmol·m⁻²·s⁻¹ per 1000 lux
         float expectedPpfd = 150f;
@@ -23,14 +23,31 @@ public class LightMathTest {
     }
 
     /**
+     * A reading of zero lux should always return zero PPFD regardless of
+     * the calibration factor.
+     */
+    @Test
+    public void ppfdFromLux_withZeroLux_returnsZero() {
+        assertEquals(0f, LightMath.ppfdFromLux(0f, 0.02f), 0f);
+    }
+
+    /**
      * Verify daily light integral calculation for a known PPFD value and
      * photoperiod. 200 µmol·m⁻²·s⁻¹ over 16 hours equals 11.52 mol·m⁻²·day⁻¹.
      */
     @Test
-    public void dliFromPpfd_calculatesDli() {
+    public void dliFromPpfd_returnsExpectedValue() {
         float ppfd = 200f;
         float hours = 16f;
         float expectedDli = 11.52f;
         assertEquals(expectedDli, LightMath.dliFromPpfd(ppfd, hours), 0.0001f);
+    }
+
+    /**
+     * Zero light hours should yield a daily light integral of zero.
+     */
+    @Test
+    public void dliFromPpfd_withZeroHours_returnsZero() {
+        assertEquals(0f, LightMath.dliFromPpfd(100f, 0f), 0f);
     }
 }
