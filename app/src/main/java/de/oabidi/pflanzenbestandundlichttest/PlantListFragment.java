@@ -253,12 +253,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         } else if (itemId == R.id.action_import_data) {
             importLauncher.launch(new String[]{"text/csv"});
             return true;
-        } else if (itemId == R.id.action_help) {
-            getParentFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, new OnboardingFragment())
-                .addToBackStack(null)
-                .commit();
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }
