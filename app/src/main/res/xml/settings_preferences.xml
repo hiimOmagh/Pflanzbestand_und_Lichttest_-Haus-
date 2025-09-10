@@ -26,6 +26,21 @@
         android:hint="@string/hint_number" />
 
     <SwitchPreferenceCompat
+        app:key="dli_alerts_enabled"
+        app:title="@string/pref_dli_alerts"
+        app:defaultValue="false"
+        app:summary="@string/pref_dli_alerts_summary" />
+
+    <EditTextPreference
+        app:key="dli_alert_threshold"
+        app:title="@string/pref_dli_alert_threshold"
+        app:defaultValue="3"
+        app:useSimpleSummaryProvider="true"
+        app:dependency="dli_alerts_enabled"
+        android:inputType="number"
+        app:summary="@string/pref_dli_alert_threshold_summary" />
+
+    <SwitchPreferenceCompat
         app:key="auto_backup"
         app:title="@string/pref_auto_backup"
         app:defaultValue="false"

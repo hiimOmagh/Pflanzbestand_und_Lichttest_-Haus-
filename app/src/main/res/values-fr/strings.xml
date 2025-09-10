@@ -3,7 +3,7 @@
     <string name="app_name">Inventaire des plantes et test de lumière</string>
     <string name="no_light_sensor">Aucun capteur de lumière détecté</string>
     <string name="label_calibration">Calibration k:</string>
-    <string name="label_sample_size">Taille de l'échantillon :</string>
+    <string name="label_sample_size">Taille de l\\\\'échantillon :</string>
     <string name="lux_placeholder">Lux moy. : --</string>
     <string name="ppfd_placeholder">PPFD : --</string>
     <string name="dli_placeholder">DLI : --</string>
@@ -13,8 +13,8 @@
     <string name="format_raw_lux">Lux brut : %.2f</string>
     <string name="format_ppfd">PPFD : %.2f µmol/m²/s</string>
     <string name="format_dli">DLI : %.2f mol/m²/jour</string>
-    <string name="location_check_placeholder">Vérification de l'emplacement : --</string>
-    <string name="format_location_check">Vérification de l'emplacement : %s</string>
+    <string name="location_check_placeholder">Vérification de l\\'emplacement : --</string>
+    <string name="format_location_check">Vérification de l\\'emplacement : %s</string>
     <string name="new_plant_name">Nouvelle plante</string>
     <string name="new_plant_description">Une plante nouvellement ajoutée.</string>
     <string name="default_description">Aucune description</string>
@@ -39,14 +39,14 @@
     <string name="error_select_plant">Veuillez sélectionner une plante</string>
     <string name="plant_photo_desc">Photo de la plante</string>
     <string name="plant_photo_desc_format">Photo de %1$s</string>
-    <string name="diary_entry_photo_desc">Photo de l'entrée de journal</string>
+    <string name="diary_entry_photo_desc">Photo de l\\\\\\\\'entrée de journal</string>
     <string name="action_view_diary">Voir le journal</string>
     <string name="action_view_measurements">Voir les mesures</string>
     <string name="action_add_diary_entry">Ajouter une entrée</string>
-    <string name="action_edit_diary_entry">Modifier l'entrée</string>
+    <string name="action_edit_diary_entry">Modifier l\\'entrée</string>
     <string name="action_add_target">Ajouter une cible</string>
     <string name="action_edit_target">Modifier la cible</string>
-    <string name="hint_species_key">Clé d'espèce</string>
+    <string name="hint_species_key">Clé d\\'espèce</string>
     <string name="hint_ppfd_min">PPFD min</string>
     <string name="hint_ppfd_max">PPFD max</string>
     <string name="title_plants">Plantes</string>
@@ -56,7 +56,7 @@
     <string name="title_stats">Statistiques</string>
     <string name="title_settings">Paramètres</string>
     <string name="stats_placeholder">Pas encore de statistiques</string>
-    <string name="stats_no_diary_entries">Aucune entrée de journal pour l'instant</string>
+    <string name="stats_no_diary_entries">Aucune entrée de journal pour l\\'instant</string>
     <string name="format_diary_counts">%1$s : %2$d, %3$s : %4$d, %5$s : %6$d</string>
     <string name="stats_chart_default_content_description">Diagramme en barres PPFD</string>
     <string name="format_stats_chart_content_description">Diagramme en barres PPFD, max %.1f µmol/m²/s</string>
@@ -100,7 +100,7 @@
         <!-- 2: show measurements from the last 30 days -->
         <item>@string/filter_last_30_days</item>
     </string-array>
-    <string name="action_delete_diary_entry">Supprimer l'entrée</string>
+    <string name="action_delete_diary_entry">Supprimer l\\'entrée</string>
     <string name="confirm_delete_diary_entry">Supprimer cette entrée ?</string>
     <string name="action_delete_measurement">Supprimer la mesure</string>
     <string name="confirm_delete_measurement">Supprimer cette mesure ?</string>
@@ -122,11 +122,11 @@
     <string name="action_add_photo">Ajouter une photo</string>
     <string name="export_file_name">plant_data.csv</string>
     <string name="export_success">Exportation réussie</string>
-    <string name="export_failure">Échec de l'exportation</string>
+    <string name="export_failure">Échec de l\\'exportation</string>
     <string name="share_backup">Partager la sauvegarde</string>
     <string name="import_success">Importation réussie</string>
-    <string name="import_failure">Échec de l'importation</string>
-    <string name="import_image_warning">Certaines images n'ont pas pu être restaurées</string>
+    <string name="import_failure">Échec de l\\'importation</string>
+    <string name="import_image_warning">Certaines images n\\\\\\\\\\'ont pas pu être restaurées</string>
     <string name="import_choice_message">Comment les données importées doivent-elles être appliquées ?</string>
     <string name="import_merge">Fusionner</string>
     <string name="import_replace">Remplacer</string>
@@ -134,6 +134,8 @@
     <string name="reminder_mark_done">Terminé</string>
     <string name="reminder_snooze">Répéter</string>
     <string name="reminder_channel">Rappels</string>
+    <string name="reminder_dli_low">DLI de %1$s trop faible depuis %2$d jours</string>
+    <string name="reminder_dli_high">DLI de %1$s trop élevé depuis %2$d jours</string>
     <string name="action_undo">Annuler</string>
     <string name="plant_deleted">Plante supprimée</string>
     <string name="diary_entry_deleted">Entrée supprimée</string>
@@ -142,12 +144,16 @@
     <string name="action_skip">Ignorer</string>
     <string name="reminder_deleted">Rappel supprimé</string>
     <string name="pref_calibration_factor">Facteur de calibration</string>
-    <string name="pref_sample_size">Taille de l'échantillon</string>
+    <string name="pref_sample_size">Taille de l\\'échantillon</string>
     <string name="pref_light_hours">Heures de lumière</string>
     <string name="pref_light_hours_summary">Heures de lumière par jour</string>
+    <string name="pref_dli_alerts">Alertes DLI</string>
+    <string name="pref_dli_alerts_summary">Notifier lorsque le DLI reste hors de la cible de l\\'espèce</string>
+    <string name="pref_dli_alert_threshold">Seuil d\\\\'alerte DLI</string>
+    <string name="pref_dli_alert_threshold_summary">Jours consécutifs avant l\\'alerte</string>
     <string name="hint_number">Nombre</string>
     <string name="pref_auto_backup">Sauvegardes automatiques</string>
-    <string name="pref_auto_backup_summary">Exporter les données chaque semaine vers le stockage de l'application</string>
+    <string name="pref_auto_backup_summary">Exporter les données chaque semaine vers le stockage de l\\'application</string>
     <string name="pref_theme">Thème</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
@@ -171,7 +177,7 @@
     <string name="hint_reminder_message">Message</string>
     <string name="hint_reminder_time">Date (aaaa-MM-jj HH:mm)</string>
     <string name="error_invalid_date">Date invalide</string>
-    <string name="notification_permission_denied">Permission de notification refusée. Les rappels n'apparaîtront pas.</string>
+    <string name="notification_permission_denied">Permission de notification refusée. Les rappels n\\'apparaîtront pas.</string>
     <string name="date_time_pattern">yyyy-MM-dd HH:mm</string>
     <string name="date_pattern">yyyy-MM-dd</string>
     <string name="chart_date_pattern">MM-dd</string>
@@ -181,7 +187,7 @@
     <string name="menu_help">Aide</string>
     <string name="onboarding_plant_setup">Ajoutez vos plantes et suivez-les.</string>
     <string name="onboarding_measurement">Mesurez les niveaux de lumière pour aider vos plantes à prospérer.</string>
-    <string name="onboarding_diary">Enregistrez les activités d'entretien dans le journal.</string>
+    <string name="onboarding_diary">Enregistrez les activités d\\'entretien dans le journal.</string>
     <string name="action_done">Compris</string>
     <string name="test_crash">Test de plantage</string>
 </resources>

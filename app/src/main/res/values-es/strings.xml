@@ -134,6 +134,8 @@
     <string name="reminder_mark_done">Hecho</string>
     <string name="reminder_snooze">Posponer</string>
     <string name="reminder_channel">Recordatorios</string>
+    <string name="reminder_dli_low">DLI de %1$s bajo durante %2$d días</string>
+    <string name="reminder_dli_high">DLI de %1$s alto durante %2$d días</string>
     <string name="action_undo">Deshacer</string>
     <string name="plant_deleted">Planta eliminada</string>
     <string name="diary_entry_deleted">Entrada eliminada</string>
@@ -145,6 +147,10 @@
     <string name="pref_sample_size">Tamaño de muestra</string>
     <string name="pref_light_hours">Horas de luz</string>
     <string name="pref_light_hours_summary">Horas de luz por día</string>
+    <string name="pref_dli_alerts">Alertas de DLI</string>
+    <string name="pref_dli_alerts_summary">Notificar cuando el DLI esté fuera del objetivo de la especie</string>
+    <string name="pref_dli_alert_threshold">Umbral de alerta DLI</string>
+    <string name="pref_dli_alert_threshold_summary">Días consecutivos antes de alertar</string>
     <string name="hint_number">Número</string>
     <string name="widget_no_reminders">Sin recordatorios pendientes</string>
     <string name="widget_measure_now">Medir ahora</string>

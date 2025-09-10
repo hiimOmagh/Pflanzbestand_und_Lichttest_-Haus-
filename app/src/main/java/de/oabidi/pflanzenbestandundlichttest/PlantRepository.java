@@ -12,6 +12,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.List;
+import java.util.Calendar;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -154,6 +155,7 @@ public class PlantRepository {
     public Future<?> insertMeasurement(Measurement measurement, Runnable callback) {
         return PlantDatabase.databaseWriteExecutor.submit(() -> {
             measurementDao.insert(measurement);
+            checkDliAlerts(measurement.getPlantId());
             if (callback != null) {
                 mainHandler.post(callback);
             }
@@ -190,6 +192,103 @@ public class PlantRepository {
                 mainHandler.post(callback);
             }
         });
+    }
+
+    private void checkDliAlerts(long plantId) {
+        SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+        if (!prefs.getBoolean(SettingsKeys.KEY_DLI_ALERTS_ENABLED, false)) {
+            return;
+        }
+        String thresholdStr = prefs.getString(SettingsKeys.KEY_DLI_ALERT_THRESHOLD, "3");
+        int threshold;
+        try {
+            threshold = Integer.parseInt(thresholdStr);
+        } catch (NumberFormatException e) {
+            threshold = 3;
+        }
+        if (threshold <= 0) {
+            return;
+        }
+        String hoursStr = prefs.getString(SettingsKeys.KEY_LIGHT_HOURS, "12");
+        float lightHours;
+        try {
+            lightHours = Float.parseFloat(hoursStr);
+        } catch (NumberFormatException e) {
+            lightHours = 12f;
+        }
+
+        Plant plant = plantDao.findById(plantId);
+        if (plant == null || plant.getSpecies() == null || plant.getSpecies().isEmpty()) {
+            return;
+        }
+        SpeciesTarget target = speciesTargetDao.findBySpeciesKey(plant.getSpecies());
+        if (target == null) {
+            return;
+        }
+
+        float minDli = LightMath.dliFromPpfd(target.getPpfdMin(), lightHours);
+        float maxDli = LightMath.dliFromPpfd(target.getPpfdMax(), lightHours);
+
+        long todayStart = startOfDay(System.currentTimeMillis());
+        int lowStreak = 0;
+        int highStreak = 0;
+        for (int i = 0; i < threshold; i++) {
+            long start = todayStart - i * 86400000L;
+            long end = start + 86400000L;
+            List<Measurement> list = measurementDao.getForPlantInRange(plantId, start, end);
+            if (list.isEmpty()) {
+                break;
+            }
+            Measurement m = list.get(0);
+            Float dli = m.getDli();
+            if (dli == null) {
+                Float ppfd = m.getPpfd();
+                if (ppfd != null) {
+                    dli = LightMath.dliFromPpfd(ppfd, lightHours);
+                }
+            }
+            if (dli == null) {
+                break;
+            }
+            if (dli < minDli) {
+                lowStreak++;
+                highStreak = 0;
+            } else if (dli > maxDli) {
+                highStreak++;
+                lowStreak = 0;
+            } else {
+                break;
+            }
+        }
+
+        if (lowStreak >= threshold || highStreak >= threshold) {
+            String message;
+            if (lowStreak >= threshold) {
+                message = context.getString(R.string.reminder_dli_low, plant.getName(), threshold);
+            } else {
+                message = context.getString(R.string.reminder_dli_high, plant.getName(), threshold);
+            }
+            List<Reminder> reminders = reminderDao.getForPlant(plantId);
+            for (Reminder r : reminders) {
+                if (message.equals(r.getMessage())) {
+                    return;
+                }
+            }
+            long triggerAt = System.currentTimeMillis();
+            Reminder reminder = new Reminder(triggerAt, message, plantId);
+            long id = reminderDao.insert(reminder);
+            ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id, plantId);
+        }
+    }
+
+    private long startOfDay(long time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(time);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     /**

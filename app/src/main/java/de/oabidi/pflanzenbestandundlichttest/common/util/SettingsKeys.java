@@ -29,6 +29,16 @@ public final class SettingsKeys {
     public static final String KEY_LIGHT_HOURS = "light_hours";
 
     /**
+     * Enables alerts when DLI stays outside the species target range.
+     */
+    public static final String KEY_DLI_ALERTS_ENABLED = "dli_alerts_enabled";
+
+    /**
+     * Consecutive days threshold before triggering DLI alerts.
+     */
+    public static final String KEY_DLI_ALERT_THRESHOLD = "dli_alert_threshold";
+
+    /**
      * Identifier of the plant currently selected by the user.
      */
     public static final String KEY_SELECTED_PLANT = "selectedPlantId";

@@ -133,6 +133,8 @@
     <string name="reminder_mark_done">Done</string>
     <string name="reminder_snooze">Snooze</string>
     <string name="reminder_channel">Reminders</string>
+    <string name="reminder_dli_low">DLI for %1$s below target for %2$d days</string>
+    <string name="reminder_dli_high">DLI for %1$s above target for %2$d days</string>
     <string name="action_undo">Undo</string>
     <string name="plant_deleted">Plant deleted</string>
     <string name="diary_entry_deleted">Entry deleted</string>
@@ -144,6 +146,10 @@
     <string name="pref_sample_size">Sample size</string>
     <string name="pref_light_hours">Light hours</string>
     <string name="pref_light_hours_summary">Hours of light per day</string>
+    <string name="pref_dli_alerts">DLI alerts</string>
+    <string name="pref_dli_alerts_summary">Notify when DLI stays outside the species target</string>
+    <string name="pref_dli_alert_threshold">DLI alert threshold</string>
+    <string name="pref_dli_alert_threshold_summary">Consecutive days before alert</string>
     <string name="hint_number">Number</string>
     <string name="pref_auto_backup">Automatic backups</string>
     <string name="pref_auto_backup_summary">Export data weekly to app storage</string>

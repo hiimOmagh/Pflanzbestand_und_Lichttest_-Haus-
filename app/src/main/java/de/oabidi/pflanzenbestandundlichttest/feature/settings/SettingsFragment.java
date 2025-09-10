@@ -39,6 +39,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             lightHoursPreference.setOnPreferenceChangeListener(this::validatePositiveFloat);
         }
 
+        EditTextPreference dliThresholdPreference = findPreference(SettingsKeys.KEY_DLI_ALERT_THRESHOLD);
+        if (dliThresholdPreference != null) {
+            dliThresholdPreference.setOnPreferenceChangeListener(this::validateSampleSize);
+        }
+
         SwitchPreferenceCompat backupPref = findPreference(SettingsKeys.KEY_AUTO_BACKUP);
         if (backupPref != null) {
             backupPref.setOnPreferenceChangeListener((pref, newValue) -> {
