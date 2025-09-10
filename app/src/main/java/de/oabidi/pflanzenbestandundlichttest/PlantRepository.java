@@ -453,6 +453,21 @@ public class PlantRepository {
     }
 
     /**
+     * Retrieves all measurements for a plant asynchronously and delivers them on the main thread.
+     *
+     * @param plantId  identifier of the plant
+     * @param callback invoked with the resulting list on the main thread
+     */
+    public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Measurement> result = measurementDao.getAllForPlant(plantId);
+            if (callback != null) {
+                mainHandler.post(() -> callback.accept(result));
+            }
+        });
+    }
+
+    /**
      * Returns all diary entries for the given plant.
      * <p>
      * This method must be invoked on a background thread.

@@ -98,6 +98,7 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract PlantDao plantDao();
 
+    /** Provides access to stored light measurements. */
     public abstract MeasurementDao measurementDao();
 
     public abstract DiaryDao diaryDao();

@@ -16,8 +16,8 @@ public interface MeasurementDao {
     /**
      * Persists a measurement in the database.
      *
-     * <p>The {@link Measurement} contains both PPFD and DLI values which will
-     * be stored for later retrieval.</p>
+     * <p>The {@link Measurement} contains the recorded average lux and optional
+     * PPFD value which will be stored for later retrieval.</p>
      *
      * @param measurement the entity to insert
      * @return the generated row ID

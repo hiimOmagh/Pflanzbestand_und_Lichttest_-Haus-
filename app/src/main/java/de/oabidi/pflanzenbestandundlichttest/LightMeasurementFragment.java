@@ -15,9 +15,6 @@ import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.Toast;
-import android.widget.EditText;
-
-import androidx.appcompat.app.AlertDialog;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -117,23 +114,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
-                EditText input = new EditText(requireContext());
-                input.setHint(R.string.measurement_add_note);
-                new AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.measurement_add_note)
-                    .setView(input)
-                    .setPositiveButton(R.string.measurement_save, (d, w) -> {
-                        String note = input.getText().toString().trim();
-                        Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd, lastDli, note.isEmpty() ? null : note);
-                        repository.insertMeasurement(m, () ->
-                            Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
-                    })
-                    .setNegativeButton(R.string.action_skip, (d, w) -> {
-                        Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd, lastDli, null);
-                        repository.insertMeasurement(m, () ->
-                            Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
-                    })
-                    .show();
+                Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd, lastDli, null);
+                repository.insertMeasurement(m, () ->
+                    Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
             } else {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
             }

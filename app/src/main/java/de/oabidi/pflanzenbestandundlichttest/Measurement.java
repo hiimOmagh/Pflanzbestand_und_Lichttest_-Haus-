@@ -8,6 +8,10 @@ import androidx.room.PrimaryKey;
 
 /**
  * Room entity capturing a single light measurement for a plant.
+ *
+ * <p>Each record stores the average lux value and may optionally include the
+ * corresponding PPFD calculation. The moment the sample was taken is tracked
+ * via {@code timeEpoch}.</p>
  */
 @Entity(
     foreignKeys = @ForeignKey(
