@@ -85,9 +85,9 @@ On first launch the app seeds the database with common species light requirement
 
 ## Localization
 
-The project currently provides English and Spanish translations. To contribute another language,
-copy `app/src/main/res/values/strings.xml` into a new `values-xx` directory, translate all
-strings, and open a pull request.
+The project currently provides English, German, Spanish, and French translations. French strings
+were contributed by the community. To add another language, copy `app/src/main/res/values/strings.xml`
+into a new `values-xx` directory, translate all strings, and open a pull request.
 
 ## Repository threading
 

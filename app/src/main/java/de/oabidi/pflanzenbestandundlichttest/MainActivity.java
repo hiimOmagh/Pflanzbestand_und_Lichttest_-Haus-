@@ -99,10 +99,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Creates a button that mimics a crash when pressed
         Button crashButton = new Button(this);
-        crashButton.setText("Test Crash");
+        crashButton.setText(R.string.test_crash);
         crashButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                throw new RuntimeException("Test Crash"); // Force a crash
+                throw new RuntimeException(getString(R.string.test_crash)); // Force a crash
             }
         });
 
