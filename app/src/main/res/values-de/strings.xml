@@ -40,7 +40,6 @@
     <string name="plant_photo_desc">Pflanzenfoto</string>
     <string name="plant_photo_desc_format">Foto von %1$s</string>
     <string name="diary_entry_photo_desc">Tagebucheintragsfoto</string>
-    <string name="plant_photo">Pflanzenfoto</string>
     <string name="action_view_diary">Tagebuch anzeigen</string>
     <string name="action_view_measurements">Messungen anzeigen</string>
     <string name="action_add_diary_entry">Eintrag hinzufügen</string>
@@ -61,6 +60,7 @@
     <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
     <string name="stats_chart_default_content_description">PPFD-Balkendiagramm</string>
     <string name="format_stats_chart_content_description">PPFD-Balkendiagramm, max %.1f µmol/m²/s</string>
+    <string name="select_plants">Pflanzen auswählen</string>
     <string name="diary_hint_note">Notiz</string>
     <string name="diary_search_hint">Einträge suchen</string>
     <string name="diary_type_water">Wasser</string>
@@ -142,6 +142,7 @@
     <string name="measurement_deleted">Messung gelöscht</string>
     <string name="measurement_add_note">Notiz hinzufügen</string>
     <string name="action_skip">Überspringen</string>
+    <string name="reminder_deleted">Erinnerung gelöscht</string>
     <string name="pref_calibration_factor">Kalibrierungsfaktor</string>
     <string name="pref_sample_size">Stichprobengröße</string>
     <string name="pref_light_hours">Lichtstunden</string>
@@ -151,6 +152,22 @@
     <string name="pref_dli_alert_threshold">DLI-Schwellenwert</string>
     <string name="pref_dli_alert_threshold_summary">Aufeinanderfolgende Tage vor Benachrichtigung</string>
     <string name="hint_number">Zahl</string>
+    <string name="pref_auto_backup">Automatische Backups</string>
+    <string name="pref_auto_backup_summary">Daten wöchentlich in den App-Speicher exportieren</string>
+    <string name="pref_theme">Theme</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_system">Systemstandard</string>
+    <string-array name="theme_entries">
+        <item>@string/theme_light</item>
+        <item>@string/theme_dark</item>
+        <item>@string/theme_system</item>
+    </string-array>
+    <string-array name="theme_values">
+        <item>light</item>
+        <item>dark</item>
+        <item>system</item>
+    </string-array>
     <string name="widget_no_reminders">Keine anstehenden Erinnerungen</string>
     <string name="widget_measure_now">Jetzt messen</string>
     <string name="range_low">Niedrig</string>
@@ -161,9 +178,16 @@
     <string name="hint_reminder_time">Datum (JJJJ-MM-TT HH:mm)</string>
     <string name="error_invalid_date">Ungültiges Datum</string>
     <string name="notification_permission_denied">Benachrichtigungsberechtigung verweigert. Erinnerungen werden nicht angezeigt.</string>
+    <string name="date_time_pattern">yyyy-MM-dd HH:mm</string>
+    <string name="date_pattern">yyyy-MM-dd</string>
+    <string name="chart_date_pattern">MM-dd</string>
+    <string name="list_separator">, </string>
+    <string name="format_species_target">%1$s: %2$s - %3$s</string>
+    <string name="format_reminder_item">%1$s - %2$s</string>
     <string name="menu_help">Hilfe</string>
     <string name="onboarding_plant_setup">Füge deine Pflanzen hinzu und behalte den Überblick.</string>
     <string name="onboarding_measurement">Miss die Lichtwerte, damit deine Pflanzen gedeihen.</string>
     <string name="onboarding_diary">Halte Pflegeaktivitäten im Tagebuch fest.</string>
     <string name="action_done">Verstanden</string>
+    <string name="test_crash">Testabsturz</string>
 </resources>
