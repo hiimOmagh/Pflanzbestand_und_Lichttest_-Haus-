@@ -110,6 +110,7 @@ public class ExportManager {
                     }
                     totalStepsHolder[0] = 5 + photoCount + 1; // Assign to holder
 
+                    writer.write("Version,1\n\n");
                     writer.write("Plants\n");
                     writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
                     for (Plant p : plants) {

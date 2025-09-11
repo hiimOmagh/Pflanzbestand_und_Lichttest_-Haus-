@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,6 +48,7 @@ import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
  */
 public class ImportManager {
     private static final String TAG = "ImportManager";
+    private static final int SUPPORTED_VERSION = 1;
 
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -173,6 +175,29 @@ public class ImportManager {
                                    AtomicBoolean warning, @Nullable ProgressCallback progressCallback,
                                    AtomicInteger progress,
                                    int totalSteps) throws IOException {
+        String firstLine = reader.readLine();
+        if (firstLine == null || !firstLine.startsWith("Version,")) {
+            mainHandler.post(() ->
+                Toast.makeText(context, "Missing export version", Toast.LENGTH_LONG).show());
+            return false;
+        }
+        int version;
+        try {
+            version = Integer.parseInt(firstLine.split(",", 2)[1]);
+        } catch (Exception e) {
+            mainHandler.post(() ->
+                Toast.makeText(context, "Invalid export version", Toast.LENGTH_LONG).show());
+            return false;
+        }
+        if (version != SUPPORTED_VERSION) {
+            final int badVersion = version;
+            mainHandler.post(() ->
+                Toast.makeText(context,
+                    "Unsupported export version " + badVersion,
+                    Toast.LENGTH_LONG).show());
+            return false;
+        }
+
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
         final boolean[] importedAny = {false};

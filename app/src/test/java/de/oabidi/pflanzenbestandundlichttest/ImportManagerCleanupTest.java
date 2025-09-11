@@ -66,7 +66,9 @@ public class ImportManagerCleanupTest {
             fos.write(new byte[]{1});
         }
 
-        String csv = "Plants\n" +
+        String csv = "Version,1\n" +
+            "\n" +
+            "Plants\n" +
             "id,name,description,species,location,acquired,photo\n" +
             "1,newPlant,desc,species,loc,0,photo.jpg\n";
 
