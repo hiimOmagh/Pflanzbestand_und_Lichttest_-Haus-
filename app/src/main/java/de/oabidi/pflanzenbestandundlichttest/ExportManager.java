@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +28,7 @@ import java.util.zip.ZipOutputStream;
  * Manager responsible for exporting measurements and diary entries to a CSV file.
  */
 public class ExportManager {
+    private static final String TAG = "ExportManager";
     private final Context context;
     private final PlantRepository repository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -67,191 +69,170 @@ public class ExportManager {
     private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                                 @Nullable ProgressCallback progressCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            boolean success = false; // Overall success flag
+            boolean success = false;
             File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
             if (!tempDir.mkdirs()) {
                 tempDir = null;
             }
 
-            final int[] progress = {0}; // Moved to outer scope
-            final int[] totalStepsHolder = {0}; // Holder for totalSteps in outer scope
+            int totalSteps = 3;
+            int[] progress = {0};
 
             if (tempDir != null) {
-                File csvFile = new File(tempDir, "data.csv");
-                boolean csvPhaseOk = false; // Tracks success of CSV writing phase
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
-                    List<Plant> plants;
-                    List<Measurement> measurements;
-                    List<DiaryEntry> diaryEntries;
-                    List<Reminder> reminders;
-                    List<SpeciesTarget> targets;
-                    try {
-                        if (plantId >= 0) {
-                            Plant p = repository.getPlant(plantId).get();
-                            plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
-                            measurements = repository.getMeasurementsForPlant(plantId).get();
-                            diaryEntries = repository.diaryEntriesForPlant(plantId).get();
-                            reminders = repository.getRemindersForPlant(plantId).get();
-                        } else {
-                            plants = repository.getAllPlants().get();
-                            measurements = repository.getAllMeasurements().get();
-                            diaryEntries = repository.getAllDiaryEntries().get();
-                            reminders = repository.getAllReminders().get();
-                        }
-                        targets = repository.getAllSpeciesTargets().get();
-                    } catch (ExecutionException | InterruptedException e) {
-                        throw new IOException("Failed to load data for export", e);
-                    }
+                try {
+                    ExportData data = loadData(plantId);
+                    notifyProgress(progressCallback, progress, totalSteps);
 
-                    int photoCount = 0;
-                    for (Plant p : plants) {
-                        if (p.getPhotoUri() != null) {
-                            photoCount++;
-                        }
-                    }
-                    for (DiaryEntry d : diaryEntries) {
-                        if (d.getPhotoUri() != null && !d.getPhotoUri().isEmpty()) {
-                            photoCount++;
-                        }
-                    }
-                    totalStepsHolder[0] = 5 + photoCount + 1; // Assign to holder
+                    writeCsv(tempDir, data);
+                    notifyProgress(progressCallback, progress, totalSteps);
 
-                    writer.write("Version,1\n\n");
-                    writer.write("Plants\n");
-                    writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
-                    for (Plant p : plants) {
-                        String photoName = "";
-                        if (p.getPhotoUri() != null) {
-                            photoName = "plant_" + p.getId() + "_" + getFileName(p.getPhotoUri());
-                            copyUriToFile(p.getPhotoUri(), new File(tempDir, photoName));
-                        }
-                        writer.write(String.format(Locale.US,
-                            "%d,%s,%s,%s,%s,%d,%s\n",
-                            p.getId(),
-                            escape(p.getName()),
-                            escape(p.getDescription()),
-                            escape(p.getSpecies()),
-                            escape(p.getLocationHint()),
-                            p.getAcquiredAtEpoch(),
-                            escape(photoName)));
-                    }
-                    progress[0]++;
-                    if (progressCallback != null) {
-                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
-                    }
+                    zipFiles(uri, tempDir);
+                    notifyProgress(progressCallback, progress, totalSteps);
 
-                    writer.write("\nSpeciesTargets\n");
-                    writer.write("speciesKey,ppfdMin,ppfdMax\n");
-                    for (SpeciesTarget t : targets) {
-                        writer.write(String.format(Locale.US, "%s,%f,%f\n",
-                            escape(t.getSpeciesKey()),
-                            t.getPpfdMin(),
-                            t.getPpfdMax()));
-                    }
-                    progress[0]++;
-                    if (progressCallback != null) {
-                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
-                    }
-
-                    writer.write("\nMeasurements\n");
-                    writer.write("id,plantId,timeEpoch,luxAvg,ppfd\n"); // Corrected header
-                    for (Measurement m : measurements) {
-                        writer.write(String.format(Locale.US, "%d,%d,%d,%f,%s\n",
-                            m.getId(),
-                            m.getPlantId(),
-                            m.getTimeEpoch(),
-                            m.getLuxAvg(),
-                            m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""
-                        ));
-                    }
-                    progress[0]++;
-                    if (progressCallback != null) {
-                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
-                    }
-
-                    writer.write("\nDiaryEntries\n");
-                    writer.write("id,plantId,timeEpoch,type,note,photoUri\n");
-                    for (DiaryEntry d : diaryEntries) {
-                        String photoName = "";
-                        if (d.getPhotoUri() != null && !d.getPhotoUri().isEmpty()) {
-                            Uri dUri = Uri.parse(d.getPhotoUri());
-                            photoName = "diary_" + d.getId() + "_" + getFileName(dUri);
-                            copyUriToFile(dUri, new File(tempDir, photoName));
-                        }
-                        writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s\n",
-                            d.getId(),
-                            d.getPlantId(),
-                            d.getTimeEpoch(),
-                            escape(d.getType()),
-                            escape(d.getNote()),
-                            escape(photoName)));
-                    }
-                    progress[0]++;
-                    if (progressCallback != null) {
-                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
-                    }
-
-                    writer.write("\nReminders\n");
-                    writer.write("id,plantId,triggerAt,message\n");
-                    for (Reminder r : reminders) {
-                        writer.write(String.format(Locale.US, "%d,%d,%d,%s\n",
-                            r.getId(),
-                            r.getPlantId(),
-                            r.getTriggerAt(),
-                            escape(r.getMessage())));
-                    }
-                    writer.flush();
-                    progress[0]++;
-                    if (progressCallback != null) {
-                        mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0]));
-                    }
-                    csvPhaseOk = true; // CSV writing successful
+                    success = true;
                 } catch (IOException e) {
-                    // csvPhaseOk remains false, error logged if necessary
+                    Log.e(TAG, "Export failed", e);
                 }
-
-                if (csvPhaseOk) {
-                    boolean zipPhaseOk = false; // Tracks success of zipping phase
-                    try (OutputStream os = context.getContentResolver().openOutputStream(uri);
-                         ZipOutputStream zos = new ZipOutputStream(os)) {
-                        File[] files = tempDir.listFiles();
-                        if (files != null) {
-                            byte[] buffer = new byte[8192];
-                            for (File f : files) {
-                                try (InputStream fis = new FileInputStream(f)) {
-                                    zos.putNextEntry(new ZipEntry(f.getName()));
-                                    int len;
-                                    while ((len = fis.read(buffer)) != -1) {
-                                        zos.write(buffer, 0, len);
-                                    }
-                                    zos.closeEntry();
-                                }
-                                progress[0]++; // Now in scope
-                                if (progressCallback != null) {
-                                    mainHandler.post(() -> progressCallback.onProgress(progress[0], totalStepsHolder[0])); // Now in scope
-                                }
-                            }
-                        }
-                        zipPhaseOk = true; // Zipping successful
-                    } catch (IOException e) {
-                        // zipPhaseOk remains false, error logged if necessary
-                    } finally {
-                        deleteRecursive(tempDir); // Delete tempDir after zipping attempt
-                    }
-                    success = zipPhaseOk; // Overall success depends on zipping success
-                } else {
-                    // CSV phase failed
-                    if (tempDir.exists()) { // tempDir might exist even if CSV writing failed partway
-                        deleteRecursive(tempDir);
-                    }
-                    success = false; // Ensure overall success is false
-                }
-            } else { // tempDir creation failed
-                success = false;
             }
-            final boolean result = success;
+
+            boolean result = success;
             mainHandler.post(() -> callback.onComplete(result));
         });
+    }
+
+    private ExportData loadData(long plantId) throws IOException {
+        try {
+            List<Plant> plants;
+            List<Measurement> measurements;
+            List<DiaryEntry> diaryEntries;
+            List<Reminder> reminders;
+            if (plantId >= 0) {
+                Plant p = repository.getPlant(plantId).get();
+                plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
+                measurements = repository.getMeasurementsForPlant(plantId).get();
+                diaryEntries = repository.diaryEntriesForPlant(plantId).get();
+                reminders = repository.getRemindersForPlant(plantId).get();
+            } else {
+                plants = repository.getAllPlants().get();
+                measurements = repository.getAllMeasurements().get();
+                diaryEntries = repository.getAllDiaryEntries().get();
+                reminders = repository.getAllReminders().get();
+            }
+            List<SpeciesTarget> targets = repository.getAllSpeciesTargets().get();
+            return new ExportData(plants, measurements, diaryEntries, reminders, targets);
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e(TAG, "Error loading data", e);
+            throw new IOException("Failed to load data", e);
+        }
+    }
+
+    private File writeCsv(File tempDir, ExportData data) throws IOException {
+        File csvFile = new File(tempDir, "data.csv");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
+            writer.write("Version,1\n\n");
+            writer.write("Plants\n");
+            writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+            for (Plant p : data.plants) {
+                String photoName = "";
+                if (p.getPhotoUri() != null) {
+                    photoName = "plant_" + p.getId() + "_" + getFileName(p.getPhotoUri());
+                    copyUriToFile(p.getPhotoUri(), new File(tempDir, photoName));
+                }
+                writer.write(String.format(Locale.US,
+                    "%d,%s,%s,%s,%s,%d,%s\n",
+                    p.getId(),
+                    escape(p.getName()),
+                    escape(p.getDescription()),
+                    escape(p.getSpecies()),
+                    escape(p.getLocationHint()),
+                    p.getAcquiredAtEpoch(),
+                    escape(photoName)));
+            }
+
+            writer.write("\nSpeciesTargets\n");
+            writer.write("speciesKey,ppfdMin,ppfdMax\n");
+            for (SpeciesTarget t : data.targets) {
+                writer.write(String.format(Locale.US, "%s,%f,%f\n",
+                    escape(t.getSpeciesKey()),
+                    t.getPpfdMin(),
+                    t.getPpfdMax()));
+            }
+
+            writer.write("\nMeasurements\n");
+            writer.write("id,plantId,timeEpoch,luxAvg,ppfd\n");
+            for (Measurement m : data.measurements) {
+                writer.write(String.format(Locale.US, "%d,%d,%d,%f,%s\n",
+                    m.getId(),
+                    m.getPlantId(),
+                    m.getTimeEpoch(),
+                    m.getLuxAvg(),
+                    m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""));
+            }
+
+            writer.write("\nDiaryEntries\n");
+            writer.write("id,plantId,timeEpoch,type,note,photoUri\n");
+            for (DiaryEntry d : data.diaryEntries) {
+                String photoName = "";
+                if (d.getPhotoUri() != null && !d.getPhotoUri().isEmpty()) {
+                    Uri dUri = Uri.parse(d.getPhotoUri());
+                    photoName = "diary_" + d.getId() + "_" + getFileName(dUri);
+                    copyUriToFile(dUri, new File(tempDir, photoName));
+                }
+                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s\n",
+                    d.getId(),
+                    d.getPlantId(),
+                    d.getTimeEpoch(),
+                    escape(d.getType()),
+                    escape(d.getNote()),
+                    escape(photoName)));
+            }
+
+            writer.write("\nReminders\n");
+            writer.write("id,plantId,triggerAt,message\n");
+            for (Reminder r : data.reminders) {
+                writer.write(String.format(Locale.US, "%d,%d,%d,%s\n",
+                    r.getId(),
+                    r.getPlantId(),
+                    r.getTriggerAt(),
+                    escape(r.getMessage())));
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error writing CSV", e);
+            throw e;
+        }
+        return csvFile;
+    }
+
+    private void zipFiles(Uri uri, File tempDir) throws IOException {
+        try (OutputStream os = context.getContentResolver().openOutputStream(uri);
+             ZipOutputStream zos = new ZipOutputStream(os)) {
+            File[] files = tempDir.listFiles();
+            if (files != null) {
+                byte[] buffer = new byte[8192];
+                for (File f : files) {
+                    try (InputStream fis = new FileInputStream(f)) {
+                        zos.putNextEntry(new ZipEntry(f.getName()));
+                        int len;
+                        while ((len = fis.read(buffer)) != -1) {
+                            zos.write(buffer, 0, len);
+                        }
+                        zos.closeEntry();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error creating ZIP", e);
+            throw e;
+        } finally {
+            deleteRecursive(tempDir);
+        }
+    }
+
+    private void notifyProgress(@Nullable ProgressCallback progressCallback, int[] progress, int totalSteps) {
+        progress[0]++;
+        if (progressCallback != null) {
+            mainHandler.post(() -> progressCallback.onProgress(progress[0], totalSteps));
+        }
     }
 
     private void copyUriToFile(Uri source, File dest) throws IOException {
@@ -270,7 +251,6 @@ public class ExportManager {
 
     private String getFileName(Uri uri) {
         String name = uri.getLastPathSegment();
-        // Basic sanitization, consider more robust solution if needed for security
         if (name != null) {
             name = name.replaceAll("[/:*?\"<>|]", "_");
         }
@@ -299,5 +279,22 @@ public class ExportManager {
             escaped = "\"" + escaped + "\"";
         }
         return escaped;
+    }
+
+    private static class ExportData {
+        final List<Plant> plants;
+        final List<Measurement> measurements;
+        final List<DiaryEntry> diaryEntries;
+        final List<Reminder> reminders;
+        final List<SpeciesTarget> targets;
+
+        ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
+                   List<Reminder> reminders, List<SpeciesTarget> targets) {
+            this.plants = plants;
+            this.measurements = measurements;
+            this.diaryEntries = diaryEntries;
+            this.reminders = reminders;
+            this.targets = targets;
+        }
     }
 }
