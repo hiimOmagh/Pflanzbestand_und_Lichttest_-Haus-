@@ -7,6 +7,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
@@ -113,6 +115,15 @@ public class MainActivity extends AppCompatActivity implements MainView {
     @Override
     public void launchImport(String[] mimeTypes) {
         importLauncher.launch(mimeTypes);
+    }
+
+    @Override
+    public void showImportWarnings(String message) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.import_warnings_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show();
     }
 
     /**

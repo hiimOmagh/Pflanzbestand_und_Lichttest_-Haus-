@@ -83,9 +83,13 @@ public class MainPresenterImpl implements MainPresenter {
     @Override
     public void handleImportResult(@Nullable Uri uri) {
         if (uri != null) {
-            importManager.importData(uri, ImportManager.Mode.MERGE, (success, hadWarnings) -> {
+            importManager.importData(uri, ImportManager.Mode.MERGE, (success, warnings) -> {
                 int msg = success ? R.string.import_success : R.string.import_failure;
                 view.showToast(msg);
+                if (!warnings.isEmpty()) {
+                    String message = ImportManager.summarizeWarnings(warnings);
+                    view.showImportWarnings(message);
+                }
             });
         } else {
             view.showToast(R.string.import_failure);

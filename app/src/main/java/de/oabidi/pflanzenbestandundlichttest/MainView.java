@@ -29,4 +29,7 @@ public interface MainView {
 
     /** Launch an import document picker with the specified MIME types. */
     void launchImport(String[] mimeTypes);
+
+    /** Display summarized warnings after an import. */
+    void showImportWarnings(String message);
 }
