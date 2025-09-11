@@ -27,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 /**
@@ -36,8 +37,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private PlantListPresenter presenter;
     private PlantAdapter adapter;
     private List<Plant> plants = new ArrayList<>();
-    private ExportManager exportManager;
-    private ImportManager importManager;
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
 
@@ -70,29 +69,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
             if (uri != null) {
                 showProgress();
-                exportManager.export(uri, success -> {
-                    hideProgress();
-                    if (isAdded()) {
-                        if (success) {
-                            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                            shareIntent.setType("application/zip");
-                            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            Snackbar.make(requireView(), R.string.export_success, Snackbar.LENGTH_LONG)
-                                .setAction(R.string.share_backup, v -> startActivity(
-                                    Intent.createChooser(shareIntent,
-                                        getString(R.string.share_backup))))
-                                .show();
-                        } else {
-                            Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }, (current, total) -> {
-                    if (isAdded()) {
-                        progressBar.setMax(total);
-                        progressBar.setProgress(current);
-                    }
-                });
+                presenter.exportData(uri);
             } else if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
             }
@@ -121,21 +98,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
         showProgress();
-        importManager.importData(uri, mode, (success, warnings) -> {
-            hideProgress();
-            if (isAdded()) {
-                int msg = success ? R.string.import_success : R.string.import_failure;
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-                if (success && warnings != null && !warnings.isEmpty()) {
-                    showWarningDialog(warnings);
-                }
-            }
-        }, (current, total) -> {
-            if (isAdded()) {
-                progressBar.setMax(total);
-                progressBar.setProgress(current);
-            }
-        });
+        presenter.importData(uri, mode);
     }
 
     private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
@@ -161,10 +124,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
-        presenter = new PlantListPresenter(this, requireContext().getApplicationContext());
+        ExportManager exportManager = new ExportManager(requireContext().getApplicationContext());
+        ImportManager importManager = new ImportManager(requireContext().getApplicationContext());
+        presenter = new PlantListPresenter(this, requireContext().getApplicationContext(), exportManager, importManager);
         presenter.refreshPlants();
-        exportManager = new ExportManager(requireContext().getApplicationContext());
-        importManager = new ImportManager(requireContext().getApplicationContext());
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
             (requestKey, bundle) -> presenter.refreshPlants());
@@ -189,9 +152,63 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     @Override
+    public void showSearchResults(List<Plant> plants) {
+        adapter.submitList(new ArrayList<>(plants));
+    }
+
+    @Override
     public void showError(String message) {
         if (isAdded()) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onExportProgress(int current, int total) {
+        if (isAdded() && progressBar != null) {
+            progressBar.setMax(total);
+            progressBar.setProgress(current);
+        }
+    }
+
+    @Override
+    public void onExportResult(boolean success, Uri uri) {
+        hideProgress();
+        if (!isAdded()) {
+            return;
+        }
+        if (success) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("application/zip");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Snackbar.make(requireView(), R.string.export_success, Snackbar.LENGTH_LONG)
+                .setAction(R.string.share_backup, v -> startActivity(
+                    Intent.createChooser(shareIntent, getString(R.string.share_backup))))
+                .show();
+        } else {
+            Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onImportProgress(int current, int total) {
+        if (isAdded() && progressBar != null) {
+            progressBar.setMax(total);
+            progressBar.setProgress(current);
+        }
+    }
+
+    @Override
+    public void onImportResult(boolean success, List<ImportManager.ImportWarning> warnings) {
+        hideProgress();
+        if (!isAdded()) {
+            return;
+        }
+        int msg = success ? R.string.import_success : R.string.import_failure;
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+        if (success && warnings != null && !warnings.isEmpty()) {
+            showWarningDialog(warnings);
         }
     }
 
@@ -263,20 +280,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     private void filterPlants(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            adapter.submitList(new ArrayList<>(plants));
-            return;
-        }
-        Context ctx = getContext();
-        if (ctx == null) {
-            return;
-        }
-        PlantRepository repository = ((PlantApp) ctx.getApplicationContext()).getRepository();
-        repository.searchPlants(query, result -> {
-            if (isAdded()) {
-                adapter.submitList(result);
-            }
-        });
+        presenter.searchPlants(query);
     }
 
     private void navigateToEdit(@Nullable Plant plant) {
