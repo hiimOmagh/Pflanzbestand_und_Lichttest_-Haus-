@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.text.TextUtils;
 import androidx.appcompat.app.AlertDialog;
 
@@ -160,6 +161,13 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
     @Override
     public void showDli(String text) {
         dliView.setText(text);
+    }
+
+    @Override
+    public void showError(String message) {
+        if (isAdded()) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showPlantSelectionDialog() {

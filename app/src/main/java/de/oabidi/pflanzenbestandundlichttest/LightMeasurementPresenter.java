@@ -78,7 +78,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
             this.plants = plants;
             view.showPlants(plants);
             selectPlant(0);
-        });
+        }, e -> view.showError(context.getString(R.string.error_database)));
     }
 
     public void saveMeasurement(Measurement measurement, Runnable afterSave) {

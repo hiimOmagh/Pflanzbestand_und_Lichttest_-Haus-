@@ -73,13 +73,29 @@ public class PlantRepository {
     /**
      * Retrieves all stored plants asynchronously and delivers them on the main thread.
      *
-     * @param callback invoked with the resulting list on the main thread
+     * @param callback      invoked with the resulting list on the main thread
      */
     public void getAllPlants(Consumer<List<Plant>> callback) {
+        getAllPlants(callback, null);
+    }
+
+    /**
+     * Retrieves all stored plants asynchronously and delivers them on the main thread.
+     *
+     * @param callback      invoked with the resulting list on the main thread
+     * @param errorCallback invoked with any encountered exception on the main thread
+     */
+    public void getAllPlants(Consumer<List<Plant>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Plant> result = plantDao.getAll();
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Plant> result = plantDao.getAll();
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }

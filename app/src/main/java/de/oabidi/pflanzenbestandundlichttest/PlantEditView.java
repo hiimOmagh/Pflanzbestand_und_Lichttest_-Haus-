@@ -32,4 +32,7 @@ public interface PlantEditView {
 
     /** Finish editing and return the resulting plant to the caller. */
     void finishWithResult(Plant plant);
+
+    /** Display a generic error message. */
+    void showError(String message);
 }

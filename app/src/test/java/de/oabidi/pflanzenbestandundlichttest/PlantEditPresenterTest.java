@@ -34,6 +34,7 @@ public class PlantEditPresenterTest {
         long id;
         boolean nameErrorShown;
         Plant finished;
+        String errorMessage;
 
         @Override
         public String getName() { return name; }
@@ -53,6 +54,8 @@ public class PlantEditPresenterTest {
         public void showNameError() { nameErrorShown = true; }
         @Override
         public void finishWithResult(Plant plant) { finished = plant; }
+        @Override
+        public void showError(String message) { errorMessage = message; }
     }
 
     private static class RecordingRepository extends PlantRepository {
@@ -78,7 +81,7 @@ public class PlantEditPresenterTest {
         Context context = ApplicationProvider.getApplicationContext();
         view = new FakeView();
         repository = new RecordingRepository(context);
-        presenter = new PlantEditPresenterImpl(view, repository);
+        presenter = new PlantEditPresenterImpl(view, repository, context);
     }
 
     @Test

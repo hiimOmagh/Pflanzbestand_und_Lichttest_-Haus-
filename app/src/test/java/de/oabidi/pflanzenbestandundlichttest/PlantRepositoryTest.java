@@ -85,7 +85,7 @@ public class PlantRepositoryTest {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             holder[0] = plants;
             queryLatch.countDown();
-        });
+        }, e -> fail("error callback"));
         awaitLatch(queryLatch);
         assertEquals(1, holder[0].size());
 
@@ -102,7 +102,7 @@ public class PlantRepositoryTest {
             assertEquals("Aloe Vera", plants.get(0).getName());
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             queryLatch2.countDown();
-        });
+        }, e -> fail("error callback"));
         awaitLatch(queryLatch2);
 
         CountDownLatch deleteLatch = new CountDownLatch(1);
@@ -117,7 +117,7 @@ public class PlantRepositoryTest {
             assertTrue(plants.isEmpty());
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             queryLatch3.countDown();
-        });
+        }, e -> fail("error callback"));
         awaitLatch(queryLatch3);
     }
 
@@ -184,6 +184,20 @@ public class PlantRepositoryTest {
         AtomicBoolean errorCalled = new AtomicBoolean(false);
 
         repository.insert(plant, () -> fail("should not succeed"), e -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            errorCalled.set(true);
+            latch.countDown();
+        });
+        awaitLatch(latch);
+        assertTrue(errorCalled.get());
+    }
+
+    @Test
+    public void getAllPlantsErrorPropagatesToCallback() throws Exception {
+        db.close();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean errorCalled = new AtomicBoolean(false);
+        repository.getAllPlants(plants -> fail("should not succeed"), e -> {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             errorCalled.set(true);
             latch.countDown();

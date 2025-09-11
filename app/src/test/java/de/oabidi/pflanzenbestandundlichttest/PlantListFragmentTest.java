@@ -73,7 +73,8 @@ public class PlantListFragmentTest {
         }
 
         @Override
-        public void getAllPlants(java.util.function.Consumer<List<Plant>> callback) {
+        public void getAllPlants(java.util.function.Consumer<List<Plant>> callback,
+                                 java.util.function.Consumer<Exception> errorCallback) {
             if (callback != null) {
                 callback.accept(new ArrayList<>(data));
             }

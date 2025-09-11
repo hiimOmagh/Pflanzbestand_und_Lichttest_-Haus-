@@ -24,7 +24,8 @@ public class PlantListPresenter {
     }
 
     public void refreshPlants() {
-        repository.getAllPlants(view::showPlants);
+        repository.getAllPlants(view::showPlants,
+            e -> view.showError(context.getString(R.string.error_database)));
     }
 
     public void insertPlant(Plant plant) {

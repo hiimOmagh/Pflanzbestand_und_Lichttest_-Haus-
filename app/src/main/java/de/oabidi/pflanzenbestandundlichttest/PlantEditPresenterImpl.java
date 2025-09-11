@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.Context;
 import android.net.Uri;
 
 /**
@@ -8,10 +9,12 @@ import android.net.Uri;
 public class PlantEditPresenterImpl implements PlantEditPresenter {
     private final PlantEditView view;
     private final PlantRepository repository;
+    private final Context context;
 
-    public PlantEditPresenterImpl(PlantEditView view, PlantRepository repository) {
+    public PlantEditPresenterImpl(PlantEditView view, PlantRepository repository, Context context) {
         this.view = view;
         this.repository = repository;
+        this.context = context.getApplicationContext();
     }
 
     @Override
@@ -32,9 +35,11 @@ public class PlantEditPresenterImpl implements PlantEditPresenter {
         plant.setId(id);
         Runnable afterSave = () -> view.finishWithResult(plant);
         if (id == 0) {
-            repository.insert(plant, afterSave);
+            repository.insert(plant, afterSave,
+                e -> view.showError(context.getString(R.string.error_database)));
         } else {
-            repository.update(plant, afterSave);
+            repository.update(plant, afterSave,
+                e -> view.showError(context.getString(R.string.error_database)));
         }
     }
 

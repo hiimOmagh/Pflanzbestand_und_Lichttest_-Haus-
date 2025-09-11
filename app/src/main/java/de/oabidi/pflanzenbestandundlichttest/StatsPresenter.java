@@ -15,6 +15,7 @@ public class StatsPresenter {
         void showMeasurements(Map<Long, List<Measurement>> data);
         void showDiaryCounts(String text);
         void showDli(String text);
+        void showError(String message);
     }
 
     private final View view;
@@ -30,7 +31,8 @@ public class StatsPresenter {
 
     /** Load all plants and pass them to the view. */
     public void loadPlants() {
-        repository.getAllPlants(view::showPlants);
+        repository.getAllPlants(view::showPlants,
+            e -> view.showError(context.getString(R.string.error_database)));
     }
 
     /** Load measurement and diary data for the given plants. */

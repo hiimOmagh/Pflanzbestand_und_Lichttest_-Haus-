@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -104,7 +105,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         }
 
         PlantRepository repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
-        presenter = new PlantEditPresenterImpl(this, repository);
+        presenter = new PlantEditPresenterImpl(this, repository, requireContext().getApplicationContext());
 
         acquiredInput.setOnClickListener(v -> showDatePicker());
         saveButton.setOnClickListener(v -> presenter.savePlant());
@@ -190,6 +191,13 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         }
         getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
         getParentFragmentManager().popBackStack();
+    }
+
+    @Override
+    public void showError(String message) {
+        if (isAdded()) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     public static PlantEditFragment newInstance(@Nullable Plant plant) {
