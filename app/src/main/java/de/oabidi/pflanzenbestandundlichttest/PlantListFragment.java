@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -185,6 +186,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     public void showPlants(List<Plant> plants) {
         this.plants = plants;
         adapter.submitList(new ArrayList<>(plants));
+    }
+
+    @Override
+    public void showError(String message) {
+        if (isAdded()) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

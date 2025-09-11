@@ -23,6 +23,7 @@ import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Unit tests for {@link PlantRepository} verifying basic CRUD operations and
@@ -171,6 +172,24 @@ public class PlantRepositoryTest {
             queryLatch2.countDown();
         });
         awaitLatch(queryLatch2);
+    }
+
+    @Test
+    public void insertErrorPropagatesToCallback() throws Exception {
+        Plant plant = new Plant();
+        plant.setAcquiredAtEpoch(0L);
+        db.close();
+
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean errorCalled = new AtomicBoolean(false);
+
+        repository.insert(plant, () -> fail("should not succeed"), e -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            errorCalled.set(true);
+            latch.countDown();
+        });
+        awaitLatch(latch);
+        assertTrue(errorCalled.get());
     }
 
     @Test

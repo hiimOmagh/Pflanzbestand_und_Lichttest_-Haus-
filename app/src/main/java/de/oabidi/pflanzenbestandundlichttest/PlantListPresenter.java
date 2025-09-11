@@ -10,14 +10,17 @@ import java.util.List;
 public class PlantListPresenter {
     public interface View {
         void showPlants(List<Plant> plants);
+        void showError(String message);
     }
 
     private final View view;
     private final PlantRepository repository;
+    private final Context context;
 
     public PlantListPresenter(View view, Context context) {
         this.view = view;
-        this.repository = ((PlantApp) context.getApplicationContext()).getRepository();
+        this.context = context.getApplicationContext();
+        this.repository = ((PlantApp) this.context).getRepository();
     }
 
     public void refreshPlants() {
@@ -25,11 +28,13 @@ public class PlantListPresenter {
     }
 
     public void insertPlant(Plant plant) {
-        repository.insert(plant, this::refreshPlants);
+        repository.insert(plant, this::refreshPlants, e ->
+            view.showError(context.getString(R.string.error_database)));
     }
 
     public void updatePlant(Plant plant) {
-        repository.update(plant, this::refreshPlants);
+        repository.update(plant, this::refreshPlants, e ->
+            view.showError(context.getString(R.string.error_database)));
     }
 
     public void deletePlant(Plant plant) {
@@ -42,6 +47,6 @@ public class PlantListPresenter {
             if (afterDelete != null) {
                 afterDelete.run();
             }
-        });
+        }, e -> view.showError(context.getString(R.string.error_database)));
     }
 }

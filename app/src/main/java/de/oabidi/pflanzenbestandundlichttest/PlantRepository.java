@@ -55,6 +55,21 @@ public class PlantRepository {
         reminderDao = db.reminderDao();
     }
 
+    private Future<?> runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
+        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+            try {
+                action.run();
+                if (callback != null) {
+                    mainHandler.post(callback);
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
     /**
      * Retrieves all stored plants asynchronously and delivers them on the main thread.
      *
@@ -112,13 +127,14 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> insert(Plant plant, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+        return insert(plant, callback, null);
+    }
+
+    public Future<?> insert(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> {
             final long id = plantDao.insert(plant);
             plant.setId(id);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        }, callback, errorCallback);
     }
 
     /**
@@ -129,12 +145,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> update(Plant plant, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            plantDao.update(plant);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return update(plant, callback, null);
+    }
+
+    public Future<?> update(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> plantDao.update(plant), callback, errorCallback);
     }
 
     /**
@@ -145,7 +160,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> delete(Plant plant, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+        return delete(plant, callback, null);
+    }
+
+    public Future<?> delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> {
             PhotoManager.deletePhoto(context, plant.getPhotoUri());
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
             for (Reminder reminder : reminders) {
@@ -156,10 +175,7 @@ public class PlantRepository {
             if (prefs.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1) == plant.getId()) {
                 prefs.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
             }
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        }, callback, errorCallback);
     }
 
     /**
@@ -170,13 +186,14 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> insertMeasurement(Measurement measurement, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+        return insertMeasurement(measurement, callback, null);
+    }
+
+    public Future<?> insertMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> {
             measurementDao.insert(measurement);
             checkDliAlerts(measurement.getPlantId());
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        }, callback, errorCallback);
     }
 
     /**
@@ -187,12 +204,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> updateMeasurement(Measurement measurement, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            measurementDao.update(measurement);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return updateMeasurement(measurement, callback, null);
+    }
+
+    public Future<?> updateMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> measurementDao.update(measurement), callback, errorCallback);
     }
 
     /**
@@ -203,12 +219,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> deleteMeasurement(Measurement measurement, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            measurementDao.delete(measurement);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return deleteMeasurement(measurement, callback, null);
+    }
+
+    public Future<?> deleteMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> measurementDao.delete(measurement), callback, errorCallback);
     }
 
     private void checkDliAlerts(long plantId) {

@@ -47,7 +47,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private List<Plant> plants;
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
-    private PlantRepository repository;
     private boolean hasValidReading = false;
 
     @Nullable
@@ -88,7 +87,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
 
         presenter = new LightMeasurementPresenter(this, context, calibrationFactor, sampleSize);
-        repository = ((PlantApp) context).getRepository();
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
@@ -119,7 +117,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
                 Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd, lastDli, null);
-                repository.insertMeasurement(m, () ->
+                presenter.saveMeasurement(m, () ->
                     Toast.makeText(requireContext(), R.string.measurement_saved, Toast.LENGTH_SHORT).show());
             } else {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
@@ -265,6 +263,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             plantSelector.setSelection(selection);
         } else {
             selectedPlantId = -1;
+        }
+    }
+
+    @Override
+    public void showError(String message) {
+        if (isAdded()) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         }
     }
 

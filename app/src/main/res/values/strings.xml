@@ -36,6 +36,7 @@
     <string name="measurement_save">Save</string>
     <string name="measurement_saved">Measurement saved</string>
     <string name="error_select_plant">Please select a plant</string>
+    <string name="error_database">Database error</string>
     <string name="plant_photo_desc">Plant photo</string>
     <string name="plant_photo_desc_format">Photo of %1$s</string>
     <string name="diary_entry_photo_desc">Diary entry photo</string>

@@ -12,6 +12,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         void showLightData(float rawLux, float lux, float ppfd, float dli);
         void showRangeStatus(String status);
         void showPlants(List<Plant> plants);
+        void showError(String message);
     }
 
     private final View view;
@@ -78,6 +79,11 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
             view.showPlants(plants);
             selectPlant(0);
         });
+    }
+
+    public void saveMeasurement(Measurement measurement, Runnable afterSave) {
+        plantRepository.insertMeasurement(measurement, afterSave,
+            e -> view.showError(context.getString(R.string.error_database)));
     }
 
     public void selectPlant(int index) {
