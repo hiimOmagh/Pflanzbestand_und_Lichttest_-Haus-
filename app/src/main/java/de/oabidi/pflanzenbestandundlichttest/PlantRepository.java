@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteException;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -13,8 +14,10 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.List;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Repository providing asynchronous access to {@link Plant} entities.
@@ -31,6 +34,8 @@ public class PlantRepository {
     private final ReminderDao reminderDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context;
+    private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
+    private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
 
     /**
      * Creates a new repository instance.
@@ -77,8 +82,19 @@ public class PlantRepository {
             if (query == null || query.isEmpty()) {
                 result = plantDao.getAll();
             } else {
-                String q = query + "*";
-                result = plantDao.search(q);
+                String normalized = UNSUPPORTED_CHARS.matcher(query).replaceAll(" ");
+                normalized = RESERVED_FTS.matcher(normalized).replaceAll(" ");
+                normalized = normalized.trim().replaceAll("\\s+", " ");
+                if (normalized.isEmpty()) {
+                    result = Collections.emptyList();
+                } else {
+                    String q = normalized + "*";
+                    try {
+                        result = plantDao.search(q);
+                    } catch (SQLiteException e) {
+                        result = Collections.emptyList();
+                    }
+                }
             }
             if (callback != null) {
                 mainHandler.post(() -> callback.accept(result));
