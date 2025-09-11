@@ -24,8 +24,6 @@
     <string name="format_diary_entry">%1$s – %2$s – %3$s</string>
     <string name="updated_suffix"> (updated)</string>
     <string name="menu_add_plant">Add Plant</string>
-    <string name="menu_update_first_plant">Update First Plant</string>
-    <string name="menu_delete_first_plant">Delete First Plant</string>
     <string name="menu_species_targets">Species Targets</string>
     <string name="menu_export_data">Export Data</string>
     <string name="menu_import_data">Import Data</string>
@@ -100,6 +98,9 @@
         <!-- 2: show measurements from the last 30 days -->
         <item>@string/filter_last_30_days</item>
     </string-array>
+    <string name="action_edit_plant">Edit Plant</string>
+    <string name="action_delete_plant">Delete Plant</string>
+    <string name="confirm_delete_plant">Delete this plant?</string>
     <string name="action_delete_diary_entry">Delete Entry</string>
     <string name="confirm_delete_diary_entry">Delete this entry?</string>
     <string name="action_delete_measurement">Delete Measurement</string>

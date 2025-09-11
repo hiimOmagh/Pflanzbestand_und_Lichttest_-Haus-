@@ -12,14 +12,6 @@
         android:title="@string/menu_add_plant"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_update"
-        android:title="@string/menu_update_first_plant"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_delete"
-        android:title="@string/menu_delete_first_plant"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_species_targets"
         android:title="@string/menu_species_targets"
         app:showAsAction="never" />

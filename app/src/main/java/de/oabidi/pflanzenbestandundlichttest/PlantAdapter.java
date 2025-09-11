@@ -21,6 +21,7 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
 
     public interface OnPlantClickListener {
         void onPlantClick(Plant plant);
+        void onPlantLongClick(Plant plant);
     }
 
     private final OnPlantClickListener listener;
@@ -93,6 +94,10 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
             nameView.setText(plant.getName());
             itemView.setContentDescription(plant.getName());
             itemView.setOnClickListener(v -> listener.onPlantClick(plant));
+            itemView.setOnLongClickListener(v -> {
+                listener.onPlantLongClick(plant);
+                return true;
+            });
         }
     }
 }

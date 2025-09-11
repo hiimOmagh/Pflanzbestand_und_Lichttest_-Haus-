@@ -250,6 +250,33 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     @Override
+    public void onPlantLongClick(Plant plant) {
+        CharSequence[] options = {
+            getString(R.string.action_edit_plant),
+            getString(R.string.action_delete_plant)
+        };
+        new AlertDialog.Builder(requireContext())
+            .setItems(options, (d, which) -> {
+                if (which == 0) {
+                    navigateToEdit(plant);
+                } else if (which == 1) {
+                    String message = getString(R.string.confirm_delete_plant);
+                    new AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.action_delete_plant)
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, (d2, w) ->
+                            presenter.deletePlant(plant, () ->
+                                Snackbar.make(requireView(), R.string.plant_deleted, Snackbar.LENGTH_LONG)
+                                    .setAction(R.string.action_undo, v -> presenter.insertPlant(plant))
+                                    .show()))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+                }
+            })
+            .show();
+    }
+
+    @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.main_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
@@ -274,20 +301,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         int itemId = item.getItemId();
         if (itemId == R.id.action_add) {
             navigateToEdit(null);
-            return true;
-        } else if (itemId == R.id.action_update) {
-            if (!plants.isEmpty()) {
-                navigateToEdit(plants.get(0));
-            }
-            return true;
-        } else if (itemId == R.id.action_delete) {
-            if (!plants.isEmpty()) {
-                Plant plant = plants.get(0);
-                presenter.deletePlant(plant, () ->
-                    Snackbar.make(requireView(), R.string.plant_deleted, Snackbar.LENGTH_LONG)
-                        .setAction(R.string.action_undo, v -> presenter.insertPlant(plant))
-                        .show());
-            }
             return true;
         } else if (itemId == R.id.action_species_targets) {
             navigateToSpeciesTargets();
