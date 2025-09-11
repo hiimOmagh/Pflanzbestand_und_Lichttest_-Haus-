@@ -2,7 +2,6 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -167,21 +166,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         importManager = new ImportManager(requireContext().getApplicationContext());
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
-            (requestKey, bundle) -> {
-                Plant plant = new Plant(
-                    bundle.getString("name"),
-                    bundle.getString("notes"),
-                    bundle.getString("species"),
-                    bundle.getString("location"),
-                    bundle.getLong("acquired"),
-                    bundle.containsKey("photo") ? Uri.parse(bundle.getString("photo")) : null);
-                plant.setId(bundle.getLong("id", 0));
-                if (plant.getId() == 0) {
-                    presenter.insertPlant(plant);
-                } else {
-                    presenter.updatePlant(plant);
-                }
-            });
+            (requestKey, bundle) -> presenter.refreshPlants());
 
         setHasOptionsMenu(true);
     }

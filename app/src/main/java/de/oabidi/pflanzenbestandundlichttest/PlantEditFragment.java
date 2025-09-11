@@ -27,7 +27,7 @@ import java.util.Locale;
  * Fragment allowing creation or editing of a {@link Plant}.
  * The result is returned to the caller via {@link androidx.fragment.app.FragmentResultOwner}.
  */
-public class PlantEditFragment extends Fragment {
+public class PlantEditFragment extends Fragment implements PlantEditView {
     public static final String RESULT_KEY = "plant_edit_result";
 
     private static final String ARG_ID = "id";
@@ -47,6 +47,7 @@ public class PlantEditFragment extends Fragment {
 
     private Uri photoUri;
     private long acquiredEpoch = System.currentTimeMillis();
+    private PlantEditPresenter presenter;
 
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -102,47 +103,16 @@ public class PlantEditFragment extends Fragment {
             }
         }
 
+        PlantRepository repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        presenter = new PlantEditPresenterImpl(this, repository);
+
         acquiredInput.setOnClickListener(v -> showDatePicker());
-        saveButton.setOnClickListener(v -> savePlant());
-    }
-
-    private void savePlant() {
-        String name = getText(nameInput);
-        if (name.isEmpty()) {
-            nameInput.setError(getString(R.string.error_required));
-            return;
-        }
-        String species = emptyToNull(getText(speciesInput));
-        String location = emptyToNull(getText(locationInput));
-        String notes = emptyToNull(getText(notesInput));
-
-        Plant plant = new Plant(name, notes, species, location, acquiredEpoch, photoUri);
-        Bundle args = getArguments();
-        if (args != null) {
-            plant.setId(args.getLong(ARG_ID, 0));
-        }
-
-        Bundle result = new Bundle();
-        result.putLong(ARG_ID, plant.getId());
-        result.putString(ARG_NAME, plant.getName());
-        result.putString(ARG_SPECIES, plant.getSpecies());
-        result.putString(ARG_LOCATION, plant.getLocationHint());
-        result.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
-        result.putString(ARG_NOTES, plant.getDescription());
-        if (plant.getPhotoUri() != null) {
-            result.putString(ARG_PHOTO, plant.getPhotoUri().toString());
-        }
-        getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
-        getParentFragmentManager().popBackStack();
+        saveButton.setOnClickListener(v -> presenter.savePlant());
     }
 
     private static String getText(TextInputEditText editText) {
         CharSequence cs = editText.getText();
         return cs != null ? cs.toString().trim() : "";
-    }
-
-    private static String emptyToNull(String s) {
-        return s.isEmpty() ? null : s;
     }
 
     private void showDatePicker() {
@@ -163,6 +133,63 @@ public class PlantEditFragment extends Fragment {
     private String formatDate(long epoch) {
         return new SimpleDateFormat(getString(R.string.date_pattern), Locale.getDefault())
             .format(new Date(epoch));
+    }
+
+    @Override
+    public String getName() {
+        return getText(nameInput);
+    }
+
+    @Override
+    public String getSpecies() {
+        return getText(speciesInput);
+    }
+
+    @Override
+    public String getLocation() {
+        return getText(locationInput);
+    }
+
+    @Override
+    public String getNotes() {
+        return getText(notesInput);
+    }
+
+    @Override
+    public long getAcquiredEpoch() {
+        return acquiredEpoch;
+    }
+
+    @Override
+    public Uri getPhotoUri() {
+        return photoUri;
+    }
+
+    @Override
+    public long getPlantId() {
+        Bundle args = getArguments();
+        return args != null ? args.getLong(ARG_ID, 0) : 0;
+    }
+
+    @Override
+    public void showNameError() {
+        nameInput.setError(getString(R.string.error_required));
+    }
+
+    @Override
+    public void finishWithResult(Plant plant) {
+        Bundle result = new Bundle();
+        result.putLong(ARG_ID, plant.getId());
+        result.putString(ARG_NAME, plant.getName());
+        result.putString(ARG_SPECIES, plant.getSpecies());
+        result.putString(ARG_LOCATION, plant.getLocationHint());
+        result.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
+        result.putString(ARG_NOTES, plant.getDescription());
+        if (plant.getPhotoUri() != null) {
+            result.putString(ARG_PHOTO, plant.getPhotoUri().toString());
+        }
+        getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
+        getParentFragmentManager().popBackStack();
     }
 
     public static PlantEditFragment newInstance(@Nullable Plant plant) {
