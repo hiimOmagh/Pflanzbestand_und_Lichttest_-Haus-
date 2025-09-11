@@ -248,7 +248,10 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                     try {
                         int days = Integer.parseInt(daysText);
                         String message = note.isEmpty() ? label : label + getString(R.string.note_separator) + note;
-                        ReminderScheduler.scheduleReminder(requireContext(), days, message, plantId);
+                        boolean scheduled = ReminderScheduler.scheduleReminder(requireContext(), days, message, plantId);
+                        if (!scheduled) {
+                            Toast.makeText(requireContext(), R.string.error_positive_number, Toast.LENGTH_SHORT).show();
+                        }
                     } catch (NumberFormatException ignored) {
                     }
                 }

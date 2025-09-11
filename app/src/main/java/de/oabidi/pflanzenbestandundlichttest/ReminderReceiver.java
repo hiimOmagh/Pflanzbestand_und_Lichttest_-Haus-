@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -38,7 +39,10 @@ public class ReminderReceiver extends BroadcastReceiver {
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
             long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
-            ReminderScheduler.scheduleReminder(context, 1, message, plantId);
+            boolean scheduled = ReminderScheduler.scheduleReminder(context, 1, message, plantId);
+            if (!scheduled) {
+                Log.w("ReminderReceiver", "Failed to reschedule reminder for snooze");
+            }
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);

@@ -37,12 +37,12 @@ public class ReminderScheduler {
      * @param days    number of days until the reminder should trigger
      * @param message message displayed in the reminder notification
      * @param plantId identifier of the related plant
+     * @return {@code true} if the reminder was scheduled, {@code false} if the input was invalid
      */
-    public static void scheduleReminder(Context context, int days, String message, long plantId) {
+    public static boolean scheduleReminder(Context context, int days, String message, long plantId) {
         if (days <= 0) {
             Log.w("ReminderScheduler", "Days must be positive");
-            Toast.makeText(context, R.string.error_positive_number, Toast.LENGTH_SHORT).show();
-            return;
+            return false;
         }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
         PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
@@ -50,6 +50,7 @@ public class ReminderScheduler {
         repository.insertReminder(reminder,
             () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId),
             e -> Toast.makeText(context, R.string.error_database, Toast.LENGTH_SHORT).show());
+        return true;
     }
 
     public static void scheduleReminderAt(Context context, long triggerAt, String message, long id, long plantId) {
