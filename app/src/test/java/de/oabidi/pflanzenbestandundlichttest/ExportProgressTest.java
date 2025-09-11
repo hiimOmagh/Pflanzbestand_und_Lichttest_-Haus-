@@ -25,13 +25,14 @@ public class ExportProgressTest {
 
     private static class FakeView implements MainView {
         final List<int[]> progress = new ArrayList<>();
+        String lastExportFileName;
         @Override public void navigateToFragment(androidx.fragment.app.Fragment fragment, boolean addToBackStack) { }
         @Override public void showToast(int messageResId) { }
         @Override public void showLongToast(int messageResId) { }
         @Override public void showExportProgress(int current, int total) { progress.add(new int[]{current, total}); }
         @Override public void selectNavigationItem(int itemId) { }
         @Override public void requestNotificationPermission(String permission) { }
-        @Override public void launchExport(String fileName) { }
+        @Override public void launchExport(String fileName) { lastExportFileName = fileName; }
         @Override public void launchImport(String[] mimeTypes) { }
         @Override public void showImportWarnings(String message) { }
     }
@@ -52,14 +53,18 @@ public class ExportProgressTest {
     }
 
     @Test
-    public void exportMenuItem_reportsProgress() throws Exception {
+    public void exportFlow_reportsProgress() throws Exception {
         FakeView view = new FakeView();
         MainPresenterImpl presenter = new MainPresenterImpl(view, context);
         Field f = MainPresenterImpl.class.getDeclaredField("exportManager");
         f.setAccessible(true);
         f.set(presenter, new FakeExportManager(context));
+
         boolean handled = presenter.onOptionsItemSelected(R.id.action_export_data);
         assertTrue(handled);
+        assertEquals(context.getString(R.string.export_file_name), view.lastExportFileName);
+
+        presenter.handleExportResult(Uri.parse("content://test"));
         assertEquals(2, view.progress.size());
         assertArrayEquals(new int[]{1,3}, view.progress.get(0));
         assertArrayEquals(new int[]{3,3}, view.progress.get(1));

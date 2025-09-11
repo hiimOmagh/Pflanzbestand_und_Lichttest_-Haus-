@@ -15,7 +15,6 @@ import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import java.io.File;
 
 /**
  * Implementation of {@link MainPresenter} handling main screen interactions such as
@@ -75,7 +74,7 @@ public class MainPresenterImpl implements MainPresenter {
             exportManager.export(uri, success -> {
                 int msg = success ? R.string.export_success : R.string.export_failure;
                 view.showToast(msg);
-            });
+            }, view::showExportProgress);
         } else {
             view.showToast(R.string.export_failure);
         }
@@ -123,13 +122,7 @@ public class MainPresenterImpl implements MainPresenter {
             view.navigateToFragment(new OnboardingFragment(), true);
             return true;
         } else if (id == R.id.action_export_data) {
-            File out = new File(context.getCacheDir(),
-                context.getString(R.string.export_file_name));
-            Uri uri = Uri.fromFile(out);
-            exportManager.export(uri, success -> {
-                int msg = success ? R.string.export_success : R.string.export_failure;
-                view.showToast(msg);
-            }, view::showExportProgress);
+            view.launchExport(context.getString(R.string.export_file_name));
             return true;
         } else if (id == R.id.action_import_data) {
             view.launchImport(new String[]{"text/csv"});
