@@ -190,5 +190,4 @@
     <string name="onboarding_measurement">Mesurez les niveaux de lumière pour aider vos plantes à prospérer.</string>
     <string name="onboarding_diary">Enregistrez les activités d'entretien dans le journal.</string>
     <string name="action_done">Compris</string>
-    <string name="test_crash">Test de plantage</string>
 </resources>

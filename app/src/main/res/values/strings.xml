@@ -189,5 +189,4 @@
     <string name="onboarding_measurement">Measure light levels to help your plants thrive.</string>
     <string name="onboarding_diary">Record care activities in the diary.</string>
     <string name="action_done">Got it</string>
-    <string name="test_crash">Test Crash</string>
 </resources>

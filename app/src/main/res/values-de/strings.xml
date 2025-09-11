@@ -190,5 +190,4 @@
     <string name="onboarding_measurement">Miss die Lichtwerte, damit deine Pflanzen gedeihen.</string>
     <string name="onboarding_diary">Halte Pflegeaktivitäten im Tagebuch fest.</string>
     <string name="action_done">Verstanden</string>
-    <string name="test_crash">Testabsturz</string>
 </resources>

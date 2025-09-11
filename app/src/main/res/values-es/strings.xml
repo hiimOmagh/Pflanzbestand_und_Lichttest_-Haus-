@@ -190,5 +190,4 @@
     <string name="onboarding_measurement">Mide la luz para que tus plantas prosperen.</string>
     <string name="onboarding_diary">Registra el cuidado en el diario.</string>
     <string name="action_done">Entendido</string>
-    <string name="test_crash">Probar fallo</string>
 </resources>
