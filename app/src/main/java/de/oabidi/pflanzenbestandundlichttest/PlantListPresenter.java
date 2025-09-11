@@ -20,7 +20,8 @@ public class PlantListPresenter {
         void onExportResult(boolean success, Uri uri);
         void onImportProgress(int current, int total);
         void onImportResult(boolean success, @Nullable ImportManager.ImportError error,
-                            List<ImportManager.ImportWarning> warnings);
+                            List<ImportManager.ImportWarning> warnings,
+                            @Nullable String message);
     }
 
     private final View view;
@@ -78,8 +79,8 @@ public class PlantListPresenter {
     }
 
     public void importData(Uri uri, ImportManager.Mode mode) {
-        importManager.importData(uri, mode, (success, error, warnings) -> {
-            view.onImportResult(success, error, warnings);
+        importManager.importData(uri, mode, (success, error, warnings, message) -> {
+            view.onImportResult(success, error, warnings, message);
             if (success) {
                 refreshPlants();
             }

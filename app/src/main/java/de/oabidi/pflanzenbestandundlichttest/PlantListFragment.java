@@ -203,31 +203,34 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     @Override
     public void onImportResult(boolean success, @Nullable ImportManager.ImportError error,
-                               List<ImportManager.ImportWarning> warnings) {
+                               List<ImportManager.ImportWarning> warnings,
+                               @Nullable String message) {
         hideProgress();
         if (!isAdded()) {
             return;
         }
-        int msg;
-        if (success) {
-            msg = R.string.import_success;
-        } else if (error != null) {
-            switch (error) {
-                case MISSING_VERSION:
-                    msg = R.string.import_error_missing_version;
-                    break;
-                case INVALID_VERSION:
-                    msg = R.string.import_error_invalid_version;
-                    break;
-                case UNSUPPORTED_VERSION:
-                    msg = R.string.import_error_unsupported_version;
-                    break;
-                default:
-                    msg = R.string.import_failure;
-                    break;
+        String msg = message;
+        if (msg == null) {
+            if (success) {
+                msg = getString(R.string.import_success);
+            } else if (error != null) {
+                switch (error) {
+                    case MISSING_VERSION:
+                        msg = getString(R.string.import_error_missing_version);
+                        break;
+                    case INVALID_VERSION:
+                        msg = getString(R.string.import_error_invalid_version);
+                        break;
+                    case UNSUPPORTED_VERSION:
+                        msg = getString(R.string.import_error_unsupported_version);
+                        break;
+                    default:
+                        msg = getString(R.string.import_failure);
+                        break;
+                }
+            } else {
+                msg = getString(R.string.import_failure);
             }
-        } else {
-            msg = R.string.import_failure;
         }
         Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
         if (success && warnings != null && !warnings.isEmpty()) {

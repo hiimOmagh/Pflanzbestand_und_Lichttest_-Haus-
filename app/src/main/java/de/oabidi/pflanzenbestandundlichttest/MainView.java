@@ -12,8 +12,11 @@ public interface MainView {
      */
     void navigateToFragment(Fragment fragment, boolean addToBackStack);
 
-    /** Show a short toast message. */
+    /** Show a short toast message using a string resource. */
     void showToast(int messageResId);
+
+    /** Show a short toast message with a raw string. */
+    void showToast(String message);
 
     /** Show a longer toast message. */
     void showLongToast(int messageResId);

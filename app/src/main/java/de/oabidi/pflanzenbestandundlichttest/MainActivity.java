@@ -92,6 +92,10 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
+    public void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+    @Override
     public void showLongToast(int messageResId) {
         Toast.makeText(this, messageResId, Toast.LENGTH_LONG).show();
     }

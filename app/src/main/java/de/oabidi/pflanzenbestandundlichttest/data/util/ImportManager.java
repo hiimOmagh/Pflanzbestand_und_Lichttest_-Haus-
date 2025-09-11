@@ -38,6 +38,7 @@ import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
@@ -54,7 +55,8 @@ public class ImportManager {
 
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
-        void onComplete(boolean success, @Nullable ImportError error, List<ImportWarning> warnings);
+        void onComplete(boolean success, @Nullable ImportError error,
+                        List<ImportWarning> warnings, @Nullable String message);
     }
 
     /** Callback used to report incremental progress. */
@@ -216,7 +218,28 @@ public class ImportManager {
             final boolean result = success;
             final ImportError finalError = error;
             final List<ImportWarning> warningList = new ArrayList<>(warnings);
-            mainHandler.post(() -> callback.onComplete(result, finalError, warningList));
+            final String message;
+            if (result) {
+                message = context.getString(R.string.import_success);
+            } else if (finalError != null) {
+                switch (finalError) {
+                    case MISSING_VERSION:
+                        message = context.getString(R.string.import_error_missing_version);
+                        break;
+                    case INVALID_VERSION:
+                        message = context.getString(R.string.import_error_invalid_version);
+                        break;
+                    case UNSUPPORTED_VERSION:
+                        message = context.getString(R.string.import_error_unsupported_version);
+                        break;
+                    default:
+                        message = context.getString(R.string.import_failure);
+                        break;
+                }
+            } else {
+                message = context.getString(R.string.import_failure);
+            }
+            mainHandler.post(() -> callback.onComplete(result, finalError, warningList, message));
         });
     }
 

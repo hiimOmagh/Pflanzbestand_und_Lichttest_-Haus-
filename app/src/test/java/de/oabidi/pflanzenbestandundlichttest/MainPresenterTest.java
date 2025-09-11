@@ -40,6 +40,9 @@ public class MainPresenterTest {
         public void showToast(int messageResId) { }
 
         @Override
+        public void showToast(String message) { }
+
+        @Override
         public void showLongToast(int messageResId) { }
 
         @Override
@@ -58,6 +61,9 @@ public class MainPresenterTest {
 
         @Override
         public void launchImport(String[] mimeTypes) { }
+
+        @Override
+        public void showImportWarnings(String message) { }
     }
 
     @Before

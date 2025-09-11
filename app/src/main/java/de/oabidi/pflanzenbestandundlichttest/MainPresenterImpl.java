@@ -83,34 +83,37 @@ public class MainPresenterImpl implements MainPresenter {
     @Override
     public void handleImportResult(@Nullable Uri uri) {
         if (uri != null) {
-            importManager.importData(uri, ImportManager.Mode.MERGE, (success, error, warnings) -> {
-                int msg;
-                if (success) {
-                    msg = R.string.import_success;
-                } else if (error != null) {
-                    switch (error) {
-                        case MISSING_VERSION:
-                            msg = R.string.import_error_missing_version;
-                            break;
-                        case INVALID_VERSION:
-                            msg = R.string.import_error_invalid_version;
-                            break;
-                        case UNSUPPORTED_VERSION:
-                            msg = R.string.import_error_unsupported_version;
-                            break;
-                        default:
-                            msg = R.string.import_failure;
-                            break;
+            importManager.importData(uri, ImportManager.Mode.MERGE,
+                (success, error, warnings, message) -> {
+                    String msg = message;
+                    if (msg == null) {
+                        if (success) {
+                            msg = context.getString(R.string.import_success);
+                        } else if (error != null) {
+                            switch (error) {
+                                case MISSING_VERSION:
+                                    msg = context.getString(R.string.import_error_missing_version);
+                                    break;
+                                case INVALID_VERSION:
+                                    msg = context.getString(R.string.import_error_invalid_version);
+                                    break;
+                                case UNSUPPORTED_VERSION:
+                                    msg = context.getString(R.string.import_error_unsupported_version);
+                                    break;
+                                default:
+                                    msg = context.getString(R.string.import_failure);
+                                    break;
+                            }
+                        } else {
+                            msg = context.getString(R.string.import_failure);
+                        }
                     }
-                } else {
-                    msg = R.string.import_failure;
-                }
-                view.showToast(msg);
-                if (success && !warnings.isEmpty()) {
-                    String message = ImportManager.summarizeWarnings(warnings);
-                    view.showImportWarnings(message);
-                }
-            });
+                    view.showToast(msg);
+                    if (success && !warnings.isEmpty()) {
+                        String warningMsg = ImportManager.summarizeWarnings(warnings);
+                        view.showImportWarnings(warningMsg);
+                    }
+                });
         } else {
             view.showToast(R.string.import_failure);
         }

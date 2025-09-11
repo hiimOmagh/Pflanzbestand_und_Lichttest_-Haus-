@@ -28,6 +28,7 @@ public class ExportProgressTest {
         String lastExportFileName;
         @Override public void navigateToFragment(androidx.fragment.app.Fragment fragment, boolean addToBackStack) { }
         @Override public void showToast(int messageResId) { }
+        @Override public void showToast(String message) { }
         @Override public void showLongToast(int messageResId) { }
         @Override public void showExportProgress(int current, int total) { progress.add(new int[]{current, total}); }
         @Override public void selectNavigationItem(int itemId) { }

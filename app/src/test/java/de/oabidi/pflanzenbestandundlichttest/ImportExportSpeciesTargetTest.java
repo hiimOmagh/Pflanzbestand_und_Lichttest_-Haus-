@@ -73,11 +73,12 @@ public class ImportExportSpeciesTargetTest {
         CountDownLatch importLatch = new CountDownLatch(1);
         final boolean[] importSuccess = {false};
         final List<ImportManager.ImportWarning>[] warnings = new List[]{null};
-        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE, (success, err, w) -> {
-            importSuccess[0] = success;
-            warnings[0] = w;
-            importLatch.countDown();
-        });
+        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE,
+            (success, err, w, message) -> {
+                importSuccess[0] = success;
+                warnings[0] = w;
+                importLatch.countDown();
+            });
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
         assertTrue(importSuccess[0]);
         assertTrue(warnings[0] == null || warnings[0].isEmpty());
