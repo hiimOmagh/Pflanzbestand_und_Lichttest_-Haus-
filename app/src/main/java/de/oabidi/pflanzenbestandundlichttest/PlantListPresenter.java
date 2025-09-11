@@ -6,6 +6,7 @@ import android.net.Uri;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import androidx.annotation.Nullable;
 
 /**
  * Presenter responsible for loading and modifying the list of plants.
@@ -18,7 +19,8 @@ public class PlantListPresenter {
         void onExportProgress(int current, int total);
         void onExportResult(boolean success, Uri uri);
         void onImportProgress(int current, int total);
-        void onImportResult(boolean success, List<ImportManager.ImportWarning> warnings);
+        void onImportResult(boolean success, @Nullable ImportManager.ImportError error,
+                            List<ImportManager.ImportWarning> warnings);
     }
 
     private final View view;
@@ -76,8 +78,8 @@ public class PlantListPresenter {
     }
 
     public void importData(Uri uri, ImportManager.Mode mode) {
-        importManager.importData(uri, mode, (success, warnings) -> {
-            view.onImportResult(success, warnings);
+        importManager.importData(uri, mode, (success, error, warnings) -> {
+            view.onImportResult(success, error, warnings);
             if (success) {
                 refreshPlants();
             }

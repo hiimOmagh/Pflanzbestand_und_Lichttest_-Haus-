@@ -78,8 +78,8 @@ public class ImportManagerCleanupTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Method m = ImportManager.class.getDeclaredMethod("parseAndInsert", BufferedReader.class, File.class, ImportManager.Mode.class, List.class, ImportManager.ProgressCallback.class, AtomicInteger.class, int.class);
         m.setAccessible(true);
-        boolean success = (Boolean) m.invoke(importer, reader, baseDir, ImportManager.Mode.REPLACE, warnings, null, new AtomicInteger(0), 0);
-        assertFalse(success);
+        ImportManager.ImportError error = (ImportManager.ImportError) m.invoke(importer, reader, baseDir, ImportManager.Mode.REPLACE, warnings, null, new AtomicInteger(0), 0);
+        assertNotNull(error);
 
         Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
         assertNotNull(cursor);

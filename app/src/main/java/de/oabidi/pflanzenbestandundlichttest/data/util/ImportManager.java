@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,7 +54,7 @@ public class ImportManager {
 
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
-        void onComplete(boolean success, List<ImportWarning> warnings);
+        void onComplete(boolean success, @Nullable ImportError error, List<ImportWarning> warnings);
     }
 
     /** Callback used to report incremental progress. */
@@ -99,6 +98,15 @@ public class ImportManager {
     /** Import mode determining how incoming data is applied. */
     public enum Mode { MERGE, REPLACE }
 
+    /** Possible high-level errors during import. */
+    public enum ImportError {
+        MISSING_VERSION,
+        INVALID_VERSION,
+        UNSUPPORTED_VERSION,
+        NO_DATA,
+        IO_ERROR
+    }
+
     public ImportManager(@NonNull Context context) {
         this.context = context.getApplicationContext();
     }
@@ -120,6 +128,7 @@ public class ImportManager {
                            @Nullable ProgressCallback progressCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             boolean success = false;
+            ImportError error = null;
             List<ImportWarning> warnings = new ArrayList<>();
             File tempDir = new File(context.getCacheDir(), "import_" + System.currentTimeMillis());
             if (!tempDir.mkdirs()) {
@@ -187,49 +196,47 @@ public class ImportManager {
                             db.clearAllTables();
                         }
                         try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                            success = parseAndInsert(reader, tempDir, mode, warnings,
+                            error = parseAndInsert(reader, tempDir, mode, warnings,
                                 progressCallback, progress, totalSteps);
+                            success = (error == null);
                         }
+                    } else {
+                        error = ImportError.IO_ERROR;
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "Failed to open import file", e);
                     success = false;
+                    error = ImportError.IO_ERROR;
                 } finally {
                     deleteRecursive(tempDir);
                 }
+            } else {
+                error = ImportError.IO_ERROR;
             }
             final boolean result = success;
+            final ImportError finalError = error;
             final List<ImportWarning> warningList = new ArrayList<>(warnings);
-            mainHandler.post(() -> callback.onComplete(result, warningList));
+            mainHandler.post(() -> callback.onComplete(result, finalError, warningList));
         });
     }
 
-    private boolean parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
+    private @Nullable ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
                                    List<ImportWarning> warnings,
                                    @Nullable ProgressCallback progressCallback,
                                    AtomicInteger progress,
                                    int totalSteps) throws IOException {
         String firstLine = reader.readLine();
         if (firstLine == null || !firstLine.startsWith("Version,")) {
-            mainHandler.post(() ->
-                Toast.makeText(context, "Missing export version", Toast.LENGTH_LONG).show());
-            return false;
+            return ImportError.MISSING_VERSION;
         }
         int version;
         try {
             version = Integer.parseInt(firstLine.split(",", 2)[1]);
         } catch (Exception e) {
-            mainHandler.post(() ->
-                Toast.makeText(context, "Invalid export version", Toast.LENGTH_LONG).show());
-            return false;
+            return ImportError.INVALID_VERSION;
         }
         if (version != SUPPORTED_VERSION) {
-            final int badVersion = version;
-            mainHandler.post(() ->
-                Toast.makeText(context,
-                    "Unsupported export version " + badVersion,
-                    Toast.LENGTH_LONG).show());
-            return false;
+            return ImportError.UNSUPPORTED_VERSION;
         }
 
         PlantDatabase db = PlantDatabase.getDatabase(context);
@@ -546,12 +553,13 @@ public class ImportManager {
                 throw (IOException) e.getCause();
             }
             Log.e(TAG, "Failed to parse import", e);
-            return false;
+            return ImportError.IO_ERROR;
         }
         if (!importedAny[0]) {
             cleanupUris(restoredUris);
+            return ImportError.NO_DATA;
         }
-        return importedAny[0];
+        return null;
     }
 
     private static List<String> parseCsv(String line) {
