@@ -127,6 +127,7 @@
     <string name="import_success">Importación exitosa</string>
     <string name="import_failure">Fallo en la importación</string>
     <string name="import_image_warning">Algunas imágenes no se pudieron restaurar</string>
+    <string name="import_warnings_title">Advertencias de importación</string>
     <string name="import_choice_message">¿Cómo se deben aplicar los datos importados?</string>
     <string name="import_merge">Combinar</string>
     <string name="import_replace">Reemplazar</string>

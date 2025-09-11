@@ -19,6 +19,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -71,15 +72,15 @@ public class ImportExportSpeciesTargetTest {
         ImportManager importer = new ImportManager(context);
         CountDownLatch importLatch = new CountDownLatch(1);
         final boolean[] importSuccess = {false};
-        final boolean[] hadWarnings = {false};
-        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE, (success, warning) -> {
+        final List<ImportManager.ImportWarning>[] warnings = new List[]{null};
+        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE, (success, w) -> {
             importSuccess[0] = success;
-            hadWarnings[0] = warning;
+            warnings[0] = w;
             importLatch.countDown();
         });
         assertTrue(importLatch.await(5, TimeUnit.SECONDS));
         assertTrue(importSuccess[0]);
-        assertFalse(hadWarnings[0]);
+        assertTrue(warnings[0] == null || warnings[0].isEmpty());
 
         SpeciesTarget loaded = db.speciesTargetDao().findBySpeciesKey("roundTrip");
         assertNotNull(loaded);

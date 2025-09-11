@@ -22,7 +22,9 @@ import java.io.FileOutputStream;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -73,10 +75,10 @@ public class ImportManagerCleanupTest {
             "1,newPlant,desc,species,loc,0,photo.jpg\n";
 
         BufferedReader reader = new BufferedReader(new StringReader(csv));
-        AtomicBoolean warning = new AtomicBoolean();
-        Method m = ImportManager.class.getDeclaredMethod("parseAndInsert", BufferedReader.class, File.class, ImportManager.Mode.class, AtomicBoolean.class);
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Method m = ImportManager.class.getDeclaredMethod("parseAndInsert", BufferedReader.class, File.class, ImportManager.Mode.class, List.class, ImportManager.ProgressCallback.class, AtomicInteger.class, int.class);
         m.setAccessible(true);
-        boolean success = (Boolean) m.invoke(importer, reader, baseDir, ImportManager.Mode.REPLACE, warning);
+        boolean success = (Boolean) m.invoke(importer, reader, baseDir, ImportManager.Mode.REPLACE, warnings, null, new AtomicInteger(0), 0);
         assertFalse(success);
 
         Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);

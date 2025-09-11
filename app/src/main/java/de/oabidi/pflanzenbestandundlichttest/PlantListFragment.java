@@ -121,13 +121,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
         showProgress();
-        importManager.importData(uri, mode, (success, hadWarnings) -> {
+        importManager.importData(uri, mode, (success, warnings) -> {
             hideProgress();
             if (isAdded()) {
                 int msg = success ? R.string.import_success : R.string.import_failure;
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-                if (success && hadWarnings) {
-                    Toast.makeText(requireContext(), R.string.import_image_warning, Toast.LENGTH_LONG).show();
+                if (success && warnings != null && !warnings.isEmpty()) {
+                    showWarningDialog(warnings);
                 }
             }
         }, (current, total) -> {
@@ -136,6 +136,15 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                 progressBar.setProgress(current);
             }
         });
+    }
+
+    private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
+        String message = ImportManager.summarizeWarnings(warnings);
+        new AlertDialog.Builder(requireContext())
+            .setTitle(R.string.import_warnings_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show();
     }
 
     @Nullable

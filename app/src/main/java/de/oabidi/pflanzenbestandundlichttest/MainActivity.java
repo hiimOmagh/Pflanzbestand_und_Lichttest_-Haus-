@@ -17,8 +17,10 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
@@ -27,6 +29,8 @@ import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.util.List;
 
 /**
  * Activity hosting the main navigation of the app.
@@ -64,9 +68,12 @@ public class MainActivity extends AppCompatActivity {
         importLauncher = registerForActivityResult(
             new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
-                    importManager.importData(uri, ImportManager.Mode.MERGE, (success, hadWarnings) -> {
+                    importManager.importData(uri, ImportManager.Mode.MERGE, (success, warnings) -> {
                         int msg = success ? R.string.import_success : R.string.import_failure;
                         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+                        if (success && warnings != null && !warnings.isEmpty()) {
+                            showWarningDialog(warnings);
+                        }
                     });
                 } else {
                     Toast.makeText(this, R.string.import_failure, Toast.LENGTH_SHORT).show();
@@ -184,6 +191,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
+        String message = ImportManager.summarizeWarnings(warnings);
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.import_warnings_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .show();
     }
 
     /**
