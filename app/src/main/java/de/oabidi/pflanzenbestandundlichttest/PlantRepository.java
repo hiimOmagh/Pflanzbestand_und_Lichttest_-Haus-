@@ -97,7 +97,8 @@ public class PlantRepository {
                 }
             }
             if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+                List<Plant> finalResult = result;
+                mainHandler.post(() -> callback.accept(finalResult));
             }
         });
     }

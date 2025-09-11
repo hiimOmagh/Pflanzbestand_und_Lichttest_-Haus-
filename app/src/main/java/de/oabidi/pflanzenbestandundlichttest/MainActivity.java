@@ -17,14 +17,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 /**
  * Activity hosting the main navigation of the app.
  */
-public class MainActivity extends AppCompatActivity implements MainPresenter.View {
+public class MainActivity extends AppCompatActivity implements MainView {
     /** Intent extra to navigate directly to the measurement screen. */
     public static final String EXTRA_NAVIGATE_MEASURE =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
@@ -37,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements MainPresenter.Vie
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        presenter = new MainPresenter(this, getApplicationContext());
+        presenter = new MainPresenterImpl(this, getApplicationContext());
 
         exportLauncher = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/zip"),
@@ -52,27 +50,8 @@ public class MainActivity extends AppCompatActivity implements MainPresenter.Vie
             presenter::onNotificationPermissionResult);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment fragment;
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_plants) {
-                fragment = new PlantListFragment();
-            } else if (itemId == R.id.nav_measure) {
-                fragment = new LightMeasurementFragment();
-            } else if (itemId == R.id.nav_diary) {
-                fragment = new DiaryFragment();
-            } else if (itemId == R.id.nav_reminders) {
-                fragment = new ReminderListFragment();
-            } else if (itemId == R.id.nav_stats) {
-                fragment = new StatsFragment();
-            } else {
-                fragment = new SettingsFragment();
-            }
-            getSupportFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, fragment)
-                .commit();
-            return true;
-        });
+        bottomNavigationView.setOnItemSelectedListener(item ->
+            presenter.onNavigationItemSelected(item.getItemId()));
 
         presenter.onCreate(savedInstanceState, getIntent());
 
@@ -117,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements MainPresenter.Vie
             || super.onOptionsItemSelected(item);
     }
 
-    // MainPresenter.View implementation
+    // MainView implementation
     @Override
     public void navigateToFragment(Fragment fragment, boolean addToBackStack) {
         androidx.fragment.app.FragmentTransaction transaction =
