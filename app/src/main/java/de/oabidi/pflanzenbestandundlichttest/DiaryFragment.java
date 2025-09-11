@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -68,7 +69,9 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        presenter = new DiaryPresenter(this, requireContext().getApplicationContext(), plantId);
+        Context context = requireContext().getApplicationContext();
+        PlantRepository repository = ((PlantApp) context).getRepository();
+        presenter = new DiaryPresenter(this, repository, plantId);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(

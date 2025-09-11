@@ -1,7 +1,5 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
-import android.content.Context;
-
 import java.util.List;
 
 /** Presenter for managing diary entries. */
@@ -15,9 +13,9 @@ public class DiaryPresenter {
     private final long plantId;
     private String query = "";
 
-    public DiaryPresenter(View view, Context context, long plantId) {
+    public DiaryPresenter(View view, PlantRepository repository, long plantId) {
         this.view = view;
-        this.repository = ((PlantApp) context.getApplicationContext()).getRepository();
+        this.repository = repository;
         this.plantId = plantId;
     }
 

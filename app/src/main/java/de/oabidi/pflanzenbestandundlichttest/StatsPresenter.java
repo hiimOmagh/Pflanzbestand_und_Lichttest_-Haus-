@@ -23,9 +23,9 @@ public class StatsPresenter {
     private final Context context;
     private static final int DLI_DAYS = 7;
 
-    public StatsPresenter(View view, Context context) {
+    public StatsPresenter(View view, PlantRepository repository, Context context) {
         this.view = view;
-        this.repository = ((PlantApp) context.getApplicationContext()).getRepository();
+        this.repository = repository;
         this.context = context.getApplicationContext();
     }
 

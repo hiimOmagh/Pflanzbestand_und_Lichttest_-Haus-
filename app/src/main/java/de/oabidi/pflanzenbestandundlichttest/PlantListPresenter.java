@@ -29,17 +29,17 @@ public class PlantListPresenter {
     private final ExportManager exportManager;
     private final ImportManager importManager;
 
-    public PlantListPresenter(View view, Context context, ExportManager exportManager,
-                              ImportManager importManager) {
+    public PlantListPresenter(View view, PlantRepository repository, Context context,
+                              ExportManager exportManager, ImportManager importManager) {
         this.view = view;
+        this.repository = repository;
         this.context = context.getApplicationContext();
-        this.repository = ((PlantApp) this.context).getRepository();
         this.exportManager = exportManager;
         this.importManager = importManager;
     }
 
-    public PlantListPresenter(View view, Context context) {
-        this(view, context.getApplicationContext(),
+    public PlantListPresenter(View view, PlantRepository repository, Context context) {
+        this(view, repository, context.getApplicationContext(),
             new ExportManager(context.getApplicationContext()),
             new ImportManager(context.getApplicationContext()));
     }

@@ -27,13 +27,14 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     private float lightHours = 12f;
 
-    public LightMeasurementPresenter(View view, Context context, float calibrationFactor, int sampleSize) {
+    public LightMeasurementPresenter(View view, PlantRepository plantRepository, Context context,
+                                     float calibrationFactor, int sampleSize) {
         this.view = view;
+        this.plantRepository = plantRepository;
         this.context = context.getApplicationContext();
         this.calibrationFactor = calibrationFactor;
         this.sampleSize = sampleSize;
         lightSensorHelper = new LightSensorHelper(this.context, this, sampleSize);
-        plantRepository = ((PlantApp) this.context).getRepository();
     }
 
     public boolean hasLightSensor() {

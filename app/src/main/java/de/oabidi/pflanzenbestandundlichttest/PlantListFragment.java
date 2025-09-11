@@ -124,9 +124,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
-        ExportManager exportManager = new ExportManager(requireContext().getApplicationContext());
-        ImportManager importManager = new ImportManager(requireContext().getApplicationContext());
-        presenter = new PlantListPresenter(this, requireContext().getApplicationContext(), exportManager, importManager);
+        Context context = requireContext().getApplicationContext();
+        ExportManager exportManager = new ExportManager(context);
+        ImportManager importManager = new ImportManager(context);
+        PlantRepository repository = ((PlantApp) context).getRepository();
+        presenter = new PlantListPresenter(this, repository, context, exportManager, importManager);
         presenter.refreshPlants();
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
