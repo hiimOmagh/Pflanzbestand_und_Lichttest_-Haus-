@@ -1,41 +1,30 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
-import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import java.util.List;
 
 /**
  * Activity hosting the main navigation of the app.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainPresenter.View {
     /** Intent extra to navigate directly to the measurement screen. */
     public static final String EXTRA_NAVIGATE_MEASURE =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
@@ -43,60 +32,24 @@ public class MainActivity extends AppCompatActivity {
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
-    private ExportManager exportManager;
-    private ImportManager importManager;
+    private MainPresenter presenter;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        exportManager = new ExportManager(getApplicationContext());
-        importManager = new ImportManager(getApplicationContext());
+        presenter = new MainPresenter(this, getApplicationContext());
 
         exportLauncher = registerForActivityResult(
-            new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
-                if (uri != null) {
-                    exportManager.export(uri, success -> {
-                        int msg = success ? R.string.export_success : R.string.export_failure;
-                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                    });
-                } else {
-                    Toast.makeText(this, R.string.export_failure, Toast.LENGTH_SHORT).show();
-                }
-            });
+            new ActivityResultContracts.CreateDocument("application/zip"),
+            presenter::handleExportResult);
 
         importLauncher = registerForActivityResult(
-            new ActivityResultContracts.OpenDocument(), uri -> {
-                if (uri != null) {
-                    importManager.importData(uri, ImportManager.Mode.MERGE, (success, warnings) -> {
-                        int msg = success ? R.string.import_success : R.string.import_failure;
-                        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                        if (success && warnings != null && !warnings.isEmpty()) {
-                            showWarningDialog(warnings);
-                        }
-                    });
-                } else {
-                    Toast.makeText(this, R.string.import_failure, Toast.LENGTH_SHORT).show();
-                }
-            });
+            new ActivityResultContracts.OpenDocument(),
+            presenter::handleImportResult);
 
         notificationPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (!isGranted) {
-                    Toast.makeText(
-                        this,
-                        R.string.notification_permission_denied,
-                        Toast.LENGTH_LONG
-                    ).show();
-                }
-            }
-        );
-
-        if (Build.VERSION.SDK_INT >= 33
-            && !NotificationManagerCompat.from(this).areNotificationsEnabled()) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
-        }
+            presenter::onNotificationPermissionResult);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -121,22 +74,7 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        SharedPreferences prefs = getSharedPreferences(SettingsKeys.PREFS_NAME, MODE_PRIVATE);
-        boolean hasOnboarded = prefs.getBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false);
-
-        if (savedInstanceState == null) {
-            if (!hasOnboarded) {
-                getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.nav_host_fragment, new OnboardingFragment())
-                    .commit();
-            } else if (getIntent().getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
-                bottomNavigationView.setSelectedItemId(R.id.nav_measure);
-            } else {
-                getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.nav_host_fragment, new PlantListFragment())
-                    .commit();
-            }
-        }
+        presenter.onCreate(savedInstanceState, getIntent());
 
         // Creates a button that mimics a crash when pressed
         Button crashButton = new Button(this);
@@ -150,8 +88,8 @@ public class MainActivity extends AppCompatActivity {
         // Get the root FrameLayout
         FrameLayout rootView = (FrameLayout) findViewById(android.R.id.content);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT);
         params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         params.bottomMargin = 180; // Increased from 100 to 180
         rootView.addView(crashButton, params);
@@ -162,10 +100,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (intent.getBooleanExtra(EXTRA_NAVIGATE_MEASURE, false)) {
-            BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-            bottomNavigationView.setSelectedItemId(R.id.nav_measure);
-        }
+        presenter.onNewIntent(intent);
     }
 
     @Override
@@ -176,30 +111,51 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_help) {
-            getSupportFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, new OnboardingFragment())
-                .addToBackStack(null)
-                .commit();
-            return true;
-        } else if (id == R.id.action_export_data) {
-            exportLauncher.launch(getString(R.string.export_file_name));
-            return true;
-        } else if (id == R.id.action_import_data) {
-            importLauncher.launch(new String[]{"text/csv"});
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+        return presenter.onOptionsItemSelected(item.getItemId())
+            || super.onOptionsItemSelected(item);
     }
 
-    private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
-        String message = ImportManager.summarizeWarnings(warnings);
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.import_warnings_title)
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok, null)
-            .show();
+    // MainPresenter.View implementation
+    @Override
+    public void navigateToFragment(Fragment fragment, boolean addToBackStack) {
+        androidx.fragment.app.FragmentTransaction transaction =
+            getSupportFragmentManager().beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment);
+        if (addToBackStack) {
+            transaction.addToBackStack(null);
+        }
+        transaction.commit();
+    }
+
+    @Override
+    public void showToast(int messageResId) {
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showLongToast(int messageResId) {
+        Toast.makeText(this, messageResId, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void selectNavigationItem(int itemId) {
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+        bottomNavigationView.setSelectedItemId(itemId);
+    }
+
+    @Override
+    public void requestNotificationPermission(String permission) {
+        notificationPermissionLauncher.launch(permission);
+    }
+
+    @Override
+    public void launchExport(String fileName) {
+        exportLauncher.launch(fileName);
+    }
+
+    @Override
+    public void launchImport(String[] mimeTypes) {
+        importLauncher.launch(mimeTypes);
     }
 
     /**
