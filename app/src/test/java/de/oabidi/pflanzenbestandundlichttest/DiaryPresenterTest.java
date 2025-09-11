@@ -35,6 +35,7 @@ public class DiaryPresenterTest {
     private static class StubView implements DiaryPresenter.View {
         List<DiaryEntry> shown;
         @Override public void showEntries(List<DiaryEntry> entries) { shown = entries; }
+        @Override public void showError(String message) {}
     }
 
     @Test
@@ -43,7 +44,7 @@ public class DiaryPresenterTest {
         List<DiaryEntry> entries = Arrays.asList(new DiaryEntry(1, 0L, DiaryEntry.TYPE_WATER, null));
         StubRepository repo = new StubRepository(context, entries);
         StubView view = new StubView();
-        DiaryPresenter presenter = new DiaryPresenter(view, repo, 1L);
+        DiaryPresenter presenter = new DiaryPresenter(view, repo, 1L, context);
         presenter.loadEntries("water");
         assertEquals(entries, view.shown);
     }

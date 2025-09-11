@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import android.widget.Toast;
 
 import java.util.function.Consumer;
 
@@ -71,7 +72,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         }
         Context context = requireContext().getApplicationContext();
         PlantRepository repository = ((PlantApp) context).getRepository();
-        presenter = new DiaryPresenter(this, repository, plantId);
+        presenter = new DiaryPresenter(this, repository, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(
@@ -285,5 +286,12 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             }
         }
         adapter.submitList(entries);
+    }
+
+    @Override
+    public void showError(String message) {
+        if (isAdded()) {
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
     }
 }

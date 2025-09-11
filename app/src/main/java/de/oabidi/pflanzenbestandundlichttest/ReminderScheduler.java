@@ -48,7 +48,8 @@ public class ReminderScheduler {
         PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
         Reminder reminder = new Reminder(triggerAt, message, plantId);
         repository.insertReminder(reminder,
-            () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId));
+            () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId),
+            e -> Toast.makeText(context, R.string.error_database, Toast.LENGTH_SHORT).show());
     }
 
     public static void scheduleReminderAt(Context context, long triggerAt, String message, long id, long plantId) {

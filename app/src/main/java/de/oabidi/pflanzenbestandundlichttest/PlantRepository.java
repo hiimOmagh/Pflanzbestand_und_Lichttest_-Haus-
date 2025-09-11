@@ -347,12 +347,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> insertDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            diaryDao.insert(entry);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return insertDiaryEntry(entry, callback, null);
+    }
+
+    public Future<?> insertDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> diaryDao.insert(entry), callback, errorCallback);
     }
 
     /**
@@ -363,12 +362,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> updateDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            diaryDao.update(entry);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return updateDiaryEntry(entry, callback, null);
+    }
+
+    public Future<?> updateDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> diaryDao.update(entry), callback, errorCallback);
     }
 
     /**
@@ -379,13 +377,14 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+        return deleteDiaryEntry(entry, callback, null);
+    }
+
+    public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> {
             PhotoManager.deletePhoto(context, entry.getPhotoUri());
             diaryDao.delete(entry);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        }, callback, errorCallback);
     }
 
     /**
@@ -411,13 +410,14 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> insertReminder(Reminder reminder, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+        return insertReminder(reminder, callback, null);
+    }
+
+    public Future<?> insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> {
             long id = reminderDao.insert(reminder);
             reminder.setId(id);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        }, callback, errorCallback);
     }
 
     /**
@@ -428,12 +428,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> updateReminder(Reminder reminder, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            reminderDao.update(reminder);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return updateReminder(reminder, callback, null);
+    }
+
+    public Future<?> updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> reminderDao.update(reminder), callback, errorCallback);
     }
 
     /**
@@ -444,12 +443,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> deleteReminderById(long id, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            reminderDao.deleteById(id);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return deleteReminderById(id, callback, null);
+    }
+
+    public Future<?> deleteReminderById(long id, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> reminderDao.deleteById(id), callback, errorCallback);
     }
 
     /**
@@ -489,12 +487,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> insertSpeciesTarget(SpeciesTarget target, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            speciesTargetDao.insert(target);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return insertSpeciesTarget(target, callback, null);
+    }
+
+    public Future<?> insertSpeciesTarget(SpeciesTarget target, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> speciesTargetDao.insert(target), callback, errorCallback);
     }
 
     /**
@@ -505,12 +502,11 @@ public class PlantRepository {
      * @return a {@link Future} representing the pending operation
      */
     public Future<?> deleteSpeciesTarget(String speciesKey, Runnable callback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
-            speciesTargetDao.deleteBySpeciesKey(speciesKey);
-            if (callback != null) {
-                mainHandler.post(callback);
-            }
-        });
+        return deleteSpeciesTarget(speciesKey, callback, null);
+    }
+
+    public Future<?> deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
+        return runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
     }
 
     /**

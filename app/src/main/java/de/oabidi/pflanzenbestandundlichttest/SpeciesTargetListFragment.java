@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 
@@ -103,7 +104,8 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     float min = parseFloat(minEdit.getText().toString());
                     float max = parseFloat(maxEdit.getText().toString());
                     SpeciesTarget newTarget = new SpeciesTarget(key, min, max);
-                    repository.insertSpeciesTarget(newTarget, this::loadTargets);
+                    repository.insertSpeciesTarget(newTarget, this::loadTargets,
+                        e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
                     dialog.dismiss();
                 }
             });
@@ -164,7 +166,8 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             .setTitle(R.string.action_delete_target)
             .setMessage(R.string.confirm_delete_target)
             .setPositiveButton(android.R.string.ok, (d, which) ->
-                repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets))
+                repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets,
+                    e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); }))
             .setNegativeButton(android.R.string.cancel, null)
             .show();
     }
