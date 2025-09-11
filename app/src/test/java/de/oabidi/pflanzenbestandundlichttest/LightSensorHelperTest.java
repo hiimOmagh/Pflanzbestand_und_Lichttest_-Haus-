@@ -60,7 +60,8 @@ public class LightSensorHelperTest {
     @Test
     public void startClearsBufferAndResetsAverage() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        LightSensorHelper helper = new LightSensorHelper(context, null, 3);
+        List<Float> averages = new ArrayList<>();
+        LightSensorHelper helper = new LightSensorHelper(context, (raw, avg) -> averages.add(avg), 3);
 
         helper.onSensorChanged(createLightEvent(50f));
         helper.onSensorChanged(createLightEvent(60f));
@@ -82,5 +83,13 @@ public class LightSensorHelperTest {
 
         assertEquals(0, samples.size());
         assertEquals(0f, sumField.getFloat(helper), 0.0001f);
+
+        // A new reading after start() should behave as the first sample.
+        helper.onSensorChanged(createLightEvent(70f));
+
+        assertEquals(1, samples.size());
+        assertEquals(70f, sumField.getFloat(helper), 0.0001f);
+        assertEquals(1, averages.size());
+        assertEquals(70f, averages.get(0), 0.0001f);
     }
 }
