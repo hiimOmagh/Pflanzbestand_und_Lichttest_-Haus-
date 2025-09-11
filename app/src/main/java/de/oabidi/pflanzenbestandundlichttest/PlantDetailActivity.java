@@ -10,9 +10,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.DateFormat;
-import java.util.Date;
-
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -39,9 +36,9 @@ import androidx.core.view.WindowInsetsCompat;
  *   <li>{@code photoUri} – string form of the plant photo URI; empty string when unavailable</li>
  * </ul>
  */
-public class PlantDetailActivity extends AppCompatActivity {
+public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
     private long plantId;
-    private ExportManager exportManager;
+    private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
 
     @Override
@@ -71,29 +68,14 @@ public class PlantDetailActivity extends AppCompatActivity {
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        exportManager = new ExportManager(this);
-        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
-            if (uri != null) {
-                exportManager.export(uri, plantId, success -> {
-                    int msg = success ? R.string.export_success : R.string.export_failure;
-                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                });
-            } else {
-                Toast.makeText(this, R.string.export_failure, Toast.LENGTH_SHORT).show();
-            }
-        });
+        presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this));
+        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), presenter::onExportUriSelected);
 
-        setTextOrFallback(nameView, name);
-        setTextOrFallback(descriptionView, description);
-        setTextOrFallback(speciesView, species);
-        setTextOrFallback(locationHintView, locationHint);
-        if (acquiredAtEpoch == 0) {
-            acquiredAtView.setText(R.string.unknown_date);
-        } else {
-            DateFormat dateFormat = DateFormat.getDateInstance();
-            String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
-            acquiredAtView.setText(acquiredAt);
-        }
+        nameView.setText(presenter.getTextOrFallback(name));
+        descriptionView.setText(presenter.getTextOrFallback(description));
+        speciesView.setText(presenter.getTextOrFallback(species));
+        locationHintView.setText(presenter.getTextOrFallback(locationHint));
+        acquiredAtView.setText(presenter.formatAcquiredAt(acquiredAtEpoch));
         if (photoUri == null) {
             photoView.setVisibility(View.GONE);
         } else {
@@ -106,13 +88,7 @@ public class PlantDetailActivity extends AppCompatActivity {
                 getString(R.string.plant_photo_desc_format, cdName));
         }
 
-        diaryButton.setOnClickListener(v -> {
-            DiaryFragment fragment = DiaryFragment.newInstance(plantId);
-            getSupportFragmentManager().beginTransaction()
-                .replace(android.R.id.content, fragment)
-                .addToBackStack(null)
-                .commit();
-        });
+        diaryButton.setOnClickListener(v -> presenter.onDiaryClicked());
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
@@ -133,21 +109,43 @@ public class PlantDetailActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_export_plant) {
-            exportLauncher.launch(getString(R.string.export_file_name));
+            presenter.onExportRequested();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Sets the text of the given view or a fallback when the text is {@code null} or empty.
-     *
-     * @param view the TextView to update
-     * @param text the text to set, may be {@code null}
-     */
-    private static void setTextOrFallback(TextView view, String text) {
-        view.setText((text == null || text.isEmpty())
-            ? view.getContext().getString(R.string.placeholder_dash)
-            : text);
+    @Override
+    public void showExportSuccess() {
+        Toast.makeText(this, R.string.export_success, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showExportFailure() {
+        Toast.makeText(this, R.string.export_failure, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void launchExport() {
+        exportLauncher.launch(getString(R.string.export_file_name));
+    }
+
+    @Override
+    public void navigateToDiary(long plantId) {
+        DiaryFragment fragment = DiaryFragment.newInstance(plantId);
+        getSupportFragmentManager().beginTransaction()
+            .replace(android.R.id.content, fragment)
+            .addToBackStack(null)
+            .commit();
+    }
+
+    @Override
+    public String getPlaceholderDash() {
+        return getString(R.string.placeholder_dash);
+    }
+
+    @Override
+    public String getUnknownDateText() {
+        return getString(R.string.unknown_date);
     }
 }
