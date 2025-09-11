@@ -89,17 +89,20 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
 
         void bind(DiaryEntry entry, OnEntryClickListener clickListener,
                   OnEntryLongClickListener longClickListener) {
-            String note = entry.getNote() != null ? entry.getNote() : "";
+            String note = entry.getNote();
             String date = df.format(new Date(entry.getTimeEpoch()));
             String label = labelFromCode(itemView.getContext(), entry.getType());
             String item = itemView.getContext()
-                .getString(R.string.format_diary_entry, date, label, note);
+                .getString(R.string.format_diary_entry, date, label,
+                    note != null ? note : "");
             textView.setText(item);
 
             if (entry.getPhotoUri() != null) {
                 photoView.setVisibility(View.VISIBLE);
                 Uri uri = Uri.parse(entry.getPhotoUri());
                 photoView.setImageURI(uri);
+                String description = (note != null && !note.isEmpty()) ? note : label;
+                photoView.setContentDescription(description);
                 photoView.setOnClickListener(v -> {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setDataAndType(uri, "image/*");
@@ -109,6 +112,7 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
             } else {
                 photoView.setVisibility(View.GONE);
                 photoView.setOnClickListener(null);
+                photoView.setContentDescription(null);
             }
 
             itemView.setOnClickListener(v -> clickListener.onEntryClick(entry));
