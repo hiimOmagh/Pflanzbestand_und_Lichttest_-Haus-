@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.net.Uri;
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Before;
@@ -41,7 +42,7 @@ public class PlantDetailPresenterTest {
             this.result = result;
         }
         @Override
-        public void export(Uri uri, long plantId, Callback cb) {
+        public void export(@NonNull Uri uri, long plantId, Callback cb) {
             this.uri = uri;
             this.plantId = plantId;
             cb.onComplete(result);

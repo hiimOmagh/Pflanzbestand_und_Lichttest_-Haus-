@@ -40,7 +40,8 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
 
-    private void showProgress() {
+    @Override
+    public void showProgress() {
         if (!isAdded()) {
             return;
         }
@@ -58,7 +59,8 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         progressDialog.show();
     }
 
-    private void hideProgress() {
+    @Override
+    public void hideProgress() {
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
             progressBar.setProgress(0);
@@ -68,8 +70,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     private final ActivityResultLauncher<String> exportLauncher =
         registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
             if (uri != null) {
-                showProgress();
-                presenter.exportData(uri);
+                presenter.startExport(uri);
             } else if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
             }
@@ -86,19 +87,24 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             }
         });
 
+    @Override
+    public void requestExport(String fileName) {
+        exportLauncher.launch(fileName);
+    }
+
+    @Override
+    public void requestImport() {
+        importLauncher.launch(new String[]{"text/csv"});
+    }
+
     private void showImportChoiceDialog(@NonNull Uri uri) {
         new AlertDialog.Builder(requireContext())
             .setTitle(R.string.menu_import_data)
             .setMessage(R.string.import_choice_message)
-            .setPositiveButton(R.string.import_merge, (d, w) -> startImport(uri, ImportManager.Mode.MERGE))
-            .setNegativeButton(R.string.import_replace, (d, w) -> startImport(uri, ImportManager.Mode.REPLACE))
+            .setPositiveButton(R.string.import_merge, (d, w) -> presenter.startImport(uri, ImportManager.Mode.MERGE))
+            .setNegativeButton(R.string.import_replace, (d, w) -> presenter.startImport(uri, ImportManager.Mode.REPLACE))
             .setNeutralButton(android.R.string.cancel, null)
             .show();
-    }
-
-    private void startImport(@NonNull Uri uri, ImportManager.Mode mode) {
-        showProgress();
-        presenter.importData(uri, mode);
     }
 
     private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
@@ -240,15 +246,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     @Override
     public void onPlantClick(Plant plant) {
-        Intent intent = new Intent(requireContext(), PlantDetailActivity.class);
-        intent.putExtra("plantId", plant.getId());
-        intent.putExtra("name", plant.getName());
-        intent.putExtra("description", plant.getDescription());
-        intent.putExtra("species", plant.getSpecies());
-        intent.putExtra("locationHint", plant.getLocationHint());
-        intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
-        String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
-        intent.putExtra("photoUri", photo);
+        Intent intent = MainActivity.createPlantDetailIntent(requireContext(), plant);
         startActivity(intent);
     }
 
@@ -287,13 +285,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                filterPlants(query);
+                presenter.filterPlants(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                filterPlants(newText);
+                presenter.filterPlants(newText);
                 return true;
             }
         });
@@ -309,17 +307,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             navigateToSpeciesTargets();
             return true;
         } else if (itemId == R.id.action_export_data) {
-            exportLauncher.launch(getString(R.string.export_file_name));
+            presenter.requestExport();
             return true;
         } else if (itemId == R.id.action_import_data) {
-            importLauncher.launch(new String[]{"text/csv"});
+            presenter.requestImport();
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void filterPlants(String query) {
-        presenter.searchPlants(query);
     }
 
     private void navigateToEdit(@Nullable Plant plant) {

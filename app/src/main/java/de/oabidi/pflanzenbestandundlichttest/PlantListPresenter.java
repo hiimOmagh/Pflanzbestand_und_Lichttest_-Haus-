@@ -16,6 +16,10 @@ public class PlantListPresenter {
         void showPlants(List<Plant> plants);
         void showSearchResults(List<Plant> plants);
         void showError(String message);
+        void showProgress();
+        void hideProgress();
+        void requestExport(String fileName);
+        void requestImport();
         void onExportProgress(int current, int total);
         void onExportResult(boolean success, Uri uri);
         void onImportProgress(int current, int total);
@@ -73,13 +77,26 @@ public class PlantListPresenter {
         }, e -> view.showError(context.getString(R.string.error_database)));
     }
 
-    public void exportData(Uri uri) {
-        exportManager.export(uri, success -> view.onExportResult(success, uri),
-            (c, t) -> view.onExportProgress(c, t));
+    public void requestExport() {
+        view.requestExport(context.getString(R.string.export_file_name));
     }
 
-    public void importData(Uri uri, ImportManager.Mode mode) {
+    public void requestImport() {
+        view.requestImport();
+    }
+
+    public void startExport(Uri uri) {
+        view.showProgress();
+        exportManager.export(uri, success -> {
+            view.hideProgress();
+            view.onExportResult(success, uri);
+        }, (c, t) -> view.onExportProgress(c, t));
+    }
+
+    public void startImport(Uri uri, ImportManager.Mode mode) {
+        view.showProgress();
         importManager.importData(uri, mode, (success, error, warnings, message) -> {
+            view.hideProgress();
             view.onImportResult(success, error, warnings, message);
             if (success) {
                 refreshPlants();
@@ -87,7 +104,7 @@ public class PlantListPresenter {
         }, (c, t) -> view.onImportProgress(c, t));
     }
 
-    public void searchPlants(String query) {
+    public void filterPlants(String query) {
         if (query == null || query.trim().isEmpty()) {
             refreshPlants();
         } else {
