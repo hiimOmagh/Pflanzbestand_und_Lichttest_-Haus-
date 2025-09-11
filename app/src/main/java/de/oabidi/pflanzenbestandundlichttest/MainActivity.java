@@ -97,6 +97,12 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
+    public void showExportProgress(int current, int total) {
+        String msg = getString(R.string.export_progress, current, total);
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void selectNavigationItem(int itemId) {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setSelectedItemId(itemId);

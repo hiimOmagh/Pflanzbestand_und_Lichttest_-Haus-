@@ -18,6 +18,9 @@ public interface MainView {
     /** Show a longer toast message. */
     void showLongToast(int messageResId);
 
+    /** Display export progress to the user. */
+    void showExportProgress(int current, int total);
+
     /** Programmatically select an item in the bottom navigation. */
     void selectNavigationItem(int itemId);
 

@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.*;
+import static org.robolectric.Robolectric.buildFragment;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -85,7 +86,7 @@ public class PlantListFragmentTest {
         Context context = ApplicationProvider.getApplicationContext();
         ((TestApp) context).setRepository(new StubPlantRepository(context, plants));
 
-        PlantListFragment fragment = Robolectric.buildFragment(PlantListFragment.class).create().start().resume().get();
+        PlantListFragment fragment = buildFragment(PlantListFragment.class).create().start().resume().get();
         RecordingPlantAdapter adapter = new RecordingPlantAdapter();
         Field plantsField = PlantListFragment.class.getDeclaredField("plants");
         plantsField.setAccessible(true);
