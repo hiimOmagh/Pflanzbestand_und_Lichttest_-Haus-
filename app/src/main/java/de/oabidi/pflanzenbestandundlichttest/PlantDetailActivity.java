@@ -90,7 +90,7 @@ public class PlantDetailActivity extends AppCompatActivity {
         if (acquiredAtEpoch == 0) {
             acquiredAtView.setText(R.string.unknown_date);
         } else {
-            DateFormat dateFormat = DateFormat.getDateTimeInstance();
+            DateFormat dateFormat = DateFormat.getDateInstance();
             String acquiredAt = dateFormat.format(new Date(acquiredAtEpoch));
             acquiredAtView.setText(acquiredAt);
         }
