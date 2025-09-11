@@ -76,23 +76,25 @@ public class MainActivity extends AppCompatActivity implements MainPresenter.Vie
 
         presenter.onCreate(savedInstanceState, getIntent());
 
-        // Creates a button that mimics a crash when pressed
-        Button crashButton = new Button(this);
-        crashButton.setText(R.string.test_crash);
-        crashButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                throw new RuntimeException(getString(R.string.test_crash)); // Force a crash
-            }
-        });
+        if (BuildConfig.DEBUG) {
+            // Creates a button that mimics a crash when pressed
+            Button crashButton = new Button(this);
+            crashButton.setText(R.string.test_crash);
+            crashButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View view) {
+                    throw new RuntimeException(getString(R.string.test_crash)); // Force a crash
+                }
+            });
 
-        // Get the root FrameLayout
-        FrameLayout rootView = (FrameLayout) findViewById(android.R.id.content);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT);
-        params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        params.bottomMargin = 180; // Increased from 100 to 180
-        rootView.addView(crashButton, params);
+            // Get the root FrameLayout
+            FrameLayout rootView = (FrameLayout) findViewById(android.R.id.content);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+            params.bottomMargin = 180; // Increased from 100 to 180
+            rootView.addView(crashButton, params);
+        }
 
     }
 
