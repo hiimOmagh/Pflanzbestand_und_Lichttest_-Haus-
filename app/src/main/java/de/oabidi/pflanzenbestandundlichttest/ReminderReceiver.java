@@ -12,6 +12,8 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * Receives reminder alarms and displays notifications with action buttons.
  */
@@ -26,12 +28,12 @@ public class ReminderReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
+        PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
         if (ACTION_MARK_DONE.equals(action)) {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
-            PlantDatabase.databaseWriteExecutor.execute(() ->
-                PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
+            repository.deleteReminderById(reminderId, null);
             return;
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
@@ -40,8 +42,7 @@ public class ReminderReceiver extends BroadcastReceiver {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
-            PlantDatabase.databaseWriteExecutor.execute(() ->
-                PlantDatabase.getDatabase(context).reminderDao().deleteById(reminderId));
+            repository.deleteReminderById(reminderId, null);
             return;
         }
 
@@ -52,9 +53,13 @@ public class ReminderReceiver extends BroadcastReceiver {
         int notificationId = (int) System.currentTimeMillis();
 
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            PlantDatabase db = PlantDatabase.getDatabase(context);
-            db.reminderDao().deleteById(reminderId);
-            Plant plant = db.plantDao().findById(plantId);
+            repository.deleteReminderById(reminderId, null);
+            Plant plant = null;
+            try {
+                plant = repository.getPlant(plantId).get();
+            } catch (ExecutionException | InterruptedException e) {
+                // Ignore and proceed without plant details
+            }
 
             Intent doneIntent = new Intent(context, ReminderReceiver.class);
             doneIntent.setAction(ACTION_MARK_DONE);

@@ -41,9 +41,8 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_measure_button, pendingIntent);
 
         PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            long now = System.currentTimeMillis();
-            List<Reminder> reminders = repository.getAllRemindersSync();
+        final long now = System.currentTimeMillis();
+        repository.getAllReminders(reminders -> {
             Reminder next = null;
             for (Reminder r : reminders) {
                 if (r.getTriggerAt() >= now && (next == null || r.getTriggerAt() < next.getTriggerAt())) {
