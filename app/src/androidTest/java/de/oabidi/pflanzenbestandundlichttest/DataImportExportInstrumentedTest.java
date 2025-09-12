@@ -84,7 +84,7 @@ public class DataImportExportInstrumentedTest {
         File file = new File(context.getCacheDir(), "export.zip");
         Uri uri = Uri.fromFile(file);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context).export(uri, success -> exportLatch.countDown());
+        new ExportManager(context, repository).export(uri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
 
         // Wipe database
@@ -203,7 +203,7 @@ public class DataImportExportInstrumentedTest {
         File export = new File(context.getCacheDir(), "persist_export.zip");
         Uri exportUri = Uri.fromFile(export);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context).export(exportUri, success -> exportLatch.countDown());
+        new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
 
         PlantDatabase.databaseWriteExecutor.submit(() ->

@@ -61,7 +61,7 @@ public class DataRoundTripInstrumentedTest {
         File exportFile = new File(context.getCacheDir(), "round_trip.zip");
         Uri exportUri = Uri.fromFile(exportFile);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context).export(exportUri, success -> exportLatch.countDown());
+        new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
 
         // Wipe database

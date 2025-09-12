@@ -100,7 +100,7 @@ public class PlantListPresenterTest {
 
     private static class FakeExportManager extends ExportManager {
         Uri lastUri;
-        FakeExportManager(Context c) { super(c); }
+        FakeExportManager(Context c) { super(c, new PlantRepository(c)); }
         @Override
         public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             lastUri = uri;

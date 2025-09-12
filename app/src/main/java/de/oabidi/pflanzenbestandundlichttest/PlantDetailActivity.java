@@ -67,7 +67,8 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this));
+        PlantRepository repository = ((PlantApp) getApplicationContext()).getRepository();
+        presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this, repository));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), presenter::onExportUriSelected);
 
         nameView.setText(presenter.getTextOrFallback(name));

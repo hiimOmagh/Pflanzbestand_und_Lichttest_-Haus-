@@ -17,11 +17,10 @@ import org.robolectric.Shadows;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.FutureTask;
 
 @RunWith(RobolectricTestRunner.class)
 public class ExportManagerMethodsTest {
@@ -29,30 +28,21 @@ public class ExportManagerMethodsTest {
 
     private static class StubRepository extends PlantRepository {
         StubRepository(Context ctx) { super(ctx); }
-        private <T> java.util.concurrent.Future<T> immediate(T value) {
-            FutureTask<T> f = new FutureTask<>(() -> value);
-            f.run();
-            return f;
-        }
-        @Override public java.util.concurrent.Future<java.util.List<Plant>> getAllPlants() { return immediate(Collections.emptyList()); }
-        @Override public java.util.concurrent.Future<java.util.List<Measurement>> getAllMeasurements() { return immediate(Collections.emptyList()); }
-        @Override public java.util.concurrent.Future<java.util.List<DiaryEntry>> getAllDiaryEntries() { return immediate(Collections.emptyList()); }
-        @Override public java.util.concurrent.Future<java.util.List<Reminder>> getAllReminders() { return immediate(Collections.emptyList()); }
-        @Override public java.util.concurrent.Future<java.util.List<SpeciesTarget>> getAllSpeciesTargets() { return immediate(Collections.emptyList()); }
+        @Override
+        List<Plant> getAllPlantsSync() { return Collections.emptyList(); }
+        @Override List<Measurement> getAllMeasurementsSync() { return Collections.emptyList(); }
+        @Override List<DiaryEntry> getAllDiaryEntriesSync() { return Collections.emptyList(); }
+        @Override List<Reminder> getAllRemindersSync() { return Collections.emptyList(); }
+        @Override List<SpeciesTarget> getAllSpeciesTargetsSync() { return Collections.emptyList(); }
     }
 
     private static class FailingRepository extends PlantRepository {
         FailingRepository(Context ctx) { super(ctx); }
-        private <T> java.util.concurrent.Future<T> fail() {
-            FutureTask<T> f = new FutureTask<>(() -> { throw new IOException("fail"); });
-            f.run();
-            return f;
-        }
-        @Override public java.util.concurrent.Future<java.util.List<Plant>> getAllPlants() { return fail(); }
-        @Override public java.util.concurrent.Future<java.util.List<Measurement>> getAllMeasurements() { return fail(); }
-        @Override public java.util.concurrent.Future<java.util.List<DiaryEntry>> getAllDiaryEntries() { return fail(); }
-        @Override public java.util.concurrent.Future<java.util.List<Reminder>> getAllReminders() { return fail(); }
-        @Override public java.util.concurrent.Future<java.util.List<SpeciesTarget>> getAllSpeciesTargets() { return fail(); }
+        @Override List<Plant> getAllPlantsSync() { throw new RuntimeException("fail"); }
+        @Override List<Measurement> getAllMeasurementsSync() { throw new RuntimeException("fail"); }
+        @Override List<DiaryEntry> getAllDiaryEntriesSync() { throw new RuntimeException("fail"); }
+        @Override List<Reminder> getAllRemindersSync() { throw new RuntimeException("fail"); }
+        @Override List<SpeciesTarget> getAllSpeciesTargetsSync() { throw new RuntimeException("fail"); }
     }
 
     @Before
@@ -62,8 +52,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void loadData_success() throws Exception {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
 
         Method m = ExportManager.class.getDeclaredMethod("loadData", long.class);
         m.setAccessible(true);
@@ -73,8 +62,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void loadData_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new FailingRepository(context));
+        ExportManager mgr = new ExportManager(context, new FailingRepository(context));
 
         Method m = ExportManager.class.getDeclaredMethod("loadData", long.class);
         m.setAccessible(true);
@@ -87,8 +75,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void writeCsv_success() throws Exception {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
@@ -106,8 +93,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void writeCsv_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
@@ -130,8 +116,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void zipFiles_success() throws Exception {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
 
         File dir = new File(context.getCacheDir(), "zipdir");
         dir.mkdirs();
@@ -149,8 +134,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void zipFiles_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context);
-        setRepository(mgr, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
 
         File dir = new File(context.getCacheDir(), "zipdir2");
         dir.mkdirs();
@@ -166,7 +150,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void notifyProgress_success() throws Exception {
-        ExportManager mgr = new ExportManager(context);
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
         Method m = ExportManager.class.getDeclaredMethod("notifyProgress", ExportManager.ProgressCallback.class, int[].class, int.class);
         m.setAccessible(true);
 
@@ -185,17 +169,11 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void notifyProgress_nullCallback() throws Exception {
-        ExportManager mgr = new ExportManager(context);
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
         Method m = ExportManager.class.getDeclaredMethod("notifyProgress", ExportManager.ProgressCallback.class, int[].class, int.class);
         m.setAccessible(true);
         int[] progress = {0};
         m.invoke(mgr, null, progress, 3);
         assertEquals(1, progress[0]);
-    }
-
-    private void setRepository(ExportManager mgr, PlantRepository repo) throws Exception {
-        Field f = ExportManager.class.getDeclaredField("repository");
-        f.setAccessible(true);
-        f.set(mgr, repo);
     }
 }

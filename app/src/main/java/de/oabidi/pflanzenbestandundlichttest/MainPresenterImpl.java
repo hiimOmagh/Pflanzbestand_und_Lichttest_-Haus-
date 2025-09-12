@@ -33,7 +33,8 @@ public class MainPresenterImpl implements MainPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState, Intent intent) {
-        exportManager = new ExportManager(context);
+        PlantRepository repository = ((PlantApp) context).getRepository();
+        exportManager = new ExportManager(context, repository);
         importManager = new ImportManager(context);
 
         if (Build.VERSION.SDK_INT >= 33

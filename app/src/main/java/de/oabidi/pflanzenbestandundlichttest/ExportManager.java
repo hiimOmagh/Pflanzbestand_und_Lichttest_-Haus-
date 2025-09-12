@@ -20,7 +20,6 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -43,9 +42,9 @@ public class ExportManager {
         void onProgress(int current, int total);
     }
 
-    public ExportManager(@NonNull Context context) {
+    public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
         this.context = context.getApplicationContext();
-        this.repository = ((PlantApp) this.context).getRepository();
+        this.repository = repository;
     }
 
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
@@ -107,20 +106,20 @@ public class ExportManager {
             List<DiaryEntry> diaryEntries;
             List<Reminder> reminders;
             if (plantId >= 0) {
-                Plant p = repository.getPlant(plantId).get();
+                Plant p = repository.getPlantSync(plantId);
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
-                measurements = repository.getMeasurementsForPlant(plantId).get();
-                diaryEntries = repository.diaryEntriesForPlant(plantId).get();
-                reminders = repository.getRemindersForPlant(plantId).get();
+                measurements = repository.getMeasurementsForPlantSync(plantId);
+                diaryEntries = repository.getDiaryEntriesForPlantSync(plantId);
+                reminders = repository.getRemindersForPlantSync(plantId);
             } else {
-                plants = repository.getAllPlants().get();
-                measurements = repository.getAllMeasurements().get();
-                diaryEntries = repository.getAllDiaryEntries().get();
-                reminders = repository.getAllReminders().get();
+                plants = repository.getAllPlantsSync();
+                measurements = repository.getAllMeasurementsSync();
+                diaryEntries = repository.getAllDiaryEntriesSync();
+                reminders = repository.getAllRemindersSync();
             }
-            List<SpeciesTarget> targets = repository.getAllSpeciesTargets().get();
+            List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
             return new ExportData(plants, measurements, diaryEntries, reminders, targets);
-        } catch (ExecutionException | InterruptedException e) {
+        } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);
             throw new IOException("Failed to load data", e);
         }

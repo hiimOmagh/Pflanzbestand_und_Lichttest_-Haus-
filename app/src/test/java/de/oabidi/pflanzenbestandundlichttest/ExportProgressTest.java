@@ -41,7 +41,7 @@ public class ExportProgressTest {
     }
 
     private static class FakeExportManager extends ExportManager {
-        FakeExportManager(Context context) { super(context); }
+        FakeExportManager(Context context) { super(context, new PlantRepository(context)); }
         @Override
         public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             Objects.requireNonNull(progressCallback).onProgress(1, 3);

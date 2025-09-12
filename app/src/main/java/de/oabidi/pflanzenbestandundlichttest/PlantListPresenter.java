@@ -45,7 +45,7 @@ public class PlantListPresenter {
 
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
         this(view, repository, context.getApplicationContext(),
-            new ExportManager(context.getApplicationContext()),
+            new ExportManager(context.getApplicationContext(), repository),
             new ImportManager(context.getApplicationContext()));
     }
 

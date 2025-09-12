@@ -38,7 +38,7 @@ public class PlantDetailPresenterTest {
         Uri uri;
         long plantId;
         FakeExportManager(Context context, boolean result) {
-            super(context);
+            super(context, new PlantRepository(context));
             this.result = result;
         }
         @Override
