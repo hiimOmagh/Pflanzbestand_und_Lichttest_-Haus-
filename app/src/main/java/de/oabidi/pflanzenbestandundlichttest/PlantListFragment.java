@@ -26,6 +26,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -36,7 +37,6 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantClickListener, PlantListPresenter.View {
     private PlantListPresenter presenter;
     private PlantAdapter adapter;
-    private List<Plant> plants = new ArrayList<>();
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
 
@@ -155,7 +155,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     @Override
     public void showPlants(List<Plant> plants) {
-        this.plants = plants;
         adapter.submitList(new ArrayList<>(plants));
     }
 
@@ -282,7 +281,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         inflater.inflate(R.menu.main_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        Objects.requireNonNull(searchView).setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 presenter.filterPlants(query);

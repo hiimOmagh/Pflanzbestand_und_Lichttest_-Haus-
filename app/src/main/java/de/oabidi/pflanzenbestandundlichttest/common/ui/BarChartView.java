@@ -8,6 +8,7 @@ import android.view.View;
 
 import java.util.Locale;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
@@ -117,7 +118,7 @@ public class BarChartView extends View {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(@NonNull Canvas canvas) {
         super.onDraw(canvas);
         if (seriesValues.isEmpty() || timestamps.isEmpty() || maxValue <= 0) {
             return;
@@ -169,8 +170,8 @@ public class BarChartView extends View {
 
         // X-axis ticks and labels
         textPaint.setTextAlign(Paint.Align.CENTER);
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-            getResources().getString(R.string.chart_date_pattern), Locale.getDefault());
+        SimpleDateFormat dateFormat = new SimpleDateFormat(getResources().getString(R.string.chart_date_pattern),
+            Locale.getDefault());
         for (int i = 0; i < entryCount; i++) {
             float x = originX + i * groupWidth + (groupWidth * 0.5f);
             canvas.drawLine(x, originY, x, originY + tick, axisPaint);

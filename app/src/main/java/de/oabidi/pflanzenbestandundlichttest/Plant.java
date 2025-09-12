@@ -20,7 +20,6 @@ import androidx.room.PrimaryKey;
 public class Plant {
     @PrimaryKey(autoGenerate = true)
     private long id;
-    @NonNull
     private String name;
     private String description;
     private String species;
@@ -74,6 +73,7 @@ public class Plant {
     /**
      * @return the plant's name, never {@code null}
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -84,9 +84,6 @@ public class Plant {
      * @param name new non-null name value
      */
     public void setName(@NonNull String name) {
-        if (name == null) {
-            throw new IllegalArgumentException("name must not be null");
-        }
         this.name = name;
     }
 

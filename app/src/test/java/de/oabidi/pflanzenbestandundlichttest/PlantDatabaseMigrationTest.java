@@ -101,7 +101,6 @@ public class PlantDatabaseMigrationTest {
         @PrimaryKey(autoGenerate = true)
         public long id;
         public long triggerAt;
-        @NonNull
         public String message;
     }
 }

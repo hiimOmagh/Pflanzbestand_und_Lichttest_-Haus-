@@ -41,7 +41,7 @@ public class DiaryPresenterTest {
     @Test
     public void loadEntriesUsesRepository() {
         Context context = ApplicationProvider.getApplicationContext();
-        List<DiaryEntry> entries = Arrays.asList(new DiaryEntry(1, 0L, DiaryEntry.TYPE_WATER, null));
+        List<DiaryEntry> entries = List.of(new DiaryEntry(1, 0L, DiaryEntry.TYPE_WATER, null));
         StubRepository repo = new StubRepository(context, entries);
         StubView view = new StubView();
         DiaryPresenter presenter = new DiaryPresenter(view, repo, 1L, context);

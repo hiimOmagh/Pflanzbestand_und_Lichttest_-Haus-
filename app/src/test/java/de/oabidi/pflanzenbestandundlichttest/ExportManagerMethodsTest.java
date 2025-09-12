@@ -20,6 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.FutureTask;
 
 @RunWith(RobolectricTestRunner.class)
@@ -80,7 +81,7 @@ public class ExportManagerMethodsTest {
         try {
             m.invoke(mgr, -1L);
         } catch (java.lang.reflect.InvocationTargetException e) {
-            throw e.getCause();
+            throw Objects.requireNonNull(e.getCause());
         }
     }
 
@@ -100,7 +101,7 @@ public class ExportManagerMethodsTest {
         Method m = ExportManager.class.getDeclaredMethod("writeCsv", File.class, dataClass);
         m.setAccessible(true);
         File csv = (File) m.invoke(mgr, dir, data);
-        assertTrue(csv.exists());
+        assertTrue(Objects.requireNonNull(csv).exists());
     }
 
     @Test(expected = IOException.class)
@@ -123,7 +124,7 @@ public class ExportManagerMethodsTest {
         try {
             m.invoke(mgr, dir, data);
         } catch (java.lang.reflect.InvocationTargetException e) {
-            throw e.getCause();
+            throw Objects.requireNonNull(e.getCause());
         }
     }
 
@@ -159,7 +160,7 @@ public class ExportManagerMethodsTest {
         try {
             m.invoke(mgr, Uri.parse("content://invalid/out.zip"), dir);
         } catch (java.lang.reflect.InvocationTargetException e) {
-            throw e.getCause();
+            throw Objects.requireNonNull(e.getCause());
         }
     }
 

@@ -9,11 +9,13 @@
         android:id="@+id/reminder_edit_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/hint_reminder_message" />
+        android:hint="@string/hint_reminder_message"
+        android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/reminder_edit_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/hint_reminder_time" />
+        android:hint="@string/hint_reminder_time"
+        android:minHeight="48dp" />
 </LinearLayout>

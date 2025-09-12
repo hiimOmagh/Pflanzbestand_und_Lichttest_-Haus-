@@ -30,6 +30,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -48,7 +49,6 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
     private String searchQuery = "";
-    private Spinner filterSpinner;
     private String typeFilter = "";
 
     /**
@@ -95,7 +95,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         RecyclerView listView = view.findViewById(R.id.diary_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        filterSpinner = view.findViewById(R.id.diary_filter_spinner);
+        Spinner filterSpinner = view.findViewById(R.id.diary_filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
             requireContext(),
             R.array.diary_filter_labels,
@@ -187,7 +187,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         inflater.inflate(R.menu.diary_menu, menu);
         MenuItem searchItem = menu.findItem(R.id.diary_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setQueryHint(getString(R.string.diary_search_hint));
+        Objects.requireNonNull(searchView).setQueryHint(getString(R.string.diary_search_hint));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {

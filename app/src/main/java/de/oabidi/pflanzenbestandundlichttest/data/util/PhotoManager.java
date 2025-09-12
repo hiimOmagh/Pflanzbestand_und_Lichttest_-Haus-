@@ -8,6 +8,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * Utility class for managing photo files associated with plants or diary entries.
@@ -36,7 +37,7 @@ public final class PhotoManager {
                 ContentResolver resolver = context.getContentResolver();
                 resolver.delete(uri, null, null);
             } else {
-                File f = new File(uri.getPath());
+                File f = new File(Objects.requireNonNull(uri.getPath()));
                 //noinspection ResultOfMethodCallIgnored
                 f.delete();
             }

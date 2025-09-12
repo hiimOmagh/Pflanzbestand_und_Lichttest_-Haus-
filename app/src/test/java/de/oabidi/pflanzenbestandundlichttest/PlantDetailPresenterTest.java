@@ -42,7 +42,7 @@ public class PlantDetailPresenterTest {
             this.result = result;
         }
         @Override
-        public void export(@NonNull Uri uri, long plantId, Callback cb) {
+        public void export(@NonNull Uri uri, long plantId, @NonNull Callback cb) {
             this.uri = uri;
             this.plantId = plantId;
             cb.onComplete(result);

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
@@ -385,8 +386,8 @@ public class ImportManager {
                             if (parts.size() >= 3) {
                                 try {
                                     String speciesKey = parts.get(0);
-                                    float ppfdMin = nf.parse(parts.get(1)).floatValue();
-                                    float ppfdMax = nf.parse(parts.get(2)).floatValue();
+                                    float ppfdMin = Objects.requireNonNull(nf.parse(parts.get(1))).floatValue();
+                                    float ppfdMax = Objects.requireNonNull(nf.parse(parts.get(2))).floatValue();
                                     SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
                                     db.speciesTargetDao().insert(t);
                                     importedAny[0] = true;
@@ -426,7 +427,7 @@ public class ImportManager {
                                     }
                                     float luxAvg;
                                     try {
-                                        luxAvg = nf.parse(parts.get(3)).floatValue();
+                                        luxAvg = Objects.requireNonNull(nf.parse(parts.get(3))).floatValue();
                                     } catch (Exception e) {
                                         warnings.add(new ImportWarning("measurements", currentLine, "invalid lux value"));
                                         continue;
@@ -434,7 +435,7 @@ public class ImportManager {
                                     Float ppfd = null;
                                     if (!parts.get(4).isEmpty()) {
                                         try {
-                                            ppfd = nf.parse(parts.get(4)).floatValue();
+                                            ppfd = Objects.requireNonNull(nf.parse(parts.get(4))).floatValue();
                                         } catch (Exception e) {
                                             warnings.add(new ImportWarning("measurements", currentLine, "invalid PPFD value"));
                                             continue;
@@ -443,7 +444,7 @@ public class ImportManager {
                                     Float dli = null;
                                     if (!parts.get(5).isEmpty()) {
                                         try {
-                                            dli = nf.parse(parts.get(5)).floatValue();
+                                            dli = Objects.requireNonNull(nf.parse(parts.get(5))).floatValue();
                                         } catch (Exception e) {
                                             warnings.add(new ImportWarning("measurements", currentLine, "invalid DLI value"));
                                             continue;
@@ -640,7 +641,7 @@ public class ImportManager {
                 byte[] buffer = new byte[8192];
                 int len;
                 while ((len = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, len);
+                    Objects.requireNonNull(out).write(buffer, 0, len);
                 }
             }
 

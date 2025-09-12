@@ -24,7 +24,6 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private TextView luxView;
     private EditText ppfdInput;
-    private Button confirmButton;
     private LightSensorHelper lightSensorHelper;
     private float lastLux;
 
@@ -40,7 +39,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         super.onViewCreated(view, savedInstanceState);
         luxView = view.findViewById(R.id.calibration_lux_value);
         ppfdInput = view.findViewById(R.id.calibration_ppfd_input);
-        confirmButton = view.findViewById(R.id.calibration_confirm_button);
+        Button confirmButton = view.findViewById(R.id.calibration_confirm_button);
         Context context = requireContext().getApplicationContext();
         lightSensorHelper = new LightSensorHelper(context, this);
 

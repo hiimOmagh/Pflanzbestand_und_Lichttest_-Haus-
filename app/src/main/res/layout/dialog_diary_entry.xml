@@ -8,20 +8,23 @@
     <Spinner
         android:id="@+id/diary_entry_type"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/diary_entry_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/diary_hint_note" />
+        android:hint="@string/diary_hint_note"
+        android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/diary_entry_remind_days"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:hint="@string/hint_remind_days"
         android:inputType="number"
-        android:hint="@string/hint_remind_days" />
+        android:minHeight="48dp" />
 
     <Button
         android:id="@+id/diary_entry_add_photo"

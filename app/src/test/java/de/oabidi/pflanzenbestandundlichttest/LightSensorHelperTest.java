@@ -17,6 +17,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Tests for {@link LightSensorHelper} verifying moving averages and buffer resets.
@@ -69,7 +70,7 @@ public class LightSensorHelperTest {
         Field samplesField = LightSensorHelper.class.getDeclaredField("recentLuxSamples");
         samplesField.setAccessible(true);
         Deque<Float> samples = (Deque<Float>) samplesField.get(helper);
-        assertEquals(2, samples.size());
+        assertEquals(2, Objects.requireNonNull(samples).size());
 
         Field sumField = LightSensorHelper.class.getDeclaredField("luxSum");
         sumField.setAccessible(true);

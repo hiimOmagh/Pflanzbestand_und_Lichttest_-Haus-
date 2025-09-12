@@ -11,7 +11,8 @@
         <Spinner
             android:id="@+id/measurement_filter_spinner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:minHeight="32dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/measurement_list"

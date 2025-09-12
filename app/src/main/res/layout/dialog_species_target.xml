@@ -9,20 +9,23 @@
         android:id="@+id/edit_species_key"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/hint_species_key" />
+        android:hint="@string/hint_species_key"
+        android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/edit_ppfd_min"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_ppfd_min"
-        android:inputType="numberDecimal" />
+        android:inputType="numberDecimal"
+        android:minHeight="48dp" />
 
     <EditText
         android:id="@+id/edit_ppfd_max"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_ppfd_max"
-        android:inputType="numberDecimal" />
+        android:inputType="numberDecimal"
+        android:minHeight="48dp" />
 
 </LinearLayout>

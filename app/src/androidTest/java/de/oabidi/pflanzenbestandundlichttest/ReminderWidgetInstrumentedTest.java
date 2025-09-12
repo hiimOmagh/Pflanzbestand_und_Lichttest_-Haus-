@@ -17,6 +17,7 @@ import org.robolectric.shadows.ShadowAppWidgetManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 import org.robolectric.shadows.ShadowRemoteViews;
 
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -64,7 +65,7 @@ public class ReminderWidgetInstrumentedTest {
         PendingIntent measurePending = shadowViews.getOnClickPendingIntent(R.id.widget_measure_button);
         ShadowPendingIntent shadowPending = Shadows.shadowOf(measurePending);
         Intent launchIntent = shadowPending.getSavedIntent();
-        assertEquals(MainActivity.class.getName(), launchIntent.getComponent().getClassName());
+        assertEquals(MainActivity.class.getName(), Objects.requireNonNull(launchIntent.getComponent()).getClassName());
         assertTrue(launchIntent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false));
     }
 }

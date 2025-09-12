@@ -37,7 +37,6 @@ import androidx.core.view.WindowInsetsCompat;
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
-    private long plantId;
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
 
@@ -48,7 +47,7 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
 
-        plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
+        long plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
         String description = getIntent().getStringExtra("description"); // Additional notes about the plant
         String species = getIntent().getStringExtra("species"); // Botanical species identifier

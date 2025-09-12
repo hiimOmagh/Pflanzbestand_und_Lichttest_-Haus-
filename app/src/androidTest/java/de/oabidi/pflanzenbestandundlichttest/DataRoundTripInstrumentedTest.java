@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -95,7 +96,7 @@ public class DataRoundTripInstrumentedTest {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buf = new byte[1024];
             int len;
-            while ((len = is.read(buf)) != -1) {
+            while ((len = Objects.requireNonNull(is).read(buf)) != -1) {
                 baos.write(buf, 0, len);
             }
             assertArrayEquals(plantPhotoBytes, baos.toByteArray());
@@ -111,7 +112,7 @@ public class DataRoundTripInstrumentedTest {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] buf = new byte[1024];
             int len;
-            while ((len = is.read(buf)) != -1) {
+            while ((len = Objects.requireNonNull(is).read(buf)) != -1) {
                 baos.write(buf, 0, len);
             }
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());

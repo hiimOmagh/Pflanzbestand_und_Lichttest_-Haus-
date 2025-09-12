@@ -24,7 +24,6 @@ public class Reminder {
     private long id;
     private long triggerAt;
     private long plantId;
-    @NonNull
     private String message;
 
     /** Default constructor required by Room. */
@@ -75,9 +74,6 @@ public class Reminder {
     }
 
     public void setMessage(@NonNull String message) {
-        if (message == null) {
-            throw new IllegalArgumentException("message must not be null");
-        }
         this.message = message;
     }
 }

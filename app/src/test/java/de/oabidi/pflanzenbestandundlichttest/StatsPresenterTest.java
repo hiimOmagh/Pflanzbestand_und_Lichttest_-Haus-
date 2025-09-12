@@ -45,7 +45,7 @@ public class StatsPresenterTest {
     @Test
     public void loadPlantsUsesRepository() {
         Context context = ApplicationProvider.getApplicationContext();
-        List<Plant> plants = Arrays.asList(new Plant("Aloe", null, null, null, 0L, null));
+        List<Plant> plants = List.of(new Plant("Aloe", null, null, null, 0L, null));
         StubRepository repo = new StubRepository(context, plants);
         StubView view = new StubView();
         StatsPresenter presenter = new StatsPresenter(view, repo, context);

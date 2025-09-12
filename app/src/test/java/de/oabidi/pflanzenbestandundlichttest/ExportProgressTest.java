@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Before;
@@ -15,6 +16,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Verifies that export progress updates are forwarded to the view.
@@ -41,8 +43,8 @@ public class ExportProgressTest {
     private static class FakeExportManager extends ExportManager {
         FakeExportManager(Context context) { super(context); }
         @Override
-        public void export(Uri uri, Callback callback, ProgressCallback progressCallback) {
-            progressCallback.onProgress(1, 3);
+        public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
+            Objects.requireNonNull(progressCallback).onProgress(1, 3);
             progressCallback.onProgress(3, 3);
             callback.onComplete(true);
         }

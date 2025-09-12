@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.content.Context;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class PlantListPresenterTest {
         Uri lastUri;
         FakeExportManager(Context c) { super(c); }
         @Override
-        public void export(Uri uri, Callback callback, ProgressCallback progressCallback) {
+        public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             lastUri = uri;
             if (progressCallback != null) {
                 progressCallback.onProgress(1,1);
@@ -114,7 +115,7 @@ public class PlantListPresenterTest {
         Uri lastUri; Mode lastMode;
         FakeImportManager(Context c) { super(c); }
         @Override
-        public void importData(Uri uri, Mode mode, Callback cb, ProgressCallback pc) {
+        public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback cb, ProgressCallback pc) {
             lastUri = uri; lastMode = mode;
             if (pc != null) { pc.onProgress(1,1); }
             cb.onComplete(true, null, Collections.emptyList(), null);

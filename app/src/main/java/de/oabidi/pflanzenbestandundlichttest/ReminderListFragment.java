@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Fragment displaying all scheduled reminders.
@@ -104,7 +105,7 @@ public class ReminderListFragment extends Fragment {
         dateEdit.setOnClickListener(v -> {
             Calendar cal = Calendar.getInstance();
             try {
-                cal.setTime(df.parse(dateEdit.getText().toString()));
+                cal.setTime(Objects.requireNonNull(df.parse(dateEdit.getText().toString())));
             } catch (ParseException ignored) {
             }
             new DatePickerDialog(requireContext(), (view1, year, month, day) -> {
@@ -130,7 +131,7 @@ public class ReminderListFragment extends Fragment {
             String message = messageEdit.getText().toString();
             String dateStr = dateEdit.getText().toString();
             try {
-                long triggerAt = df.parse(dateStr).getTime();
+                long triggerAt = Objects.requireNonNull(df.parse(dateStr)).getTime();
                 reminder.setMessage(message);
                 reminder.setTriggerAt(triggerAt);
                 ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());

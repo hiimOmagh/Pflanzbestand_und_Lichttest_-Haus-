@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -49,12 +50,12 @@ public class LightMeasurementInstrumentedTest {
             // Simulate a sensor value via presenter hook
             scenario.onActivity(activity -> {
                 Fragment navHost = activity.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-                LightMeasurementFragment fragment = (LightMeasurementFragment) navHost.getChildFragmentManager().getFragments().get(0);
+                LightMeasurementFragment fragment = (LightMeasurementFragment) Objects.requireNonNull(navHost).getChildFragmentManager().getFragments().get(0);
                 try {
                     Field presenterField = LightMeasurementFragment.class.getDeclaredField("presenter");
                     presenterField.setAccessible(true);
                     LightMeasurementPresenter presenter = (LightMeasurementPresenter) presenterField.get(fragment);
-                    presenter.onLuxChanged(500f, 500f);
+                    Objects.requireNonNull(presenter).onLuxChanged(500f, 500f);
                 } catch (NoSuchFieldException | IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }

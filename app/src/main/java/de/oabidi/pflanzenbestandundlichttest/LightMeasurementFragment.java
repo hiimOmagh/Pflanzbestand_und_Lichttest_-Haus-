@@ -35,7 +35,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView dliView;
     private Spinner plantSelector;
     private Button saveMeasurementButton;
-    private Button calibrateButton;
     private TextView locationCheckView;
     private float calibrationFactor;
     private float lastLux;
@@ -66,7 +65,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         plantSelector = view.findViewById(R.id.plant_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
-        calibrateButton = view.findViewById(R.id.measurement_calibrate_button);
+        Button calibrateButton = view.findViewById(R.id.measurement_calibrate_button);
 
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);

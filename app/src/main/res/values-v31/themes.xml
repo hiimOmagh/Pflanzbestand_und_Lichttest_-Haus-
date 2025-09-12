@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Dynamic color theme for Android 12 and above -->
     <style name="Theme.Pflanzenbestand.Dynamic" parent="Theme.Material3.DynamicColors.DayNight" />
     <style name="Theme.Pflanzenbestand" parent="Theme.Pflanzenbestand.Dynamic" />

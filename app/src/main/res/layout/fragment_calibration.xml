@@ -37,10 +37,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:ems="4"
-        android:inputType="numberDecimal"
         android:digits="0123456789."
+        android:ems="4"
         android:hint="@string/hint_positive_number"
+        android:inputType="numberDecimal"
+        android:minWidth="48dp"
+        android:minHeight="48dp"
         app:layout_constraintBaseline_toBaselineOf="@id/calibration_ppfd_label"
         app:layout_constraintStart_toEndOf="@id/calibration_ppfd_label" />
 
