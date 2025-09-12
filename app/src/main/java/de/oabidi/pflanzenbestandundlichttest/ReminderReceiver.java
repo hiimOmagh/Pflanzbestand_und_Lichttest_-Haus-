@@ -42,7 +42,13 @@ public class ReminderReceiver extends BroadcastReceiver {
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
             long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
-            boolean scheduled = ReminderScheduler.scheduleReminder(context, 1, message, plantId);
+            boolean scheduled = ReminderScheduler.scheduleReminder(
+                context,
+                1,
+                message,
+                plantId,
+                e -> Log.w("ReminderReceiver", "Failed to reschedule reminder for snooze", e)
+            );
             if (!scheduled) {
                 Log.w("ReminderReceiver", "Failed to reschedule reminder for snooze");
             }
