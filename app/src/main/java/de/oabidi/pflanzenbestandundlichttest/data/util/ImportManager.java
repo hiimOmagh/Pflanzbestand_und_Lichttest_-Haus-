@@ -61,7 +61,7 @@ public class ImportManager {
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
         void onComplete(boolean success, @Nullable ImportError error,
-                        List<ImportWarning> warnings, @Nullable String message);
+                        List<ImportWarning> warnings, @NonNull String message);
     }
 
     /** Callback used to report incremental progress. */

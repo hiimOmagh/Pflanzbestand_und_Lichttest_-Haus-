@@ -118,7 +118,7 @@ public class PlantListPresenterTest {
         public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback cb, ProgressCallback pc) {
             lastUri = uri; lastMode = mode;
             if (pc != null) { pc.onProgress(1,1); }
-            cb.onComplete(true, null, Collections.emptyList(), null);
+            cb.onComplete(true, null, Collections.emptyList(), "done");
         }
     }
 

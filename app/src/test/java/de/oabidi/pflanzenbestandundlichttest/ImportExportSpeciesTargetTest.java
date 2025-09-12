@@ -74,15 +74,18 @@ public class ImportExportSpeciesTargetTest {
         CountDownLatch importLatch = new CountDownLatch(1);
         final boolean[] importSuccess = {false};
         final List<ImportManager.ImportWarning>[] warnings = new List[]{null};
+        final String[] messageHolder = new String[1];
         importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE,
             (success, err, w, message) -> {
                 importSuccess[0] = success;
                 warnings[0] = w;
+                messageHolder[0] = message;
                 importLatch.countDown();
             });
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
         assertTrue(importSuccess[0]);
         assertTrue(warnings[0] == null || warnings[0].isEmpty());
+        assertNotNull(messageHolder[0]);
 
         SpeciesTarget loaded = db.speciesTargetDao().findBySpeciesKey("roundTrip");
         assertNotNull(loaded);

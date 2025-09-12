@@ -86,30 +86,7 @@ public class MainPresenterImpl implements MainPresenter {
         if (uri != null) {
             importManager.importData(uri, ImportManager.Mode.MERGE,
                 (success, error, warnings, message) -> {
-                    String msg = message;
-                    if (msg == null) {
-                        if (success) {
-                            msg = context.getString(R.string.import_success);
-                        } else if (error != null) {
-                            switch (error) {
-                                case MISSING_VERSION:
-                                    msg = context.getString(R.string.import_error_missing_version);
-                                    break;
-                                case INVALID_VERSION:
-                                    msg = context.getString(R.string.import_error_invalid_version);
-                                    break;
-                                case UNSUPPORTED_VERSION:
-                                    msg = context.getString(R.string.import_error_unsupported_version);
-                                    break;
-                                default:
-                                    msg = context.getString(R.string.import_failure);
-                                    break;
-                            }
-                        } else {
-                            msg = context.getString(R.string.import_failure);
-                        }
-                    }
-                    view.showToast(msg);
+                    view.showToast(message);
                     if (success && !warnings.isEmpty()) {
                         String warningMsg = ImportManager.summarizeWarnings(warnings);
                         view.showImportWarnings(warningMsg);
