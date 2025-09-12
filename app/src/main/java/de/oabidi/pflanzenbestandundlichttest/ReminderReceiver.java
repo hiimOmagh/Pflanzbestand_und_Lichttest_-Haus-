@@ -98,18 +98,11 @@ public class ReminderReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
 
-            Intent contentIntent = new Intent(context, PlantDetailActivity.class);
+            Intent contentIntent;
             if (plant != null) {
-                contentIntent.putExtra("plantId", plant.getId());
-                contentIntent.putExtra("name", plant.getName());
-                contentIntent.putExtra("description", plant.getDescription());
-                contentIntent.putExtra("species", plant.getSpecies());
-                contentIntent.putExtra("locationHint", plant.getLocationHint());
-                contentIntent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
-                String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
-                contentIntent.putExtra("photoUri", photo);
+                contentIntent = MainActivity.createPlantDetailIntent(context, plant);
             } else {
-                contentIntent.putExtra("plantId", plantId);
+                contentIntent = new Intent(context, PlantDetailActivity.class);
             }
             PendingIntent contentPending = PendingIntent.getActivity(
                 context,
