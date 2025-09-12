@@ -35,6 +35,7 @@
     <string name="measurement_save">Guardar</string>
     <string name="measurement_saved">Medición guardada</string>
     <string name="error_select_plant">Seleccione una planta</string>
+    <string name="error_database">Error de base de datos</string>
     <string name="plant_photo_desc">Foto de la planta</string>
     <string name="plant_photo_desc_format">Foto de %1$s</string>
     <string name="diary_entry_photo_desc">Foto del diario</string>
@@ -128,6 +129,7 @@
     <string name="share_backup">Compartir respaldo</string>
     <string name="import_success">Importación exitosa</string>
     <string name="import_failure">Fallo en la importación</string>
+    <string name="import_error_unsupported_version">Versión de exportación no compatible</string>
     <string name="import_image_warning">Algunas imágenes no se pudieron restaurar</string>
     <string name="import_warnings_title">Advertencias de importación</string>
     <string name="import_choice_message">¿Cómo se deben aplicar los datos importados?</string>
@@ -192,4 +194,6 @@
     <string name="onboarding_measurement">Mide la luz para que tus plantas prosperen.</string>
     <string name="onboarding_diary">Registra el cuidado en el diario.</string>
     <string name="action_done">Entendido</string>
+    <string name="import_error_missing_version">Falta la versión de exportación</string>
+    <string name="import_error_invalid_version">Versión de exportación no válida</string>
 </resources>

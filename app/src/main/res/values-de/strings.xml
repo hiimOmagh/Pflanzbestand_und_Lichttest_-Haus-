@@ -35,6 +35,7 @@
     <string name="measurement_save">Speichern</string>
     <string name="measurement_saved">Messung gespeichert</string>
     <string name="error_select_plant">Bitte eine Pflanze auswählen</string>
+    <string name="error_database">Datenbankfehler</string>
     <string name="plant_photo_desc">Pflanzenfoto</string>
     <string name="plant_photo_desc_format">Foto von %1$s</string>
     <string name="diary_entry_photo_desc">Tagebucheintragsfoto</string>
@@ -131,6 +132,9 @@
     <string name="import_choice_message">Wie sollen die importierten Daten angewendet werden?</string>
     <string name="import_merge">Zusammenführen</string>
     <string name="import_replace">Ersetzen</string>
+    <string name="import_error_missing_version">Fehlende Exportversion</string>
+    <string name="import_error_invalid_version">Ungültige Exportversion</string>
+    <string name="import_error_unsupported_version">Nicht unterstützte Exportversion</string>
     <string name="import_image_warning">Einige Bilder konnten nicht wiederhergestellt werden</string>
     <string name="import_warnings_title">Importwarnungen</string>
     <string name="hint_remind_days">In Tagen erinnern</string>
