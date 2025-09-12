@@ -69,8 +69,7 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
 
         PlantRepository repository = ((PlantApp) getApplicationContext()).getRepository();
         presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this, repository));
-        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), presenter::onExportUriSelected);
-
+        exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
         nameView.setText(presenter.getTextOrFallback(name));
         descriptionView.setText(presenter.getTextOrFallback(description));
         speciesView.setText(presenter.getTextOrFallback(species));

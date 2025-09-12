@@ -94,7 +94,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     @Override
     public void requestImport() {
-        importLauncher.launch(new String[]{"text/csv"});
+        importLauncher.launch(new String[]{"application/zip"});
     }
 
     private void showImportChoiceDialog(@NonNull Uri uri) {

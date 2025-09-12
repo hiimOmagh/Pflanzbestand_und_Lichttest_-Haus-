@@ -121,7 +121,7 @@
     <string name="action_calibrate">Confirmar</string>
     <string name="menu_calibrate">Calibrar</string>
     <string name="action_add_photo">Agregar foto</string>
-    <string name="export_file_name">plant_data.csv</string>
+    <string name="export_file_name">plant_data.zip</string>
     <string name="export_success">Exportación exitosa</string>
     <string name="export_failure">Fallo en la exportación</string>
     <string name="export_progress">Exportando %1$d/%2$d</string>

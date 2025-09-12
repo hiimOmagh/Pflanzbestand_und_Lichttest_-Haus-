@@ -106,7 +106,7 @@ public class MainPresenterImpl implements MainPresenter {
             view.launchExport(context.getString(R.string.export_file_name));
             return true;
         } else if (id == R.id.action_import_data) {
-            view.launchImport(new String[]{"text/csv"});
+            view.launchImport(new String[]{"application/zip"});
             return true;
         }
         return false;
