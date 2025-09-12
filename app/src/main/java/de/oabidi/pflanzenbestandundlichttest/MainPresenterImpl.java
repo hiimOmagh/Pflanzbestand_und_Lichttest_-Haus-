@@ -72,8 +72,10 @@ public class MainPresenterImpl implements MainPresenter {
     @Override
     public void handleExportResult(@Nullable Uri uri) {
         if (uri != null) {
+            view.showProgressBar();
             exportManager.export(uri, success -> {
                 int msg = success ? R.string.export_success : R.string.export_failure;
+                view.hideProgressBar();
                 view.showToast(msg);
             }, view::showExportProgress);
         } else {

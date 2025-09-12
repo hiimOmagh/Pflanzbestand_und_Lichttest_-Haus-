@@ -24,6 +24,12 @@ public interface MainView {
     /** Display export progress to the user. */
     void showExportProgress(int current, int total);
 
+    /** Show a progress bar for long running operations. */
+    void showProgressBar();
+
+    /** Hide the progress bar once operations complete. */
+    void hideProgressBar();
+
     /** Programmatically select an item in the bottom navigation. */
     void selectNavigationItem(int itemId);
 

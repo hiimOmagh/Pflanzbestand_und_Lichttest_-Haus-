@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -30,11 +31,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
     private MainPresenter presenter;
+    private ProgressBar exportProgressBar;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         presenter = new MainPresenterImpl(this, getApplicationContext());
+
+        exportProgressBar = findViewById(R.id.export_progress_bar);
 
         exportLauncher = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/zip"),
@@ -103,8 +107,19 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showExportProgress(int current, int total) {
-        String msg = getString(R.string.export_progress, current, total);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        exportProgressBar.setMax(total);
+        exportProgressBar.setProgress(current);
+    }
+
+    @Override
+    public void showProgressBar() {
+        exportProgressBar.setProgress(0);
+        exportProgressBar.setVisibility(android.view.View.VISIBLE);
+    }
+
+    @Override
+    public void hideProgressBar() {
+        exportProgressBar.setVisibility(android.view.View.GONE);
     }
 
     @Override

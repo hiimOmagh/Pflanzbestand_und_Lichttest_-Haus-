@@ -48,6 +48,9 @@ public class MainPresenterTest {
         @Override
         public void showExportProgress(int current, int total) { }
 
+        @Override public void showProgressBar() { }
+        @Override public void hideProgressBar() { }
+
         @Override
         public void selectNavigationItem(int itemId) {
             lastSelectedId = itemId;

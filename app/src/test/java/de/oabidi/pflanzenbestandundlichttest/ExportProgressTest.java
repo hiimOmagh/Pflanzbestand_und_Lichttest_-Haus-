@@ -33,6 +33,8 @@ public class ExportProgressTest {
         @Override public void showToast(String message) { }
         @Override public void showLongToast(int messageResId) { }
         @Override public void showExportProgress(int current, int total) { progress.add(new int[]{current, total}); }
+        @Override public void showProgressBar() { }
+        @Override public void hideProgressBar() { }
         @Override public void selectNavigationItem(int itemId) { }
         @Override public void requestNotificationPermission(String permission) { }
         @Override public void launchExport(String fileName) { lastExportFileName = fileName; }
