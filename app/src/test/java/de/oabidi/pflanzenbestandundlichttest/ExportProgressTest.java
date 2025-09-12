@@ -60,7 +60,8 @@ public class ExportProgressTest {
     @Test
     public void exportFlow_reportsProgress() throws Exception {
         FakeView view = new FakeView();
-        MainPresenterImpl presenter = new MainPresenterImpl(view, context);
+        MainPresenterImpl presenter =
+            new MainPresenterImpl(view, context, new PlantRepository(context));
         Field f = MainPresenterImpl.class.getDeclaredField("exportManager");
         f.setAccessible(true);
         f.set(presenter, new FakeExportManager(context));

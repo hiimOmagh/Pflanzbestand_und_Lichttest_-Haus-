@@ -73,7 +73,7 @@ public class MainPresenterTest {
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
         view = new FakeView();
-        presenter = new MainPresenterImpl(view, context);
+        presenter = new MainPresenterImpl(view, context, new PlantRepository(context));
     }
 
     /**

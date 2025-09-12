@@ -23,17 +23,23 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class MainPresenterImpl implements MainPresenter {
     private final MainView view;
     private final Context context;
+    private final PlantRepository repository;
     private ExportManager exportManager;
     private ImportManager importManager;
 
     public MainPresenterImpl(MainView view, Context context) {
+        this(view, context,
+            ((PlantApp) context.getApplicationContext()).getRepository());
+    }
+
+    public MainPresenterImpl(MainView view, Context context, PlantRepository repository) {
         this.view = view;
         this.context = context.getApplicationContext();
+        this.repository = repository;
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState, Intent intent) {
-        PlantRepository repository = ((PlantApp) context).getRepository();
         exportManager = new ExportManager(context, repository);
         importManager = new ImportManager(context);
 
