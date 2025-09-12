@@ -32,6 +32,9 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
@@ -53,6 +56,7 @@ public class ImportManager {
 
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
@@ -129,7 +133,7 @@ public class ImportManager {
 
     public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback,
                            @Nullable ProgressCallback progressCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
+        ioExecutor.execute(() -> {
             boolean success = false;
             ImportError error = null;
             List<ImportWarning> warnings = new ArrayList<>();
@@ -176,32 +180,39 @@ public class ImportManager {
                     }
                     if (csvFile != null) {
                         if (mode == Mode.REPLACE) {
-                            // When replacing, clean up resources referenced by existing data
-                            // before wiping the database to avoid leaking photos or reminders.
-                            PlantDatabase db = PlantDatabase.getDatabase(context);
-
-                            // Remove plant photos
-                            for (Plant plant : db.plantDao().getAll()) {
-                                PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                            try {
+                                PlantDatabase.databaseWriteExecutor.submit(() -> {
+                                    PlantDatabase db = PlantDatabase.getDatabase(context);
+                                    for (Plant plant : db.plantDao().getAll()) {
+                                        PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                                    }
+                                    for (DiaryEntry diaryEntry : db.diaryDao().getAll()) {
+                                        PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
+                                    }
+                                    for (Reminder reminder : db.reminderDao().getAll()) {
+                                        ReminderScheduler.cancelReminder(context, reminder.getId());
+                                    }
+                                    db.clearAllTables();
+                                    return null;
+                                }).get();
+                            } catch (ExecutionException | InterruptedException e) {
+                                Log.e(TAG, "Failed to clean database", e);
+                                error = ImportError.IO_ERROR;
                             }
-
-                            // Remove diary entry photos
-                            for (DiaryEntry diaryEntry : db.diaryDao().getAll()) {
-                                PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
-                            }
-
-                            // Cancel any scheduled reminders
-                            for (Reminder reminder : db.reminderDao().getAll()) {
-                                ReminderScheduler.cancelReminder(context, reminder.getId());
-                            }
-
-                            // Now remove all database entries
-                            db.clearAllTables();
                         }
-                        try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                            error = parseAndInsert(reader, tempDir, mode, warnings,
-                                progressCallback, progress, totalSteps);
-                            success = (error == null);
+                        if (error == null) {
+                            try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
+                                ImportError parseResult = PlantDatabase.databaseWriteExecutor
+                                    .submit(() -> parseAndInsert(reader, tempDir, mode, warnings,
+                                        progressCallback, progress, totalSteps))
+                                    .get();
+                                error = parseResult;
+                                success = (parseResult == null);
+                            } catch (ExecutionException | InterruptedException e) {
+                                Log.e(TAG, "Failed to parse import file", e);
+                                success = false;
+                                error = ImportError.IO_ERROR;
+                            }
                         }
                     } else {
                         error = ImportError.IO_ERROR;

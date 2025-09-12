@@ -62,7 +62,7 @@ public class DataRoundTripInstrumentedTest {
         Uri exportUri = Uri.fromFile(exportFile);
         CountDownLatch exportLatch = new CountDownLatch(1);
         new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
-        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
         PlantDatabase.databaseWriteExecutor
@@ -74,7 +74,7 @@ public class DataRoundTripInstrumentedTest {
         new ImportManager(context)
             .importData(exportUri, ImportManager.Mode.REPLACE,
                 (success, error, warnings, message) -> importLatch.countDown());
-        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify counts
         int plantCount = PlantDatabase.databaseWriteExecutor

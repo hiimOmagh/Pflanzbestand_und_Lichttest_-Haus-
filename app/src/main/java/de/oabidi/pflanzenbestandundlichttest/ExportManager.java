@@ -20,6 +20,9 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -31,6 +34,7 @@ public class ExportManager {
     private final Context context;
     private final PlantRepository repository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     /** Callback used to signal completion of the export operation. */
     public interface Callback {
@@ -67,7 +71,7 @@ public class ExportManager {
 
     private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                                 @Nullable ProgressCallback progressCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
+        ioExecutor.execute(() -> {
             boolean success = false;
             File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
             if (!tempDir.mkdirs()) {
@@ -79,7 +83,9 @@ public class ExportManager {
 
             if (tempDir != null) {
                 try {
-                    ExportData data = loadData(plantId);
+                    ExportData data = PlantDatabase.databaseWriteExecutor
+                        .submit(() -> loadData(plantId))
+                        .get();
                     notifyProgress(progressCallback, progress, totalSteps);
 
                     writeCsv(tempDir, data);
@@ -89,7 +95,14 @@ public class ExportManager {
                     notifyProgress(progressCallback, progress, totalSteps);
 
                     success = true;
-                } catch (IOException e) {
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause();
+                    if (cause instanceof IOException) {
+                        Log.e(TAG, "Export failed", cause);
+                    } else {
+                        Log.e(TAG, "Export failed", e);
+                    }
+                } catch (InterruptedException | IOException e) {
                     Log.e(TAG, "Export failed", e);
                 }
             }

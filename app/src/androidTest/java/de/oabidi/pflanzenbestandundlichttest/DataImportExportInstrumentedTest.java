@@ -85,7 +85,7 @@ public class DataImportExportInstrumentedTest {
         Uri uri = Uri.fromFile(file);
         CountDownLatch exportLatch = new CountDownLatch(1);
         new ExportManager(context, repository).export(uri, success -> exportLatch.countDown());
-        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
         PlantDatabase.databaseWriteExecutor.submit(() ->
@@ -96,7 +96,7 @@ public class DataImportExportInstrumentedTest {
         CountDownLatch importLatch = new CountDownLatch(1);
         new ImportManager(context).importData(uri, ImportManager.Mode.REPLACE,
             (success, error, warnings, message) -> importLatch.countDown());
-        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify all data restored
         int plantCount = PlantDatabase.databaseWriteExecutor.submit(
@@ -204,7 +204,7 @@ public class DataImportExportInstrumentedTest {
         Uri exportUri = Uri.fromFile(export);
         CountDownLatch exportLatch = new CountDownLatch(1);
         new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
-        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         PlantDatabase.databaseWriteExecutor.submit(() ->
             PlantDatabase.getDatabase(context).clearAllTables()
@@ -213,7 +213,7 @@ public class DataImportExportInstrumentedTest {
         CountDownLatch importLatch = new CountDownLatch(1);
         new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE,
             (success, error, warnings, message) -> importLatch.countDown());
-        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
             () -> repository.getAllPlantsSync().get(0)

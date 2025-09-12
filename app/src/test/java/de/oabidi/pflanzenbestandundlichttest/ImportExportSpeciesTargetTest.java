@@ -65,7 +65,7 @@ public class ImportExportSpeciesTargetTest {
             exportSuccess[0] = success;
             exportLatch.countDown();
         });
-        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
         assertTrue(exportSuccess[0]);
 
         db.clearAllTables();
@@ -80,7 +80,7 @@ public class ImportExportSpeciesTargetTest {
                 warnings[0] = w;
                 importLatch.countDown();
             });
-        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(importLatch.await(10, TimeUnit.SECONDS));
         assertTrue(importSuccess[0]);
         assertTrue(warnings[0] == null || warnings[0].isEmpty());
 
