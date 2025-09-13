@@ -115,28 +115,38 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void searchPlants(String query, Consumer<List<Plant>> callback) {
+        searchPlants(query, callback, null);
+    }
+
+    public void searchPlants(String query, Consumer<List<Plant>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Plant> result;
-            if (query == null || query.isEmpty()) {
-                result = plantDao.getAll();
-            } else {
-                String normalized = UNSUPPORTED_CHARS.matcher(query).replaceAll(" ");
-                normalized = RESERVED_FTS.matcher(normalized).replaceAll(" ");
-                normalized = normalized.trim().replaceAll("\\s+", " ");
-                if (normalized.isEmpty()) {
-                    result = Collections.emptyList();
+            try {
+                List<Plant> result;
+                if (query == null || query.isEmpty()) {
+                    result = plantDao.getAll();
                 } else {
-                    String q = normalized + "*";
-                    try {
-                        result = plantDao.search(q);
-                    } catch (SQLiteException e) {
+                    String normalized = UNSUPPORTED_CHARS.matcher(query).replaceAll(" ");
+                    normalized = RESERVED_FTS.matcher(normalized).replaceAll(" ");
+                    normalized = normalized.trim().replaceAll("\\s+", " ");
+                    if (normalized.isEmpty()) {
                         result = Collections.emptyList();
+                    } else {
+                        String q = normalized + "*";
+                        try {
+                            result = plantDao.search(q);
+                        } catch (SQLiteException e) {
+                            result = Collections.emptyList();
+                        }
                     }
                 }
-            }
-            if (callback != null) {
-                List<Plant> finalResult = result;
-                mainHandler.post(() -> callback.accept(finalResult));
+                if (callback != null) {
+                    List<Plant> finalResult = result;
+                    mainHandler.post(() -> callback.accept(finalResult));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -400,10 +410,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void getAllReminders(Consumer<List<Reminder>> callback) {
+        getAllReminders(callback, null);
+    }
+
+    public void getAllReminders(Consumer<List<Reminder>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Reminder> result = reminderDao.getAll();
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Reminder> result = reminderDao.getAll();
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -464,10 +484,20 @@ public class PlantRepository {
      * @param callback   invoked with the resulting target on the main thread
      */
     public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback) {
+        getSpeciesTarget(speciesKey, callback, null);
+    }
+
+    public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            SpeciesTarget result = speciesTargetDao.findBySpeciesKey(speciesKey);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                SpeciesTarget result = speciesTargetDao.findBySpeciesKey(speciesKey);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -478,10 +508,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback) {
+        getAllSpeciesTargets(callback, null);
+    }
+
+    public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<SpeciesTarget> result = speciesTargetDao.getAll();
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<SpeciesTarget> result = speciesTargetDao.getAll();
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -701,10 +741,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback) {
+        getMeasurementsForPlant(plantId, callback, null);
+    }
+
+    public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Measurement> result = measurementDao.getAllForPlant(plantId);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Measurement> result = measurementDao.getAllForPlant(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -745,10 +795,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback) {
+        recentMeasurementsForPlant(plantId, limit, callback, null);
+    }
+
+    public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Measurement> result = measurementDao.recentForPlant(plantId, limit);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Measurement> result = measurementDao.recentForPlant(plantId, limit);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -761,10 +821,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void measurementsForPlantSince(long plantId, long since, Consumer<List<Measurement>> callback) {
+        measurementsForPlantSince(plantId, since, callback, null);
+    }
+
+    public void measurementsForPlantSince(long plantId, long since, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Measurement> result = measurementDao.getForPlantSince(plantId, since);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Measurement> result = measurementDao.getForPlantSince(plantId, since);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -778,10 +848,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void measurementsForPlantInRange(long plantId, long start, long end, Consumer<List<Measurement>> callback) {
+        measurementsForPlantInRange(plantId, start, end, callback, null);
+    }
+
+    public void measurementsForPlantInRange(long plantId, long start, long end, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<Measurement> result = measurementDao.getForPlantInRange(plantId, start, end);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<Measurement> result = measurementDao.getForPlantInRange(plantId, start, end);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -796,11 +876,21 @@ public class PlantRepository {
      * @param callback invoked with the summed PPFD on the main thread
      */
     public void sumPpfdForRange(long plantId, long start, long end, Consumer<Float> callback) {
+        sumPpfdForRange(plantId, start, end, callback, null);
+    }
+
+    public void sumPpfdForRange(long plantId, long start, long end, Consumer<Float> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            Float result = measurementDao.sumPpfdForRange(plantId, start, end);
-            float value = result != null ? result : 0f;
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(value));
+            try {
+                Float result = measurementDao.sumPpfdForRange(plantId, start, end);
+                float value = result != null ? result : 0f;
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(value));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -815,10 +905,20 @@ public class PlantRepository {
      * @param callback invoked with the day count on the main thread
      */
     public void countDaysWithData(long plantId, long start, long end, Consumer<Integer> callback) {
+        countDaysWithData(plantId, start, end, callback, null);
+    }
+
+    public void countDaysWithData(long plantId, long start, long end, Consumer<Integer> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            int result = measurementDao.countDaysWithData(plantId, start, end);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                int result = measurementDao.countDaysWithData(plantId, start, end);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -833,17 +933,27 @@ public class PlantRepository {
      * @param callback invoked with the aggregated result on the main thread
      */
     public void sumPpfdAndCountDays(long plantId, long start, long end, Consumer<MeasurementDao.SumAndDays> callback) {
+        sumPpfdAndCountDays(plantId, start, end, callback, null);
+    }
+
+    public void sumPpfdAndCountDays(long plantId, long start, long end, Consumer<MeasurementDao.SumAndDays> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            MeasurementDao.SumAndDays result = measurementDao.sumPpfdAndCountDays(plantId, start, end);
-            if (result == null) {
-                result = new MeasurementDao.SumAndDays();
-            }
-            if (result.sum == null) {
-                result.sum = 0f;
-            }
-            MeasurementDao.SumAndDays finalResult = result;
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(finalResult));
+            try {
+                MeasurementDao.SumAndDays result = measurementDao.sumPpfdAndCountDays(plantId, start, end);
+                if (result == null) {
+                    result = new MeasurementDao.SumAndDays();
+                }
+                if (result.sum == null) {
+                    result.sum = 0f;
+                }
+                MeasurementDao.SumAndDays finalResult = result;
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(finalResult));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -855,10 +965,20 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback) {
+        diaryEntriesForPlant(plantId, callback, null);
+    }
+
+    public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<DiaryEntry> result = diaryDao.entriesForPlant(plantId);
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<DiaryEntry> result = diaryDao.entriesForPlant(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }
@@ -872,16 +992,26 @@ public class PlantRepository {
      * @param callback invoked with the resulting list on the main thread
      */
     public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback) {
+        searchDiaryEntries(plantId, query, callback, null);
+    }
+
+    public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback, Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            List<DiaryEntry> result;
-            if (query == null || query.isEmpty()) {
-                result = diaryDao.entriesForPlant(plantId);
-            } else {
-                String q = query + "*";
-                result = diaryDao.searchDiaryEntries(plantId, q);
-            }
-            if (callback != null) {
-                mainHandler.post(() -> callback.accept(result));
+            try {
+                List<DiaryEntry> result;
+                if (query == null || query.isEmpty()) {
+                    result = diaryDao.entriesForPlant(plantId);
+                } else {
+                    String q = query + "*";
+                    result = diaryDao.searchDiaryEntries(plantId, q);
+                }
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
             }
         });
     }

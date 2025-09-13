@@ -53,6 +53,9 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
                 : context.getString(R.string.widget_no_reminders);
             views.setTextViewText(R.id.widget_reminder_text, message);
             appWidgetManager.updateAppWidget(appWidgetId, views);
+        }, e -> {
+            views.setTextViewText(R.id.widget_reminder_text, context.getString(R.string.widget_no_reminders));
+            appWidgetManager.updateAppWidget(appWidgetId, views);
         });
     }
 }

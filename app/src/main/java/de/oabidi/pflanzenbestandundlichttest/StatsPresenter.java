@@ -55,14 +55,14 @@ public class StatsPresenter {
                         view.showMeasurements(data);
                     }
                 }
-            });
+            }, e -> view.showError(context.getString(R.string.error_database)));
         }
 
         if (plantIds.size() == 1) {
             long id = plantIds.get(0);
             repository.diaryEntriesForPlant(id, entries ->
-                view.showDiaryCounts(formatDiaryCounts(entries))
-            );
+                    view.showDiaryCounts(formatDiaryCounts(entries)),
+                e -> view.showError(context.getString(R.string.error_database)));
             computeDli(id);
         } else {
             view.showDiaryCounts(context.getString(R.string.stats_no_diary_entries));
@@ -82,7 +82,7 @@ public class StatsPresenter {
             } else {
                 view.showDli(context.getString(R.string.dli_placeholder));
             }
-        });
+        }, e -> view.showError(context.getString(R.string.error_database)));
     }
 
     private long startOfDay(long time) {

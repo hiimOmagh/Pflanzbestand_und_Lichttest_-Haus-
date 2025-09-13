@@ -104,7 +104,7 @@ public class ReminderListFragment extends Fragment {
             if (isAdded()) {
                 adapter.submitList(reminders);
             }
-        });
+        }, e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
     }
 
     private void showEditDialog(Reminder reminder) {

@@ -94,7 +94,8 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
         String speciesKey = plants.get(index).getSpecies();
         if (speciesKey != null && !speciesKey.isEmpty()) {
-            plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target);
+            plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target,
+                e -> view.showError(context.getString(R.string.error_database)));
         } else {
             speciesTarget = null;
         }

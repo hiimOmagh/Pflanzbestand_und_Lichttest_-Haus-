@@ -53,7 +53,8 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     }
 
     private void loadTargets() {
-        repository.getAllSpeciesTargets(targets -> adapter.submitList(new ArrayList<>(targets)));
+        repository.getAllSpeciesTargets(targets -> adapter.submitList(new ArrayList<>(targets)),
+            e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
     }
 
     private void showDialog(@Nullable SpeciesTarget target) {

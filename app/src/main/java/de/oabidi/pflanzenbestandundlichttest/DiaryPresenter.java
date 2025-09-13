@@ -26,7 +26,8 @@ public class DiaryPresenter {
     /** Load entries matching the given search query. */
     public void loadEntries(String query) {
         this.query = query != null ? query : "";
-        repository.searchDiaryEntries(plantId, this.query, view::showEntries);
+        repository.searchDiaryEntries(plantId, this.query, view::showEntries,
+            e -> view.showError(context.getString(R.string.error_database)));
     }
 
     /** Insert a new diary entry and refresh the list. */

@@ -207,6 +207,20 @@ public class PlantRepositoryTest {
     }
 
     @Test
+    public void searchPlantsErrorPropagatesToCallback() throws Exception {
+        db.close();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean errorCalled = new AtomicBoolean(false);
+        repository.searchPlants("a", plants -> fail("should not succeed"), e -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            errorCalled.set(true);
+            latch.countDown();
+        });
+        awaitLatch(latch);
+        assertTrue(errorCalled.get());
+    }
+
+    @Test
     public void ppfdAggregationMatchesManualComputation() throws Exception {
         Plant plant = new Plant();
         plant.setName("DLI");

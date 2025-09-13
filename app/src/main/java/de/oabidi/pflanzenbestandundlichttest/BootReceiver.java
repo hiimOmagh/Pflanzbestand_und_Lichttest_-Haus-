@@ -40,7 +40,7 @@ public class BootReceiver extends BroadcastReceiver {
                     }
                 }
                 result.finish();
-            });
+            }, e -> result.finish());
         }
     }
 }

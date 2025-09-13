@@ -108,7 +108,8 @@ public class PlantListPresenter {
         if (query == null || query.trim().isEmpty()) {
             refreshPlants();
         } else {
-            repository.searchPlants(query, view::showSearchResults);
+            repository.searchPlants(query, view::showSearchResults,
+                e -> view.showError(context.getString(R.string.error_database)));
         }
     }
 }

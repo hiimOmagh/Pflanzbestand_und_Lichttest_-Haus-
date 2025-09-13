@@ -46,7 +46,8 @@ public class PlantListPresenterTest {
             this.data = data;
         }
         @Override
-        public void searchPlants(String query, java.util.function.Consumer<List<Plant>> cb) {
+        public void searchPlants(String query, java.util.function.Consumer<List<Plant>> cb,
+                                 java.util.function.Consumer<Exception> errorCallback) {
             String lower = query.toLowerCase(Locale.ROOT);
             List<Plant> result = new ArrayList<>();
             for (Plant plant : data) {
@@ -72,6 +73,24 @@ public class PlantListPresenterTest {
         }
     }
 
+    private static class FailingRepository extends PlantRepository {
+        FailingRepository(Context context) { super(context); }
+        @Override
+        public void searchPlants(String query, java.util.function.Consumer<List<Plant>> cb,
+                                 java.util.function.Consumer<Exception> errorCallback) {
+            if (errorCallback != null) {
+                errorCallback.accept(new RuntimeException("fail"));
+            }
+        }
+        @Override
+        public void getAllPlants(java.util.function.Consumer<List<Plant>> callback,
+                                 java.util.function.Consumer<Exception> errorCallback) {
+            if (callback != null) {
+                callback.accept(new ArrayList<>());
+            }
+        }
+    }
+
     private static class RecordingView implements PlantListPresenter.View {
         List<Plant> shown;
         boolean progressShown;
@@ -83,9 +102,10 @@ public class PlantListPresenterTest {
         boolean importResult;
         Uri importUri;
         ImportManager.Mode importMode;
+        String lastError;
         @Override public void showPlants(List<Plant> plants) { shown = plants; }
         @Override public void showSearchResults(List<Plant> plants) { shown = plants; }
-        @Override public void showError(String message) { }
+        @Override public void showError(String message) { lastError = message; }
         @Override public void showProgress() { progressShown = true; }
         @Override public void hideProgress() { progressHidden = true; }
         @Override public void requestExport(String fileName) { exportRequested = true; }
@@ -127,6 +147,13 @@ public class PlantListPresenterTest {
         Context context = ApplicationProvider.getApplicationContext();
         ((TestApp) context).setRepository(new StubPlantRepository(context, data));
         PlantRepository repo = ((TestApp) context).getRepository();
+        return new PlantListPresenter(view, repo, context, em, im);
+    }
+
+    private PlantListPresenter createPresenterWithRepo(PlantRepository repo, RecordingView view,
+                                                       FakeExportManager em, FakeImportManager im) {
+        Context context = ApplicationProvider.getApplicationContext();
+        ((TestApp) context).setRepository(repo);
         return new PlantListPresenter(view, repo, context, em, im);
     }
 
@@ -202,5 +229,16 @@ public class PlantListPresenterTest {
         assertTrue(view.importResult);
         assertEquals(uri, im.lastUri);
         assertEquals(ImportManager.Mode.MERGE, im.lastMode);
+    }
+
+    @Test
+    public void filterPlantsErrorShowsMessage() {
+        RecordingView view = new RecordingView();
+        FakeExportManager em = new FakeExportManager(ApplicationProvider.getApplicationContext());
+        FakeImportManager im = new FakeImportManager(ApplicationProvider.getApplicationContext());
+        FailingRepository repo = new FailingRepository(ApplicationProvider.getApplicationContext());
+        PlantListPresenter presenter = createPresenterWithRepo(repo, view, em, im);
+        presenter.filterPlants("a");
+        assertEquals(ApplicationProvider.getApplicationContext().getString(R.string.error_database), view.lastError);
     }
 }

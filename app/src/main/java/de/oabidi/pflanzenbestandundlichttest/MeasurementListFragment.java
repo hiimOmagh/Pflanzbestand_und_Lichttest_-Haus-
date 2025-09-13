@@ -120,7 +120,8 @@ public class MeasurementListFragment extends Fragment {
             return;
         }
         if (filterSpinner == null) {
-            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
+            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
             return;
         }
 
@@ -128,12 +129,15 @@ public class MeasurementListFragment extends Fragment {
         long now = System.currentTimeMillis();
         if (position == FILTER_LAST_7_DAYS) {
             long since = now - 7L * 24 * 60 * 60 * 1000;
-            repository.measurementsForPlantSince(plantId, since, adapter::submitList);
+            repository.measurementsForPlantSince(plantId, since, adapter::submitList,
+                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         } else if (position == FILTER_LAST_30_DAYS) {
             long since = now - 30L * 24 * 60 * 60 * 1000;
-            repository.measurementsForPlantSince(plantId, since, adapter::submitList);
+            repository.measurementsForPlantSince(plantId, since, adapter::submitList,
+                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         } else {
-            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList);
+            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         }
     }
 }
