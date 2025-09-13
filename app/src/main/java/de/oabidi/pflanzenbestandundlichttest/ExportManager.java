@@ -71,44 +71,45 @@ public class ExportManager {
 
     private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                                 @Nullable ProgressCallback progressCallback) {
-        ioExecutor.execute(() -> {
-            boolean success = false;
-            File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
-            if (!tempDir.mkdirs()) {
-                tempDir = null;
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            ExportData data;
+            try {
+                data = loadData(plantId);
+            } catch (IOException e) {
+                Log.e(TAG, "Export failed", e);
+                mainHandler.post(() -> callback.onComplete(false));
+                return;
             }
 
-            int totalSteps = 3;
-            int[] progress = {0};
+            ioExecutor.execute(() -> {
+                boolean success = false;
+                File tempDir = new File(context.getCacheDir(), "export_" + System.currentTimeMillis());
+                if (!tempDir.mkdirs()) {
+                    tempDir = null;
+                }
 
-            if (tempDir != null) {
-                try {
-                    ExportData data = PlantDatabase.databaseWriteExecutor
-                        .submit(() -> loadData(plantId))
-                        .get();
-                    notifyProgress(progressCallback, progress, totalSteps);
+                int totalSteps = 3;
+                int[] progress = {0};
 
-                    writeCsv(tempDir, data);
-                    notifyProgress(progressCallback, progress, totalSteps);
+                if (tempDir != null) {
+                    try {
+                        notifyProgress(progressCallback, progress, totalSteps);
 
-                    zipFiles(uri, tempDir);
-                    notifyProgress(progressCallback, progress, totalSteps);
+                        writeCsv(tempDir, data);
+                        notifyProgress(progressCallback, progress, totalSteps);
 
-                    success = true;
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause();
-                    if (cause instanceof IOException) {
-                        Log.e(TAG, "Export failed", cause);
-                    } else {
+                        zipFiles(uri, tempDir);
+                        notifyProgress(progressCallback, progress, totalSteps);
+
+                        success = true;
+                    } catch (IOException e) {
                         Log.e(TAG, "Export failed", e);
                     }
-                } catch (InterruptedException | IOException e) {
-                    Log.e(TAG, "Export failed", e);
                 }
-            }
 
-            boolean result = success;
-            mainHandler.post(() -> callback.onComplete(result));
+                boolean result = success;
+                mainHandler.post(() -> callback.onComplete(result));
+            });
         });
     }
 

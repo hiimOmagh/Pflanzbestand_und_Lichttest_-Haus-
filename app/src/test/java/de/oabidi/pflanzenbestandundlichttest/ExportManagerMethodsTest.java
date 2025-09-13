@@ -21,6 +21,8 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricTestRunner.class)
 public class ExportManagerMethodsTest {
@@ -175,5 +177,22 @@ public class ExportManagerMethodsTest {
         int[] progress = {0};
         m.invoke(mgr, null, progress, 3);
         assertEquals(1, progress[0]);
+    }
+
+    @Test
+    public void export_completesAsynchronously() throws Exception {
+        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        File out = new File(context.getCacheDir(), "export_async.zip");
+        if (out.exists()) {
+            out.delete();
+        }
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = {false};
+        mgr.export(Uri.fromFile(out), success -> {
+            result[0] = success;
+            latch.countDown();
+        });
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        assertTrue(result[0]);
     }
 }

@@ -47,6 +47,7 @@ public class ExportProgressTest {
         @Override
         public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             Objects.requireNonNull(progressCallback).onProgress(1, 3);
+            progressCallback.onProgress(2, 3);
             progressCallback.onProgress(3, 3);
             callback.onComplete(true);
         }
@@ -71,8 +72,9 @@ public class ExportProgressTest {
         assertEquals(context.getString(R.string.export_file_name), view.lastExportFileName);
 
         presenter.handleExportResult(Uri.parse("content://test"));
-        assertEquals(2, view.progress.size());
+        assertEquals(3, view.progress.size());
         assertArrayEquals(new int[]{1,3}, view.progress.get(0));
-        assertArrayEquals(new int[]{3,3}, view.progress.get(1));
+        assertArrayEquals(new int[]{2,3}, view.progress.get(1));
+        assertArrayEquals(new int[]{3,3}, view.progress.get(2));
     }
 }
