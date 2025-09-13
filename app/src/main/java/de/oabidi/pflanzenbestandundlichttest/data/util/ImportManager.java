@@ -46,6 +46,7 @@ import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
+import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -183,13 +184,14 @@ public class ImportManager {
                             try {
                                 PlantDatabase.databaseWriteExecutor.submit(() -> {
                                     PlantDatabase db = PlantDatabase.getDatabase(context);
-                                    for (Plant plant : db.plantDao().getAll()) {
+                                    BulkReadDao bulk = db.bulkDao();
+                                    for (Plant plant : bulk.getAllPlants()) {
                                         PhotoManager.deletePhoto(context, plant.getPhotoUri());
                                     }
-                                    for (DiaryEntry diaryEntry : db.diaryDao().getAll()) {
+                                    for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
                                         PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
                                     }
-                                    for (Reminder reminder : db.reminderDao().getAll()) {
+                                    for (Reminder reminder : bulk.getAllReminders()) {
                                         ReminderScheduler.cancelReminder(context, reminder.getId());
                                     }
                                     db.clearAllTables();

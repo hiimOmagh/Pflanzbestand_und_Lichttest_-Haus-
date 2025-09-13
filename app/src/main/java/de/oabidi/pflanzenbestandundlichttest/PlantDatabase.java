@@ -127,6 +127,9 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract ReminderDao reminderDao();
 
+    /** Provides bulk read access for export and import operations. */
+    public abstract BulkReadDao bulkDao();
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {

@@ -20,7 +20,6 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
@@ -32,7 +31,7 @@ import java.util.zip.ZipOutputStream;
 public class ExportManager {
     private static final String TAG = "ExportManager";
     private final Context context;
-    private final PlantRepository repository;
+    private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
@@ -48,7 +47,7 @@ public class ExportManager {
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
         this.context = context.getApplicationContext();
-        this.repository = repository;
+        this.bulkDao = repository.bulkDao();
     }
 
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
@@ -120,18 +119,18 @@ public class ExportManager {
             List<DiaryEntry> diaryEntries;
             List<Reminder> reminders;
             if (plantId >= 0) {
-                Plant p = repository.getPlantSync(plantId);
+                Plant p = bulkDao.getPlant(plantId);
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
-                measurements = repository.getMeasurementsForPlantSync(plantId);
-                diaryEntries = repository.getDiaryEntriesForPlantSync(plantId);
-                reminders = repository.getRemindersForPlantSync(plantId);
+                measurements = bulkDao.getMeasurementsForPlant(plantId);
+                diaryEntries = bulkDao.getDiaryEntriesForPlant(plantId);
+                reminders = bulkDao.getRemindersForPlant(plantId);
             } else {
-                plants = repository.getAllPlantsSync();
-                measurements = repository.getAllMeasurementsSync();
-                diaryEntries = repository.getAllDiaryEntriesSync();
-                reminders = repository.getAllRemindersSync();
+                plants = bulkDao.getAllPlants();
+                measurements = bulkDao.getAllMeasurements();
+                diaryEntries = bulkDao.getAllDiaryEntries();
+                reminders = bulkDao.getAllReminders();
             }
-            List<SpeciesTarget> targets = repository.getAllSpeciesTargetsSync();
+            List<SpeciesTarget> targets = bulkDao.getAllSpeciesTargets();
             return new ExportData(plants, measurements, diaryEntries, reminders, targets);
         } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);

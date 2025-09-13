@@ -32,6 +32,7 @@ public class PlantRepository {
     private final DiaryDao diaryDao;
     private final SpeciesTargetDao speciesTargetDao;
     private final ReminderDao reminderDao;
+    private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context;
     private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
@@ -53,6 +54,12 @@ public class PlantRepository {
         diaryDao = db.diaryDao();
         speciesTargetDao = db.speciesTargetDao();
         reminderDao = db.reminderDao();
+        bulkDao = db.bulkDao();
+    }
+
+    /** Exposes bulk read operations for export and import managers. */
+    public BulkReadDao bulkDao() {
+        return bulkDao;
     }
 
     private Future<?> runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
@@ -601,6 +608,7 @@ public class PlantRepository {
      *
      * @return list of all plants
      */
+    @Deprecated
     @VisibleForTesting
     List<Plant> getAllPlantsSync() {
         return plantDao.getAll();
@@ -613,6 +621,7 @@ public class PlantRepository {
      *
      * @return list of all species targets
      */
+    @Deprecated
     @VisibleForTesting
     List<SpeciesTarget> getAllSpeciesTargetsSync() {
         return speciesTargetDao.getAll();
@@ -625,6 +634,7 @@ public class PlantRepository {
      *
      * @return list of all measurements
      */
+    @Deprecated
     @VisibleForTesting
     List<Measurement> getAllMeasurementsSync() {
         return measurementDao.getAll();
@@ -637,6 +647,7 @@ public class PlantRepository {
      *
      * @return list of all diary entries
      */
+    @Deprecated
     @VisibleForTesting
     List<DiaryEntry> getAllDiaryEntriesSync() {
         return diaryDao.getAll();
@@ -649,6 +660,7 @@ public class PlantRepository {
      *
      * @return list of all reminders
      */
+    @Deprecated
     @VisibleForTesting
     List<Reminder> getAllRemindersSync() {
         return reminderDao.getAll();
@@ -662,6 +674,7 @@ public class PlantRepository {
      * @param id database identifier
      * @return the matching plant or {@code null} if not found
      */
+    @Deprecated
     @VisibleForTesting
     Plant getPlantSync(long id) {
         return plantDao.findById(id);
@@ -675,6 +688,7 @@ public class PlantRepository {
      * @param plantId identifier of the plant
      * @return list of measurements associated with the plant
      */
+    @Deprecated
     @VisibleForTesting
     List<Measurement> getMeasurementsForPlantSync(long plantId) {
         return measurementDao.getAllForPlant(plantId);
@@ -703,6 +717,7 @@ public class PlantRepository {
      * @param plantId identifier of the plant
      * @return list of diary entries associated with the plant
      */
+    @Deprecated
     @VisibleForTesting
     List<DiaryEntry> getDiaryEntriesForPlantSync(long plantId) {
         return diaryDao.entriesForPlant(plantId);
@@ -716,6 +731,7 @@ public class PlantRepository {
      * @param plantId identifier of the plant
      * @return list of reminders associated with the plant
      */
+    @Deprecated
     @VisibleForTesting
     List<Reminder> getRemindersForPlantSync(long plantId) {
         return reminderDao.getForPlant(plantId);
