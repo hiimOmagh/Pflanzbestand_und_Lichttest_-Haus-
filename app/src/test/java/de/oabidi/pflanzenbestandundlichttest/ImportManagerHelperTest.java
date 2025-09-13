@@ -6,6 +6,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.room.Room;
+import android.net.Uri;
 
 import org.junit.After;
 import org.junit.Before;
@@ -110,5 +111,47 @@ public class ImportManagerHelperTest {
             NumberFormat.getInstance(Locale.US), db);
         assertFalse(inserted);
         assertEquals("invalid plant id", warnings.get(0).reason);
+    }
+
+    @Test
+    public void insertDiaryRow_invalidPlantId() throws Exception {
+        ImportManager importer = new ImportManager(context);
+        List<String> parts = new ArrayList<>();
+        parts.add("0");
+        parts.add("abc");
+        parts.add("123");
+        parts.add("type");
+        parts.add("note");
+        parts.add("");
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Method m = ImportManager.class.getDeclaredMethod("insertDiaryRow", List.class,
+            ImportManager.Mode.class, File.class, Map.class, List.class, int.class,
+            List.class, PlantDatabase.class);
+        m.setAccessible(true);
+        boolean inserted = (boolean) m.invoke(importer, parts, ImportManager.Mode.REPLACE,
+            context.getCacheDir(), new HashMap<Long, Long>(), warnings, 1,
+            new ArrayList<Uri>(), db);
+        assertFalse(inserted);
+        assertEquals("invalid plant id", warnings.get(0).reason);
+    }
+
+    @Test
+    public void insertReminderRow_invalidTimestamp() throws Exception {
+        ImportManager importer = new ImportManager(context);
+        List<String> parts = new ArrayList<>();
+        parts.add("0");
+        parts.add("1");
+        parts.add("notime");
+        parts.add("msg");
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Map<Long, Long> map = new HashMap<>();
+        map.put(1L, 1L);
+        Method m = ImportManager.class.getDeclaredMethod("insertReminderRow", List.class,
+            ImportManager.Mode.class, Map.class, List.class, int.class, PlantDatabase.class);
+        m.setAccessible(true);
+        boolean inserted = (boolean) m.invoke(importer, parts, ImportManager.Mode.MERGE,
+            map, warnings, 1, db);
+        assertFalse(inserted);
+        assertEquals("invalid timestamp", warnings.get(0).reason);
     }
 }

@@ -130,7 +130,7 @@ public class ReminderReceiver extends BroadcastReceiver {
                 .addAction(0, context.getString(R.string.reminder_mark_done), donePending)
                 .addAction(0, context.getString(R.string.reminder_snooze), snoozePending);
 
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
                 //    ActivityCompat#requestPermissions
                 // here to request the missing permissions, and then overriding
