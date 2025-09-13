@@ -28,22 +28,32 @@ public class ReminderReceiver extends BroadcastReceiver {
     public static final String ACTION_SNOOZE =
         "de.oabidi.pflanzenbestandundlichttest.action.SNOOZE";
     private static final String EXTRA_NOTIFICATION_ID = "notification_id";
+    private final PlantRepository repository;
+
+    public ReminderReceiver() {
+        this(null);
+    }
+
+    public ReminderReceiver(PlantRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
         if (ACTION_MARK_DONE.equals(action)) {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
-            repository.deleteReminderById(reminderId, null);
+            repo.deleteReminderById(reminderId, null);
             return;
         } else if (ACTION_SNOOZE.equals(action)) {
             String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
             long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
             boolean scheduled = ReminderScheduler.scheduleReminder(
                 context,
+                repo,
                 1,
                 message,
                 plantId,
@@ -55,7 +65,7 @@ public class ReminderReceiver extends BroadcastReceiver {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
             NotificationManagerCompat.from(context).cancel(id);
-            repository.deleteReminderById(reminderId, null);
+            repo.deleteReminderById(reminderId, null);
             return;
         }
 
@@ -66,10 +76,10 @@ public class ReminderReceiver extends BroadcastReceiver {
         int notificationId = (int) System.currentTimeMillis();
 
         PlantDatabase.databaseWriteExecutor.execute(() -> {
-            repository.deleteReminderById(reminderId, null);
+            repo.deleteReminderById(reminderId, null);
             Plant plant = null;
             try {
-                plant = repository.getPlant(plantId).get();
+                plant = repo.getPlant(plantId).get();
             } catch (ExecutionException | InterruptedException e) {
                 // Ignore and proceed without plant details
             }

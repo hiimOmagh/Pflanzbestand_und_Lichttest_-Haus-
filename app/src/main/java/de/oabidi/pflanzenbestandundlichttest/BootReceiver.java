@@ -11,6 +11,16 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  * Broadcast receiver that reschedules pending reminders after a device reboot.
  */
 public class BootReceiver extends BroadcastReceiver {
+    private final PlantRepository repository;
+
+    public BootReceiver() {
+        this(null);
+    }
+
+    public BootReceiver(PlantRepository repository) {
+        this.repository = repository;
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
@@ -19,14 +29,14 @@ public class BootReceiver extends BroadcastReceiver {
                 BackupScheduler.schedule(context);
             }
             PendingResult result = goAsync();
-            PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
-            repository.getAllReminders(reminders -> {
+            PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
+            repo.getAllReminders(reminders -> {
                 long now = System.currentTimeMillis();
                 for (Reminder reminder : reminders) {
                     if (reminder.getTriggerAt() > now) {
                         ReminderScheduler.scheduleReminderAt(context, reminder.getTriggerAt(), reminder.getMessage(), reminder.getId(), reminder.getPlantId());
                     } else {
-                        repository.deleteReminderById(reminder.getId(), null);
+                        repo.deleteReminderById(reminder.getId(), null);
                     }
                 }
                 result.finish();

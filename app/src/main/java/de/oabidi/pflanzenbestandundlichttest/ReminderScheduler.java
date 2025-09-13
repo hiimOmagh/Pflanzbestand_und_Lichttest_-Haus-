@@ -34,20 +34,21 @@ public class ReminderScheduler {
      * Schedule a reminder to be shown after the specified number of days.
      *
      * @param context       context used to access system services
+     * @param repository    repository used to persist reminder information
      * @param days          number of days until the reminder should trigger
      * @param message       message displayed in the reminder notification
      * @param plantId       identifier of the related plant
      * @param errorCallback callback invoked when scheduling the reminder fails
      * @return {@code true} if the reminder was scheduled, {@code false} if the input was invalid
      */
-    public static boolean scheduleReminder(Context context, int days, String message, long plantId,
+    public static boolean scheduleReminder(Context context, PlantRepository repository, int days,
+                                           String message, long plantId,
                                            Consumer<Exception> errorCallback) {
         if (days <= 0) {
             Log.w("ReminderScheduler", "Days must be positive");
             return false;
         }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
-        PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
         Reminder reminder = new Reminder(triggerAt, message, plantId);
         repository.insertReminder(reminder,
             () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId),

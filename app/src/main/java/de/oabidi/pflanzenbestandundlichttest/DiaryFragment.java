@@ -46,6 +46,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private long plantId = -1;
     private DiaryPresenter presenter;
     private DiaryEntryAdapter adapter;
+    private PlantRepository repository;
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
     private String searchQuery = "";
@@ -71,7 +72,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
         Context context = requireContext().getApplicationContext();
-        PlantRepository repository = ((PlantApp) context).getRepository();
+        repository = ((PlantApp) context).getRepository();
         presenter = new DiaryPresenter(this, repository, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
@@ -250,6 +251,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                         String message = note.isEmpty() ? label : label + getString(R.string.note_separator) + note;
                         boolean scheduled = ReminderScheduler.scheduleReminder(
                             requireContext(),
+                            repository,
                             days,
                             message,
                             plantId,

@@ -35,6 +35,17 @@ public class ReminderListFragment extends Fragment {
     private PlantRepository repository;
     private SimpleDateFormat df;
 
+    public ReminderListFragment() {
+    }
+
+    public ReminderListFragment(PlantRepository repository) {
+        this.repository = repository;
+    }
+
+    public static ReminderListFragment newInstance(PlantRepository repository) {
+        return new ReminderListFragment(repository);
+    }
+    
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -49,7 +60,9 @@ public class ReminderListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ReminderAdapter(this::showEditDialog);
         recyclerView.setAdapter(adapter);
-        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(requireContext().getApplicationContext());
+        }
         df = new SimpleDateFormat(getString(R.string.date_time_pattern), Locale.getDefault());
 
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,

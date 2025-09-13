@@ -130,7 +130,7 @@ public class MainPresenterImpl implements MainPresenter {
         } else if (itemId == R.id.nav_diary) {
             fragment = new DiaryFragment();
         } else if (itemId == R.id.nav_reminders) {
-            fragment = new ReminderListFragment();
+            fragment = ReminderListFragment.newInstance(repository);
         } else if (itemId == R.id.nav_stats) {
             fragment = new StatsFragment();
         } else {
