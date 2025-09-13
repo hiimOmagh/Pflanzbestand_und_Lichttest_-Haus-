@@ -40,21 +40,35 @@ public class LightSensorHelperTest {
     }
 
     @Test
-    public void movingAverageHonorsSampleSize() {
+    public void movingAverageHonorsDifferentSampleSizes() {
         Context context = ApplicationProvider.getApplicationContext();
-        List<Float> averages = new ArrayList<>();
-        LightSensorHelper helper = new LightSensorHelper(context, (raw, avg) -> averages.add(avg), 3);
 
-        helper.onSensorChanged(createLightEvent(10f));
-        helper.onSensorChanged(createLightEvent(20f));
-        helper.onSensorChanged(createLightEvent(30f));
-        helper.onSensorChanged(createLightEvent(40f));
+        float[] luxValues = {10f, 20f, 30f, 40f};
+        int[] sampleSizes = {1, 3, 5};
+        float[][] expected = {
+            {10f, 20f, 30f, 40f},      // sampleSize = 1
+            {10f, 15f, 20f, 30f},      // sampleSize = 3
+            {10f, 15f, 20f, 25f}       // sampleSize = 5
+        };
 
-        assertEquals(4, averages.size());
-        assertEquals(10f, averages.get(0), 0.0001f);
-        assertEquals(15f, averages.get(1), 0.0001f);
-        assertEquals(20f, averages.get(2), 0.0001f);
-        assertEquals(30f, averages.get(3), 0.0001f);
+        for (int i = 0; i < sampleSizes.length; i++) {
+            List<Float> averages = new ArrayList<>();
+            LightSensorHelper helper =
+                new LightSensorHelper(context, (raw, avg) -> averages.add(avg), sampleSizes[i]);
+
+            for (float lux : luxValues) {
+                helper.onSensorChanged(createLightEvent(lux));
+            }
+
+            assertEquals(expected[i].length, averages.size());
+            for (int j = 0; j < expected[i].length; j++) {
+                assertEquals(
+                    "sampleSize=" + sampleSizes[i] + " index=" + j,
+                    expected[i][j],
+                    averages.get(j),
+                    0.0001f);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
