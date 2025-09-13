@@ -27,11 +27,6 @@ public class MainPresenterImpl implements MainPresenter {
     private ExportManager exportManager;
     private ImportManager importManager;
 
-    public MainPresenterImpl(MainView view, Context context) {
-        this(view, context,
-            ((PlantApp) context.getApplicationContext()).getRepository());
-    }
-
     public MainPresenterImpl(MainView view, Context context, PlantRepository repository) {
         this.view = view;
         this.context = context.getApplicationContext();
@@ -52,7 +47,7 @@ public class MainPresenterImpl implements MainPresenter {
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
             boolean hasOnboarded = prefs.getBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false);
             if (!hasOnboarded) {
-                view.navigateToFragment(new OnboardingFragment(), false);
+                view.navigateToFragment(OnboardingFragment.newInstance(repository), false);
             } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false)) {
                 view.selectNavigationItem(R.id.nav_measure);
             } else {
@@ -108,7 +103,7 @@ public class MainPresenterImpl implements MainPresenter {
     @Override
     public boolean onOptionsItemSelected(int id) {
         if (id == R.id.action_help) {
-            view.navigateToFragment(new OnboardingFragment(), true);
+            view.navigateToFragment(OnboardingFragment.newInstance(repository), true);
             return true;
         } else if (id == R.id.action_export_data) {
             view.launchExport(context.getString(R.string.export_file_name));
@@ -124,15 +119,15 @@ public class MainPresenterImpl implements MainPresenter {
     public boolean onNavigationItemSelected(int itemId) {
         Fragment fragment;
         if (itemId == R.id.nav_plants) {
-            fragment = new PlantListFragment();
+            fragment = PlantListFragment.newInstance(repository);
         } else if (itemId == R.id.nav_measure) {
-            fragment = new LightMeasurementFragment();
+            fragment = LightMeasurementFragment.newInstance(repository);
         } else if (itemId == R.id.nav_diary) {
-            fragment = new DiaryFragment();
+            fragment = DiaryFragment.newInstance(repository, -1);
         } else if (itemId == R.id.nav_reminders) {
             fragment = ReminderListFragment.newInstance(repository);
         } else if (itemId == R.id.nav_stats) {
-            fragment = new StatsFragment();
+            fragment = StatsFragment.newInstance(repository);
         } else {
             fragment = new SettingsFragment();
         }

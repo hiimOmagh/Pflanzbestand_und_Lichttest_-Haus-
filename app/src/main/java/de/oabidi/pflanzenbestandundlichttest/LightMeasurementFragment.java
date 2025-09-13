@@ -28,6 +28,7 @@ import java.util.List;
  * Fragment responsible for displaying live light measurements.
  */
 public class LightMeasurementFragment extends Fragment implements LightMeasurementPresenter.View {
+    private PlantRepository repository;
 
     private TextView luxRawView;
     private TextView luxView;
@@ -47,6 +48,12 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
     private boolean hasValidReading = false;
+
+    public static LightMeasurementFragment newInstance(PlantRepository repository) {
+        LightMeasurementFragment fragment = new LightMeasurementFragment();
+        fragment.repository = repository;
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -85,8 +92,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             sampleSize = 1;
         }
 
-        PlantRepository repository = ((PlantApp) context).getRepository();
-        presenter = new LightMeasurementPresenter(this, repository, context, calibrationFactor, sampleSize);
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        presenter = new LightMeasurementPresenter(this, repo, context, calibrationFactor, sampleSize);
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);

@@ -49,6 +49,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private Uri photoUri;
     private long acquiredEpoch = System.currentTimeMillis();
     private PlantEditPresenter presenter;
+    private PlantRepository repository;
 
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -59,6 +60,25 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
                 photoView.setImageURI(uri);
             }
         });
+
+    public static PlantEditFragment newInstance(@Nullable Plant plant, PlantRepository repository) {
+        PlantEditFragment fragment = new PlantEditFragment();
+        fragment.repository = repository;
+        if (plant != null) {
+            Bundle args = new Bundle();
+            args.putLong(ARG_ID, plant.getId());
+            args.putString(ARG_NAME, plant.getName());
+            args.putString(ARG_SPECIES, plant.getSpecies());
+            args.putString(ARG_LOCATION, plant.getLocationHint());
+            args.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
+            args.putString(ARG_NOTES, plant.getDescription());
+            if (plant.getPhotoUri() != null) {
+                args.putString(ARG_PHOTO, plant.getPhotoUri().toString());
+            }
+            fragment.setArguments(args);
+        }
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -104,7 +124,9 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             }
         }
 
-        PlantRepository repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(requireContext().getApplicationContext());
+        }
         presenter = new PlantEditPresenterImpl(this, repository, requireContext().getApplicationContext());
 
         acquiredInput.setOnClickListener(v -> showDatePicker());
@@ -198,23 +220,5 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         if (isAdded()) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         }
-    }
-
-    public static PlantEditFragment newInstance(@Nullable Plant plant) {
-        PlantEditFragment fragment = new PlantEditFragment();
-        if (plant != null) {
-            Bundle args = new Bundle();
-            args.putLong(ARG_ID, plant.getId());
-            args.putString(ARG_NAME, plant.getName());
-            args.putString(ARG_SPECIES, plant.getSpecies());
-            args.putString(ARG_LOCATION, plant.getLocationHint());
-            args.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
-            args.putString(ARG_NOTES, plant.getDescription());
-            if (plant.getPhotoUri() != null) {
-                args.putString(ARG_PHOTO, plant.getPhotoUri().toString());
-            }
-            fragment.setArguments(args);
-        }
-        return fragment;
     }
 }

@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 /**
  * Fragment showing diary entries.
  *
- * <p>When instantiated with {@link #newInstance(long)} it displays entries for the
+ * <p>When instantiated with {@link #newInstance(PlantRepository, long)} it displays entries for the
  * provided plant. If no plant ID is supplied the fragment simply shows an empty
  * view, making it suitable as a top-level destination as well.</p>
  */
@@ -55,8 +55,9 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     /**
      * Creates a new instance of the fragment for the given plant.
      */
-    public static DiaryFragment newInstance(long plantId) {
+    public static DiaryFragment newInstance(PlantRepository repository, long plantId) {
         DiaryFragment fragment = new DiaryFragment();
+        fragment.repository = repository;
         Bundle args = new Bundle();
         args.putLong(ARG_PLANT_ID, plantId);
         fragment.setArguments(args);
@@ -72,8 +73,8 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
         Context context = requireContext().getApplicationContext();
-        repository = ((PlantApp) context).getRepository();
-        presenter = new DiaryPresenter(this, repository, plantId, context);
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        presenter = new DiaryPresenter(this, repo, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(

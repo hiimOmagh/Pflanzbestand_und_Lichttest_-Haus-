@@ -14,6 +14,13 @@ import java.util.List;
  * Home screen widget provider showing the next pending reminder.
  */
 public class ReminderWidgetProvider extends AppWidgetProvider {
+    private PlantRepository repository;
+
+    public ReminderWidgetProvider() { }
+
+    public ReminderWidgetProvider(PlantRepository repository) {
+        this.repository = repository;
+    }
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
@@ -40,9 +47,9 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widget_measure_button, pendingIntent);
 
-        PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
         final long now = System.currentTimeMillis();
-        repository.getAllReminders(reminders -> {
+        repo.getAllReminders(reminders -> {
             Reminder next = null;
             for (Reminder r : reminders) {
                 if (r.getTriggerAt() >= now && (next == null || r.getTriggerAt() < next.getTriggerAt())) {

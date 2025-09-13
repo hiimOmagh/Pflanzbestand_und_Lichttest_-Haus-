@@ -35,10 +35,17 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
  * Fragment displaying the list of plants.
  */
 public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantClickListener, PlantListPresenter.View {
+    private PlantRepository repository;
     private PlantListPresenter presenter;
     private PlantAdapter adapter;
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
+
+    public static PlantListFragment newInstance(PlantRepository repository) {
+        PlantListFragment fragment = new PlantListFragment();
+        fragment.repository = repository;
+        return fragment;
+    }
 
     @Override
     public void showProgress() {
@@ -131,10 +138,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
         Context context = requireContext().getApplicationContext();
-        PlantRepository repository = ((PlantApp) context).getRepository();
-        ExportManager exportManager = new ExportManager(context, repository);
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        ExportManager exportManager = new ExportManager(context, repo);
         ImportManager importManager = new ImportManager(context);
-        presenter = new PlantListPresenter(this, repository, context, exportManager, importManager);
+        presenter = new PlantListPresenter(this, repo, context, exportManager, importManager);
         presenter.refreshPlants();
 
         getParentFragmentManager().setFragmentResultListener(PlantEditFragment.RESULT_KEY, this,
@@ -316,7 +323,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     private void navigateToEdit(@Nullable Plant plant) {
-        PlantEditFragment fragment = PlantEditFragment.newInstance(plant);
+        PlantEditFragment fragment = PlantEditFragment.newInstance(plant, repository);
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)
@@ -324,7 +331,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     private void navigateToSpeciesTargets() {
-        SpeciesTargetListFragment fragment = new SpeciesTargetListFragment();
+        SpeciesTargetListFragment fragment = SpeciesTargetListFragment.newInstance(repository);
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)

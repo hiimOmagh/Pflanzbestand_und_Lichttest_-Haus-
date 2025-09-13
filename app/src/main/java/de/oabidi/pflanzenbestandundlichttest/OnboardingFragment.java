@@ -23,6 +23,13 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  * Fragment displaying a simple onboarding slider.
  */
 public class OnboardingFragment extends Fragment {
+    private PlantRepository repository;
+
+    public static OnboardingFragment newInstance(PlantRepository repository) {
+        OnboardingFragment fragment = new OnboardingFragment();
+        fragment.repository = repository;
+        return fragment;
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -52,8 +59,9 @@ public class OnboardingFragment extends Fragment {
         } else {
             BottomNavigationView bottomNav = requireActivity().findViewById(R.id.bottom_nav);
             bottomNav.setSelectedItemId(R.id.nav_plants);
+            PlantRepository repo = repository != null ? repository : new PlantRepository(requireContext().getApplicationContext());
             getParentFragmentManager().beginTransaction()
-                .replace(R.id.nav_host_fragment, new PlantListFragment())
+                .replace(R.id.nav_host_fragment, PlantListFragment.newInstance(repo))
                 .commit();
         }
     }

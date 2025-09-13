@@ -39,6 +39,7 @@ import androidx.core.view.WindowInsetsCompat;
 public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
+    private PlantRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +68,7 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        PlantRepository repository = ((PlantApp) getApplicationContext()).getRepository();
+        repository = ((PlantApp) getApplicationContext()).getRepository();
         presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this, repository));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
         nameView.setText(presenter.getTextOrFallback(name));
@@ -131,7 +132,7 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
 
     @Override
     public void navigateToDiary(long plantId) {
-        DiaryFragment fragment = DiaryFragment.newInstance(plantId);
+        DiaryFragment fragment = DiaryFragment.newInstance(repository, plantId);
         getSupportFragmentManager().beginTransaction()
             .replace(android.R.id.content, fragment)
             .addToBackStack(null)

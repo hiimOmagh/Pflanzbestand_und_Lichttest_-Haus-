@@ -31,6 +31,7 @@ import de.oabidi.pflanzenbestandundlichttest.MeasurementListFragment;
  * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
  */
 public class StatsFragment extends Fragment implements StatsPresenter.View {
+    private PlantRepository repository;
     private StatsPresenter presenter;
     private TextView diaryCountsView;
     private TextView dliView;
@@ -41,6 +42,12 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
     private View viewMeasurementsButton;
     private TextView placeholderView;
     private SharedPreferences preferences;
+
+    public static StatsFragment newInstance(PlantRepository repository) {
+        StatsFragment fragment = new StatsFragment();
+        fragment.repository = repository;
+        return fragment;
+    }
 
     @Nullable
     @Override
@@ -59,8 +66,8 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
-        PlantRepository repository = ((PlantApp) context).getRepository();
-        presenter = new StatsPresenter(this, repository, context);
+        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        presenter = new StatsPresenter(this, repo, context);
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
 
         if (savedInstanceState != null) {
@@ -87,7 +94,7 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
         viewMeasurementsButton.setOnClickListener(v -> {
             if (selectedPlantIds.size() == 1) {
                 long id = selectedPlantIds.get(0);
-                MeasurementListFragment fragment = MeasurementListFragment.newInstance(id);
+                MeasurementListFragment fragment = MeasurementListFragment.newInstance(id, repo);
                 requireActivity().getSupportFragmentManager().beginTransaction()
                     .replace(R.id.nav_host_fragment, fragment)
                     .addToBackStack(null)

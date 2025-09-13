@@ -29,6 +29,12 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     private PlantRepository repository;
     private SpeciesTargetAdapter adapter;
 
+    public static SpeciesTargetListFragment newInstance(PlantRepository repository) {
+        SpeciesTargetListFragment fragment = new SpeciesTargetListFragment();
+        fragment.repository = repository;
+        return fragment;
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -39,7 +45,9 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(requireContext().getApplicationContext());
+        }
 
         RecyclerView recyclerView = view.findViewById(R.id.target_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));

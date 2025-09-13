@@ -35,8 +35,9 @@ public class MeasurementListFragment extends Fragment {
     /**
      * Creates a new instance showing measurements for the given plant.
      */
-    public static MeasurementListFragment newInstance(long plantId) {
+    public static MeasurementListFragment newInstance(long plantId, PlantRepository repository) {
         MeasurementListFragment fragment = new MeasurementListFragment();
+        fragment.repository = repository;
         Bundle args = new Bundle();
         args.putLong(ARG_PLANT_ID, plantId);
         fragment.setArguments(args);
@@ -50,7 +51,9 @@ public class MeasurementListFragment extends Fragment {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        repository = ((PlantApp) requireContext().getApplicationContext()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(requireContext().getApplicationContext());
+        }
     }
 
     @Nullable

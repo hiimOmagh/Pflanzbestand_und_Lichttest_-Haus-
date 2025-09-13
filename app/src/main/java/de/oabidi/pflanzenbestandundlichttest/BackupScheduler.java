@@ -20,6 +20,15 @@ public class BackupScheduler extends BroadcastReceiver {
     private static final int REQUEST_CODE = 42;
     private static final long WEEK_INTERVAL = AlarmManager.INTERVAL_DAY * 7;
     private static final int RETENTION_COUNT = 5;
+    private final PlantRepository repository;
+
+    public BackupScheduler() {
+        this(null);
+    }
+
+    public BackupScheduler(PlantRepository repository) {
+        this.repository = repository;
+    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -31,8 +40,8 @@ public class BackupScheduler extends BroadcastReceiver {
                 .format(new Date());
             File out = new File(dir, "backup-" + timestamp + ".zip");
             Uri uri = Uri.fromFile(out);
-            PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
-            new ExportManager(context, repository).export(uri, success -> result.finish());
+            PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
+            new ExportManager(context, repo).export(uri, success -> result.finish());
         } else {
             result.finish();
         }
