@@ -21,6 +21,9 @@ public class PlantApp extends Application implements RepositoryProvider {
         SharedPreferences prefs = getSharedPreferences(SettingsKeys.PREFS_NAME, MODE_PRIVATE);
         String theme = prefs.getString(SettingsKeys.KEY_THEME, "system");
         applyTheme(theme);
+
+        // Ensure the repository is created and supplied to activities at startup.
+        getRepository();
     }
 
     private void applyTheme(String value) {
@@ -46,6 +49,8 @@ public class PlantApp extends Application implements RepositoryProvider {
         if (repository == null) {
             repository = new PlantRepository(this);
         }
+        MainActivity.setRepository(repository);
+        PlantDetailActivity.setRepository(repository);
         return repository;
     }
 }

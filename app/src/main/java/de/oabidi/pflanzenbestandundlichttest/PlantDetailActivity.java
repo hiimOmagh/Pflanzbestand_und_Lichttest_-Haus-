@@ -13,8 +13,8 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -37,9 +37,22 @@ import androidx.core.view.WindowInsetsCompat;
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
+    private static PlantRepository defaultRepository;
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
     private PlantRepository repository;
+
+    public PlantDetailActivity() {
+        this(defaultRepository);
+    }
+
+    public PlantDetailActivity(PlantRepository repository) {
+        this.repository = repository;
+    }
+
+    public static void setRepository(PlantRepository repository) {
+        defaultRepository = repository;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +81,9 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        repository = ((RepositoryProvider) getApplication()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(getApplicationContext());
+        }
         presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this, repository));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
         nameView.setText(presenter.getTextOrFallback(name));

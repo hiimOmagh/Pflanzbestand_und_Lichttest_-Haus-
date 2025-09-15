@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -27,17 +27,32 @@ public class MainActivity extends AppCompatActivity implements MainView {
     public static final String EXTRA_NAVIGATE_MEASURE =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
 
+    private static PlantRepository defaultRepository;
+    private PlantRepository repository;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
     private MainPresenter presenter;
     private ProgressBar exportProgressBar;
+
+    public MainActivity() {
+        this(defaultRepository);
+    }
+
+    public MainActivity(PlantRepository repository) {
+        this.repository = repository;
+    }
+
+    public static void setRepository(PlantRepository repository) {
+        defaultRepository = repository;
+    }
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        PlantRepository repository =
-            ((RepositoryProvider) getApplication()).getRepository();
+        if (repository == null) {
+            repository = new PlantRepository(getApplicationContext());
+        }
         presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
 
         exportProgressBar = findViewById(R.id.export_progress_bar);
@@ -157,11 +172,15 @@ public class MainActivity extends AppCompatActivity implements MainView {
     /**
      * Creates an intent pre-filled with the given plant's details.
      *
-     * @param context the context used to create the intent
-     * @param plant   the plant whose details should be shown
+     * @param context     the context used to create the intent
+     * @param repository  repository to be used by {@link PlantDetailActivity}
+     * @param plant       the plant whose details should be shown
      * @return an intent for {@link PlantDetailActivity}
      */
-    public static Intent createPlantDetailIntent(Context context, Plant plant) {
+    public static Intent createPlantDetailIntent(Context context,
+                                                 PlantRepository repository,
+                                                 Plant plant) {
+        PlantDetailActivity.setRepository(repository);
         Intent intent = new Intent(context, PlantDetailActivity.class);
         intent.putExtra("plantId", plant.getId());
         intent.putExtra("name", plant.getName());

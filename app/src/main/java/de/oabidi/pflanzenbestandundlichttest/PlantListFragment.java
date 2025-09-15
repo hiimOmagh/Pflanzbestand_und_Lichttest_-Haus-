@@ -255,7 +255,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     @Override
     public void onPlantClick(Plant plant) {
-        Intent intent = MainActivity.createPlantDetailIntent(requireContext(), plant);
+        Intent intent = MainActivity.createPlantDetailIntent(requireContext(), repository, plant);
         startActivity(intent);
     }
 

@@ -2,7 +2,6 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.assertSame;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
@@ -12,32 +11,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 /**
- * Verifies that {@link PlantDetailActivity} obtains its repository from the application
- * {@link RepositoryProvider}, allowing tests to supply a mock implementation.
+ * Verifies that {@link PlantDetailActivity} uses the repository supplied
+ * via {@link PlantDetailActivity#setRepository(PlantRepository)}.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantDetailActivityRepositoryProviderTest.TestApp.class)
-public class PlantDetailActivityRepositoryProviderTest {
-
-    public static class TestApp extends Application implements RepositoryProvider {
-        private PlantRepository repository;
-        @Override
-        public PlantRepository getRepository() {
-            return repository;
-        }
-        void setRepository(PlantRepository repo) {
-            this.repository = repo;
-        }
-    }
-
+public class PlantDetailActivityInjectionTest {
     @Test
-    public void usesRepositoryFromApplication() throws Exception {
+    public void usesInjectedRepository() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository fakeRepo = new PlantRepository(context);
-        ((TestApp) context).setRepository(fakeRepo);
+        PlantDetailActivity.setRepository(fakeRepo);
 
         Intent intent = new Intent(context, PlantDetailActivity.class);
         intent.putExtra("plantId", 1L);
