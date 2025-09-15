@@ -102,6 +102,8 @@ public class ExportManager {
                     success = true;
                 } catch (IOException e) {
                     Log.e(TAG, "Export failed", e);
+                } finally {
+                    deleteRecursive(tempDir);
                 }
             }
 
@@ -233,8 +235,6 @@ public class ExportManager {
         } catch (IOException e) {
             Log.e(TAG, "Error creating ZIP", e);
             throw e;
-        } finally {
-            deleteRecursive(tempDir);
         }
     }
 
