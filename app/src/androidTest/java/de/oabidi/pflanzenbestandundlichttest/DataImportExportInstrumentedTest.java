@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import android.app.AlarmManager;
 import android.content.Intent;
 
@@ -38,6 +40,21 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(AndroidJUnit4.class)
 public class DataImportExportInstrumentedTest {
+    private static <T> T awaitDb(Callable<T> task) throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<T> result = new AtomicReference<>();
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                result.set(task.call());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                latch.countDown();
+            }
+        });
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        return result.get();
+    }
     @Test
     public void testExportImportRestoresData() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
@@ -75,9 +92,9 @@ public class DataImportExportInstrumentedTest {
 
         long reminderTrigger = System.currentTimeMillis() + 5000;
         Reminder reminder = new Reminder(reminderTrigger, "ExportReminder", plant.getId());
-        long reminderId = PlantDatabase.databaseWriteExecutor.submit(() ->
+        long reminderId = awaitDb(() ->
             PlantDatabase.getDatabase(context).reminderDao().insert(reminder)
-        ).get();
+        );
         reminder.setId(reminderId);
 
         // Export data to temporary file
@@ -88,9 +105,10 @@ public class DataImportExportInstrumentedTest {
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
-        PlantDatabase.databaseWriteExecutor.submit(() ->
-            PlantDatabase.getDatabase(context).clearAllTables()
-        ).get();
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).clearAllTables();
+            return null;
+        });
 
         // Import data
         CountDownLatch importLatch = new CountDownLatch(1);
@@ -99,21 +117,11 @@ public class DataImportExportInstrumentedTest {
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify all data restored
-        int plantCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> repository.getAllPlantsSync().size()
-        ).get();
-        int targetCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> repository.getAllSpeciesTargetsSync().size()
-        ).get();
-        int measurementCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> repository.getAllMeasurementsSync().size()
-        ).get();
-        int diaryCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> repository.getAllDiaryEntriesSync().size()
-        ).get();
-        int reminderCount = PlantDatabase.databaseWriteExecutor.submit(
-            () -> repository.getAllRemindersSync().size()
-        ).get();
+        int plantCount = awaitDb(() -> repository.getAllPlantsSync().size());
+        int targetCount = awaitDb(() -> repository.getAllSpeciesTargetsSync().size());
+        int measurementCount = awaitDb(() -> repository.getAllMeasurementsSync().size());
+        int diaryCount = awaitDb(() -> repository.getAllDiaryEntriesSync().size());
+        int reminderCount = awaitDb(() -> repository.getAllRemindersSync().size());
 
         assertEquals(1, plantCount);
         assertEquals(1, targetCount);
@@ -121,14 +129,14 @@ public class DataImportExportInstrumentedTest {
         assertEquals(1, diaryCount);
         assertEquals(1, reminderCount);
 
-        Measurement restoredMeasurement = PlantDatabase.databaseWriteExecutor.submit(
+        Measurement restoredMeasurement = awaitDb(
             () -> repository.getAllMeasurementsSync().get(0)
-        ).get();
+        );
 
         // Verify photos restored
-        Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
+        Plant restoredPlant = awaitDb(
             () -> repository.getAllPlantsSync().get(0)
-        ).get();
+        );
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
         assertNotNull(restoredPlantUri);
         try (InputStream is = context.getContentResolver().openInputStream(restoredPlantUri)) {
@@ -141,9 +149,9 @@ public class DataImportExportInstrumentedTest {
             assertArrayEquals(plantPhotoBytes, baos.toByteArray());
         }
 
-        DiaryEntry restoredDiary = PlantDatabase.databaseWriteExecutor.submit(
+        DiaryEntry restoredDiary = awaitDb(
             () -> repository.getAllDiaryEntriesSync().get(0)
-        ).get();
+        );
         assertNotNull(restoredDiary.getPhotoUri());
         Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
         try (InputStream is = context.getContentResolver().openInputStream(restoredDiaryUri)) {
@@ -156,9 +164,9 @@ public class DataImportExportInstrumentedTest {
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
         }
 
-        Reminder restoredReminder = PlantDatabase.databaseWriteExecutor.submit(
+        Reminder restoredReminder = awaitDb(
             () -> repository.getAllRemindersSync().get(0)
-        ).get();
+        );
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());
         assertEquals(plant.getId(), restoredReminder.getPlantId());
@@ -206,23 +214,24 @@ public class DataImportExportInstrumentedTest {
         new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
-        PlantDatabase.databaseWriteExecutor.submit(() ->
-            PlantDatabase.getDatabase(context).clearAllTables()
-        ).get();
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).clearAllTables();
+            return null;
+        });
 
         CountDownLatch importLatch = new CountDownLatch(1);
         new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE,
             (success, error, warnings, message) -> importLatch.countDown());
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
-        Plant restoredPlant = PlantDatabase.databaseWriteExecutor.submit(
+        Plant restoredPlant = awaitDb(
             () -> repository.getAllPlantsSync().get(0)
-        ).get();
+        );
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
 
-        DiaryEntry restoredDiary = PlantDatabase.databaseWriteExecutor.submit(
+        DiaryEntry restoredDiary = awaitDb(
             () -> repository.getAllDiaryEntriesSync().get(0)
-        ).get();
+        );
         Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
 
         clearDir(context.getCacheDir());

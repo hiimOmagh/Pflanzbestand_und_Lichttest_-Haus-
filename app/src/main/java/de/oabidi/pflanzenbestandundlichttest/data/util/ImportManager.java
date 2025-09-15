@@ -32,7 +32,6 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -193,42 +192,31 @@ public class ImportManager {
                     if (csvFile != null) {
                         if (mode == Mode.REPLACE) {
                             try {
-                                PlantDatabase.databaseWriteExecutor.submit(() -> {
-                                    PlantDatabase db = PlantDatabase.getDatabase(context);
-                                    BulkReadDao bulk = db.bulkDao();
-                                    for (Plant plant : bulk.getAllPlants()) {
-                                        PhotoManager.deletePhoto(context, plant.getPhotoUri());
-                                    }
-                                    for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
-                                        PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
-                                    }
-                                    for (Reminder reminder : bulk.getAllReminders()) {
-                                        ReminderScheduler.cancelReminder(context, reminder.getId());
-                                    }
-                                    db.clearAllTables();
-                                    return null;
-                                }).get();
-                            } catch (ExecutionException | InterruptedException e) {
+                                PlantDatabase db = PlantDatabase.getDatabase(context);
+                                BulkReadDao bulk = db.bulkDao();
+                                for (Plant plant : bulk.getAllPlants()) {
+                                    PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                                }
+                                for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
+                                    PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
+                                }
+                                for (Reminder reminder : bulk.getAllReminders()) {
+                                    ReminderScheduler.cancelReminder(context, reminder.getId());
+                                }
+                                db.clearAllTables();
+                            } catch (Exception e) {
                                 Log.e(TAG, "Failed to clean database", e);
                                 error = ImportError.IO_ERROR;
                             }
                         }
                         if (error == null) {
                             try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                                final BufferedReader finalReader = reader;
-                                final File finalTempDir = tempDir;
-                                final Mode finalMode = mode;
-                                final List<ImportWarning> finalWarnings = warnings;
-                                final ProgressCallback finalCallback = progressCallback;
-                                final AtomicInteger finalProgress = progress;
-                                final int finalTotalSteps = totalSteps;
-                                ImportError parseResult = PlantDatabase.databaseWriteExecutor
-                                    .submit(() -> parseAndInsert(finalReader, finalTempDir, finalMode, finalWarnings,
-                                        finalCallback, finalProgress, finalTotalSteps))
-                                    .get();
+                                ImportError parseResult = parseAndInsert(
+                                    reader, tempDir, mode, warnings,
+                                    progressCallback, progress, totalSteps);
                                 error = parseResult;
                                 success = (parseResult == null);
-                            } catch (ExecutionException | InterruptedException e) {
+                            } catch (IOException e) {
                                 Log.e(TAG, "Failed to parse import file", e);
                                 success = false;
                                 error = ImportError.IO_ERROR;

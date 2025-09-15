@@ -16,6 +16,8 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -27,6 +29,21 @@ import static org.junit.Assert.*;
  */
 @RunWith(AndroidJUnit4.class)
 public class DataRoundTripInstrumentedTest {
+    private static <T> T awaitDb(Callable<T> task) throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<T> result = new AtomicReference<>();
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                result.set(task.call());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                latch.countDown();
+            }
+        });
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+        return result.get();
+    }
 
     @Test
     public void plantAndDiaryRoundTrip() throws Exception {
@@ -65,9 +82,10 @@ public class DataRoundTripInstrumentedTest {
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
-        PlantDatabase.databaseWriteExecutor
-            .submit(() -> PlantDatabase.getDatabase(context).clearAllTables())
-            .get();
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).clearAllTables();
+            return null;
+        });
 
         // Import data back
         CountDownLatch importLatch = new CountDownLatch(1);
@@ -77,19 +95,13 @@ public class DataRoundTripInstrumentedTest {
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify counts
-        int plantCount = PlantDatabase.databaseWriteExecutor
-            .submit(() -> repository.getAllPlantsSync().size())
-            .get();
-        int diaryCount = PlantDatabase.databaseWriteExecutor
-            .submit(() -> repository.getAllDiaryEntriesSync().size())
-            .get();
+        int plantCount = awaitDb(() -> repository.getAllPlantsSync().size());
+        int diaryCount = awaitDb(() -> repository.getAllDiaryEntriesSync().size());
         assertEquals(1, plantCount);
         assertEquals(1, diaryCount);
 
         // Verify plant photo restored
-        Plant restoredPlant = PlantDatabase.databaseWriteExecutor
-            .submit(() -> repository.getAllPlantsSync().get(0))
-            .get();
+        Plant restoredPlant = awaitDb(() -> repository.getAllPlantsSync().get(0));
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
         assertNotNull(restoredPlantUri);
         try (InputStream is = context.getContentResolver().openInputStream(restoredPlantUri)) {
@@ -103,9 +115,7 @@ public class DataRoundTripInstrumentedTest {
         }
 
         // Verify diary photo restored
-        DiaryEntry restoredEntry = PlantDatabase.databaseWriteExecutor
-            .submit(() -> repository.getAllDiaryEntriesSync().get(0))
-            .get();
+        DiaryEntry restoredEntry = awaitDb(() -> repository.getAllDiaryEntriesSync().get(0));
         assertNotNull(restoredEntry.getPhotoUri());
         Uri restoredDiaryUri = Uri.parse(restoredEntry.getPhotoUri());
         try (InputStream is = context.getContentResolver().openInputStream(restoredDiaryUri)) {

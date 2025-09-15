@@ -41,8 +41,14 @@ public class ReminderWidgetInstrumentedTest {
         long triggerAt = System.currentTimeMillis() + 60000;
         Reminder reminder = new Reminder(triggerAt, "Water widget", 1);
         PlantDatabase db = PlantDatabase.getDatabase(context);
-        long reminderId = PlantDatabase.databaseWriteExecutor
-            .submit(() -> db.reminderDao().insert(reminder)).get();
+        final long[] reminderIdHolder = new long[1];
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            reminderIdHolder[0] = db.reminderDao().insert(reminder);
+            insertLatch.countDown();
+        });
+        assertTrue(insertLatch.await(2, TimeUnit.SECONDS));
+        long reminderId = reminderIdHolder[0];
         ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
 
         CountDownLatch latch = new CountDownLatch(1);
