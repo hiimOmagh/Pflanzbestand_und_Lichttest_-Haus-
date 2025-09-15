@@ -10,7 +10,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 /**
  * Application subclass providing a single {@link PlantRepository} instance.
  */
-public class PlantApp extends Application {
+public class PlantApp extends Application implements RepositoryProvider {
     private PlantRepository repository;
 
     @Override
@@ -41,6 +41,7 @@ public class PlantApp extends Application {
     /**
      * Returns the shared {@link PlantRepository} instance for the application.
      */
+    @Override
     public synchronized PlantRepository getRepository() {
         if (repository == null) {
             repository = new PlantRepository(this);

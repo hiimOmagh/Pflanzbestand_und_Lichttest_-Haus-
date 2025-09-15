@@ -98,7 +98,7 @@ to interact with returned data directly from the callback without additional
 thread switching:
 
 ```java
-PlantRepository repository = ((PlantApp) context.getApplicationContext()).getRepository();
+PlantRepository repository = ((RepositoryProvider) context.getApplicationContext()).getRepository();
 repository.getAllPlants(plants -> {
     // This code runs on the main thread.
     // Update UI with the retrieved plants.

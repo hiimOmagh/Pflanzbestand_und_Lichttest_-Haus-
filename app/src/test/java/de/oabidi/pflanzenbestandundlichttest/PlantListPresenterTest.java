@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.*;
 
+import android.app.Application;
 import android.content.Context;
 import android.net.Uri;
 
@@ -28,7 +29,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 @Config(application = PlantListPresenterTest.TestApp.class)
 public class PlantListPresenterTest {
 
-    public static class TestApp extends PlantApp {
+    public static class TestApp extends Application implements RepositoryProvider {
         private PlantRepository repository;
         @Override
         public synchronized PlantRepository getRepository() {

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         PlantRepository repository =
-            ((PlantApp) getApplicationContext()).getRepository();
+            ((RepositoryProvider) getApplication()).getRepository();
         presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
 
         exportProgressBar = findViewById(R.id.export_progress_bar);

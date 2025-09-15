@@ -26,7 +26,7 @@ public class StatsFragmentInstrumentedTest {
     @Test
     public void testDliAndChartReflectMeasurements() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = ((PlantApp) context).getRepository();
+        PlantRepository repository = ((RepositoryProvider) context).getRepository();
 
         // Insert a plant
         Plant plant = new Plant();
