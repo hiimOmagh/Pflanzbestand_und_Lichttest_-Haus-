@@ -224,30 +224,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         if (!isAdded()) {
             return;
         }
-        String msg = message;
-        if (msg == null) {
-            if (success) {
-                msg = getString(R.string.import_success);
-            } else if (error != null) {
-                switch (error) {
-                    case MISSING_VERSION:
-                        msg = getString(R.string.import_error_missing_version);
-                        break;
-                    case INVALID_VERSION:
-                        msg = getString(R.string.import_error_invalid_version);
-                        break;
-                    case UNSUPPORTED_VERSION:
-                        msg = getString(R.string.import_error_unsupported_version);
-                        break;
-                    default:
-                        msg = getString(R.string.import_failure);
-                        break;
-                }
-            } else {
-                msg = getString(R.string.import_failure);
-            }
-        }
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         if (success && warnings != null && !warnings.isEmpty()) {
             showWarningDialog(warnings);
         }

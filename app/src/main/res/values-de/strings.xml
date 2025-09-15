@@ -132,9 +132,6 @@
     <string name="import_choice_message">Wie sollen die importierten Daten angewendet werden?</string>
     <string name="import_merge">Zusammenführen</string>
     <string name="import_replace">Ersetzen</string>
-    <string name="import_error_missing_version">Fehlende Exportversion</string>
-    <string name="import_error_invalid_version">Ungültige Exportversion</string>
-    <string name="import_error_unsupported_version">Nicht unterstützte Exportversion</string>
     <string name="import_image_warning">Einige Bilder konnten nicht wiederhergestellt werden</string>
     <string name="import_warnings_title">Importwarnungen</string>
     <string name="hint_remind_days">In Tagen erinnern</string>

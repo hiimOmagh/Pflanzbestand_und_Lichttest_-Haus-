@@ -129,9 +129,6 @@
     <string name="share_backup">Partager la sauvegarde</string>
     <string name="import_success">Importation réussie</string>
     <string name="import_failure">Échec de l\'importation</string>
-    <string name="import_error_missing_version">Version d\'exportation manquante</string>
-    <string name="import_error_invalid_version">Version d\'exportation non valide</string>
-    <string name="import_error_unsupported_version">Version d\'exportation non prise en charge</string>
     <string name="import_image_warning">Certaines images n\'ont pas pu être restaurées</string>
     <string name="import_warnings_title">Avertissements d\'importation</string>
     <string name="import_choice_message">Comment les données importées doivent-elles être appliquées ?</string>
