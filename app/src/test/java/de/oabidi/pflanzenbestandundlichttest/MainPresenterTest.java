@@ -24,6 +24,11 @@ public class MainPresenterTest {
     private Context context;
     private FakeView view;
     private MainPresenter presenter;
+    private PlantRepository repository;
+
+    private static class FakeRepository extends PlantRepository {
+        FakeRepository(Context context) { super(context); }
+    }
 
     private static class FakeView implements MainView {
         Fragment lastFragment;
@@ -73,7 +78,8 @@ public class MainPresenterTest {
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
         view = new FakeView();
-        presenter = new MainPresenterImpl(view, context, new PlantRepository(context));
+        repository = new FakeRepository(context);
+        presenter = new MainPresenterImpl(view, context, repository);
     }
 
     /**
@@ -95,6 +101,24 @@ public class MainPresenterTest {
     public void navigation_measure_showsLightMeasurement() {
         presenter.onNavigationItemSelected(R.id.nav_measure);
         assertTrue(view.lastFragment instanceof LightMeasurementFragment);
+    }
+
+    @Test
+    public void navigation_plants_usesProvidedRepository() throws Exception {
+        presenter.onNavigationItemSelected(R.id.nav_plants);
+        assertTrue(view.lastFragment instanceof PlantListFragment);
+        java.lang.reflect.Field f = PlantListFragment.class.getDeclaredField("repository");
+        f.setAccessible(true);
+        assertSame(repository, f.get(view.lastFragment));
+    }
+
+    @Test
+    public void navigation_diary_usesProvidedRepository() throws Exception {
+        presenter.onNavigationItemSelected(R.id.nav_diary);
+        assertTrue(view.lastFragment instanceof DiaryFragment);
+        java.lang.reflect.Field f = DiaryFragment.class.getDeclaredField("repository");
+        f.setAccessible(true);
+        assertSame(repository, f.get(view.lastFragment));
     }
 
     /**

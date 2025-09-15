@@ -138,7 +138,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
         Context context = requireContext().getApplicationContext();
-        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        if (repository == null) {
+            throw new IllegalStateException("PlantRepository missing. Use newInstance() to create this fragment.");
+        }
+        PlantRepository repo = repository;
         ExportManager exportManager = new ExportManager(context, repo);
         ImportManager importManager = new ImportManager(context);
         presenter = new PlantListPresenter(this, repo, context, exportManager, importManager);
