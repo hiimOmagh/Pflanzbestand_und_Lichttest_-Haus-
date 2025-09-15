@@ -16,8 +16,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import java.util.concurrent.ExecutionException;
-
 /**
  * Receives reminder alarms and displays notifications with action buttons.
  */
@@ -77,12 +75,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             repo.deleteReminderById(reminderId, null);
-            Plant plant = null;
-            try {
-                plant = repo.getPlant(plantId).get();
-            } catch (ExecutionException | InterruptedException e) {
-                // Ignore and proceed without plant details
-            }
+            Plant plant = repo.getPlantSync(plantId);
 
             Intent doneIntent = new Intent(context, ReminderReceiver.class);
             doneIntent.setAction(ACTION_MARK_DONE);

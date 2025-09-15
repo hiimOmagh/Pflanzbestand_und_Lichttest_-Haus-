@@ -63,7 +63,10 @@ public class DataImportExportInstrumentedTest {
 
         // Insert species target and plant with measurement and diary entry
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
-        repository.insertSpeciesTarget(target, null).get();
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).speciesTargetDao().insert(target);
+            return null;
+        });
 
         // Create dummy photos
         byte[] plantPhotoBytes = new byte[]{1, 2, 3};
@@ -81,14 +84,25 @@ public class DataImportExportInstrumentedTest {
         Uri diaryPhotoUri = Uri.fromFile(diaryPhotoFile);
 
         Plant plant = new Plant("ExportPlant", null, "ExportSpecies", null, 0L, plantPhotoUri);
-        repository.insert(plant, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).plantDao().insert(plant);
+            plant.setId(id);
+            return null;
+        });
 
         Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 1f, "note");
-        repository.insertMeasurement(m, null).get();
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).measurementDao().insert(m);
+            return null;
+        });
 
         DiaryEntry d = new DiaryEntry(plant.getId(), 2000L, "note", "hello");
         d.setPhotoUri(diaryPhotoUri.toString());
-        repository.insertDiaryEntry(d, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).diaryDao().insert(d);
+            d.setId(id);
+            return null;
+        });
 
         long reminderTrigger = System.currentTimeMillis() + 5000;
         Reminder reminder = new Reminder(reminderTrigger, "ExportReminder", plant.getId());
@@ -202,11 +216,19 @@ public class DataImportExportInstrumentedTest {
         Uri diaryPhotoUri = Uri.fromFile(diaryPhotoFile);
 
         Plant plant = new Plant("PersistPlant", null, null, null, 0L, plantPhotoUri);
-        repository.insert(plant, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).plantDao().insert(plant);
+            plant.setId(id);
+            return null;
+        });
 
         DiaryEntry entry = new DiaryEntry(plant.getId(), 1000L, "note", "import");
         entry.setPhotoUri(diaryPhotoUri.toString());
-        repository.insertDiaryEntry(entry, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).diaryDao().insert(entry);
+            entry.setId(id);
+            return null;
+        });
 
         File export = new File(context.getCacheDir(), "persist_export.zip");
         Uri exportUri = Uri.fromFile(export);

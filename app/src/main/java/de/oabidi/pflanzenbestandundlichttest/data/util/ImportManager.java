@@ -13,6 +13,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -192,38 +193,55 @@ public class ImportManager {
                         zis.closeEntry();
                     }
                     if (csvFile != null) {
-                        if (mode == Mode.REPLACE) {
-                            try {
-                                PlantDatabase db = PlantDatabase.getDatabase(context);
-                                BulkReadDao bulk = db.bulkDao();
-                                for (Plant plant : bulk.getAllPlants()) {
-                                    PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                        PlantDatabase db = PlantDatabase.getDatabase(context);
+                        final boolean[] successHolder = {false};
+                        final ImportError[] errorHolder = {null};
+                        try {
+                            db.runInTransaction(() -> {
+                                if (mode == Mode.REPLACE) {
+                                    BulkReadDao bulk = db.bulkDao();
+                                    try {
+                                        for (Plant plant : bulk.getAllPlants()) {
+                                            PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                                        }
+                                        for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
+                                            PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
+                                        }
+                                        for (Reminder reminder : bulk.getAllReminders()) {
+                                            ReminderScheduler.cancelReminder(context, reminder.getId());
+                                        }
+                                        db.clearAllTables();
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Failed to clean database", e);
+                                        errorHolder[0] = ImportError.IO_ERROR;
+                                        throw new RuntimeException(e);
+                                    }
                                 }
-                                for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
-                                    PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
+                                if (errorHolder[0] == null) {
+                                    try (BufferedReader reader = new BufferedReader(
+                                        new InputStreamReader(new FileInputStream(csvFile), StandardCharsets.UTF_8))) {
+                                        ImportError parseResult = parseAndInsert(
+                                            reader, tempDir, mode, warnings,
+                                            progressCallback, progress, totalSteps);
+                                        if (parseResult != null) {
+                                            errorHolder[0] = parseResult;
+                                            throw new RuntimeException();
+                                        }
+                                        successHolder[0] = true;
+                                    } catch (IOException e) {
+                                        Log.e(TAG, "Failed to parse import file", e);
+                                        errorHolder[0] = ImportError.IO_ERROR;
+                                        throw new RuntimeException(e);
+                                    }
                                 }
-                                for (Reminder reminder : bulk.getAllReminders()) {
-                                    ReminderScheduler.cancelReminder(context, reminder.getId());
-                                }
-                                db.clearAllTables();
-                            } catch (Exception e) {
-                                Log.e(TAG, "Failed to clean database", e);
-                                error = ImportError.IO_ERROR;
-                            }
+                            });
+                        } catch (RuntimeException e) {
+                            // Transaction failed; errorHolder already set
                         }
-                        if (error == null) {
-                            try (BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(new FileInputStream(csvFile), StandardCharsets.UTF_8))) {
-                                ImportError parseResult = parseAndInsert(
-                                    reader, tempDir, mode, warnings,
-                                    progressCallback, progress, totalSteps);
-                                error = parseResult;
-                                success = (parseResult == null);
-                            } catch (IOException e) {
-                                Log.e(TAG, "Failed to parse import file", e);
-                                success = false;
-                                error = ImportError.IO_ERROR;
-                            }
+                        error = errorHolder[0];
+                        success = successHolder[0];
+                        if (error != null) {
+                            success = false;
                         }
                     } else {
                         error = ImportError.IO_ERROR;
@@ -266,8 +284,9 @@ public class ImportManager {
         });
     }
 
-    private @Nullable ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
-                                   List<ImportWarning> warnings,
+    @VisibleForTesting
+    @Nullable ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
+                                         List<ImportWarning> warnings,
                                    @Nullable ProgressCallback progressCallback,
                                    AtomicInteger progress,
                                    int totalSteps) throws IOException {

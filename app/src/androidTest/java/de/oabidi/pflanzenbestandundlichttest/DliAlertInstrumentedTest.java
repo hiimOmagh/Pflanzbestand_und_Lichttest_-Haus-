@@ -29,6 +29,17 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  */
 @RunWith(RobolectricTestRunner.class)
 public class DliAlertInstrumentedTest {
+    private static void awaitDb(Runnable task) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                task.run();
+            } finally {
+                latch.countDown();
+            }
+        });
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
+    }
 
     @Before
     public void setUp() {
@@ -51,19 +62,22 @@ public class DliAlertInstrumentedTest {
             .apply();
 
         SpeciesTarget target = new SpeciesTarget("AlertSpecies", 100f, 200f);
-        repository.insertSpeciesTarget(target, null).get();
+        awaitDb(() -> PlantDatabase.getDatabase(context).speciesTargetDao().insert(target));
 
         Plant plant = new Plant("AlertPlant", null, "AlertSpecies", null, 0L, null);
-        repository.insert(plant, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).plantDao().insert(plant);
+            plant.setId(id);
+        });
 
         long now = System.currentTimeMillis();
         long yesterday = now - 86400000L;
 
         Measurement first = new Measurement(plant.getId(), yesterday, 0f, 50f, null, null);
-        repository.insertMeasurement(first, null).get();
+        awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().insert(first));
 
         Measurement second = new Measurement(plant.getId(), now, 0f, 50f, null, null);
-        repository.insertMeasurement(second, null).get();
+        awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().insert(first));
 
         ShadowSystemClock.advanceBy(Duration.ofSeconds(1));
         CountDownLatch latch = new CountDownLatch(1);

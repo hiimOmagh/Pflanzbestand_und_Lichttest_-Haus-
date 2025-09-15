@@ -68,11 +68,19 @@ public class DataRoundTripInstrumentedTest {
 
         // Insert plant and diary entry
         Plant plant = new Plant("RoundTrip", null, null, null, 0L, plantPhotoUri);
-        repository.insert(plant, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).plantDao().insert(plant);
+            plant.setId(id);
+            return null;
+        });
 
         DiaryEntry entry = new DiaryEntry(plant.getId(), 1234L, "note", "round");
         entry.setPhotoUri(diaryPhotoUri.toString());
-        repository.insertDiaryEntry(entry, null).get();
+        awaitDb(() -> {
+            long id = PlantDatabase.getDatabase(context).diaryDao().insert(entry);
+            entry.setId(id);
+            return null;
+        });
 
         // Export database to temporary file
         File exportFile = new File(context.getCacheDir(), "round_trip.zip");
