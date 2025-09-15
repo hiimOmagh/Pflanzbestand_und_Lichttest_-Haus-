@@ -17,10 +17,10 @@ import androidx.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +35,8 @@ import java.text.NumberFormat;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import java.nio.charset.StandardCharsets;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
@@ -210,7 +212,8 @@ public class ImportManager {
                             }
                         }
                         if (error == null) {
-                            try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
+                            try (BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(new FileInputStream(csvFile), StandardCharsets.UTF_8))) {
                                 ImportError parseResult = parseAndInsert(
                                     reader, tempDir, mode, warnings,
                                     progressCallback, progress, totalSteps);

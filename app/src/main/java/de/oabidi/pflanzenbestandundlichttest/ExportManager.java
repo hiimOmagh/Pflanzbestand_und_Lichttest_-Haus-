@@ -13,10 +13,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +24,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.
@@ -140,7 +142,8 @@ public class ExportManager {
 
     private File writeCsv(File tempDir, ExportData data) throws IOException {
         File csvFile = new File(tempDir, "data.csv");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
+        try (BufferedWriter writer = new BufferedWriter(
+            new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
             writer.write("Version,1\n\n");
             writer.write("Plants\n");
             writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
