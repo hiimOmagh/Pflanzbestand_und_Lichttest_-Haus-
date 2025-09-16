@@ -22,11 +22,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricTestRunner.class)
 public class ExportManagerMethodsTest {
     private Context context;
+    private ExecutorService executor;
 
     private static class StubRepository extends PlantRepository {
         StubRepository(Context ctx) { super(ctx); }
@@ -50,11 +52,12 @@ public class ExportManagerMethodsTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
     }
 
     @Test
     public void loadData_success() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Method m = ExportManager.class.getDeclaredMethod("loadData", long.class);
         m.setAccessible(true);
@@ -64,7 +67,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void loadData_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context, new FailingRepository(context));
+        ExportManager mgr = new ExportManager(context, new FailingRepository(context), executor);
 
         Method m = ExportManager.class.getDeclaredMethod("loadData", long.class);
         m.setAccessible(true);
@@ -77,7 +80,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void writeCsv_success() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
@@ -95,7 +98,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void writeCsv_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
@@ -118,7 +121,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void zipFiles_success() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         File dir = new File(context.getCacheDir(), "zipdir");
         dir.mkdirs();
@@ -136,7 +139,7 @@ public class ExportManagerMethodsTest {
 
     @Test(expected = IOException.class)
     public void zipFiles_failure() throws Throwable {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         File dir = new File(context.getCacheDir(), "zipdir2");
         dir.mkdirs();
@@ -152,7 +155,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void notifyProgress_success() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
         Method m = ExportManager.class.getDeclaredMethod("notifyProgress", ExportManager.ProgressCallback.class, int[].class, int.class);
         m.setAccessible(true);
 
@@ -171,7 +174,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void notifyProgress_nullCallback() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
         Method m = ExportManager.class.getDeclaredMethod("notifyProgress", ExportManager.ProgressCallback.class, int[].class, int.class);
         m.setAccessible(true);
         int[] progress = {0};
@@ -181,7 +184,7 @@ public class ExportManagerMethodsTest {
 
     @Test
     public void export_completesAsynchronously() throws Exception {
-        ExportManager mgr = new ExportManager(context, new StubRepository(context));
+        ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
         File out = new File(context.getCacheDir(), "export_async.zip");
         if (out.exists()) {
             out.delete();

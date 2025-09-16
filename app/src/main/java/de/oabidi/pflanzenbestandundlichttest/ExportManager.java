@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -35,7 +34,7 @@ public class ExportManager {
     private final Context context;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private static final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor;
 
     /** Callback used to signal completion of the export operation. */
     public interface Callback {
@@ -48,8 +47,14 @@ public class ExportManager {
     }
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
+        this(context, repository, PlantApp.from(context).getIoExecutor());
+    }
+
+    public ExportManager(@NonNull Context context, @NonNull PlantRepository repository,
+                         @NonNull ExecutorService executor) {
         this.context = context.getApplicationContext();
         this.bulkDao = repository.bulkDao();
+        this.executor = executor;
     }
 
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
@@ -72,7 +77,7 @@ public class ExportManager {
 
     private void exportInternal(@NonNull Uri uri, long plantId, @NonNull Callback callback,
                                 @Nullable ProgressCallback progressCallback) {
-        ioExecutor.execute(() -> {
+        executor.execute(() -> {
             ExportData data;
             try {
                 data = loadData(plantId);

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -37,6 +38,7 @@ public class ImportManagerParseHelpersTest {
     private Context context;
     private ImportManager importer;
     private File baseDir;
+    private ExecutorService executor;
 
     @Before
     public void setUp() throws Exception {
@@ -47,7 +49,8 @@ public class ImportManagerParseHelpersTest {
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
         instance.set(null, db);
-        importer = new ImportManager(context);
+        executor = PlantApp.from(context).getIoExecutor();
+        importer = new ImportManager(context, executor);
         baseDir = new File(context.getCacheDir(), "import_test");
         baseDir.mkdirs();
 

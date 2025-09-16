@@ -16,15 +16,18 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricTestRunner.class)
 public class ExportManagerCleanupTest {
     private Context context;
+    private ExecutorService executor;
 
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
     }
 
     private static void deleteRecursive(File f) {
@@ -80,7 +83,7 @@ public class ExportManagerCleanupTest {
             }
         }
 
-        ExportManager mgr = new ExportManager(context, new FailingWriteRepository(context));
+        ExportManager mgr = new ExportManager(context, new FailingWriteRepository(context), executor);
         File out = new File(cacheDir, "fail.zip");
         if (out.exists()) {
             //noinspection ResultOfMethodCallIgnored

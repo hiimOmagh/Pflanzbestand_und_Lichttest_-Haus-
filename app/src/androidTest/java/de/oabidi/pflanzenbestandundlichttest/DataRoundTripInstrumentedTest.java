@@ -14,9 +14,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -49,6 +50,8 @@ public class DataRoundTripInstrumentedTest {
     public void plantAndDiaryRoundTrip() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository repository = new PlantRepository(context);
+        PlantApp app = PlantApp.from(context);
+        ExecutorService executor = app.getIoExecutor();
 
         // Create a plant photo
         byte[] plantPhotoBytes = new byte[]{1, 2, 3};
@@ -86,7 +89,7 @@ public class DataRoundTripInstrumentedTest {
         File exportFile = new File(context.getCacheDir(), "round_trip.zip");
         Uri exportUri = Uri.fromFile(exportFile);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
+        new ExportManager(context, repository, executor).export(exportUri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
@@ -97,7 +100,7 @@ public class DataRoundTripInstrumentedTest {
 
         // Import data back
         CountDownLatch importLatch = new CountDownLatch(1);
-        new ImportManager(context)
+        new ImportManager(context, executor)
             .importData(exportUri, ImportManager.Mode.REPLACE,
                 (success, error, warnings, message) -> importLatch.countDown());
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));

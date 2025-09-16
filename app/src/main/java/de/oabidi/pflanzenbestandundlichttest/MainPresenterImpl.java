@@ -13,6 +13,8 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
 
+import java.util.concurrent.ExecutorService;
+
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -35,8 +37,10 @@ public class MainPresenterImpl implements MainPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState, Intent intent) {
-        exportManager = new ExportManager(context, repository);
-        importManager = new ImportManager(context);
+        PlantApp app = PlantApp.from(context);
+        ExecutorService executor = app.getIoExecutor();
+        exportManager = new ExportManager(context, repository, executor);
+        importManager = new ImportManager(context, executor);
 
         if (Build.VERSION.SDK_INT >= 33
             && !NotificationManagerCompat.from(context).areNotificationsEnabled()) {

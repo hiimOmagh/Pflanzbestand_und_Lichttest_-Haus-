@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -26,10 +27,12 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class ImportManagerMessageTest {
 
     private Context context;
+    private ExecutorService executor;
 
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
     }
 
     @Test
@@ -38,7 +41,7 @@ public class ImportManagerMessageTest {
         try (FileOutputStream fos = new FileOutputStream(invalid)) {
             fos.write("not a zip".getBytes(StandardCharsets.UTF_8));
         }
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         CountDownLatch latch = new CountDownLatch(1);
         final String[] messageHolder = new String[1];
         importer.importData(Uri.fromFile(invalid), ImportManager.Mode.REPLACE,

@@ -34,7 +34,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
@@ -49,6 +48,7 @@ import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
+import de.oabidi.pflanzenbestandundlichttest.PlantApp;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -59,7 +59,7 @@ public class ImportManager {
 
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private static final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor;
 
     /** Callback used to signal completion of the import operation. */
     public interface Callback {
@@ -128,7 +128,12 @@ public class ImportManager {
     }
 
     public ImportManager(@NonNull Context context) {
+        this(context, PlantApp.from(context).getIoExecutor());
+    }
+
+    public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
         this.context = context.getApplicationContext();
+        this.executor = executor;
     }
 
     /**
@@ -146,7 +151,7 @@ public class ImportManager {
 
     public void importData(@NonNull Uri uri, @NonNull Mode mode, @NonNull Callback callback,
                            @Nullable ProgressCallback progressCallback) {
-        ioExecutor.execute(() -> {
+        executor.execute(() -> {
             boolean success = false;
             ImportError error = null;
             List<ImportWarning> warnings = new ArrayList<>();

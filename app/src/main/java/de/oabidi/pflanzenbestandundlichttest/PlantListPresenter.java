@@ -4,9 +4,11 @@ import android.content.Context;
 import android.net.Uri;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+
+import androidx.annotation.Nullable;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import androidx.annotation.Nullable;
 
 /**
  * Presenter responsible for loading and modifying the list of plants.
@@ -44,9 +46,12 @@ public class PlantListPresenter {
     }
 
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
-        this(view, repository, context.getApplicationContext(),
-            new ExportManager(context.getApplicationContext(), repository),
-            new ImportManager(context.getApplicationContext()));
+        Context appContext = context.getApplicationContext();
+        PlantApp app = PlantApp.from(appContext);
+        ExecutorService executor = app.getIoExecutor();
+        this(view, repository, appContext,
+            new ExportManager(appContext, repository, executor),
+            new ImportManager(appContext, executor));
     }
 
     public void refreshPlants() {

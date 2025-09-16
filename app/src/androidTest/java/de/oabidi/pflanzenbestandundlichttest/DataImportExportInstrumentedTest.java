@@ -14,9 +14,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import android.app.AlarmManager;
 import android.content.Intent;
@@ -60,7 +61,9 @@ public class DataImportExportInstrumentedTest {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository repository = new PlantRepository(context);
         ShadowAlarmManager.reset();
-
+        PlantApp app = PlantApp.from(context);
+        ExecutorService executor = app.getIoExecutor();
+        
         // Insert species target and plant with measurement and diary entry
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
         awaitDb(() -> {
@@ -115,7 +118,7 @@ public class DataImportExportInstrumentedTest {
         File file = new File(context.getCacheDir(), "export.zip");
         Uri uri = Uri.fromFile(file);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context, repository).export(uri, success -> exportLatch.countDown());
+        new ExportManager(context, repository, executor).export(uri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         // Wipe database
@@ -126,7 +129,7 @@ public class DataImportExportInstrumentedTest {
 
         // Import data
         CountDownLatch importLatch = new CountDownLatch(1);
-        new ImportManager(context).importData(uri, ImportManager.Mode.REPLACE,
+        new ImportManager(context, executor).importData(uri, ImportManager.Mode.REPLACE,
             (success, error, warnings, message) -> importLatch.countDown());
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
@@ -200,6 +203,8 @@ public class DataImportExportInstrumentedTest {
     public void importedPhotosSurviveCacheClear() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
         PlantRepository repository = new PlantRepository(context);
+        PlantApp app = PlantApp.from(context);
+        ExecutorService executor = app.getIoExecutor();
 
         byte[] plantPhotoBytes = new byte[]{9, 8, 7};
         File plantPhotoFile = new File(context.getCacheDir(), "persist_plant.jpg");
@@ -233,7 +238,7 @@ public class DataImportExportInstrumentedTest {
         File export = new File(context.getCacheDir(), "persist_export.zip");
         Uri exportUri = Uri.fromFile(export);
         CountDownLatch exportLatch = new CountDownLatch(1);
-        new ExportManager(context, repository).export(exportUri, success -> exportLatch.countDown());
+        new ExportManager(context, repository, executor).export(exportUri, success -> exportLatch.countDown());
         assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
 
         awaitDb(() -> {
@@ -242,7 +247,7 @@ public class DataImportExportInstrumentedTest {
         });
 
         CountDownLatch importLatch = new CountDownLatch(1);
-        new ImportManager(context).importData(exportUri, ImportManager.Mode.REPLACE,
+        new ImportManager(context, executor).importData(exportUri, ImportManager.Mode.REPLACE,
             (success, error, warnings, message) -> importLatch.countDown());
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 

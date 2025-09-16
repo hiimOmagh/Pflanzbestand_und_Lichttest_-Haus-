@@ -27,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -142,8 +143,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             throw new IllegalStateException("PlantRepository missing. Use newInstance() to create this fragment.");
         }
         PlantRepository repo = repository;
-        ExportManager exportManager = new ExportManager(context, repo);
-        ImportManager importManager = new ImportManager(context);
+        PlantApp app = PlantApp.from(context);
+        ExecutorService executor = app.getIoExecutor();
+        ExportManager exportManager = new ExportManager(context, repo, executor);
+        ImportManager importManager = new ImportManager(context, executor);
         presenter = new PlantListPresenter(this, repo, context, exportManager, importManager);
         presenter.refreshPlants();
 

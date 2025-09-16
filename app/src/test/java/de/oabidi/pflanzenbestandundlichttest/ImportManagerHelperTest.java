@@ -3,10 +3,10 @@ package de.oabidi.pflanzenbestandundlichttest;
 import static org.junit.Assert.*;
 
 import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.room.Room;
 import android.net.Uri;
+
+import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -35,10 +36,12 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class ImportManagerHelperTest {
     private PlantDatabase db;
     private Context context;
+    private ExecutorService executor;
 
     @Before
     public void setup() throws Exception {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
         db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();
@@ -57,7 +60,7 @@ public class ImportManagerHelperTest {
 
     @Test
     public void readSection_unknownLineReturnsNull() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         BufferedReader reader = new BufferedReader(new StringReader("header1,header2\n"));
         AtomicInteger lineNumber = new AtomicInteger(0);
         AtomicInteger progress = new AtomicInteger(0);
@@ -74,7 +77,7 @@ public class ImportManagerHelperTest {
 
     @Test
     public void parsePlantRow_missingFields() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         List<String> parts = new ArrayList<>();
         parts.add("1");
         parts.add("OnlyName");
@@ -92,7 +95,7 @@ public class ImportManagerHelperTest {
 
     @Test
     public void insertMeasurementRow_invalidPlantId() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         List<String> parts = new ArrayList<>();
         parts.add("0");
         parts.add("abc");
@@ -115,7 +118,7 @@ public class ImportManagerHelperTest {
 
     @Test
     public void insertDiaryRow_invalidPlantId() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         List<String> parts = new ArrayList<>();
         parts.add("0");
         parts.add("abc");
@@ -137,7 +140,7 @@ public class ImportManagerHelperTest {
 
     @Test
     public void insertReminderRow_invalidTimestamp() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
         List<String> parts = new ArrayList<>();
         parts.add("0");
         parts.add("1");

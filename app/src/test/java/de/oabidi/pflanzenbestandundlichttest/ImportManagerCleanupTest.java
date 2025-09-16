@@ -23,6 +23,7 @@ import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -32,10 +33,12 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class ImportManagerCleanupTest {
     private PlantDatabase db;
     private Context context;
+    private ExecutorService executor;
 
     @Before
     public void setUp() throws Exception {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
         db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();
@@ -58,7 +61,7 @@ public class ImportManagerCleanupTest {
 
     @Test
     public void imagesRemovedOnFailedImport() throws Exception {
-        ImportManager importer = new ImportManager(context);
+        ImportManager importer = new ImportManager(context, executor);
 
         File baseDir = new File(context.getCacheDir(), "import" );
         baseDir.mkdirs();

@@ -1,9 +1,15 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.SharedPreferences;
+
 import androidx.appcompat.app.AppCompatDelegate;
+
 import com.google.android.material.color.DynamicColors;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -12,6 +18,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  */
 public class PlantApp extends Application implements RepositoryProvider {
     private PlantRepository repository;
+    private ExecutorService ioExecutor;
 
     @Override
     public void onCreate() {
@@ -52,5 +59,36 @@ public class PlantApp extends Application implements RepositoryProvider {
         MainActivity.setRepository(repository);
         PlantDetailActivity.setRepository(repository);
         return repository;
+    }
+
+    /** Returns the shared executor used by import/export components. */
+    public synchronized ExecutorService getIoExecutor() {
+        if (ioExecutor == null || ioExecutor.isShutdown()) {
+            ioExecutor = Executors.newSingleThreadExecutor();
+        }
+        return ioExecutor;
+    }
+
+    /** Shuts down the shared executor service. */
+    public synchronized void shutdownIoExecutor() {
+        if (ioExecutor != null) {
+            ioExecutor.shutdownNow();
+            ioExecutor = null;
+        }
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        shutdownIoExecutor();
+    }
+
+    /** Returns the {@link PlantApp} instance associated with the given context. */
+    public static PlantApp from(Context context) {
+        Context appContext = context.getApplicationContext();
+        if (appContext instanceof PlantApp) {
+            return (PlantApp) appContext;
+        }
+        throw new IllegalStateException("Application context is not PlantApp");
     }
 }

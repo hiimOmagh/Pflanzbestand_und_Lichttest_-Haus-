@@ -21,6 +21,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
@@ -30,10 +31,12 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 public class ImportExportEncodingTest {
     private PlantDatabase db;
     private Context context;
+    private ExecutorService executor;
 
     @Before
     public void setUp() throws Exception {
         context = ApplicationProvider.getApplicationContext();
+        executor = PlantApp.from(context).getIoExecutor();
         db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();
@@ -71,7 +74,7 @@ public class ImportExportEncodingTest {
                 exportFile.delete();
             }
             PlantRepository repository = new PlantRepository(context);
-            ExportManager exporter = new ExportManager(context, repository);
+            ExportManager exporter = new ExportManager(context, executor);
             CountDownLatch exportLatch = new CountDownLatch(1);
             final boolean[] exportSuccess = {false};
             exporter.export(Uri.fromFile(exportFile), success -> {
@@ -83,7 +86,7 @@ public class ImportExportEncodingTest {
 
             db.clearAllTables();
 
-            ImportManager importer = new ImportManager(context);
+            ImportManager importer = new ImportManager(context, executor);
             CountDownLatch importLatch = new CountDownLatch(1);
             final boolean[] importSuccess = {false};
             final List<ImportManager.ImportWarning>[] warnings = new List[]{null};

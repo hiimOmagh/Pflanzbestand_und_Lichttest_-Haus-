@@ -19,6 +19,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * Activity responsible for showing detailed information about a plant.
  *
@@ -84,7 +86,10 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         if (repository == null) {
             repository = new PlantRepository(getApplicationContext());
         }
-        presenter = new PlantDetailPresenter(this, plantId, new ExportManager(this, repository));
+        PlantApp app = PlantApp.from(this);
+        ExecutorService executor = app.getIoExecutor();
+        presenter = new PlantDetailPresenter(this, plantId,
+            new ExportManager(this, repository, executor));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
         nameView.setText(presenter.getTextOrFallback(name));
         descriptionView.setText(presenter.getTextOrFallback(description));

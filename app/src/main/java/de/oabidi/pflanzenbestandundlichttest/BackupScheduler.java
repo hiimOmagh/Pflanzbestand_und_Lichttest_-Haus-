@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Schedules periodic exports of the database to the app's external files directory.
@@ -41,7 +42,9 @@ public class BackupScheduler extends BroadcastReceiver {
             File out = new File(dir, "backup-" + timestamp + ".zip");
             Uri uri = Uri.fromFile(out);
             PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
-            new ExportManager(context, repo).export(uri, success -> result.finish());
+            PlantApp app = PlantApp.from(context);
+            ExecutorService executor = app.getIoExecutor();
+            new ExportManager(context, repo, executor).export(uri, success -> result.finish());
         } else {
             result.finish();
         }
