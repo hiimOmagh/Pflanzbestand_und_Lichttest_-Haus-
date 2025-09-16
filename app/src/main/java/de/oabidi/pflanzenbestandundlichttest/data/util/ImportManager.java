@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -119,12 +121,33 @@ public class ImportManager {
 
     /** Sections within an exported CSV file. */
     enum Section {
-        NONE,
-        PLANTS,
-        SPECIES_TARGETS,
-        MEASUREMENTS,
-        DIARY_ENTRIES,
-        REMINDERS
+        NONE(""),
+        PLANTS("Plants"),
+        SPECIES_TARGETS("SpeciesTargets"),
+        MEASUREMENTS("Measurements"),
+        DIARY_ENTRIES("DiaryEntries"),
+        REMINDERS("Reminders");
+
+        private final String header;
+
+        Section(String header) {
+            this.header = header;
+        }
+
+        @Nullable
+        static Section fromHeader(@NonNull String header) {
+            for (Section section : values()) {
+                if (section.header.equals(header)) {
+                    return section;
+                }
+            }
+            return null;
+        }
+
+        @NonNull
+        String getHeader() {
+            return header;
+        }
     }
 
     public ImportManager(@NonNull Context context) {
@@ -187,11 +210,7 @@ public class ImportManager {
                                 fos.write(buffer, 0, len);
                             }
                         }
-                        int cur = progress.incrementAndGet();
-                        if (progressCallback != null) {
-                            final int progressValue = cur;
-                            mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
-                        }
+                        stepProgress(progress, progressCallback, totalSteps);
                         if (zipEntry.getName().endsWith(".csv")) {
                             csvFile = outFile;
                         }
@@ -271,6 +290,16 @@ public class ImportManager {
         });
     }
 
+    private void stepProgress(@NonNull AtomicInteger progress,
+                              @Nullable ProgressCallback progressCallback,
+                              int totalSteps) {
+        int current = progress.incrementAndGet();
+        if (progressCallback != null) {
+            final int finalCurrent = current;
+            mainHandler.post(() -> progressCallback.onProgress(finalCurrent, totalSteps));
+        }
+    }
+
     @VisibleForTesting
     @Nullable ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
                                          List<ImportWarning> warnings,
@@ -292,53 +321,26 @@ public class ImportManager {
         try {
             db.runInTransaction(() -> {
                 try {
-                    if (parsePlants(reader, mode, baseDir, plantIdMap, warnings,
-                        lineNumber, restoredUris, db)) {
+                    SectionReader sectionReader = new SectionReader(reader, lineNumber);
+                    SectionContext context = new SectionContext(this, mode, baseDir,
+                        plantIdMap, warnings, restoredUris, db, nf);
+                    SectionCoordinator coordinator = new SectionCoordinator(
+                        this,
+                        sectionReader,
+                        Arrays.asList(
+                            new PlantsSectionParser(),
+                            new SpeciesTargetsSectionParser(),
+                            new MeasurementsSectionParser(),
+                            new DiaryEntriesSectionParser(),
+                            new RemindersSectionParser()
+                        ),
+                        context,
+                        progress,
+                        progressCallback,
+                        totalSteps
+                    );
+                    if (coordinator.process()) {
                         importedAny[0] = true;
-                    }
-                    int cur = progress.incrementAndGet();
-                    if (progressCallback != null) {
-                        final int progressValue = cur;
-                        mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
-                    }
-
-                    if (parseSpeciesTargets(reader, db, warnings, lineNumber, nf)) {
-                        importedAny[0] = true;
-                    }
-                    cur = progress.incrementAndGet();
-                    if (progressCallback != null) {
-                        final int progressValue = cur;
-                        mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
-                    }
-
-                    if (parseMeasurements(reader, mode, plantIdMap, warnings,
-                        lineNumber, nf, db)) {
-                        importedAny[0] = true;
-                    }
-                    cur = progress.incrementAndGet();
-                    if (progressCallback != null) {
-                        final int progressValue = cur;
-                        mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
-                    }
-
-                    if (parseDiaryEntries(reader, mode, baseDir, plantIdMap, warnings,
-                        lineNumber, restoredUris, db)) {
-                        importedAny[0] = true;
-                    }
-                    cur = progress.incrementAndGet();
-                    if (progressCallback != null) {
-                        final int progressValue = cur;
-                        mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
-                    }
-
-                    if (parseReminders(reader, mode, plantIdMap, warnings,
-                        lineNumber, db)) {
-                        importedAny[0] = true;
-                    }
-                    cur = progress.incrementAndGet();
-                    if (progressCallback != null) {
-                        final int progressValue = cur;
-                        mainHandler.post(() -> progressCallback.onProgress(progressValue, totalSteps));
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -376,244 +378,299 @@ public class ImportManager {
         return null;
     }
 
-    private @Nullable Section readSection(String line, Section current,
-                                          BufferedReader reader,
-                                          AtomicInteger lineNumber,
-                                          AtomicInteger progress,
-                                          @Nullable ProgressCallback progressCallback,
-                                          int totalSteps) throws IOException {
-        Section next = null;
-        switch (line) {
-            case "Plants":
-                next = Section.PLANTS;
-                break;
-            case "SpeciesTargets":
-                next = Section.SPECIES_TARGETS;
-                break;
-            case "Measurements":
-                next = Section.MEASUREMENTS;
-                break;
-            case "DiaryEntries":
-                next = Section.DIARY_ENTRIES;
-                break;
-            case "Reminders":
-                next = Section.REMINDERS;
-                break;
-        }
-        if (next == null) {
-            return null;
-        }
-        if (reader.readLine() != null) {
-            lineNumber.incrementAndGet();
-        }
-        int cur = progress.incrementAndGet();
-        if (progressCallback != null) {
-            final int finalCur = cur;
-            mainHandler.post(() -> progressCallback.onProgress(finalCur, totalSteps));
+    private Section readSection(@NonNull String line) throws IOException {
+        Section next = Section.fromHeader(line);
+        if (next == null || next == Section.NONE) {
+            throw new IOException("Malformed section header: " + line);
         }
         return next;
     }
 
-    private boolean parsePlants(BufferedReader reader, Mode mode, File baseDir,
-                                Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                AtomicInteger lineNumber, List<Uri> restoredUris,
-                                PlantDatabase db) throws IOException {
-        String line;
-        boolean imported = false;
-        while ((line = reader.readLine()) != null) {
-            lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) continue;
-            if ("Plants".equals(line)) {
-                break;
-            }
+    @VisibleForTesting
+    static class SectionContext {
+        final ImportManager manager;
+        final Mode mode;
+        final File baseDir;
+        final Map<Long, Long> plantIdMap;
+        final List<ImportWarning> warnings;
+        final List<Uri> restoredUris;
+        final PlantDatabase db;
+        final NumberFormat numberFormat;
+
+        SectionContext(@NonNull ImportManager manager,
+                       @NonNull Mode mode,
+                       @NonNull File baseDir,
+                       @NonNull Map<Long, Long> plantIdMap,
+                       @NonNull List<ImportWarning> warnings,
+                       @NonNull List<Uri> restoredUris,
+                       @NonNull PlantDatabase db,
+                       @NonNull NumberFormat numberFormat) {
+            this.manager = manager;
+            this.mode = mode;
+            this.baseDir = baseDir;
+            this.plantIdMap = plantIdMap;
+            this.warnings = warnings;
+            this.restoredUris = restoredUris;
+            this.db = db;
+            this.numberFormat = numberFormat;
         }
-        if (line == null) {
-            return false;
-        }
-        reader.readLine();
-        lineNumber.incrementAndGet();
-        reader.mark(1 << 16);
-        while ((line = reader.readLine()) != null) {
-            int currentLine = lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) {
-                reader.mark(1 << 16);
-                continue;
-            }
-            if ("SpeciesTargets".equals(line)) {
-                reader.reset();
-                lineNumber.decrementAndGet();
-                break;
-            }
-            List<String> parts = parseCsv(line);
-            if (parsePlantRow(parts, mode, baseDir, plantIdMap, warnings, currentLine,
-                restoredUris, db)) {
-                imported = true;
-            }
-            reader.mark(1 << 16);
-        }
-        return imported;
     }
 
-    private boolean parseSpeciesTargets(BufferedReader reader, PlantDatabase db,
-                                        List<ImportWarning> warnings,
-                                        AtomicInteger lineNumber, NumberFormat nf)
-        throws IOException {
-        String line;
-        boolean imported = false;
-        while ((line = reader.readLine()) != null) {
-            lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) continue;
-            if ("SpeciesTargets".equals(line)) {
-                break;
-            }
+    @VisibleForTesting
+    static class SectionRow {
+        final String line;
+        final int lineNumber;
+
+        SectionRow(@NonNull String line, int lineNumber) {
+            this.line = line;
+            this.lineNumber = lineNumber;
         }
-        if (line == null) {
-            return false;
+    }
+
+    @VisibleForTesting
+    static class SectionReader {
+        private final BufferedReader reader;
+        private final AtomicInteger lineNumber;
+        private String pendingHeader;
+
+        SectionReader(@NonNull BufferedReader reader, @NonNull AtomicInteger lineNumber) {
+            this.reader = reader;
+            this.lineNumber = lineNumber;
         }
-        reader.readLine();
-        lineNumber.incrementAndGet();
-        reader.mark(1 << 16);
-        while ((line = reader.readLine()) != null) {
-            int currentLine = lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) {
-                reader.mark(1 << 16);
-                continue;
-            }
-            if ("Measurements".equals(line)) {
-                reader.reset();
-                lineNumber.decrementAndGet();
-                break;
-            }
-            List<String> parts = parseCsv(line);
-            if (parts.size() >= 3) {
-                try {
-                    String speciesKey = parts.get(0);
-                    float ppfdMin = Objects.requireNonNull(nf.parse(parts.get(1))).floatValue();
-                    float ppfdMax = Objects.requireNonNull(nf.parse(parts.get(2))).floatValue();
-                    SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
-                    db.speciesTargetDao().insert(t);
-                    imported = true;
-                } catch (Exception e) {
-                    Log.e(TAG, "Malformed species target row: " + line, e);
-                    warnings.add(new ImportWarning("species targets", currentLine, "malformed row"));
-                }
+
+        @Nullable
+        Section nextSection(@NonNull ImportManager manager) throws IOException {
+            String headerLine;
+            if (pendingHeader != null) {
+                headerLine = pendingHeader;
+                pendingHeader = null;
             } else {
-                Log.e(TAG, "Malformed species target row: " + line);
-                warnings.add(new ImportWarning("species targets", currentLine, "malformed row"));
+                while ((headerLine = reader.readLine()) != null) {
+                    int currentLine = lineNumber.incrementAndGet();
+                    if (headerLine.trim().isEmpty()) {
+                        continue;
+                    }
+                    break;
+                }
+                if (headerLine == null) {
+                    return null;
+                }
             }
-            reader.mark(1 << 16);
+            Section next = manager.readSection(headerLine);
+            String headerRow = reader.readLine();
+            if (headerRow == null) {
+                throw new IOException("Missing header row for section " + headerLine);
+            }
+            lineNumber.incrementAndGet();
+            return next;
         }
-        return imported;
+
+        @Nullable
+        SectionRow nextRow() throws IOException {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int currentLine = lineNumber.incrementAndGet();
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                Section possible = Section.fromHeader(line);
+                if (possible != null && possible != Section.NONE) {
+                    pendingHeader = line;
+                    return null;
+                }
+                return new SectionRow(line, currentLine);
+            }
+            return null;
+        }
     }
 
-    private boolean parseMeasurements(BufferedReader reader, Mode mode,
-                                      Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                      AtomicInteger lineNumber, NumberFormat nf,
-                                      PlantDatabase db) throws IOException {
-        String line;
-        boolean imported = false;
-        while ((line = reader.readLine()) != null) {
-            lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) continue;
-            if ("Measurements".equals(line)) {
-                break;
-            }
-        }
-        if (line == null) {
-            return false;
-        }
-        reader.readLine();
-        lineNumber.incrementAndGet();
-        reader.mark(1 << 16);
-        while ((line = reader.readLine()) != null) {
-            int currentLine = lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) {
-                reader.mark(1 << 16);
-                continue;
-            }
-            if ("DiaryEntries".equals(line)) {
-                reader.reset();
-                lineNumber.decrementAndGet();
-                break;
-            }
-            List<String> parts = parseCsv(line);
-            if (insertMeasurementRow(parts, mode, plantIdMap, warnings, currentLine, nf, db)) {
-                imported = true;
-            }
-            reader.mark(1 << 16);
-        }
-        return imported;
+    @VisibleForTesting
+    interface SectionParser {
+        @NonNull Section getSection();
+
+        boolean parseSection(@NonNull SectionReader reader,
+                             @NonNull SectionContext context) throws IOException;
     }
 
-    private boolean parseDiaryEntries(BufferedReader reader, Mode mode, File baseDir,
-                                      Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                      AtomicInteger lineNumber, List<Uri> restoredUris,
-                                      PlantDatabase db) throws IOException {
-        String line;
-        boolean imported = false;
-        while ((line = reader.readLine()) != null) {
-            lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) continue;
-            if ("DiaryEntries".equals(line)) {
-                break;
+    @VisibleForTesting
+    static class SectionCoordinator {
+        private final ImportManager manager;
+        private final SectionReader reader;
+        private final Map<Section, SectionParser> parsers;
+        private final SectionContext context;
+        private final AtomicInteger progress;
+        @Nullable
+        private final ProgressCallback progressCallback;
+        private final int totalSteps;
+
+        SectionCoordinator(@NonNull ImportManager manager,
+                           @NonNull SectionReader reader,
+                           @NonNull List<SectionParser> parserList,
+                           @NonNull SectionContext context,
+                           @NonNull AtomicInteger progress,
+                           @Nullable ProgressCallback progressCallback,
+                           int totalSteps) {
+            this.manager = manager;
+            this.reader = reader;
+            this.context = context;
+            this.progress = progress;
+            this.progressCallback = progressCallback;
+            this.totalSteps = totalSteps;
+            this.parsers = new EnumMap<>(Section.class);
+            for (SectionParser parser : parserList) {
+                this.parsers.put(parser.getSection(), parser);
             }
         }
-        if (line == null) {
-            return false;
+
+        boolean process() throws IOException {
+            boolean importedAny = false;
+            Section section;
+            while ((section = reader.nextSection(manager)) != null) {
+                SectionParser parser = parsers.get(section);
+                if (parser == null) {
+                    throw new IOException("No parser registered for section " + section.getHeader());
+                }
+                if (parser.parseSection(reader, context)) {
+                    importedAny = true;
+                }
+                manager.stepProgress(progress, progressCallback, totalSteps);
+            }
+            return importedAny;
         }
-        reader.readLine();
-        lineNumber.incrementAndGet();
-        reader.mark(1 << 16);
-        while ((line = reader.readLine()) != null) {
-            int currentLine = lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) {
-                reader.mark(1 << 16);
-                continue;
-            }
-            if ("Reminders".equals(line)) {
-                reader.reset();
-                lineNumber.decrementAndGet();
-                break;
-            }
-            List<String> parts = parseCsv(line);
-            if (insertDiaryRow(parts, mode, baseDir, plantIdMap, warnings,
-                currentLine, restoredUris, db)) {
-                imported = true;
-            }
-            reader.mark(1 << 16);
-        }
-        return imported;
     }
 
-    private boolean parseReminders(BufferedReader reader, Mode mode,
-                                   Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                   AtomicInteger lineNumber, PlantDatabase db) throws IOException {
-        String line;
-        boolean imported = false;
-        while ((line = reader.readLine()) != null) {
-            lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) continue;
-            if ("Reminders".equals(line)) {
-                break;
-            }
+    @VisibleForTesting
+    static class PlantsSectionParser implements SectionParser {
+        @NonNull
+        @Override
+        public Section getSection() {
+            return Section.PLANTS;
         }
-        if (line == null) {
-            return false;
-        }
-        reader.readLine();
-        lineNumber.incrementAndGet();
-        while ((line = reader.readLine()) != null) {
-            int currentLine = lineNumber.incrementAndGet();
-            if (line.trim().isEmpty()) {
-                continue;
+
+        @Override
+        public boolean parseSection(@NonNull SectionReader reader,
+                                    @NonNull SectionContext context) throws IOException {
+            boolean imported = false;
+            SectionRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<String> parts = parseCsv(row.line);
+                if (context.manager.parsePlantRow(parts, context.mode, context.baseDir,
+                    context.plantIdMap, context.warnings, row.lineNumber,
+                    context.restoredUris, context.db)) {
+                    imported = true;
+                }
             }
-            List<String> parts = parseCsv(line);
-            if (insertReminderRow(parts, mode, plantIdMap, warnings,
-                currentLine, db)) {
-                imported = true;
-            }
+            return imported;
         }
-        return imported;
+    }
+
+    @VisibleForTesting
+    static class SpeciesTargetsSectionParser implements SectionParser {
+        @NonNull
+        @Override
+        public Section getSection() {
+            return Section.SPECIES_TARGETS;
+        }
+
+        @Override
+        public boolean parseSection(@NonNull SectionReader reader,
+                                    @NonNull SectionContext context) throws IOException {
+            boolean imported = false;
+            SectionRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<String> parts = parseCsv(row.line);
+                if (parts.size() >= 3) {
+                    try {
+                        String speciesKey = parts.get(0);
+                        float ppfdMin = Objects.requireNonNull(context.numberFormat.parse(parts.get(1))).floatValue();
+                        float ppfdMax = Objects.requireNonNull(context.numberFormat.parse(parts.get(2))).floatValue();
+                        SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
+                        context.db.speciesTargetDao().insert(t);
+                        imported = true;
+                    } catch (Exception e) {
+                        Log.e(TAG, "Malformed species target row: " + row.line, e);
+                        context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
+                    }
+                } else {
+                    Log.e(TAG, "Malformed species target row: " + row.line);
+                    context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
+                }
+            }
+            return imported;
+        }
+    }
+
+    @VisibleForTesting
+    static class MeasurementsSectionParser implements SectionParser {
+        @NonNull
+        @Override
+        public Section getSection() {
+            return Section.MEASUREMENTS;
+        }
+
+        @Override
+        public boolean parseSection(@NonNull SectionReader reader,
+                                    @NonNull SectionContext context) throws IOException {
+            boolean imported = false;
+            SectionRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<String> parts = parseCsv(row.line);
+                if (context.manager.insertMeasurementRow(parts, context.mode, context.plantIdMap,
+                    context.warnings, row.lineNumber, context.numberFormat, context.db)) {
+                    imported = true;
+                }
+            }
+            return imported;
+        }
+    }
+
+    @VisibleForTesting
+    static class DiaryEntriesSectionParser implements SectionParser {
+        @NonNull
+        @Override
+        public Section getSection() {
+            return Section.DIARY_ENTRIES;
+        }
+
+        @Override
+        public boolean parseSection(@NonNull SectionReader reader,
+                                    @NonNull SectionContext context) throws IOException {
+            boolean imported = false;
+            SectionRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<String> parts = parseCsv(row.line);
+                if (context.manager.insertDiaryRow(parts, context.mode, context.baseDir,
+                    context.plantIdMap, context.warnings, row.lineNumber,
+                    context.restoredUris, context.db)) {
+                    imported = true;
+                }
+            }
+            return imported;
+        }
+    }
+
+    @VisibleForTesting
+    static class RemindersSectionParser implements SectionParser {
+        @NonNull
+        @Override
+        public Section getSection() {
+            return Section.REMINDERS;
+        }
+
+        @Override
+        public boolean parseSection(@NonNull SectionReader reader,
+                                    @NonNull SectionContext context) throws IOException {
+            boolean imported = false;
+            SectionRow row;
+            while ((row = reader.nextRow()) != null) {
+                List<String> parts = parseCsv(row.line);
+                if (context.manager.insertReminderRow(parts, context.mode,
+                    context.plantIdMap, context.warnings, row.lineNumber, context.db)) {
+                    imported = true;
+                }
+            }
+            return imported;
+        }
     }
 
     private boolean insertDiaryRow(List<String> parts, Mode mode, File baseDir,
