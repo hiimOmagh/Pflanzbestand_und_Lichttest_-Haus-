@@ -29,7 +29,9 @@ public class BootReceiver extends BroadcastReceiver {
                 BackupScheduler.schedule(context);
             }
             PendingResult result = goAsync();
-            PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
+            PlantRepository repo = repository != null
+                ? repository
+                : RepositoryProvider.getRepository(context);
             repo.getAllReminders(reminders -> {
                 long now = System.currentTimeMillis();
                 for (Reminder reminder : reminders) {

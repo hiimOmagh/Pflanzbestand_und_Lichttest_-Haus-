@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (repository == null) {
-            repository = new PlantRepository(getApplicationContext());
+            repository = RepositoryProvider.getRepository(this);
         }
         presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
 

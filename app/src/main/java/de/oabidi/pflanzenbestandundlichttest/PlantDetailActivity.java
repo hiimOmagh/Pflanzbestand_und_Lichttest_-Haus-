@@ -84,7 +84,7 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         View diaryButton = findViewById(R.id.detail_diary);
 
         if (repository == null) {
-            repository = new PlantRepository(getApplicationContext());
+            repository = RepositoryProvider.getRepository(this);
         }
         PlantApp app = PlantApp.from(this);
         ExecutorService executor = app.getIoExecutor();

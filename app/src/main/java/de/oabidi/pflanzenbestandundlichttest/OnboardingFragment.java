@@ -59,7 +59,9 @@ public class OnboardingFragment extends Fragment {
         } else {
             BottomNavigationView bottomNav = requireActivity().findViewById(R.id.bottom_nav);
             bottomNav.setSelectedItemId(R.id.nav_plants);
-            PlantRepository repo = repository != null ? repository : new PlantRepository(requireContext().getApplicationContext());
+            PlantRepository repo = repository != null
+                ? repository
+                : RepositoryProvider.getRepository(requireContext());
             getParentFragmentManager().beginTransaction()
                 .replace(R.id.nav_host_fragment, PlantListFragment.newInstance(repo))
                 .commit();

@@ -92,7 +92,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             sampleSize = 1;
         }
 
-        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        PlantRepository repo = repository != null
+            ? repository
+            : RepositoryProvider.getRepository(context);
         presenter = new LightMeasurementPresenter(this, repo, context, calibrationFactor, sampleSize);
 
         if (savedInstanceState != null) {

@@ -66,7 +66,9 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
         viewMeasurementsButton = view.findViewById(R.id.stats_view_measurements);
         placeholderView = view.findViewById(R.id.stats_placeholder);
         Context context = requireContext().getApplicationContext();
-        PlantRepository repo = repository != null ? repository : new PlantRepository(context);
+        PlantRepository repo = repository != null
+            ? repository
+            : RepositoryProvider.getRepository(requireContext());
         presenter = new StatsPresenter(this, repo, context);
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
 

@@ -46,7 +46,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (repository == null) {
-            repository = new PlantRepository(requireContext().getApplicationContext());
+            repository = RepositoryProvider.getRepository(requireContext());
         }
 
         RecyclerView recyclerView = view.findViewById(R.id.target_list);

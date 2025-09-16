@@ -125,7 +125,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         }
 
         if (repository == null) {
-            repository = new PlantRepository(requireContext().getApplicationContext());
+            repository = RepositoryProvider.getRepository(requireContext());
         }
         presenter = new PlantEditPresenterImpl(this, repository, requireContext().getApplicationContext());
 

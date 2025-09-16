@@ -41,7 +41,9 @@ public class BackupScheduler extends BroadcastReceiver {
                 .format(new Date());
             File out = new File(dir, "backup-" + timestamp + ".zip");
             Uri uri = Uri.fromFile(out);
-            PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
+            PlantRepository repo = repository != null
+                ? repository
+                : RepositoryProvider.getRepository(context);
             PlantApp app = PlantApp.from(context);
             ExecutorService executor = app.getIoExecutor();
             new ExportManager(context, repo, executor).export(uri, success -> result.finish());

@@ -61,7 +61,7 @@ public class ReminderListFragment extends Fragment {
         adapter = new ReminderAdapter(this::showEditDialog);
         recyclerView.setAdapter(adapter);
         if (repository == null) {
-            repository = new PlantRepository(requireContext().getApplicationContext());
+            repository = RepositoryProvider.getRepository(requireContext());
         }
         df = new SimpleDateFormat(getString(R.string.date_time_pattern), Locale.getDefault());
 

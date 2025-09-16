@@ -39,7 +39,9 @@ public class ReminderReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        PlantRepository repo = repository != null ? repository : new PlantRepository(context.getApplicationContext());
+        PlantRepository repo = repository != null
+            ? repository
+            : RepositoryProvider.getRepository(context);
         if (ACTION_MARK_DONE.equals(action)) {
             int id = intent.getIntExtra(EXTRA_NOTIFICATION_ID, 0);
             long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
