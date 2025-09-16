@@ -10,6 +10,7 @@ import com.google.android.material.color.DynamicColors;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -17,6 +18,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  * Application subclass providing a single {@link PlantRepository} instance.
  */
 public class PlantApp extends Application implements RepositoryProvider {
+    private static final int IO_THREAD_COUNT = 2;
     private PlantRepository repository;
     private ExecutorService ioExecutor;
 
@@ -62,7 +64,7 @@ public class PlantApp extends Application implements RepositoryProvider {
     /** Returns the shared executor used by import/export components. */
     public synchronized ExecutorService getIoExecutor() {
         if (ioExecutor == null || ioExecutor.isShutdown()) {
-            ioExecutor = Executors.newSingleThreadExecutor();
+            ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
         }
         return ioExecutor;
     }
@@ -70,8 +72,18 @@ public class PlantApp extends Application implements RepositoryProvider {
     /** Shuts down the shared executor service. */
     public synchronized void shutdownIoExecutor() {
         if (ioExecutor != null) {
-            ioExecutor.shutdownNow();
-            ioExecutor = null;
+            ioExecutor.shutdown();
+            try {
+                if (!ioExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    ioExecutor.shutdownNow();
+                    ioExecutor.awaitTermination(5, TimeUnit.SECONDS);
+                }
+            } catch (InterruptedException e) {
+                ioExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            } finally {
+                ioExecutor = null;
+            }
         }
     }
 
