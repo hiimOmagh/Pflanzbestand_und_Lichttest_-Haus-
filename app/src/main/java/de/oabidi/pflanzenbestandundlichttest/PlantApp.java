@@ -56,8 +56,6 @@ public class PlantApp extends Application implements RepositoryProvider {
         if (repository == null) {
             repository = new PlantRepository(this);
         }
-        MainActivity.setRepository(repository);
-        PlantDetailActivity.setRepository(repository);
         return repository;
     }
 

@@ -105,7 +105,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
             Intent contentIntent;
             if (plant != null) {
-                contentIntent = MainActivity.createPlantDetailIntent(context, repo, plant);
+                contentIntent = MainActivity.createPlantDetailIntent(context, plant);
             } else {
                 contentIntent = new Intent(context, PlantDetailActivity.class);
             }

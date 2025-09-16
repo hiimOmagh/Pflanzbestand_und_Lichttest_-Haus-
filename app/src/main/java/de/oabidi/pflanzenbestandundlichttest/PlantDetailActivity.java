@@ -39,22 +39,9 @@ import java.util.concurrent.ExecutorService;
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
-    private static PlantRepository defaultRepository;
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
     private PlantRepository repository;
-
-    public PlantDetailActivity() {
-        this(defaultRepository);
-    }
-
-    public PlantDetailActivity(PlantRepository repository) {
-        this.repository = repository;
-    }
-
-    public static void setRepository(PlantRepository repository) {
-        defaultRepository = repository;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +49,8 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         // Allow the layout to extend into the system bar areas.
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
+
+        repository = ((RepositoryProvider) getApplication()).getRepository();
 
         long plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
@@ -83,9 +72,6 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        if (repository == null) {
-            repository = RepositoryProvider.getRepository(this);
-        }
         PlantApp app = PlantApp.from(this);
         ExecutorService executor = app.getIoExecutor();
         presenter = new PlantDetailPresenter(this, plantId,
