@@ -120,7 +120,7 @@ public class ImportManager {
     }
 
     /** Sections within an exported CSV file. */
-    enum Section {
+    public enum Section {
         NONE(""),
         PLANTS("Plants"),
         SPECIES_TARGETS("SpeciesTargets"),
@@ -221,6 +221,8 @@ public class ImportManager {
                         final boolean[] successHolder = {false};
                         final ImportError[] errorHolder = {null};
                         try {
+                            File finalCsvFile = csvFile;
+                            File finalTempDir = tempDir;
                             db.runInTransaction(() -> {
                                 if (mode == Mode.REPLACE) {
                                     BulkReadDao bulk = db.bulkDao();
@@ -243,9 +245,9 @@ public class ImportManager {
                                 }
                                 if (errorHolder[0] == null) {
                                     try (BufferedReader reader = new BufferedReader(
-                                        new InputStreamReader(new FileInputStream(csvFile), StandardCharsets.UTF_8))) {
+                                        new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
                                         ImportError parseResult = parseAndInsert(
-                                            reader, tempDir, mode, warnings,
+                                            reader, finalTempDir, mode, warnings,
                                             progressCallback, progress, totalSteps);
                                         if (parseResult != null) {
                                             errorHolder[0] = parseResult;
@@ -387,7 +389,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class SectionContext {
+    public static class SectionContext {
         final ImportManager manager;
         final Mode mode;
         final File baseDir;
@@ -397,14 +399,14 @@ public class ImportManager {
         final PlantDatabase db;
         final NumberFormat numberFormat;
 
-        SectionContext(@NonNull ImportManager manager,
-                       @NonNull Mode mode,
-                       @NonNull File baseDir,
-                       @NonNull Map<Long, Long> plantIdMap,
-                       @NonNull List<ImportWarning> warnings,
-                       @NonNull List<Uri> restoredUris,
-                       @NonNull PlantDatabase db,
-                       @NonNull NumberFormat numberFormat) {
+        public SectionContext(@NonNull ImportManager manager,
+                              @NonNull Mode mode,
+                              @NonNull File baseDir,
+                              @NonNull Map<Long, Long> plantIdMap,
+                              @NonNull List<ImportWarning> warnings,
+                              @NonNull List<Uri> restoredUris,
+                              @NonNull PlantDatabase db,
+                              @NonNull NumberFormat numberFormat) {
             this.manager = manager;
             this.mode = mode;
             this.baseDir = baseDir;
@@ -428,18 +430,18 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class SectionReader {
+    public static class SectionReader {
         private final BufferedReader reader;
         private final AtomicInteger lineNumber;
         private String pendingHeader;
 
-        SectionReader(@NonNull BufferedReader reader, @NonNull AtomicInteger lineNumber) {
+        public SectionReader(@NonNull BufferedReader reader, @NonNull AtomicInteger lineNumber) {
             this.reader = reader;
             this.lineNumber = lineNumber;
         }
 
         @Nullable
-        Section nextSection(@NonNull ImportManager manager) throws IOException {
+        public Section nextSection(@NonNull ImportManager manager) throws IOException {
             String headerLine;
             if (pendingHeader != null) {
                 headerLine = pendingHeader;
@@ -485,7 +487,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    interface SectionParser {
+    public interface SectionParser {
         @NonNull Section getSection();
 
         boolean parseSection(@NonNull SectionReader reader,
@@ -493,7 +495,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class SectionCoordinator {
+    public static class SectionCoordinator {
         private final ImportManager manager;
         private final SectionReader reader;
         private final Map<Section, SectionParser> parsers;
@@ -503,13 +505,13 @@ public class ImportManager {
         private final ProgressCallback progressCallback;
         private final int totalSteps;
 
-        SectionCoordinator(@NonNull ImportManager manager,
-                           @NonNull SectionReader reader,
-                           @NonNull List<SectionParser> parserList,
-                           @NonNull SectionContext context,
-                           @NonNull AtomicInteger progress,
-                           @Nullable ProgressCallback progressCallback,
-                           int totalSteps) {
+        public SectionCoordinator(@NonNull ImportManager manager,
+                                  @NonNull SectionReader reader,
+                                  @NonNull List<SectionParser> parserList,
+                                  @NonNull SectionContext context,
+                                  @NonNull AtomicInteger progress,
+                                  @Nullable ProgressCallback progressCallback,
+                                  int totalSteps) {
             this.manager = manager;
             this.reader = reader;
             this.context = context;
@@ -522,7 +524,7 @@ public class ImportManager {
             }
         }
 
-        boolean process() throws IOException {
+        public boolean process() throws IOException {
             boolean importedAny = false;
             Section section;
             while ((section = reader.nextSection(manager)) != null) {
@@ -540,7 +542,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class PlantsSectionParser implements SectionParser {
+    public static class PlantsSectionParser implements SectionParser {
         @NonNull
         @Override
         public Section getSection() {
@@ -565,7 +567,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class SpeciesTargetsSectionParser implements SectionParser {
+    public static class SpeciesTargetsSectionParser implements SectionParser {
         @NonNull
         @Override
         public Section getSection() {
@@ -601,7 +603,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class MeasurementsSectionParser implements SectionParser {
+    public static class MeasurementsSectionParser implements SectionParser {
         @NonNull
         @Override
         public Section getSection() {
@@ -625,7 +627,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class DiaryEntriesSectionParser implements SectionParser {
+    public static class DiaryEntriesSectionParser implements SectionParser {
         @NonNull
         @Override
         public Section getSection() {
@@ -650,7 +652,7 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    static class RemindersSectionParser implements SectionParser {
+    public static class RemindersSectionParser implements SectionParser {
         @NonNull
         @Override
         public Section getSection() {
