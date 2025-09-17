@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Looper;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -14,9 +15,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.Shadows;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -27,7 +30,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
+import java.util.LinkedHashMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -48,6 +57,83 @@ public class ImportManagerHelperTest {
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
         instance.set(null, db);
+    }
+
+    @Test
+    public void importData_skipsMaliciousZipEntry() throws Exception {
+        ImportManager importer = new ImportManager(context, executor);
+        File evilFile = new File(context.getCacheDir(), "evil.txt");
+        if (evilFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
+            evilFile.delete();
+        }
+        File zipFile = createImportArchive(true);
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] successHolder = {false};
+        importer.importData(Uri.fromFile(zipFile), ImportManager.Mode.REPLACE,
+            (success, err, warnings, message) -> {
+                successHolder[0] = success;
+                latch.countDown();
+            });
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertTrue(successHolder[0]);
+        assertNotNull(db.plantDao().findById(1));
+        assertFalse("Malicious file should not be created", evilFile.exists());
+        //noinspection ResultOfMethodCallIgnored
+        zipFile.delete();
+    }
+
+    @Test
+    public void importData_importsBenignZipEntry() throws Exception {
+        ImportManager importer = new ImportManager(context, executor);
+        File zipFile = createImportArchive(false);
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] successHolder = {false};
+        importer.importData(Uri.fromFile(zipFile), ImportManager.Mode.REPLACE,
+            (success, err, warnings, message) -> {
+                successHolder[0] = success;
+                latch.countDown();
+            });
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertTrue(successHolder[0]);
+        assertNotNull(db.plantDao().findById(1));
+        //noinspection ResultOfMethodCallIgnored
+        zipFile.delete();
+    }
+
+    private File createImportArchive(boolean includeMalicious) throws Exception {
+        File zipFile = File.createTempFile("import_test", ".zip", context.getCacheDir());
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("data.csv", buildBasicCsv().getBytes(StandardCharsets.UTF_8));
+        if (includeMalicious) {
+            entries.put("../evil.txt", "malicious".getBytes(StandardCharsets.UTF_8));
+        }
+        try (FileOutputStream fos = new FileOutputStream(zipFile);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+            for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
+                zos.putNextEntry(new ZipEntry(entry.getKey()));
+                zos.write(entry.getValue());
+                zos.closeEntry();
+            }
+        }
+        return zipFile;
+    }
+
+    private String buildBasicCsv() {
+        return "Version,1\n\n"
+            + "Plants\n"
+            + "id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n"
+            + "1,Test Plant,,,,0,\n"
+            + "\nSpeciesTargets\n"
+            + "speciesKey,ppfdMin,ppfdMax\n"
+            + "\nMeasurements\n"
+            + "id,plantId,timeEpoch,luxAvg,ppfd\n"
+            + "\nDiaryEntries\n"
+            + "id,plantId,timeEpoch,type,note,photoUri\n"
+            + "\nReminders\n"
+            + "id,plantId,triggerAt,message\n";
     }
 
     @After

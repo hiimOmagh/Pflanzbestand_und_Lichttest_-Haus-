@@ -39,6 +39,7 @@ import java.text.NumberFormat;
 import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
@@ -62,36 +63,28 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 public class ImportManager {
     static final String TAG = "ImportManager";
     private static final int SUPPORTED_VERSION = 1;
-
+    private static final int SECTION_PROGRESS_STEPS = Section.values().length - 1;
+    private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor;
 
-    /** Callback used to signal completion of the import operation. */
-    public interface Callback {
-        void onComplete(boolean success, @Nullable ImportError error,
-                        List<ImportWarning> warnings, @NonNull String message);
-    }
-
-    /** Callback used to report incremental progress. */
-    public interface ProgressCallback {
-        void onProgress(int current, int total);
-    }
-
-    /** Information about a skipped row during import. */
-    public static class ImportWarning {
-        public final String category;
-        public final int lineNumber;
-        public final String reason;
-
-        public ImportWarning(@NonNull String category, int lineNumber, @NonNull String reason) {
-            this.category = category;
-            this.lineNumber = lineNumber;
-            this.reason = reason;
+    public ImportManager(@NonNull Context context) {
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
+        this(context, ((ExecutorProvider) appContext).getIoExecutor());
     }
 
-    /** Builds a human-readable summary of warnings for display. */
+    public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
+        this.context = context.getApplicationContext();
+        this.executor = executor;
+    }
+
+    /**
+     * Builds a human-readable summary of warnings for display.
+     */
     @NonNull
     public static String summarizeWarnings(@NonNull List<ImportWarning> warnings) {
         Map<String, Integer> counts = new LinkedHashMap<>();
@@ -111,63 +104,28 @@ public class ImportManager {
         return sb.toString();
     }
 
-    /** Import mode determining how incoming data is applied. */
-    public enum Mode { MERGE, REPLACE }
-
-    /** Possible high-level errors during import. */
-    public enum ImportError {
-        MISSING_VERSION,
-        INVALID_VERSION,
-        UNSUPPORTED_VERSION,
-        NO_DATA,
-        IO_ERROR
-    }
-
-    /** Sections within an exported CSV file. */
-    public enum Section {
-        NONE(""),
-        PLANTS("Plants"),
-        SPECIES_TARGETS("SpeciesTargets"),
-        MEASUREMENTS("Measurements"),
-        DIARY_ENTRIES("DiaryEntries"),
-        REMINDERS("Reminders");
-
-        private final String header;
-
-        Section(String header) {
-            this.header = header;
-        }
-
-        @Nullable
-        static Section fromHeader(@NonNull String header) {
-            for (Section section : values()) {
-                if (section.header.equals(header)) {
-                    return section;
+    static List<String> parseCsv(String line) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        boolean inQuotes = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    sb.append('"');
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
                 }
+            } else if (c == ',' && !inQuotes) {
+                tokens.add(sb.toString());
+                sb.setLength(0);
+            } else {
+                sb.append(c);
             }
-            return null;
         }
-
-        @NonNull
-        String getHeader() {
-            return header;
-        }
-    }
-
-    private static final int SECTION_PROGRESS_STEPS = Section.values().length - 1;
-    private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
-
-    public ImportManager(@NonNull Context context) {
-        Context appContext = context.getApplicationContext();
-        if (!(appContext instanceof ExecutorProvider)) {
-            throw new IllegalStateException("Application context does not implement ExecutorProvider");
-        }
-        this(context, ((ExecutorProvider) appContext).getIoExecutor());
-    }
-
-    public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
-        this.context = context.getApplicationContext();
-        this.executor = executor;
+        tokens.add(sb.toString());
+        return tokens;
     }
 
     /**
@@ -194,98 +152,143 @@ public class ImportManager {
                 tempDir = null;
             }
             if (tempDir != null) {
-                final long totalBytes = queryArchiveSize(uri);
-                final int archiveSteps = computeArchiveSteps(totalBytes);
-                final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
-                final AtomicInteger progress = new AtomicInteger(0);
-
-                try (InputStream is = context.getContentResolver().openInputStream(uri);
-                     CountingInputStream countingIs = new CountingInputStream(is);
-                     ZipInputStream zis = new ZipInputStream(countingIs)) {
-                    ArchiveProgressTracker tracker = new ArchiveProgressTracker(totalBytes,
-                        archiveSteps, progress, totalSteps, progressCallback);
-                    ZipEntry zipEntry;
-                    File csvFile = null;
-                    byte[] buffer = new byte[8192];
-                    while ((zipEntry = zis.getNextEntry()) != null) {
-                        tracker.update(countingIs.getCount());
-                        File outFile = new File(tempDir, zipEntry.getName());
-                        try (OutputStream fos = new FileOutputStream(outFile)) {
-                            int len;
-                            while ((len = zis.read(buffer)) > 0) {
-                                fos.write(buffer, 0, len);
-                                tracker.update(countingIs.getCount());
-                            }
-                        }
-                        if (zipEntry.getName().endsWith(".csv")) {
-                            csvFile = outFile;
-                        }
-                        zis.closeEntry();
-                        tracker.update(countingIs.getCount());
-                    }
-                    tracker.complete();
-                    if (csvFile != null) {
-                        PlantDatabase db = PlantDatabase.getDatabase(context);
-                        final boolean[] successHolder = {false};
-                        final ImportError[] errorHolder = {null};
-                        try {
-                            File finalCsvFile = csvFile;
-                            File finalTempDir = tempDir;
-                            db.runInTransaction(() -> {
-                                if (mode == Mode.REPLACE) {
-                                    BulkReadDao bulk = db.bulkDao();
-                                    try {
-                                        for (Plant plant : bulk.getAllPlants()) {
-                                            PhotoManager.deletePhoto(context, plant.getPhotoUri());
-                                        }
-                                        for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
-                                            PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
-                                        }
-                                        for (Reminder reminder : bulk.getAllReminders()) {
-                                            ReminderScheduler.cancelReminder(context, reminder.getId());
-                                        }
-                                        db.clearAllTables();
-                                    } catch (Exception e) {
-                                        Log.e(TAG, "Failed to clean database", e);
-                                        errorHolder[0] = ImportError.IO_ERROR;
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                                if (errorHolder[0] == null) {
-                                    try (BufferedReader reader = new BufferedReader(
-                                        new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
-                                        ImportError parseResult = parseAndInsert(
-                                            reader, finalTempDir, mode, warnings,
-                                            progressCallback, progress, totalSteps);
-                                        if (parseResult != null) {
-                                            errorHolder[0] = parseResult;
-                                            throw new RuntimeException();
-                                        }
-                                        successHolder[0] = true;
-                                    } catch (IOException e) {
-                                        Log.e(TAG, "Failed to parse import file", e);
-                                        errorHolder[0] = ImportError.IO_ERROR;
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            });
-                        } catch (RuntimeException e) {
-                            // Transaction failed; errorHolder already set
-                        }
-                        error = errorHolder[0];
-                        success = successHolder[0];
-                        if (error != null) {
-                            success = false;
-                        }
-                    } else {
-                        error = ImportError.IO_ERROR;
-                    }
+                String tempCanonical = null;
+                try {
+                    tempCanonical = tempDir.getCanonicalPath();
                 } catch (IOException e) {
-                    Log.e(TAG, "Failed to open import file", e);
-                    success = false;
+                    Log.e(TAG, "Failed to resolve temp directory", e);
+                }
+                if (tempCanonical == null) {
                     error = ImportError.IO_ERROR;
-                } finally {
-                    FileUtils.deleteRecursive(tempDir);
+                } else {
+                    final String tempCanonicalWithSep = tempCanonical.endsWith(File.separator)
+                        ? tempCanonical
+                        : tempCanonical + File.separator;
+                    final long totalBytes = queryArchiveSize(uri);
+                    final int archiveSteps = computeArchiveSteps(totalBytes);
+                    final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
+                    final AtomicInteger progress = new AtomicInteger(0);
+
+                    try (InputStream is = context.getContentResolver().openInputStream(uri);
+                         CountingInputStream countingIs = new CountingInputStream(is);
+                         ZipInputStream zis = new ZipInputStream(countingIs)) {
+                        ArchiveProgressTracker tracker = new ArchiveProgressTracker(totalBytes,
+                            archiveSteps, progress, totalSteps, progressCallback);
+                        ZipEntry zipEntry;
+                        File csvFile = null;
+                        byte[] buffer = new byte[8192];
+                        while ((zipEntry = zis.getNextEntry()) != null) {
+                            tracker.update(countingIs.getCount());
+                            String entryName = zipEntry.getName();
+                            File outFile = new File(tempDir, entryName);
+                            String outCanonical;
+                            try {
+                                outCanonical = outFile.getCanonicalPath();
+                            } catch (IOException e) {
+                                Log.w(TAG, "Skipping zip entry with invalid path: " + entryName, e);
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
+                                continue;
+                            }
+                            if (!outCanonical.equals(tempCanonical)
+                                && !outCanonical.startsWith(tempCanonicalWithSep)) {
+                                Log.w(TAG, "Skipping suspicious zip entry: " + entryName);
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
+                                continue;
+                            }
+                            if (zipEntry.isDirectory()) {
+                                if (!outFile.isDirectory() && !outFile.mkdirs()) {
+                                    Log.w(TAG, "Failed to create directory for zip entry: " + entryName);
+                                }
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
+                                continue;
+                            }
+                            File parent = outFile.getParentFile();
+                            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                                Log.w(TAG, "Failed to create parent directories for zip entry: " + entryName);
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
+                                continue;
+                            }
+                            try (OutputStream fos = new FileOutputStream(outFile)) {
+                                int len;
+                                while ((len = zis.read(buffer)) > 0) {
+                                    fos.write(buffer, 0, len);
+                                    tracker.update(countingIs.getCount());
+                                }
+                            }
+                            if (entryName.endsWith(".csv")) {
+                                csvFile = outFile;
+                            }
+                            zis.closeEntry();
+                            tracker.update(countingIs.getCount());
+                        }
+                        tracker.complete();
+                        if (csvFile != null) {
+                            PlantDatabase db = PlantDatabase.getDatabase(context);
+                            final boolean[] successHolder = {false};
+                            final ImportError[] errorHolder = {null};
+                            try {
+                                File finalCsvFile = csvFile;
+                                File finalTempDir = tempDir;
+                                db.runInTransaction(() -> {
+                                    if (mode == Mode.REPLACE) {
+                                        BulkReadDao bulk = db.bulkDao();
+                                        try {
+                                            for (Plant plant : bulk.getAllPlants()) {
+                                                PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                                            }
+                                            for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
+                                                PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
+                                            }
+                                            for (Reminder reminder : bulk.getAllReminders()) {
+                                                ReminderScheduler.cancelReminder(context, reminder.getId());
+                                            }
+                                            db.clearAllTables();
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "Failed to clean database", e);
+                                            errorHolder[0] = ImportError.IO_ERROR;
+                                            throw new RuntimeException(e);
+                                        }
+                                    }
+                                    if (errorHolder[0] == null) {
+                                        try (BufferedReader reader = new BufferedReader(
+                                            new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
+                                            ImportError parseResult = parseAndInsert(
+                                                reader, finalTempDir, mode, warnings,
+                                                progressCallback, progress, totalSteps);
+                                            if (parseResult != null) {
+                                                errorHolder[0] = parseResult;
+                                                throw new RuntimeException();
+                                            }
+                                            successHolder[0] = true;
+                                        } catch (IOException e) {
+                                            Log.e(TAG, "Failed to parse import file", e);
+                                            errorHolder[0] = ImportError.IO_ERROR;
+                                            throw new RuntimeException(e);
+                                        }
+                                    }
+                                });
+                            } catch (RuntimeException e) {
+                                // Transaction failed; errorHolder already set
+                            }
+                            error = errorHolder[0];
+                            success = successHolder[0];
+                            if (error != null) {
+                                success = false;
+                            }
+                        } else {
+                            error = ImportError.IO_ERROR;
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to open import file", e);
+                        success = false;
+                        error = ImportError.IO_ERROR;
+                    } finally {
+                        FileUtils.deleteRecursive(tempDir);
+                    }
                 }
             } else {
                 error = ImportError.IO_ERROR;
@@ -333,11 +336,12 @@ public class ImportManager {
     }
 
     @VisibleForTesting
-    @Nullable ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
-                                         List<ImportWarning> warnings,
-                                   @Nullable ProgressCallback progressCallback,
-                                   AtomicInteger progress,
-                                   int totalSteps) throws IOException {
+    @Nullable
+    ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
+                               List<ImportWarning> warnings,
+                               @Nullable ProgressCallback progressCallback,
+                               AtomicInteger progress,
+                               int totalSteps) throws IOException {
         ImportError versionError = validateVersion(reader);
         if (versionError != null) {
             return versionError;
@@ -420,92 +424,6 @@ public class ImportManager {
         return (int) Math.max(1L, Math.min(DEFAULT_ARCHIVE_PROGRESS_STEPS, maxSteps));
     }
 
-    private final class ArchiveProgressTracker {
-        private final long totalBytes;
-        private final int archiveSteps;
-        private final AtomicInteger overallProgress;
-        private final int totalSteps;
-        @Nullable
-        private final ProgressCallback callback;
-        private int lastReported;
-
-        ArchiveProgressTracker(long totalBytes, int archiveSteps, AtomicInteger overallProgress,
-                               int totalSteps, @Nullable ProgressCallback callback) {
-            this.totalBytes = totalBytes;
-            this.archiveSteps = archiveSteps;
-            this.overallProgress = overallProgress;
-            this.totalSteps = totalSteps;
-            this.callback = callback;
-            this.lastReported = 0;
-        }
-
-        void update(long countedBytes) {
-            if (archiveSteps <= 0) {
-                return;
-            }
-            int target;
-            if (totalBytes > 0) {
-                double ratio = (double) countedBytes / (double) totalBytes;
-                if (ratio < 0d) {
-                    ratio = 0d;
-                } else if (ratio > 1d) {
-                    ratio = 1d;
-                }
-                target = (int) Math.floor(ratio * archiveSteps);
-            } else {
-                long capped = Math.min(countedBytes, (long) archiveSteps);
-                if (capped < 0L) {
-                    capped = 0L;
-                }
-                target = (int) capped;
-            }
-            publish(target);
-        }
-
-        void complete() {
-            publish(archiveSteps);
-        }
-
-        private void publish(int target) {
-            if (target <= lastReported) {
-                return;
-            }
-            int delta = target - lastReported;
-            lastReported = target;
-            stepProgress(overallProgress, callback, totalSteps, delta);
-        }
-    }
-
-    private static final class CountingInputStream extends FilterInputStream {
-        private long count;
-
-        CountingInputStream(@NonNull InputStream in) {
-            super(in);
-        }
-
-        @Override
-        public int read() throws IOException {
-            int result = super.read();
-            if (result != -1) {
-                count++;
-            }
-            return result;
-        }
-
-        @Override
-        public int read(@NonNull byte[] buffer, int offset, int length) throws IOException {
-            int result = super.read(buffer, offset, length);
-            if (result > 0) {
-                count += result;
-            }
-            return result;
-        }
-
-        long getCount() {
-            return count;
-        }
-    }
-
     private @Nullable ImportError validateVersion(BufferedReader reader) throws IOException {
         String firstLine = reader.readLine();
         if (firstLine == null || !firstLine.startsWith("Version,")) {
@@ -531,116 +449,10 @@ public class ImportManager {
         return next;
     }
 
-    @VisibleForTesting
-    public static class SectionContext {
-        final ImportManager manager;
-        final Mode mode;
-        final File baseDir;
-        final Map<Long, Long> plantIdMap;
-        final List<ImportWarning> warnings;
-        final List<Uri> restoredUris;
-        final PlantDatabase db;
-        final NumberFormat numberFormat;
-
-        public SectionContext(@NonNull ImportManager manager,
-                              @NonNull Mode mode,
-                              @NonNull File baseDir,
-                              @NonNull Map<Long, Long> plantIdMap,
-                              @NonNull List<ImportWarning> warnings,
-                              @NonNull List<Uri> restoredUris,
-                              @NonNull PlantDatabase db,
-                              @NonNull NumberFormat numberFormat) {
-            this.manager = manager;
-            this.mode = mode;
-            this.baseDir = baseDir;
-            this.plantIdMap = plantIdMap;
-            this.warnings = warnings;
-            this.restoredUris = restoredUris;
-            this.db = db;
-            this.numberFormat = numberFormat;
-        }
-    }
-
-    @VisibleForTesting
-    static class SectionRow {
-        final String line;
-        final int lineNumber;
-
-        SectionRow(@NonNull String line, int lineNumber) {
-            this.line = line;
-            this.lineNumber = lineNumber;
-        }
-    }
-
-    @VisibleForTesting
-    public static class SectionReader {
-        private final BufferedReader reader;
-        private final AtomicInteger lineNumber;
-        private String pendingHeader;
-
-        public SectionReader(@NonNull BufferedReader reader, @NonNull AtomicInteger lineNumber) {
-            this.reader = reader;
-            this.lineNumber = lineNumber;
-        }
-
-        @Nullable
-        public Section nextSection(@NonNull ImportManager manager) throws IOException {
-            String headerLine;
-            if (pendingHeader != null) {
-                headerLine = pendingHeader;
-                pendingHeader = null;
-            } else {
-                while ((headerLine = reader.readLine()) != null) {
-                    int currentLine = lineNumber.incrementAndGet();
-                    if (headerLine.trim().isEmpty()) {
-                        continue;
-                    }
-                    break;
-                }
-                if (headerLine == null) {
-                    return null;
-                }
-            }
-            Section next = manager.readSection(headerLine);
-            String headerRow = reader.readLine();
-            if (headerRow == null) {
-                throw new IOException("Missing header row for section " + headerLine);
-            }
-            lineNumber.incrementAndGet();
-            return next;
-        }
-
-        @Nullable
-        SectionRow nextRow() throws IOException {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                int currentLine = lineNumber.incrementAndGet();
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                Section possible = Section.fromHeader(line);
-                if (possible != null && possible != Section.NONE) {
-                    pendingHeader = line;
-                    return null;
-                }
-                return new SectionRow(line, currentLine);
-            }
-            return null;
-        }
-    }
-
-    @VisibleForTesting
-    public interface SectionParser {
-        @NonNull Section getSection();
-
-        boolean parseSection(@NonNull SectionReader reader,
-                             @NonNull SectionContext context) throws IOException;
-    }
-
     boolean insertDiaryRow(List<String> parts, Mode mode, File baseDir,
                            Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                   int currentLine, List<Uri> restoredUris,
-                                   PlantDatabase db) {
+                           int currentLine, List<Uri> restoredUris,
+                           PlantDatabase db) {
         if (parts.size() < 6) {
             Log.e(TAG, "Malformed diary row: " + parts);
             warnings.add(new ImportWarning("diary entries", currentLine, "malformed row"));
@@ -693,8 +505,8 @@ public class ImportManager {
     }
 
     boolean insertReminderRow(List<String> parts, Mode mode,
-                                      Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                      int currentLine, PlantDatabase db) {
+                              Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                              int currentLine, PlantDatabase db) {
         if (parts.size() < 4) {
             Log.e(TAG, "Malformed reminder row: " + parts);
             warnings.add(new ImportWarning("reminders", currentLine, "malformed row"));
@@ -858,30 +670,6 @@ public class ImportManager {
         }
     }
 
-    static List<String> parseCsv(String line) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        boolean inQuotes = false;
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c == '"') {
-                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    sb.append('"');
-                    i++;
-                } else {
-                    inQuotes = !inQuotes;
-                }
-            } else if (c == ',' && !inQuotes) {
-                tokens.add(sb.toString());
-                sb.setLength(0);
-            } else {
-                sb.append(c);
-            }
-        }
-        tokens.add(sb.toString());
-        return tokens;
-    }
-
     private void cleanupUris(List<Uri> uris) {
         ContentResolver resolver = context.getContentResolver();
         for (Uri uri : uris) {
@@ -925,8 +713,280 @@ public class ImportManager {
 
             return uri;
         } catch (IOException e) {
-            Log.e(TAG, "Failed to restore image" , e);
+            Log.e(TAG, "Failed to restore image", e);
             return null;
+        }
+    }
+
+    /**
+     * Import mode determining how incoming data is applied.
+     */
+    public enum Mode {MERGE, REPLACE}
+
+    /**
+     * Possible high-level errors during import.
+     */
+    public enum ImportError {
+        MISSING_VERSION,
+        INVALID_VERSION,
+        UNSUPPORTED_VERSION,
+        NO_DATA,
+        IO_ERROR
+    }
+
+    /**
+     * Sections within an exported CSV file.
+     */
+    public enum Section {
+        NONE(""),
+        PLANTS("Plants"),
+        SPECIES_TARGETS("SpeciesTargets"),
+        MEASUREMENTS("Measurements"),
+        DIARY_ENTRIES("DiaryEntries"),
+        REMINDERS("Reminders");
+
+        private final String header;
+
+        Section(String header) {
+            this.header = header;
+        }
+
+        @Nullable
+        static Section fromHeader(@NonNull String header) {
+            for (Section section : values()) {
+                if (section.header.equals(header)) {
+                    return section;
+                }
+            }
+            return null;
+        }
+
+        @NonNull
+        String getHeader() {
+            return header;
+        }
+    }
+
+    /**
+     * Callback used to signal completion of the import operation.
+     */
+    public interface Callback {
+        void onComplete(boolean success, @Nullable ImportError error,
+                        List<ImportWarning> warnings, @NonNull String message);
+    }
+
+    /**
+     * Callback used to report incremental progress.
+     */
+    public interface ProgressCallback {
+        void onProgress(int current, int total);
+    }
+
+    @VisibleForTesting
+    public interface SectionParser {
+        @NonNull
+        Section getSection();
+
+        boolean parseSection(@NonNull SectionReader reader,
+                             @NonNull SectionContext context) throws IOException;
+    }
+
+    /**
+     * Information about a skipped row during import.
+     */
+    public static class ImportWarning {
+        public final String category;
+        public final int lineNumber;
+        public final String reason;
+
+        public ImportWarning(@NonNull String category, int lineNumber, @NonNull String reason) {
+            this.category = category;
+            this.lineNumber = lineNumber;
+            this.reason = reason;
+        }
+    }
+
+    private static final class CountingInputStream extends FilterInputStream {
+        private long count;
+
+        CountingInputStream(@NonNull InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            int result = super.read();
+            if (result != -1) {
+                count++;
+            }
+            return result;
+        }
+
+        @Override
+        public int read(@NonNull byte[] buffer, int offset, int length) throws IOException {
+            int result = super.read(buffer, offset, length);
+            if (result > 0) {
+                count += result;
+            }
+            return result;
+        }
+
+        long getCount() {
+            return count;
+        }
+    }
+
+    @VisibleForTesting
+    public static class SectionContext {
+        final ImportManager manager;
+        final Mode mode;
+        final File baseDir;
+        final Map<Long, Long> plantIdMap;
+        final List<ImportWarning> warnings;
+        final List<Uri> restoredUris;
+        final PlantDatabase db;
+        final NumberFormat numberFormat;
+
+        public SectionContext(@NonNull ImportManager manager,
+                              @NonNull Mode mode,
+                              @NonNull File baseDir,
+                              @NonNull Map<Long, Long> plantIdMap,
+                              @NonNull List<ImportWarning> warnings,
+                              @NonNull List<Uri> restoredUris,
+                              @NonNull PlantDatabase db,
+                              @NonNull NumberFormat numberFormat) {
+            this.manager = manager;
+            this.mode = mode;
+            this.baseDir = baseDir;
+            this.plantIdMap = plantIdMap;
+            this.warnings = warnings;
+            this.restoredUris = restoredUris;
+            this.db = db;
+            this.numberFormat = numberFormat;
+        }
+    }
+
+    @VisibleForTesting
+    static class SectionRow {
+        final String line;
+        final int lineNumber;
+
+        SectionRow(@NonNull String line, int lineNumber) {
+            this.line = line;
+            this.lineNumber = lineNumber;
+        }
+    }
+
+    @VisibleForTesting
+    public static class SectionReader {
+        private final BufferedReader reader;
+        private final AtomicInteger lineNumber;
+        private String pendingHeader;
+
+        public SectionReader(@NonNull BufferedReader reader, @NonNull AtomicInteger lineNumber) {
+            this.reader = reader;
+            this.lineNumber = lineNumber;
+        }
+
+        @Nullable
+        public Section nextSection(@NonNull ImportManager manager) throws IOException {
+            String headerLine;
+            if (pendingHeader != null) {
+                headerLine = pendingHeader;
+                pendingHeader = null;
+            } else {
+                while ((headerLine = reader.readLine()) != null) {
+                    int currentLine = lineNumber.incrementAndGet();
+                    if (headerLine.trim().isEmpty()) {
+                        continue;
+                    }
+                    break;
+                }
+                if (headerLine == null) {
+                    return null;
+                }
+            }
+            Section next = manager.readSection(headerLine);
+            String headerRow = reader.readLine();
+            if (headerRow == null) {
+                throw new IOException("Missing header row for section " + headerLine);
+            }
+            lineNumber.incrementAndGet();
+            return next;
+        }
+
+        @Nullable
+        SectionRow nextRow() throws IOException {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int currentLine = lineNumber.incrementAndGet();
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                Section possible = Section.fromHeader(line);
+                if (possible != null && possible != Section.NONE) {
+                    pendingHeader = line;
+                    return null;
+                }
+                return new SectionRow(line, currentLine);
+            }
+            return null;
+        }
+    }
+
+    private final class ArchiveProgressTracker {
+        private final long totalBytes;
+        private final int archiveSteps;
+        private final AtomicInteger overallProgress;
+        private final int totalSteps;
+        @Nullable
+        private final ProgressCallback callback;
+        private int lastReported;
+
+        ArchiveProgressTracker(long totalBytes, int archiveSteps, AtomicInteger overallProgress,
+                               int totalSteps, @Nullable ProgressCallback callback) {
+            this.totalBytes = totalBytes;
+            this.archiveSteps = archiveSteps;
+            this.overallProgress = overallProgress;
+            this.totalSteps = totalSteps;
+            this.callback = callback;
+            this.lastReported = 0;
+        }
+
+        void update(long countedBytes) {
+            if (archiveSteps <= 0) {
+                return;
+            }
+            int target;
+            if (totalBytes > 0) {
+                double ratio = (double) countedBytes / (double) totalBytes;
+                if (ratio < 0d) {
+                    ratio = 0d;
+                } else if (ratio > 1d) {
+                    ratio = 1d;
+                }
+                target = (int) Math.floor(ratio * archiveSteps);
+            } else {
+                long capped = Math.min(countedBytes, (long) archiveSteps);
+                if (capped < 0L) {
+                    capped = 0L;
+                }
+                target = (int) capped;
+            }
+            publish(target);
+        }
+
+        void complete() {
+            publish(archiveSteps);
+        }
+
+        private void publish(int target) {
+            if (target <= lastReported) {
+                return;
+            }
+            int delta = target - lastReported;
+            lastReported = target;
+            stepProgress(overallProgress, callback, totalSteps, delta);
         }
     }
 }
