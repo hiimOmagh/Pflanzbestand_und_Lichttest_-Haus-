@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import android.content.Context;
 
@@ -15,12 +16,13 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowToast;
 
 import java.util.Collections;
+import java.lang.reflect.Field;
 
 /**
  * Tests for {@link PlantListFragment}.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantApp.class)
+@Config(application = TestExecutorApp.class)
 public class PlantListFragmentTest {
 
     @Test
@@ -37,5 +39,23 @@ public class PlantListFragmentTest {
         fragment.onImportResult(false, null, Collections.emptyList(), message);
 
         assertEquals(message, ShadowToast.getTextOfLatestToast());
+    }
+
+    @Test
+    public void fragmentWithoutInjectedRepository_resolvesFromApplication() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        PlantListFragment fragment = new PlantListFragment();
+
+        activity.getSupportFragmentManager().beginTransaction()
+            .replace(android.R.id.content, fragment)
+            .commitNow();
+
+        Field repositoryField = PlantListFragment.class.getDeclaredField("repository");
+        repositoryField.setAccessible(true);
+        PlantRepository fragmentRepository = (PlantRepository) repositoryField.get(fragment);
+
+        PlantRepository expectedRepository = ((RepositoryProvider) context).getRepository();
+        assertSame(expectedRepository, fragmentRepository);
     }
 }

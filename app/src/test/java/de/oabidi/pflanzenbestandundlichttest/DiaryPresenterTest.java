@@ -3,13 +3,18 @@ package de.oabidi.pflanzenbestandundlichttest;
 import static org.junit.Assert.*;
 
 import android.content.Context;
+import android.os.Bundle;
+
+import androidx.fragment.app.FragmentActivity;
+import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-import androidx.test.core.app.ApplicationProvider;
+import org.robolectric.annotation.Config;
 
-import java.util.Arrays;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -17,6 +22,7 @@ import java.util.function.Consumer;
  * Tests for {@link DiaryPresenter} verifying repository injection.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(application = TestExecutorApp.class)
 public class DiaryPresenterTest {
     private static class StubRepository extends PlantRepository {
         private final List<DiaryEntry> entries;
@@ -70,5 +76,37 @@ public class DiaryPresenterTest {
         DiaryPresenter presenter = new DiaryPresenter(view, repo, 1L, context);
         presenter.loadEntries("test");
         assertEquals(context.getString(R.string.error_database), view.error);
+    }
+
+    @Test
+    public void diaryFragmentNewInstanceRetainsProvidedRepository() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        PlantRepository repository = new PlantRepository(context, TestExecutors.newImmediateExecutor());
+        DiaryFragment fragment = DiaryFragment.newInstance(repository, 42L);
+
+        Field repositoryField = DiaryFragment.class.getDeclaredField("repository");
+        repositoryField.setAccessible(true);
+        assertSame(repository, repositoryField.get(fragment));
+    }
+
+    @Test
+    public void diaryFragmentResolvesRepositoryWhenNotInjected() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
+        DiaryFragment fragment = new DiaryFragment();
+        Bundle args = new Bundle();
+        args.putLong("plantId", 1L);
+        fragment.setArguments(args);
+
+        activity.getSupportFragmentManager().beginTransaction()
+            .replace(android.R.id.content, fragment)
+            .commitNow();
+
+        Field repositoryField = DiaryFragment.class.getDeclaredField("repository");
+        repositoryField.setAccessible(true);
+        PlantRepository fragmentRepository = (PlantRepository) repositoryField.get(fragment);
+
+        PlantRepository expectedRepository = ((RepositoryProvider) context).getRepository();
+        assertSame(expectedRepository, fragmentRepository);
     }
 }

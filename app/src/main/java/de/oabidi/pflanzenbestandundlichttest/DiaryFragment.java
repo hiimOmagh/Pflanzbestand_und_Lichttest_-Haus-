@@ -72,10 +72,10 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        Context context = requireContext().getApplicationContext();
         if (repository == null) {
-            throw new IllegalStateException("PlantRepository missing. Use newInstance() to create this fragment.");
+            repository = RepositoryProvider.getRepository(requireContext());
         }
+        Context context = requireContext().getApplicationContext();
         presenter = new DiaryPresenter(this, repository, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {

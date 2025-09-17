@@ -49,6 +49,14 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (repository == null) {
+            repository = RepositoryProvider.getRepository(requireContext());
+        }
+    }
+
+    @Override
     public void showProgress() {
         if (!isAdded()) {
             return;
@@ -139,10 +147,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
         Context context = requireContext().getApplicationContext();
-        if (repository == null) {
-            throw new IllegalStateException("PlantRepository missing. Use newInstance() to create this fragment.");
-        }
         PlantRepository repo = repository;
+        if (repo == null) {
+            repo = RepositoryProvider.getRepository(requireContext());
+            repository = repo;
+        }
         if (!(context instanceof ExecutorProvider)) {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
