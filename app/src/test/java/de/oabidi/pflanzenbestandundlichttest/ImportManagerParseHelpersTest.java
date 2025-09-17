@@ -263,6 +263,26 @@ public class ImportManagerParseHelpersTest {
     }
 
     @Test
+    public void stepProgressMonotonicWithCustomDeltas() throws Exception {
+        Method m = ImportManager.class.getDeclaredMethod("stepProgress", AtomicInteger.class,
+            ImportManager.ProgressCallback.class, int.class, int.class);
+        m.setAccessible(true);
+        AtomicInteger progress = new AtomicInteger();
+        List<Integer> updates = new ArrayList<>();
+        ImportManager.ProgressCallback callback = (current, total) -> updates.add(current);
+        m.invoke(importer, progress, callback, 10, 3);
+        m.invoke(importer, progress, callback, 10, 0);
+        m.invoke(importer, progress, callback, 10, 4);
+        m.invoke(importer, progress, callback, 10, 10);
+        m.invoke(importer, progress, callback, 10, -5);
+        Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
+        assertEquals(Arrays.asList(3, 7, 10), updates);
+        for (int i = 1; i < updates.size(); i++) {
+            assertTrue(updates.get(i) >= updates.get(i - 1));
+        }
+    }
+
+    @Test
     public void coordinatorEmitsProgressPerSection() throws Exception {
         String csv = "Plants\n" +
             "id,name,description,species,location,acquired,photo\n" +

@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -17,8 +18,9 @@ import androidx.annotation.VisibleForTesting;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -150,6 +152,9 @@ public class ImportManager {
         }
     }
 
+    private static final int SECTION_PROGRESS_STEPS = Section.values().length - 1;
+    private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
+
     public ImportManager(@NonNull Context context) {
         this(context, PlantApp.from(context).getIoExecutor());
     }
@@ -183,39 +188,36 @@ public class ImportManager {
                 tempDir = null;
             }
             if (tempDir != null) {
-                int zipEntries = 0;
-                try (InputStream countIs = context.getContentResolver().openInputStream(uri);
-                     ZipInputStream countZis = new ZipInputStream(countIs)) {
-                    while (countZis.getNextEntry() != null) {
-                        zipEntries++;
-                        countZis.closeEntry();
-                    }
-                } catch (IOException e) {
-                    Log.e(TAG, "Failed to count import entries", e);
-                }
-
-                final int totalSteps = zipEntries + 5; // files + sections
+                final long totalBytes = queryArchiveSize(uri);
+                final int archiveSteps = computeArchiveSteps(totalBytes);
+                final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
                 final AtomicInteger progress = new AtomicInteger(0);
 
                 try (InputStream is = context.getContentResolver().openInputStream(uri);
-                     ZipInputStream zis = new ZipInputStream(is)) {
+                     CountingInputStream countingIs = new CountingInputStream(is);
+                     ZipInputStream zis = new ZipInputStream(countingIs)) {
+                    ArchiveProgressTracker tracker = new ArchiveProgressTracker(totalBytes,
+                        archiveSteps, progress, totalSteps, progressCallback);
                     ZipEntry zipEntry;
                     File csvFile = null;
                     byte[] buffer = new byte[8192];
                     while ((zipEntry = zis.getNextEntry()) != null) {
+                        tracker.update(countingIs.getCount());
                         File outFile = new File(tempDir, zipEntry.getName());
                         try (OutputStream fos = new FileOutputStream(outFile)) {
                             int len;
                             while ((len = zis.read(buffer)) > 0) {
                                 fos.write(buffer, 0, len);
+                                tracker.update(countingIs.getCount());
                             }
                         }
-                        stepProgress(progress, progressCallback, totalSteps);
                         if (zipEntry.getName().endsWith(".csv")) {
                             csvFile = outFile;
                         }
                         zis.closeEntry();
+                        tracker.update(countingIs.getCount());
                     }
+                    tracker.complete();
                     if (csvFile != null) {
                         PlantDatabase db = PlantDatabase.getDatabase(context);
                         final boolean[] successHolder = {false};
@@ -295,10 +297,32 @@ public class ImportManager {
     private void stepProgress(@NonNull AtomicInteger progress,
                               @Nullable ProgressCallback progressCallback,
                               int totalSteps) {
-        int current = progress.incrementAndGet();
-        if (progressCallback != null) {
+        stepProgress(progress, progressCallback, totalSteps, 1);
+    }
+
+    private void stepProgress(@NonNull AtomicInteger progress,
+                              @Nullable ProgressCallback progressCallback,
+                              int totalSteps,
+                              int delta) {
+        if (delta <= 0) {
+            return;
+        }
+        final int[] previousHolder = new int[1];
+        int current = progress.updateAndGet(previous -> {
+            previousHolder[0] = previous;
+            long candidate = (long) previous + delta;
+            if (candidate < 0L) {
+                return Integer.MAX_VALUE;
+            }
+            if (candidate > totalSteps) {
+                return totalSteps;
+            }
+            return (int) candidate;
+        });
+        if (progressCallback != null && current != previousHolder[0]) {
             final int finalCurrent = current;
-            mainHandler.post(() -> progressCallback.onProgress(finalCurrent, totalSteps));
+            final int finalTotal = totalSteps;
+            mainHandler.post(() -> progressCallback.onProgress(finalCurrent, finalTotal));
         }
     }
 
@@ -361,6 +385,119 @@ public class ImportManager {
             return ImportError.NO_DATA;
         }
         return null;
+    }
+
+    private long queryArchiveSize(@NonNull Uri uri) {
+        try (ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r")) {
+            if (pfd != null) {
+                long statSize = pfd.getStatSize();
+                if (statSize > 0) {
+                    return statSize;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to determine import size", e);
+        }
+        return -1L;
+    }
+
+    @VisibleForTesting
+    int computeArchiveSteps(long totalBytes) {
+        long maxSteps = (long) Integer.MAX_VALUE - SECTION_PROGRESS_STEPS;
+        if (maxSteps <= 0) {
+            return 1;
+        }
+        if (totalBytes > 0) {
+            long clamped = Math.min(totalBytes, maxSteps);
+            return (int) Math.max(1L, clamped);
+        }
+        return (int) Math.max(1L, Math.min(DEFAULT_ARCHIVE_PROGRESS_STEPS, maxSteps));
+    }
+
+    private final class ArchiveProgressTracker {
+        private final long totalBytes;
+        private final int archiveSteps;
+        private final AtomicInteger overallProgress;
+        private final int totalSteps;
+        @Nullable
+        private final ProgressCallback callback;
+        private int lastReported;
+
+        ArchiveProgressTracker(long totalBytes, int archiveSteps, AtomicInteger overallProgress,
+                               int totalSteps, @Nullable ProgressCallback callback) {
+            this.totalBytes = totalBytes;
+            this.archiveSteps = archiveSteps;
+            this.overallProgress = overallProgress;
+            this.totalSteps = totalSteps;
+            this.callback = callback;
+            this.lastReported = 0;
+        }
+
+        void update(long countedBytes) {
+            if (archiveSteps <= 0) {
+                return;
+            }
+            int target;
+            if (totalBytes > 0) {
+                double ratio = (double) countedBytes / (double) totalBytes;
+                if (ratio < 0d) {
+                    ratio = 0d;
+                } else if (ratio > 1d) {
+                    ratio = 1d;
+                }
+                target = (int) Math.floor(ratio * archiveSteps);
+            } else {
+                long capped = Math.min(countedBytes, (long) archiveSteps);
+                if (capped < 0L) {
+                    capped = 0L;
+                }
+                target = (int) capped;
+            }
+            publish(target);
+        }
+
+        void complete() {
+            publish(archiveSteps);
+        }
+
+        private void publish(int target) {
+            if (target <= lastReported) {
+                return;
+            }
+            int delta = target - lastReported;
+            lastReported = target;
+            stepProgress(overallProgress, callback, totalSteps, delta);
+        }
+    }
+
+    private static final class CountingInputStream extends FilterInputStream {
+        private long count;
+
+        CountingInputStream(@NonNull InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            int result = super.read();
+            if (result != -1) {
+                count++;
+            }
+            return result;
+        }
+
+        @Override
+        public int read(@NonNull byte[] buffer, int offset, int length) throws IOException {
+            int result = super.read(buffer, offset, length);
+            if (result > 0) {
+                count += result;
+            }
+            return result;
+        }
+
+        long getCount() {
+            return count;
+        }
     }
 
     private @Nullable ImportError validateVersion(BufferedReader reader) throws IOException {

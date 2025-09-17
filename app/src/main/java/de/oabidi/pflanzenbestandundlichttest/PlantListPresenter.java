@@ -36,15 +36,6 @@ public class PlantListPresenter {
     private final ExportManager exportManager;
     private final ImportManager importManager;
 
-    public PlantListPresenter(View view, PlantRepository repository, Context context,
-                              ExportManager exportManager, ImportManager importManager) {
-        this.view = view;
-        this.repository = repository;
-        this.context = context.getApplicationContext();
-        this.exportManager = exportManager;
-        this.importManager = importManager;
-    }
-
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
         Context appContext = context.getApplicationContext();
         PlantApp app = PlantApp.from(appContext);
@@ -52,6 +43,15 @@ public class PlantListPresenter {
         this(view, repository, appContext,
             new ExportManager(appContext, repository, executor),
             new ImportManager(appContext, executor));
+    }
+
+    public PlantListPresenter(View view, PlantRepository repository, Context context,
+                              ExportManager exportManager, ImportManager importManager) {
+        this.view = view;
+        this.repository = repository;
+        this.context = context.getApplicationContext();
+        this.exportManager = exportManager;
+        this.importManager = importManager;
     }
 
     public void refreshPlants() {
