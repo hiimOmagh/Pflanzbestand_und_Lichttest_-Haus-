@@ -59,7 +59,8 @@ public class BackupScheduler extends BroadcastReceiver {
         File[] backups = dir.listFiles((d, name) -> name.startsWith("backup-") && name.endsWith(".zip"));
         if (backups == null) return;
         Arrays.sort(backups, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-        for (int i = RETENTION_COUNT - 1; i < backups.length; i++) {
+        if (backups.length <= RETENTION_COUNT) return;
+        for (int i = RETENTION_COUNT; i < backups.length; i++) {
             //noinspection ResultOfMethodCallIgnored
             backups[i].delete();
         }
