@@ -54,6 +54,7 @@ import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
+import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -284,7 +285,7 @@ public class ImportManager {
                     success = false;
                     error = ImportError.IO_ERROR;
                 } finally {
-                    deleteRecursive(tempDir);
+                    FileUtils.deleteRecursive(tempDir);
                 }
             } else {
                 error = ImportError.IO_ERROR;
@@ -927,18 +928,5 @@ public class ImportManager {
             Log.e(TAG, "Failed to restore image" , e);
             return null;
         }
-    }
-
-    private void deleteRecursive(File file) {
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursive(child);
-                }
-            }
-        }
-        //noinspection ResultOfMethodCallIgnored
-        file.delete();
     }
 }

@@ -26,6 +26,8 @@ import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
+import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
+
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.
  */
@@ -115,7 +117,7 @@ public class ExportManager {
                 } catch (IOException e) {
                     Log.e(TAG, "Export failed", e);
                 } finally {
-                    deleteRecursive(tempDir);
+                    FileUtils.deleteRecursive(tempDir);
                 }
             }
 
@@ -278,19 +280,6 @@ public class ExportManager {
             name = name.replaceAll("[/:*?\"<>|]", "_");
         }
         return name != null ? name : "image";
-    }
-
-    private void deleteRecursive(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory()) {
-            File[] children = fileOrDirectory.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursive(child);
-                }
-            }
-        }
-        //noinspection ResultOfMethodCallIgnored
-        fileOrDirectory.delete();
     }
 
     private static String escape(String value) {
