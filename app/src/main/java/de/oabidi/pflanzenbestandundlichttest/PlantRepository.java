@@ -189,7 +189,7 @@ public class PlantRepository {
      * @param callback optional callback invoked on the main thread when done
      */
     public void insert(Plant plant, Runnable callback) {
-        return insert(plant, callback, null);
+        insert(plant, callback, null);
     }
 
     public void insert(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
@@ -574,91 +574,6 @@ public class PlantRepository {
 
     public void deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
         runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
-    }
-
-    /**
-     * Retrieves all plants asynchronously.
-     *
-     * @return {@link Future} delivering the list of plants
-     */
-    public Future<List<Plant>> getAllPlants() {
-        return PlantDatabase.databaseWriteExecutor.submit(plantDao::getAll);
-    }
-
-    /**
-     * Retrieves all species targets asynchronously.
-     *
-     * @return {@link Future} delivering the list of species targets
-     */
-    public Future<List<SpeciesTarget>> getAllSpeciesTargets() {
-        return PlantDatabase.databaseWriteExecutor.submit(speciesTargetDao::getAll);
-    }
-
-    /**
-     * Retrieves all measurements asynchronously.
-     *
-     * @return {@link Future} delivering the list of measurements
-     */
-    public Future<List<Measurement>> getAllMeasurements() {
-        return PlantDatabase.databaseWriteExecutor.submit(measurementDao::getAll);
-    }
-
-    /**
-     * Retrieves all diary entries asynchronously.
-     *
-     * @return {@link Future} delivering the list of diary entries
-     */
-    public Future<List<DiaryEntry>> getAllDiaryEntries() {
-        return PlantDatabase.databaseWriteExecutor.submit(diaryDao::getAll);
-    }
-
-    /**
-     * Retrieves all reminders asynchronously.
-     *
-     * @return {@link Future} delivering the list of reminders
-     */
-    public Future<List<Reminder>> getAllReminders() {
-        return PlantDatabase.databaseWriteExecutor.submit(reminderDao::getAll);
-    }
-
-    /**
-     * Retrieves a plant by its identifier asynchronously.
-     *
-     * @param id database identifier
-     * @return {@link Future} delivering the matching plant or {@code null} if not found
-     */
-    public Future<Plant> getPlant(long id) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> plantDao.findById(id));
-    }
-
-    /**
-     * Retrieves all measurements for the given plant asynchronously.
-     *
-     * @param plantId identifier of the plant
-     * @return {@link Future} delivering the list of measurements for the plant
-     */
-    public Future<List<Measurement>> getMeasurementsForPlant(long plantId) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> measurementDao.getAllForPlant(plantId));
-    }
-
-    /**
-     * Retrieves all diary entries for the given plant asynchronously.
-     *
-     * @param plantId identifier of the plant
-     * @return {@link Future} delivering the list of diary entries for the plant
-     */
-    public Future<List<DiaryEntry>> diaryEntriesForPlant(long plantId) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> diaryDao.entriesForPlant(plantId));
-    }
-
-    /**
-     * Retrieves all reminders for the given plant asynchronously.
-     *
-     * @param plantId identifier of the plant
-     * @return {@link Future} delivering the list of reminders for the plant
-     */
-    public Future<List<Reminder>> getRemindersForPlant(long plantId) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> reminderDao.getForPlant(plantId));
     }
 
     /**
