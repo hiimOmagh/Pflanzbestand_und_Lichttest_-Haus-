@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +59,7 @@ import de.oabidi.pflanzenbestandundlichttest.PlantApp;
  * Manager responsible for importing measurements and diary entries from a CSV file.
  */
 public class ImportManager {
-    private static final String TAG = "ImportManager";
+    static final String TAG = "ImportManager";
     private static final int SUPPORTED_VERSION = 1;
 
     private final Context context;
@@ -300,16 +299,16 @@ public class ImportManager {
         });
     }
 
-    private void stepProgress(@NonNull AtomicInteger progress,
-                              @Nullable ProgressCallback progressCallback,
-                              int totalSteps) {
+    void stepProgress(@NonNull AtomicInteger progress,
+                      @Nullable ProgressCallback progressCallback,
+                      int totalSteps) {
         stepProgress(progress, progressCallback, totalSteps, 1);
     }
 
-    private void stepProgress(@NonNull AtomicInteger progress,
-                              @Nullable ProgressCallback progressCallback,
-                              int totalSteps,
-                              int delta) {
+    void stepProgress(@NonNull AtomicInteger progress,
+                      @Nullable ProgressCallback progressCallback,
+                      int totalSteps,
+                      int delta) {
         if (delta <= 0) {
             return;
         }
@@ -637,189 +636,8 @@ public class ImportManager {
                              @NonNull SectionContext context) throws IOException;
     }
 
-    @VisibleForTesting
-    public static class SectionCoordinator {
-        private final ImportManager manager;
-        private final SectionReader reader;
-        private final Map<Section, SectionParser> parsers;
-        private final SectionContext context;
-        private final AtomicInteger progress;
-        @Nullable
-        private final ProgressCallback progressCallback;
-        private final int totalSteps;
-
-        public SectionCoordinator(@NonNull ImportManager manager,
-                                  @NonNull SectionReader reader,
-                                  @NonNull List<SectionParser> parserList,
-                                  @NonNull SectionContext context,
-                                  @NonNull AtomicInteger progress,
-                                  @Nullable ProgressCallback progressCallback,
-                                  int totalSteps) {
-            this.manager = manager;
-            this.reader = reader;
-            this.context = context;
-            this.progress = progress;
-            this.progressCallback = progressCallback;
-            this.totalSteps = totalSteps;
-            this.parsers = new EnumMap<>(Section.class);
-            for (SectionParser parser : parserList) {
-                this.parsers.put(parser.getSection(), parser);
-            }
-        }
-
-        public boolean process() throws IOException {
-            boolean importedAny = false;
-            Section section;
-            while ((section = reader.nextSection(manager)) != null) {
-                SectionParser parser = parsers.get(section);
-                if (parser == null) {
-                    throw new IOException("No parser registered for section " + section.getHeader());
-                }
-                if (parser.parseSection(reader, context)) {
-                    importedAny = true;
-                }
-                manager.stepProgress(progress, progressCallback, totalSteps);
-            }
-            return importedAny;
-        }
-    }
-
-    @VisibleForTesting
-    public static class PlantsSectionParser implements SectionParser {
-        @NonNull
-        @Override
-        public Section getSection() {
-            return Section.PLANTS;
-        }
-
-        @Override
-        public boolean parseSection(@NonNull SectionReader reader,
-                                    @NonNull SectionContext context) throws IOException {
-            boolean imported = false;
-            SectionRow row;
-            while ((row = reader.nextRow()) != null) {
-                List<String> parts = parseCsv(row.line);
-                if (context.manager.parsePlantRow(parts, context.mode, context.baseDir,
-                    context.plantIdMap, context.warnings, row.lineNumber,
-                    context.restoredUris, context.db)) {
-                    imported = true;
-                }
-            }
-            return imported;
-        }
-    }
-
-    @VisibleForTesting
-    public static class SpeciesTargetsSectionParser implements SectionParser {
-        @NonNull
-        @Override
-        public Section getSection() {
-            return Section.SPECIES_TARGETS;
-        }
-
-        @Override
-        public boolean parseSection(@NonNull SectionReader reader,
-                                    @NonNull SectionContext context) throws IOException {
-            boolean imported = false;
-            SectionRow row;
-            while ((row = reader.nextRow()) != null) {
-                List<String> parts = parseCsv(row.line);
-                if (parts.size() >= 3) {
-                    try {
-                        String speciesKey = parts.get(0);
-                        float ppfdMin = Objects.requireNonNull(context.numberFormat.parse(parts.get(1))).floatValue();
-                        float ppfdMax = Objects.requireNonNull(context.numberFormat.parse(parts.get(2))).floatValue();
-                        SpeciesTarget t = new SpeciesTarget(speciesKey, ppfdMin, ppfdMax);
-                        context.db.speciesTargetDao().insert(t);
-                        imported = true;
-                    } catch (Exception e) {
-                        Log.e(TAG, "Malformed species target row: " + row.line, e);
-                        context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
-                    }
-                } else {
-                    Log.e(TAG, "Malformed species target row: " + row.line);
-                    context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
-                }
-            }
-            return imported;
-        }
-    }
-
-    @VisibleForTesting
-    public static class MeasurementsSectionParser implements SectionParser {
-        @NonNull
-        @Override
-        public Section getSection() {
-            return Section.MEASUREMENTS;
-        }
-
-        @Override
-        public boolean parseSection(@NonNull SectionReader reader,
-                                    @NonNull SectionContext context) throws IOException {
-            boolean imported = false;
-            SectionRow row;
-            while ((row = reader.nextRow()) != null) {
-                List<String> parts = parseCsv(row.line);
-                if (context.manager.insertMeasurementRow(parts, context.mode, context.plantIdMap,
-                    context.warnings, row.lineNumber, context.numberFormat, context.db)) {
-                    imported = true;
-                }
-            }
-            return imported;
-        }
-    }
-
-    @VisibleForTesting
-    public static class DiaryEntriesSectionParser implements SectionParser {
-        @NonNull
-        @Override
-        public Section getSection() {
-            return Section.DIARY_ENTRIES;
-        }
-
-        @Override
-        public boolean parseSection(@NonNull SectionReader reader,
-                                    @NonNull SectionContext context) throws IOException {
-            boolean imported = false;
-            SectionRow row;
-            while ((row = reader.nextRow()) != null) {
-                List<String> parts = parseCsv(row.line);
-                if (context.manager.insertDiaryRow(parts, context.mode, context.baseDir,
-                    context.plantIdMap, context.warnings, row.lineNumber,
-                    context.restoredUris, context.db)) {
-                    imported = true;
-                }
-            }
-            return imported;
-        }
-    }
-
-    @VisibleForTesting
-    public static class RemindersSectionParser implements SectionParser {
-        @NonNull
-        @Override
-        public Section getSection() {
-            return Section.REMINDERS;
-        }
-
-        @Override
-        public boolean parseSection(@NonNull SectionReader reader,
-                                    @NonNull SectionContext context) throws IOException {
-            boolean imported = false;
-            SectionRow row;
-            while ((row = reader.nextRow()) != null) {
-                List<String> parts = parseCsv(row.line);
-                if (context.manager.insertReminderRow(parts, context.mode,
-                    context.plantIdMap, context.warnings, row.lineNumber, context.db)) {
-                    imported = true;
-                }
-            }
-            return imported;
-        }
-    }
-
-    private boolean insertDiaryRow(List<String> parts, Mode mode, File baseDir,
-                                   Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+    boolean insertDiaryRow(List<String> parts, Mode mode, File baseDir,
+                           Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                    int currentLine, List<Uri> restoredUris,
                                    PlantDatabase db) {
         if (parts.size() < 6) {
@@ -873,7 +691,7 @@ public class ImportManager {
         }
     }
 
-    private boolean insertReminderRow(List<String> parts, Mode mode,
+    boolean insertReminderRow(List<String> parts, Mode mode,
                                       Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                       int currentLine, PlantDatabase db) {
         if (parts.size() < 4) {
@@ -926,10 +744,10 @@ public class ImportManager {
         }
     }
 
-    private boolean parsePlantRow(List<String> parts, Mode mode, File baseDir,
-                                  Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                  int currentLine, List<Uri> restoredUris,
-                                  PlantDatabase db) {
+    boolean parsePlantRow(List<String> parts, Mode mode, File baseDir,
+                          Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                          int currentLine, List<Uri> restoredUris,
+                          PlantDatabase db) {
         if (parts.size() < 7) {
             Log.e(TAG, "Malformed plant row: " + parts);
             warnings.add(new ImportWarning("plants", currentLine, "malformed row"));
@@ -970,10 +788,10 @@ public class ImportManager {
         }
     }
 
-    private boolean insertMeasurementRow(List<String> parts, Mode mode,
-                                         Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                         int currentLine, NumberFormat nf,
-                                         PlantDatabase db) {
+    boolean insertMeasurementRow(List<String> parts, Mode mode,
+                                 Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                 int currentLine, NumberFormat nf,
+                                 PlantDatabase db) {
         if (parts.size() < 7) {
             Log.e(TAG, "Malformed measurement row: " + parts);
             warnings.add(new ImportWarning("measurements", currentLine, "malformed row"));
@@ -1039,7 +857,7 @@ public class ImportManager {
         }
     }
 
-    private static List<String> parseCsv(String line) {
+    static List<String> parseCsv(String line) {
         List<String> tokens = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         boolean inQuotes = false;
