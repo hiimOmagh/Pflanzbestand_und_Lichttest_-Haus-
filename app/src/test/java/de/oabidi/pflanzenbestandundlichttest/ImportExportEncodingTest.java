@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantApp.class)
+@Config(application = TestExecutorApp.class)
 public class ImportExportEncodingTest {
     private PlantDatabase db;
     private Context context;
@@ -36,7 +36,7 @@ public class ImportExportEncodingTest {
     @Before
     public void setUp() throws Exception {
         context = ApplicationProvider.getApplicationContext();
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
         db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();

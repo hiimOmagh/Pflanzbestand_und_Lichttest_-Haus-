@@ -51,7 +51,11 @@ public class PlantRepository {
      * @param context application context used to obtain the database
      */
     public PlantRepository(Context context) {
-        this(context, PlantApp.from(context).getIoExecutor());
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        this(appContext, ((ExecutorProvider) appContext).getIoExecutor());
     }
 
     @VisibleForTesting

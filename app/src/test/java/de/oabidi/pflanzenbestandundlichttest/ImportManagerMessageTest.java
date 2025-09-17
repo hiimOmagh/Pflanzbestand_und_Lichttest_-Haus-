@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantApp.class)
+@Config(application = TestExecutorApp.class)
 public class ImportManagerMessageTest {
 
     private Context context;
@@ -32,7 +32,7 @@ public class ImportManagerMessageTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
     }
 
     @Test

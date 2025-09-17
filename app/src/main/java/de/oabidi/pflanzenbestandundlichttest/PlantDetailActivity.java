@@ -72,8 +72,10 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         ImageView photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
 
-        PlantApp app = PlantApp.from(this);
-        ExecutorService executor = app.getIoExecutor();
+        if (!(getApplicationContext() instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        ExecutorService executor = ((ExecutorProvider) getApplicationContext()).getIoExecutor();
         presenter = new PlantDetailPresenter(this, plantId,
             new ExportManager(this, repository, executor));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);

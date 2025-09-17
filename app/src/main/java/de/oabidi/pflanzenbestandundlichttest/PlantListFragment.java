@@ -143,8 +143,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             throw new IllegalStateException("PlantRepository missing. Use newInstance() to create this fragment.");
         }
         PlantRepository repo = repository;
-        PlantApp app = PlantApp.from(context);
-        ExecutorService executor = app.getIoExecutor();
+        if (!(context instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        ExecutorService executor = ((ExecutorProvider) context).getIoExecutor();
         ExportManager exportManager = new ExportManager(context, repo, executor);
         ImportManager importManager = new ImportManager(context, executor);
         presenter = new PlantListPresenter(this, repo, context, exportManager, importManager);

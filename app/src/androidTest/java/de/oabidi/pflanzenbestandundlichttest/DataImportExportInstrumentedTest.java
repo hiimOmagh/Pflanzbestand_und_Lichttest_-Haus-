@@ -59,10 +59,10 @@ public class DataImportExportInstrumentedTest {
     @Test
     public void testExportImportRestoresData() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
+        Context appContext = context.getApplicationContext();
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+        PlantRepository repository = new PlantRepository(appContext, executor);
         ShadowAlarmManager.reset();
-        PlantApp app = PlantApp.from(context);
-        ExecutorService executor = app.getIoExecutor();
         
         // Insert species target and plant with measurement and diary entry
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
@@ -202,9 +202,9 @@ public class DataImportExportInstrumentedTest {
     @Test
     public void importedPhotosSurviveCacheClear() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
-        PlantApp app = PlantApp.from(context);
-        ExecutorService executor = app.getIoExecutor();
+        Context appContext = context.getApplicationContext();
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+        PlantRepository repository = new PlantRepository(appContext, executor);
 
         byte[] plantPhotoBytes = new byte[]{9, 8, 7};
         File plantPhotoFile = new File(context.getCacheDir(), "persist_plant.jpg");

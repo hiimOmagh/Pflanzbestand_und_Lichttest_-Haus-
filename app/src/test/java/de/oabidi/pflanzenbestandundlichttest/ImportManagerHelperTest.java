@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantApp.class)
+@Config(application = TestExecutorApp.class)
 public class ImportManagerHelperTest {
     private PlantDatabase db;
     private Context context;
@@ -41,7 +41,7 @@ public class ImportManagerHelperTest {
     @Before
     public void setup() throws Exception {
         context = ApplicationProvider.getApplicationContext();
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
         db = Room.inMemoryDatabaseBuilder(context, PlantDatabase.class)
             .allowMainThreadQueries()
             .build();

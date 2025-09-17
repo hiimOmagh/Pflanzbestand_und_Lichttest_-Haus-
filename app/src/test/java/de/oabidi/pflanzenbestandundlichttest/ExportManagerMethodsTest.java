@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(application = TestExecutorApp.class)
 public class ExportManagerMethodsTest {
     private Context context;
     private ExecutorService executor;
@@ -70,7 +72,7 @@ public class ExportManagerMethodsTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
     }
 
     @Test

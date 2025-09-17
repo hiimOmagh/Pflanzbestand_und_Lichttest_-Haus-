@@ -16,9 +16,11 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowNotificationManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 import org.robolectric.shadows.ShadowSystemClock;
+import org.robolectric.annotation.Config;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
@@ -27,6 +29,7 @@ import static org.junit.Assert.*;
  * Instrumented tests verifying reminder scheduling and rescheduling behavior.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(application = TestExecutorApp.class)
 public class ReminderInstrumentedTest {
 
     @Before
@@ -70,8 +73,10 @@ public class ReminderInstrumentedTest {
         });
         assertTrue("Reminder inserted", insertLatch.await(2, TimeUnit.SECONDS));
 
+        Context appContext = context.getApplicationContext();
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
         BootReceiver receiver = new BootReceiver(
-            new PlantRepository(context, PlantApp.from(context).getIoExecutor()));
+            new PlantRepository(appContext, executor));
         receiver.onReceive(context, new Intent(Intent.ACTION_BOOT_COMPLETED));
 
         CountDownLatch latch = new CountDownLatch(1);

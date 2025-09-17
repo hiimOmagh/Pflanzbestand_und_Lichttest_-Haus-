@@ -38,8 +38,10 @@ public class PlantListPresenter {
 
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
         Context appContext = context.getApplicationContext();
-        PlantApp app = PlantApp.from(appContext);
-        ExecutorService executor = app.getIoExecutor();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
         this(view, repository, appContext,
             new ExportManager(appContext, repository, executor),
             new ImportManager(appContext, executor));

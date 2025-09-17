@@ -38,6 +38,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.text.NumberFormat;
 import java.util.concurrent.ExecutorService;
+
+import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
@@ -156,7 +158,11 @@ public class ImportManager {
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
 
     public ImportManager(@NonNull Context context) {
-        this(context, PlantApp.from(context).getIoExecutor());
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        this(context, ((ExecutorProvider) appContext).getIoExecutor());
     }
 
     public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {

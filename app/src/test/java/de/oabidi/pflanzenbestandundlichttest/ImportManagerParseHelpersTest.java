@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(application = PlantApp.class)
+@Config(application = TestExecutorApp.class)
 public class ImportManagerParseHelpersTest {
     private PlantDatabase db;
     private Context context;
@@ -84,7 +84,7 @@ public class ImportManagerParseHelpersTest {
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
         instance.set(null, db);
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
         importer = new ImportManager(context, executor);
         baseDir = new File(context.getCacheDir(), "import_test");
         baseDir.mkdirs();

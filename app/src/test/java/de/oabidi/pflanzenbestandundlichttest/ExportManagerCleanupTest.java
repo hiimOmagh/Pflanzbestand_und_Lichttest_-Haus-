@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.util.Collections;
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(application = TestExecutorApp.class)
 public class ExportManagerCleanupTest {
     private Context context;
     private ExecutorService executor;
@@ -27,7 +29,7 @@ public class ExportManagerCleanupTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        executor = PlantApp.from(context).getIoExecutor();
+        executor = ((ExecutorProvider) context).getIoExecutor();
     }
 
     private static void deleteRecursive(File f) {

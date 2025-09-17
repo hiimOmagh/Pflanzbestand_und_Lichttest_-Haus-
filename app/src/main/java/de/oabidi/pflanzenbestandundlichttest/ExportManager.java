@@ -47,7 +47,12 @@ public class ExportManager {
     }
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
-        this(context, repository, PlantApp.from(context).getIoExecutor());
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+        this(context, repository, executor);
     }
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository,

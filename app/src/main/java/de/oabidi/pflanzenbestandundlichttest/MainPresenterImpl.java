@@ -37,8 +37,10 @@ public class MainPresenterImpl implements MainPresenter {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState, Intent intent) {
-        PlantApp app = PlantApp.from(context);
-        ExecutorService executor = app.getIoExecutor();
+        if (!(context instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        ExecutorService executor = ((ExecutorProvider) context).getIoExecutor();
         exportManager = new ExportManager(context, repository, executor);
         importManager = new ImportManager(context, executor);
 

@@ -44,8 +44,11 @@ public class BackupScheduler extends BroadcastReceiver {
             PlantRepository repo = repository != null
                 ? repository
                 : RepositoryProvider.getRepository(context);
-            PlantApp app = PlantApp.from(context);
-            ExecutorService executor = app.getIoExecutor();
+            Context appContext = context.getApplicationContext();
+            if (!(appContext instanceof ExecutorProvider)) {
+                throw new IllegalStateException("Application context does not implement ExecutorProvider");
+            }
+            ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
             new ExportManager(context, repo, executor).export(uri, success -> result.finish());
         } else {
             result.finish();

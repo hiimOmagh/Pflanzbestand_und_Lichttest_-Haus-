@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -29,14 +30,22 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 @Config(application = PlantListPresenterTest.TestApp.class)
 public class PlantListPresenterTest {
 
-    public static class TestApp extends Application implements RepositoryProvider {
+    public static class TestApp extends Application implements RepositoryProvider, ExecutorProvider {
         private PlantRepository repository;
+        private ExecutorService executor;
         @Override
         public synchronized PlantRepository getRepository() {
             return repository;
         }
         void setRepository(PlantRepository repo) {
             this.repository = repo;
+        }
+        @Override
+        public synchronized ExecutorService getIoExecutor() {
+            if (executor == null || executor.isShutdown()) {
+                executor = TestExecutors.newImmediateExecutor();
+            }
+            return executor;
         }
     }
 

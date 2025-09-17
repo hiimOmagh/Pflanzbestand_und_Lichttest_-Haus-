@@ -14,9 +14,11 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowNotificationManager;
 import org.robolectric.shadows.ShadowSystemClock;
+import org.robolectric.annotation.Config;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
@@ -28,6 +30,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  * outside the species target range for the configured streak threshold.
  */
 @RunWith(RobolectricTestRunner.class)
+@Config(application = TestExecutorApp.class)
 public class DliAlertInstrumentedTest {
     private static void awaitDb(Runnable task) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
@@ -52,7 +55,9 @@ public class DliAlertInstrumentedTest {
     @Test
     public void lowDliStreakPostsNotification() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
+        Context appContext = context.getApplicationContext();
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+        PlantRepository repository = new PlantRepository(appContext, executor);
 
         SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit()

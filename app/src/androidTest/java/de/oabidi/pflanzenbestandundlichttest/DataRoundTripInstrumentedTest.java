@@ -49,9 +49,9 @@ public class DataRoundTripInstrumentedTest {
     @Test
     public void plantAndDiaryRoundTrip() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
-        PlantApp app = PlantApp.from(context);
-        ExecutorService executor = app.getIoExecutor();
+        Context appContext = context.getApplicationContext();
+        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+        PlantRepository repository = new PlantRepository(appContext, executor);
 
         // Create a plant photo
         byte[] plantPhotoBytes = new byte[]{1, 2, 3};

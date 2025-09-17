@@ -17,7 +17,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 /**
  * Application subclass providing a single {@link PlantRepository} instance.
  */
-public class PlantApp extends Application implements RepositoryProvider {
+public class PlantApp extends Application implements RepositoryProvider, ExecutorProvider {
     private static final int MIN_IO_THREAD_COUNT = 2;
     private PlantRepository repository;
     private ExecutorService ioExecutor;
@@ -62,6 +62,7 @@ public class PlantApp extends Application implements RepositoryProvider {
     }
 
     /** Returns the shared executor used by import/export components. */
+    @Override
     public synchronized ExecutorService getIoExecutor() {
         if (ioExecutor == null || ioExecutor.isShutdown()) {
             ioExecutor = createIoExecutor();
