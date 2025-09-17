@@ -106,13 +106,13 @@ public class DataRoundTripInstrumentedTest {
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify counts
-        int plantCount = awaitDb(() -> repository.getAllPlantsSync().size());
-        int diaryCount = awaitDb(() -> repository.getAllDiaryEntriesSync().size());
+        int plantCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().size());
+        int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
         assertEquals(1, plantCount);
         assertEquals(1, diaryCount);
 
         // Verify plant photo restored
-        Plant restoredPlant = awaitDb(() -> repository.getAllPlantsSync().get(0));
+        Plant restoredPlant = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().get(0));
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
         assertNotNull(restoredPlantUri);
         try (InputStream is = context.getContentResolver().openInputStream(restoredPlantUri)) {
@@ -126,7 +126,7 @@ public class DataRoundTripInstrumentedTest {
         }
 
         // Verify diary photo restored
-        DiaryEntry restoredEntry = awaitDb(() -> repository.getAllDiaryEntriesSync().get(0));
+        DiaryEntry restoredEntry = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().get(0));
         assertNotNull(restoredEntry.getPhotoUri());
         Uri restoredDiaryUri = Uri.parse(restoredEntry.getPhotoUri());
         try (InputStream is = context.getContentResolver().openInputStream(restoredDiaryUri)) {

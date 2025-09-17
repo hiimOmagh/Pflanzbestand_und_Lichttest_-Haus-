@@ -393,7 +393,12 @@ public class PlantRepositoryTest {
         repository.delete(plant, deleteLatch::countDown);
         awaitLatch(deleteLatch);
 
-        assertTrue("Reminders removed from DB", repository.getAllRemindersSync().isEmpty());
+        CountDownLatch verifyLatch = new CountDownLatch(1);
+        repository.getAllReminders(reminders -> {
+            assertTrue("Reminders removed from DB", reminders.isEmpty());
+            verifyLatch.countDown();
+        }, e -> fail("error callback"));
+        awaitLatch(verifyLatch);
         assertNull("Alarm cancelled", shadowAm.getNextScheduledAlarm());
     }
 }

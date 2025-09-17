@@ -134,11 +134,11 @@ public class DataImportExportInstrumentedTest {
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         // Verify all data restored
-        int plantCount = awaitDb(() -> repository.getAllPlantsSync().size());
-        int targetCount = awaitDb(() -> repository.getAllSpeciesTargetsSync().size());
-        int measurementCount = awaitDb(() -> repository.getAllMeasurementsSync().size());
-        int diaryCount = awaitDb(() -> repository.getAllDiaryEntriesSync().size());
-        int reminderCount = awaitDb(() -> repository.getAllRemindersSync().size());
+        int plantCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().size());
+        int targetCount = awaitDb(() -> PlantDatabase.getDatabase(context).speciesTargetDao().getAll().size());
+        int measurementCount = awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().getAll().size());
+        int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
+        int reminderCount = awaitDb(() -> PlantDatabase.getDatabase(context).reminderDao().getAll().size());
 
         assertEquals(1, plantCount);
         assertEquals(1, targetCount);
@@ -147,12 +147,12 @@ public class DataImportExportInstrumentedTest {
         assertEquals(1, reminderCount);
 
         Measurement restoredMeasurement = awaitDb(
-            () -> repository.getAllMeasurementsSync().get(0)
+            () -> PlantDatabase.getDatabase(context).measurementDao().getAll().get(0)
         );
 
         // Verify photos restored
         Plant restoredPlant = awaitDb(
-            () -> repository.getAllPlantsSync().get(0)
+            () -> PlantDatabase.getDatabase(context).plantDao().getAll().get(0)
         );
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
         assertNotNull(restoredPlantUri);
@@ -167,7 +167,7 @@ public class DataImportExportInstrumentedTest {
         }
 
         DiaryEntry restoredDiary = awaitDb(
-            () -> repository.getAllDiaryEntriesSync().get(0)
+            () -> PlantDatabase.getDatabase(context).diaryDao().getAll().get(0)
         );
         assertNotNull(restoredDiary.getPhotoUri());
         Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
@@ -182,7 +182,7 @@ public class DataImportExportInstrumentedTest {
         }
 
         Reminder restoredReminder = awaitDb(
-            () -> repository.getAllRemindersSync().get(0)
+            () -> PlantDatabase.getDatabase(context).reminderDao().getAll().get(0)
         );
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());
@@ -252,12 +252,12 @@ public class DataImportExportInstrumentedTest {
         assertTrue(importLatch.await(10, TimeUnit.SECONDS));
 
         Plant restoredPlant = awaitDb(
-            () -> repository.getAllPlantsSync().get(0)
+            () -> PlantDatabase.getDatabase(context).plantDao().getAll().get(0)
         );
         Uri restoredPlantUri = restoredPlant.getPhotoUri();
 
         DiaryEntry restoredDiary = awaitDb(
-            () -> repository.getAllDiaryEntriesSync().get(0)
+            () -> PlantDatabase.getDatabase(context).diaryDao().getAll().get(0)
         );
         Uri restoredDiaryUri = Uri.parse(restoredDiary.getPhotoUri());
 

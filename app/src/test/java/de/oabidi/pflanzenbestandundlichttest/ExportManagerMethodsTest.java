@@ -30,23 +30,41 @@ public class ExportManagerMethodsTest {
     private Context context;
     private ExecutorService executor;
 
+    private static class EmptyBulkDao implements BulkReadDao {
+        @Override public List<Plant> getAllPlants() { return Collections.emptyList(); }
+        @Override public Plant getPlant(long id) { return null; }
+        @Override public List<Measurement> getAllMeasurements() { return Collections.emptyList(); }
+        @Override public List<Measurement> getMeasurementsForPlant(long plantId) { return Collections.emptyList(); }
+        @Override public List<DiaryEntry> getAllDiaryEntries() { return Collections.emptyList(); }
+        @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { return Collections.emptyList(); }
+        @Override public List<Reminder> getAllReminders() { return Collections.emptyList(); }
+        @Override public List<Reminder> getRemindersForPlant(long plantId) { return Collections.emptyList(); }
+        @Override public List<SpeciesTarget> getAllSpeciesTargets() { return Collections.emptyList(); }
+    }
+
+    private static class FailingBulkDao implements BulkReadDao {
+        private RuntimeException fail() { return new RuntimeException("fail"); }
+        @Override public List<Plant> getAllPlants() { throw fail(); }
+        @Override public Plant getPlant(long id) { throw fail(); }
+        @Override public List<Measurement> getAllMeasurements() { throw fail(); }
+        @Override public List<Measurement> getMeasurementsForPlant(long plantId) { throw fail(); }
+        @Override public List<DiaryEntry> getAllDiaryEntries() { throw fail(); }
+        @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { throw fail(); }
+        @Override public List<Reminder> getAllReminders() { throw fail(); }
+        @Override public List<Reminder> getRemindersForPlant(long plantId) { throw fail(); }
+        @Override public List<SpeciesTarget> getAllSpeciesTargets() { throw fail(); }
+    }
+
     private static class StubRepository extends PlantRepository {
+        private final BulkReadDao dao = new EmptyBulkDao();
         StubRepository(Context ctx) { super(ctx); }
-        @Override
-        List<Plant> getAllPlantsSync() { return Collections.emptyList(); }
-        @Override List<Measurement> getAllMeasurementsSync() { return Collections.emptyList(); }
-        @Override List<DiaryEntry> getAllDiaryEntriesSync() { return Collections.emptyList(); }
-        @Override List<Reminder> getAllRemindersSync() { return Collections.emptyList(); }
-        @Override List<SpeciesTarget> getAllSpeciesTargetsSync() { return Collections.emptyList(); }
+        @Override public BulkReadDao bulkDao() { return dao; }
     }
 
     private static class FailingRepository extends PlantRepository {
+        private final BulkReadDao dao = new FailingBulkDao();
         FailingRepository(Context ctx) { super(ctx); }
-        @Override List<Plant> getAllPlantsSync() { throw new RuntimeException("fail"); }
-        @Override List<Measurement> getAllMeasurementsSync() { throw new RuntimeException("fail"); }
-        @Override List<DiaryEntry> getAllDiaryEntriesSync() { throw new RuntimeException("fail"); }
-        @Override List<Reminder> getAllRemindersSync() { throw new RuntimeException("fail"); }
-        @Override List<SpeciesTarget> getAllSpeciesTargetsSync() { throw new RuntimeException("fail"); }
+        @Override public BulkReadDao bulkDao() { return dao; }
     }
 
     @Before

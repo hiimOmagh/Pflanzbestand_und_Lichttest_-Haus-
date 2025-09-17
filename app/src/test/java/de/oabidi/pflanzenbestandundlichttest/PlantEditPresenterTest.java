@@ -12,9 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-
 /**
  * Unit tests for {@link PlantEditPresenterImpl} verifying validation and persistence behaviour.
  */
@@ -63,16 +60,14 @@ public class PlantEditPresenterTest {
         Plant updated;
         RecordingRepository(Context context) { super(context); }
         @Override
-        public Future<?> insert(Plant plant, Runnable cb) {
+        public void insert(Plant plant, Runnable cb) {
             inserted = plant;
             if (cb != null) { cb.run(); }
-            return CompletableFuture.completedFuture(null);
         }
         @Override
-        public Future<?> update(Plant plant, Runnable cb) {
+        public void update(Plant plant, Runnable cb) {
             updated = plant;
             if (cb != null) { cb.run(); }
-            return CompletableFuture.completedFuture(null);
         }
     }
 

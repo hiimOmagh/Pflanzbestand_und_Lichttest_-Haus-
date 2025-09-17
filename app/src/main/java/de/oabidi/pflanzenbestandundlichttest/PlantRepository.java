@@ -72,8 +72,8 @@ public class PlantRepository {
         return bulkDao;
     }
 
-    private Future<?> runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
-        return PlantDatabase.databaseWriteExecutor.submit(() -> {
+    private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
                 action.run();
                 if (callback != null) {
@@ -183,14 +183,13 @@ public class PlantRepository {
      *
      * @param plant    the {@link Plant} to add
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> insert(Plant plant, Runnable callback) {
+    public void insert(Plant plant, Runnable callback) {
         return insert(plant, callback, null);
     }
 
-    public Future<?> insert(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> {
+    public void insert(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
             final long id = plantDao.insert(plant);
             plant.setId(id);
         }, callback, errorCallback);
@@ -201,14 +200,13 @@ public class PlantRepository {
      *
      * @param plant    the {@link Plant} to update
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> update(Plant plant, Runnable callback) {
-        return update(plant, callback, null);
+    public void update(Plant plant, Runnable callback) {
+        update(plant, callback, null);
     }
 
-    public Future<?> update(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> plantDao.update(plant), callback, errorCallback);
+    public void update(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> plantDao.update(plant), callback, errorCallback);
     }
 
     /**
@@ -216,14 +214,13 @@ public class PlantRepository {
      *
      * @param plant    the {@link Plant} to remove
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> delete(Plant plant, Runnable callback) {
-        return delete(plant, callback, null);
+    public void delete(Plant plant, Runnable callback) {
+        delete(plant, callback, null);
     }
 
-    public Future<?> delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> {
+    public void delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
@@ -244,14 +241,13 @@ public class PlantRepository {
      *
      * @param measurement the {@link Measurement} to add
      * @param callback    optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> insertMeasurement(Measurement measurement, Runnable callback) {
-        return insertMeasurement(measurement, callback, null);
+    public void insertMeasurement(Measurement measurement, Runnable callback) {
+        insertMeasurement(measurement, callback, null);
     }
 
-    public Future<?> insertMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> {
+    public void insertMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
             measurementDao.insert(measurement);
             checkDliAlerts(measurement.getPlantId());
         }, callback, errorCallback);
@@ -262,14 +258,13 @@ public class PlantRepository {
      *
      * @param measurement the {@link Measurement} to update
      * @param callback    optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> updateMeasurement(Measurement measurement, Runnable callback) {
-        return updateMeasurement(measurement, callback, null);
+    public void updateMeasurement(Measurement measurement, Runnable callback) {
+        updateMeasurement(measurement, callback, null);
     }
 
-    public Future<?> updateMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> measurementDao.update(measurement), callback, errorCallback);
+    public void updateMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> measurementDao.update(measurement), callback, errorCallback);
     }
 
     /**
@@ -277,14 +272,13 @@ public class PlantRepository {
      *
      * @param measurement the {@link Measurement} to remove
      * @param callback    optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> deleteMeasurement(Measurement measurement, Runnable callback) {
-        return deleteMeasurement(measurement, callback, null);
+    public void deleteMeasurement(Measurement measurement, Runnable callback) {
+        deleteMeasurement(measurement, callback, null);
     }
 
-    public Future<?> deleteMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> measurementDao.delete(measurement), callback, errorCallback);
+    public void deleteMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> measurementDao.delete(measurement), callback, errorCallback);
     }
 
     private void checkDliAlerts(long plantId) {
@@ -391,14 +385,13 @@ public class PlantRepository {
      *
      * @param entry    the {@link DiaryEntry} to add
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> insertDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return insertDiaryEntry(entry, callback, null);
+    public void insertDiaryEntry(DiaryEntry entry, Runnable callback) {
+        insertDiaryEntry(entry, callback, null);
     }
 
-    public Future<?> insertDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> diaryDao.insert(entry), callback, errorCallback);
+    public void insertDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> diaryDao.insert(entry), callback, errorCallback);
     }
 
     /**
@@ -406,14 +399,13 @@ public class PlantRepository {
      *
      * @param entry    the {@link DiaryEntry} to update
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> updateDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return updateDiaryEntry(entry, callback, null);
+    public void updateDiaryEntry(DiaryEntry entry, Runnable callback) {
+        updateDiaryEntry(entry, callback, null);
     }
 
-    public Future<?> updateDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> diaryDao.update(entry), callback, errorCallback);
+    public void updateDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> diaryDao.update(entry), callback, errorCallback);
     }
 
     /**
@@ -421,14 +413,13 @@ public class PlantRepository {
      *
      * @param entry    the {@link DiaryEntry} to remove
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
-        return deleteDiaryEntry(entry, callback, null);
+    public void deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
+        deleteDiaryEntry(entry, callback, null);
     }
 
-    public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> {
+    public void deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
             diaryDao.delete(entry);
             runBlockingOnIo(() -> PhotoManager.deletePhoto(context, entry.getPhotoUri()));
         }, callback, errorCallback);
@@ -464,14 +455,13 @@ public class PlantRepository {
      *
      * @param reminder the {@link Reminder} to add
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> insertReminder(Reminder reminder, Runnable callback) {
-        return insertReminder(reminder, callback, null);
+    public void insertReminder(Reminder reminder, Runnable callback) {
+        insertReminder(reminder, callback, null);
     }
 
-    public Future<?> insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> {
+    public void insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
             long id = reminderDao.insert(reminder);
             reminder.setId(id);
         }, callback, errorCallback);
@@ -482,14 +472,13 @@ public class PlantRepository {
      *
      * @param reminder the {@link Reminder} to update
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> updateReminder(Reminder reminder, Runnable callback) {
-        return updateReminder(reminder, callback, null);
+    public void updateReminder(Reminder reminder, Runnable callback) {
+        updateReminder(reminder, callback, null);
     }
 
-    public Future<?> updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> reminderDao.update(reminder), callback, errorCallback);
+    public void updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> reminderDao.update(reminder), callback, errorCallback);
     }
 
     /**
@@ -497,14 +486,13 @@ public class PlantRepository {
      *
      * @param id       identifier of the reminder to remove
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> deleteReminderById(long id, Runnable callback) {
-        return deleteReminderById(id, callback, null);
+    public void deleteReminderById(long id, Runnable callback) {
+        deleteReminderById(id, callback, null);
     }
 
-    public Future<?> deleteReminderById(long id, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> reminderDao.deleteById(id), callback, errorCallback);
+    public void deleteReminderById(long id, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> reminderDao.deleteById(id), callback, errorCallback);
     }
 
     /**
@@ -561,14 +549,13 @@ public class PlantRepository {
      *
      * @param target   the {@link SpeciesTarget} to persist
      * @param callback optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> insertSpeciesTarget(SpeciesTarget target, Runnable callback) {
-        return insertSpeciesTarget(target, callback, null);
+    public void insertSpeciesTarget(SpeciesTarget target, Runnable callback) {
+        insertSpeciesTarget(target, callback, null);
     }
 
-    public Future<?> insertSpeciesTarget(SpeciesTarget target, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> speciesTargetDao.insert(target), callback, errorCallback);
+    public void insertSpeciesTarget(SpeciesTarget target, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> speciesTargetDao.insert(target), callback, errorCallback);
     }
 
     /**
@@ -576,14 +563,13 @@ public class PlantRepository {
      *
      * @param speciesKey key of the species target to delete
      * @param callback   optional callback invoked on the main thread when done
-     * @return a {@link Future} representing the pending operation
      */
-    public Future<?> deleteSpeciesTarget(String speciesKey, Runnable callback) {
-        return deleteSpeciesTarget(speciesKey, callback, null);
+    public void deleteSpeciesTarget(String speciesKey, Runnable callback) {
+        deleteSpeciesTarget(speciesKey, callback, null);
     }
 
-    public Future<?> deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
-        return runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
+    public void deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
     }
 
     /**
@@ -672,99 +658,6 @@ public class PlantRepository {
     }
 
     /**
-     * Returns all plants stored in the database.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @return list of all plants
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<Plant> getAllPlantsSync() {
-        return plantDao.getAll();
-    }
-
-    /**
-     * Returns all species targets stored in the database.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @return list of all species targets
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<SpeciesTarget> getAllSpeciesTargetsSync() {
-        return speciesTargetDao.getAll();
-    }
-
-    /**
-     * Returns all measurements stored in the database.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @return list of all measurements
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<Measurement> getAllMeasurementsSync() {
-        return measurementDao.getAll();
-    }
-
-    /**
-     * Returns all diary entries stored in the database.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @return list of all diary entries
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<DiaryEntry> getAllDiaryEntriesSync() {
-        return diaryDao.getAll();
-    }
-
-    /**
-     * Returns all reminders stored in the database.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @return list of all reminders
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<Reminder> getAllRemindersSync() {
-        return reminderDao.getAll();
-    }
-
-    /**
-     * Returns a plant by its identifier.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @param id database identifier
-     * @return the matching plant or {@code null} if not found
-     */
-    @Deprecated
-    @VisibleForTesting
-    Plant getPlantSync(long id) {
-        return plantDao.findById(id);
-    }
-
-    /**
-     * Returns all measurements for the given plant.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @param plantId identifier of the plant
-     * @return list of measurements associated with the plant
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<Measurement> getMeasurementsForPlantSync(long plantId) {
-        return measurementDao.getAllForPlant(plantId);
-    }
-
-    /**
      * Retrieves all measurements for a plant asynchronously and delivers them on the main thread.
      *
      * @param plantId  identifier of the plant
@@ -787,34 +680,6 @@ public class PlantRepository {
                 }
             }
         });
-    }
-
-    /**
-     * Returns all diary entries for the given plant.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @param plantId identifier of the plant
-     * @return list of diary entries associated with the plant
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<DiaryEntry> getDiaryEntriesForPlantSync(long plantId) {
-        return diaryDao.entriesForPlant(plantId);
-    }
-
-    /**
-     * Returns all reminders for the given plant.
-     * <p>
-     * This method must be invoked on a background thread.
-     *
-     * @param plantId identifier of the plant
-     * @return list of reminders associated with the plant
-     */
-    @Deprecated
-    @VisibleForTesting
-    List<Reminder> getRemindersForPlantSync(long plantId) {
-        return reminderDao.getForPlant(plantId);
     }
 
     /**

@@ -77,7 +77,7 @@ public class ReminderReceiver extends BroadcastReceiver {
 
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             repo.deleteReminderById(reminderId, null);
-            Plant plant = repo.getPlantSync(plantId);
+            Plant plant = PlantDatabase.getDatabase(context).plantDao().findById(plantId);
 
             Intent doneIntent = new Intent(context, ReminderReceiver.class);
             doneIntent.setAction(ACTION_MARK_DONE);
