@@ -52,7 +52,7 @@ public class DliAlertInstrumentedTest {
     @Test
     public void lowDliStreakPostsNotification() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
 
         SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit()

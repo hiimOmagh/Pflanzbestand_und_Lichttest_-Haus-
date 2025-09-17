@@ -70,7 +70,8 @@ public class ReminderInstrumentedTest {
         });
         assertTrue("Reminder inserted", insertLatch.await(2, TimeUnit.SECONDS));
 
-        BootReceiver receiver = new BootReceiver(new PlantRepository(context));
+        BootReceiver receiver = new BootReceiver(
+            new PlantRepository(context, PlantApp.from(context).getIoExecutor()));
         receiver.onReceive(context, new Intent(Intent.ACTION_BOOT_COMPLETED));
 
         CountDownLatch latch = new CountDownLatch(1);

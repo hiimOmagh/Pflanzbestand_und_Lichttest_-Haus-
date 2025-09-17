@@ -22,6 +22,7 @@ import java.lang.reflect.Field;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class PlantRepositoryTest {
     private PlantRepository repository;
     private PlantDatabase db;
+    private ExecutorService ioExecutor;
 
     @Before
     public void setUp() throws Exception {
@@ -43,11 +45,13 @@ public class PlantRepositoryTest {
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
         instance.set(null, db);
-        repository = new PlantRepository(context);
+        ioExecutor = TestExecutors.newImmediateExecutor();
+        repository = new PlantRepository(context, ioExecutor);
     }
 
     @After
     public void tearDown() throws Exception {
+        ioExecutor.shutdown();
         db.close();
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);

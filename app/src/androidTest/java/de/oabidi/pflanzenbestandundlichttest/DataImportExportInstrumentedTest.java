@@ -59,7 +59,7 @@ public class DataImportExportInstrumentedTest {
     @Test
     public void testExportImportRestoresData() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
         ShadowAlarmManager.reset();
         PlantApp app = PlantApp.from(context);
         ExecutorService executor = app.getIoExecutor();
@@ -202,7 +202,7 @@ public class DataImportExportInstrumentedTest {
     @Test
     public void importedPhotosSurviveCacheClear() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
         PlantApp app = PlantApp.from(context);
         ExecutorService executor = app.getIoExecutor();
 

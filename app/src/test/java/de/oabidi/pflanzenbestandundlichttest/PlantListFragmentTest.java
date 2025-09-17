@@ -27,7 +27,7 @@ public class PlantListFragmentTest {
     public void onImportResult_displaysProvidedMessage() {
         Context context = ApplicationProvider.getApplicationContext();
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, TestExecutors.newImmediateExecutor());
         PlantListFragment fragment = PlantListFragment.newInstance(repository);
         activity.getSupportFragmentManager().beginTransaction()
             .replace(android.R.id.content, fragment)

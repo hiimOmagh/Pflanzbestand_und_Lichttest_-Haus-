@@ -43,7 +43,7 @@ public class PlantListPresenterTest {
     private static class StubPlantRepository extends PlantRepository {
         private final List<Plant> data;
         StubPlantRepository(Context context, List<Plant> data) {
-            super(context);
+            super(context, TestExecutors.newImmediateExecutor());
             this.data = data;
         }
         @Override
@@ -75,7 +75,7 @@ public class PlantListPresenterTest {
     }
 
     private static class FailingRepository extends PlantRepository {
-        FailingRepository(Context context) { super(context); }
+        FailingRepository(Context context) { super(context, TestExecutors.newImmediateExecutor()); }
         @Override
         public void searchPlants(String query, java.util.function.Consumer<List<Plant>> cb,
                                  java.util.function.Consumer<Exception> errorCallback) {
@@ -121,7 +121,9 @@ public class PlantListPresenterTest {
 
     private static class FakeExportManager extends ExportManager {
         Uri lastUri;
-        FakeExportManager(Context c) { super(c, new PlantRepository(c)); }
+        FakeExportManager(Context c) {
+            super(c, new PlantRepository(c, TestExecutors.newImmediateExecutor()));
+        }
         @Override
         public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             lastUri = uri;

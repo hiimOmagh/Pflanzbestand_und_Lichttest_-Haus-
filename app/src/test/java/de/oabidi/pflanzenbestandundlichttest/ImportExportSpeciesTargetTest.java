@@ -60,7 +60,7 @@ public class ImportExportSpeciesTargetTest {
         if (exportFile.exists()) {
             exportFile.delete();
         }
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, executor);
         ExportManager exporter = new ExportManager(context, repository, executor);
         CountDownLatch exportLatch = new CountDownLatch(1);
         final boolean[] exportSuccess = {false};

@@ -15,6 +15,9 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 import java.util.List;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -35,6 +38,7 @@ public class PlantRepository {
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context;
+    private final ExecutorService ioExecutor;
     private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
     private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
 
@@ -47,7 +51,13 @@ public class PlantRepository {
      * @param context application context used to obtain the database
      */
     public PlantRepository(Context context) {
+        this(context, PlantApp.from(context).getIoExecutor());
+    }
+
+    @VisibleForTesting
+    PlantRepository(Context context, ExecutorService ioExecutor) {
         this.context = context.getApplicationContext();
+        this.ioExecutor = Objects.requireNonNull(ioExecutor, "ioExecutor");
         PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
         measurementDao = db.measurementDao();
@@ -75,6 +85,22 @@ public class PlantRepository {
                 }
             }
         });
+    }
+
+    private void runBlockingOnIo(Runnable task) {
+        Future<?> future = ioExecutor.submit(task);
+        try {
+            future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("IO task interrupted", e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            }
+            throw new RuntimeException("IO task failed", cause);
+        }
     }
 
     /**
@@ -198,17 +224,19 @@ public class PlantRepository {
 
     public Future<?> delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
         return runAsync(() -> {
-            PhotoManager.deletePhoto(context, plant.getPhotoUri());
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
-            for (Reminder reminder : reminders) {
-                ReminderScheduler.cancelReminder(context, reminder.getId());
-            }
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
             if (prefs.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1) == plant.getId()) {
                 prefs.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
             }
-        }, callback, errorCallback);
+            runBlockingOnIo(() -> {
+                PhotoManager.deletePhoto(context, plant.getPhotoUri());
+                for (Reminder reminder : reminders) {
+                    ReminderScheduler.cancelReminder(context, reminder.getId());
+                }
+            });
+            }, callback, errorCallback);
     }
 
     /**
@@ -342,7 +370,9 @@ public class PlantRepository {
             long triggerAt = System.currentTimeMillis();
             Reminder reminder = new Reminder(triggerAt, message, plantId);
             long id = reminderDao.insert(reminder);
-            ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id, plantId);
+            runBlockingOnIo(() ->
+                ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id, plantId)
+            );
         }
     }
 
@@ -399,8 +429,8 @@ public class PlantRepository {
 
     public Future<?> deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
         return runAsync(() -> {
-            PhotoManager.deletePhoto(context, entry.getPhotoUri());
             diaryDao.delete(entry);
+            runBlockingOnIo(() -> PhotoManager.deletePhoto(context, entry.getPhotoUri()));
         }, callback, errorCallback);
     }
 

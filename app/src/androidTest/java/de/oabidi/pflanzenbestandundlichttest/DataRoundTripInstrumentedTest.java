@@ -49,7 +49,7 @@ public class DataRoundTripInstrumentedTest {
     @Test
     public void plantAndDiaryRoundTrip() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = new PlantRepository(context);
+        PlantRepository repository = new PlantRepository(context, PlantApp.from(context).getIoExecutor());
         PlantApp app = PlantApp.from(context);
         ExecutorService executor = app.getIoExecutor();
 

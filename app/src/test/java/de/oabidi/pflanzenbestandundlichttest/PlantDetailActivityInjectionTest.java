@@ -37,7 +37,7 @@ public class PlantDetailActivityInjectionTest {
     @Test
     public void usesInjectedRepository() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository fakeRepo = new PlantRepository(context);
+        PlantRepository fakeRepo = new PlantRepository(context, TestExecutors.newImmediateExecutor());
         ((TestApp) context).setRepository(fakeRepo);
 
         Intent intent = new Intent(context, PlantDetailActivity.class);

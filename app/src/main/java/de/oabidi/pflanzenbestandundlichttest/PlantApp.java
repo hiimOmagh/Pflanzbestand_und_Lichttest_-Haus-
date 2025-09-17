@@ -56,7 +56,7 @@ public class PlantApp extends Application implements RepositoryProvider {
     @Override
     public synchronized PlantRepository getRepository() {
         if (repository == null) {
-            repository = new PlantRepository(this);
+            repository = new PlantRepository(this, getIoExecutor());
         }
         return repository;
     }

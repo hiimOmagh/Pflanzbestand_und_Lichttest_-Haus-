@@ -43,7 +43,9 @@ public class ExportProgressTest {
     }
 
     private static class FakeExportManager extends ExportManager {
-        FakeExportManager(Context context) { super(context, new PlantRepository(context)); }
+        FakeExportManager(Context context) {
+            super(context, new PlantRepository(context, TestExecutors.newImmediateExecutor()));
+        }
         @Override
         public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
             Objects.requireNonNull(progressCallback).onProgress(1, 3);
@@ -62,7 +64,7 @@ public class ExportProgressTest {
     public void exportFlow_reportsProgress() throws Exception {
         FakeView view = new FakeView();
         MainPresenterImpl presenter =
-            new MainPresenterImpl(view, context, new PlantRepository(context));
+            new MainPresenterImpl(view, context, new PlantRepository(context, TestExecutors.newImmediateExecutor()));
         Field f = MainPresenterImpl.class.getDeclaredField("exportManager");
         f.setAccessible(true);
         f.set(presenter, new FakeExportManager(context));

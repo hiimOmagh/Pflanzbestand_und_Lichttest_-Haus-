@@ -31,7 +31,8 @@ public class LightMeasurementFragmentTest {
 
         // Start fragment inside an activity
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
-        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(new PlantRepository(context));
+        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(
+            new PlantRepository(context, TestExecutors.newImmediateExecutor()));
         activity.getSupportFragmentManager().beginTransaction()
             .replace(android.R.id.content, fragment)
             .commitNow();
@@ -50,7 +51,8 @@ public class LightMeasurementFragmentTest {
             .edit().putString(SettingsKeys.KEY_CALIBRATION, "invalid").apply();
 
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
-        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(new PlantRepository(context));
+        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(
+            new PlantRepository(context, TestExecutors.newImmediateExecutor()));
         activity.getSupportFragmentManager().beginTransaction()
             .replace(android.R.id.content, fragment)
             .commitNow();
