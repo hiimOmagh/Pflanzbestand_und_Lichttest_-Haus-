@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.*;
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Looper;
@@ -16,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,10 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.LinkedHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -103,6 +105,96 @@ public class ImportManagerHelperTest {
         zipFile.delete();
     }
 
+    @Test
+    public void replaceModeSchedulesCleanupAfterTransaction() throws Exception {
+        ShadowAlarmManager.reset();
+        ImportManager importer = new ImportManager(context, executor);
+
+        File photo = File.createTempFile("existing", ".jpg", context.getCacheDir());
+        assertTrue(photo.exists());
+        Plant existing = new Plant("Existing", null, null, null, 0L, Uri.fromFile(photo));
+        long plantId = db.plantDao().insert(existing);
+        existing.setId(plantId);
+
+        long triggerAt = System.currentTimeMillis() + 1000L;
+        Reminder reminder = new Reminder(triggerAt, "Water", plantId);
+        long reminderId = db.reminderDao().insert(reminder);
+        reminder.setId(reminderId);
+        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, plantId);
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
+        assertNotNull(shadowAlarmManager.getNextScheduledAlarm());
+
+        File zipFile = createImportArchive(false);
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] successHolder = {false};
+        final List<ImportManager.ImportWarning>[] warningsHolder = new List[]{null};
+        importer.importData(Uri.fromFile(zipFile), ImportManager.Mode.REPLACE,
+            (success, err, warnings, message) -> {
+                successHolder[0] = success;
+                warningsHolder[0] = warnings;
+                latch.countDown();
+            });
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertTrue(successHolder[0]);
+        assertNotNull(warningsHolder[0]);
+        assertTrue(warningsHolder[0].isEmpty());
+        assertFalse(photo.exists());
+        assertNull(shadowAlarmManager.getNextScheduledAlarm());
+        assertNotNull(db.plantDao().findById(1));
+        //noinspection ResultOfMethodCallIgnored
+        zipFile.delete();
+    }
+
+    @Test
+    public void replaceModeKeepsExistingDataOnFailure() throws Exception {
+        ShadowAlarmManager.reset();
+        ImportManager importer = new ImportManager(context, executor);
+
+        File photo = File.createTempFile("existing_error", ".jpg", context.getCacheDir());
+        assertTrue(photo.exists());
+        Plant existing = new Plant("Existing", null, null, null, 0L, Uri.fromFile(photo));
+        long plantId = db.plantDao().insert(existing);
+        existing.setId(plantId);
+
+        long triggerAt = System.currentTimeMillis() + 1000L;
+        Reminder reminder = new Reminder(triggerAt, "Water", plantId);
+        long reminderId = db.reminderDao().insert(reminder);
+        reminder.setId(reminderId);
+        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, plantId);
+
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAlarmManager = Shadows.shadowOf(alarmManager);
+        assertNotNull(shadowAlarmManager.getNextScheduledAlarm());
+
+        File zipFile = createEmptyImportArchive();
+        CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] successHolder = {true};
+        final ImportManager.ImportError[] errorHolder = {null};
+        final List<ImportManager.ImportWarning>[] warningsHolder = new List[]{null};
+        importer.importData(Uri.fromFile(zipFile), ImportManager.Mode.REPLACE,
+            (success, err, warnings, message) -> {
+                successHolder[0] = success;
+                errorHolder[0] = err;
+                warningsHolder[0] = warnings;
+                latch.countDown();
+            });
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertFalse(successHolder[0]);
+        assertEquals(ImportManager.ImportError.NO_DATA, errorHolder[0]);
+        assertNotNull(warningsHolder[0]);
+        assertTrue(warningsHolder[0].isEmpty());
+        assertTrue(photo.exists());
+        shadowAlarmManager = Shadows.shadowOf(alarmManager);
+        assertNotNull(shadowAlarmManager.getNextScheduledAlarm());
+        assertNotNull(db.plantDao().findById(plantId));
+        //noinspection ResultOfMethodCallIgnored
+        zipFile.delete();
+    }
+
     private File createImportArchive(boolean includeMalicious) throws Exception {
         File zipFile = File.createTempFile("import_test", ".zip", context.getCacheDir());
         Map<String, byte[]> entries = new LinkedHashMap<>();
@@ -121,19 +213,46 @@ public class ImportManagerHelperTest {
         return zipFile;
     }
 
+    private File createEmptyImportArchive() throws Exception {
+        File zipFile = File.createTempFile("import_empty", ".zip", context.getCacheDir());
+        Map<String, byte[]> entries = new LinkedHashMap<>();
+        entries.put("data.csv", buildEmptyCsv().getBytes(StandardCharsets.UTF_8));
+        try (FileOutputStream fos = new FileOutputStream(zipFile);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+            for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
+                zos.putNextEntry(new ZipEntry(entry.getKey()));
+                zos.write(entry.getValue());
+                zos.closeEntry();
+            }
+        }
+        return zipFile;
+    }
+
     private String buildBasicCsv() {
-        return "Version,1\n\n"
-            + "Plants\n"
-            + "id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n"
-            + "1,Test Plant,,,,0,\n"
-            + "\nSpeciesTargets\n"
-            + "speciesKey,ppfdMin,ppfdMax\n"
-            + "\nMeasurements\n"
-            + "id,plantId,timeEpoch,luxAvg,ppfd\n"
-            + "\nDiaryEntries\n"
-            + "id,plantId,timeEpoch,type,note,photoUri\n"
-            + "\nReminders\n"
-            + "id,plantId,triggerAt,message\n";
+        return buildCsv(true);
+    }
+
+    private String buildEmptyCsv() {
+        return buildCsv(false);
+    }
+
+    private String buildCsv(boolean includePlant) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Version,1\n\n")
+            .append("Plants\n")
+            .append("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+        if (includePlant) {
+            builder.append("1,Test Plant,,,,0,\n");
+        }
+        builder.append("\nSpeciesTargets\n")
+            .append("speciesKey,ppfdMin,ppfdMax\n")
+            .append("\nMeasurements\n")
+            .append("id,plantId,timeEpoch,luxAvg,ppfd\n")
+            .append("\nDiaryEntries\n")
+            .append("id,plantId,timeEpoch,type,note,photoUri\n")
+            .append("\nReminders\n")
+            .append("id,plantId,triggerAt,message\n");
+        return builder.toString();
     }
 
     @After

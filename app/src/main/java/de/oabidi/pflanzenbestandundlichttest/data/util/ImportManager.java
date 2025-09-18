@@ -230,49 +230,84 @@ public class ImportManager {
                             PlantDatabase db = PlantDatabase.getDatabase(context);
                             final boolean[] successHolder = {false};
                             final ImportError[] errorHolder = {null};
-                            try {
-                                File finalCsvFile = csvFile;
-                                File finalTempDir = tempDir;
-                                db.runInTransaction(() -> {
-                                    if (mode == Mode.REPLACE) {
-                                        BulkReadDao bulk = db.bulkDao();
+                            final List<Runnable> cleanupTasks = new ArrayList<>();
+                            if (mode == Mode.REPLACE) {
+                                BulkReadDao bulk = db.bulkDao();
+                                try {
+                                    for (Plant plant : bulk.getAllPlants()) {
+                                        final Uri plantPhoto = plant.getPhotoUri();
+                                        if (plantPhoto != null) {
+                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, plantPhoto));
+                                        }
+                                    }
+                                    for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
+                                        final String diaryPhoto = diaryEntry.getPhotoUri();
+                                        if (diaryPhoto != null && !diaryPhoto.isEmpty()) {
+                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, diaryPhoto));
+                                        }
+                                    }
+                                    for (Reminder reminder : bulk.getAllReminders()) {
+                                        final long reminderId = reminder.getId();
+                                        cleanupTasks.add(() -> ReminderScheduler.cancelReminder(context, reminderId));
+                                    }
+                                } catch (Exception e) {
+                                    Log.e(TAG, "Failed to collect cleanup targets", e);
+                                    errorHolder[0] = ImportError.IO_ERROR;
+                                }
+                            }
+                            if (errorHolder[0] == null) {
+                                try {
+                                    File finalCsvFile = csvFile;
+                                    File finalTempDir = tempDir;
+                                    db.runInTransaction(() -> {
+                                        if (mode == Mode.REPLACE) {
+                                            try {
+                                                db.clearAllTables();
+                                            } catch (Exception e) {
+                                                Log.e(TAG, "Failed to clear database", e);
+                                                errorHolder[0] = ImportError.IO_ERROR;
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                        if (errorHolder[0] == null) {
+                                            try (BufferedReader reader = new BufferedReader(
+                                                new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
+                                                ImportError parseResult = parseAndInsert(
+                                                    reader, finalTempDir, mode, warnings,
+                                                    progressCallback, progress, totalSteps);
+                                                if (parseResult != null) {
+                                                    errorHolder[0] = parseResult;
+                                                    throw new RuntimeException();
+                                                }
+                                                successHolder[0] = true;
+                                            } catch (IOException e) {
+                                                Log.e(TAG, "Failed to parse import file", e);
+                                                errorHolder[0] = ImportError.IO_ERROR;
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                    });
+                                } catch (RuntimeException e) {
+                                    // Transaction failed; errorHolder already set
+                                }
+                            }
+                            if (mode == Mode.REPLACE && successHolder[0] && !cleanupTasks.isEmpty()) {
+                                List<Runnable> tasks = new ArrayList<>(cleanupTasks);
+                                Runnable cleanupRunnable = () -> {
+                                    for (Runnable task : tasks) {
                                         try {
-                                            for (Plant plant : bulk.getAllPlants()) {
-                                                PhotoManager.deletePhoto(context, plant.getPhotoUri());
-                                            }
-                                            for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
-                                                PhotoManager.deletePhoto(context, diaryEntry.getPhotoUri());
-                                            }
-                                            for (Reminder reminder : bulk.getAllReminders()) {
-                                                ReminderScheduler.cancelReminder(context, reminder.getId());
-                                            }
-                                            db.clearAllTables();
+                                            task.run();
                                         } catch (Exception e) {
-                                            Log.e(TAG, "Failed to clean database", e);
-                                            errorHolder[0] = ImportError.IO_ERROR;
-                                            throw new RuntimeException(e);
+                                            Log.w(TAG, "Cleanup task failed", e);
                                         }
                                     }
-                                    if (errorHolder[0] == null) {
-                                        try (BufferedReader reader = new BufferedReader(
-                                            new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
-                                            ImportError parseResult = parseAndInsert(
-                                                reader, finalTempDir, mode, warnings,
-                                                progressCallback, progress, totalSteps);
-                                            if (parseResult != null) {
-                                                errorHolder[0] = parseResult;
-                                                throw new RuntimeException();
-                                            }
-                                            successHolder[0] = true;
-                                        } catch (IOException e) {
-                                            Log.e(TAG, "Failed to parse import file", e);
-                                            errorHolder[0] = ImportError.IO_ERROR;
-                                            throw new RuntimeException(e);
-                                        }
-                                    }
-                                });
-                            } catch (RuntimeException e) {
-                                // Transaction failed; errorHolder already set
+                                };
+                                try {
+                                    executor.execute(cleanupRunnable);
+                                } catch (RuntimeException e) {
+                                    Log.w(TAG, "Unable to schedule cleanup tasks", e);
+                                    cleanupRunnable.run();
+                                }
                             }
                             error = errorHolder[0];
                             success = successHolder[0];
