@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -23,6 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+
+import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 
 /**
  * Fragment allowing creation or editing of a {@link Plant}.
@@ -80,6 +83,26 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         return fragment;
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getParentFragmentManager().setFragmentResultListener(
+            PlantPhotoCaptureFragment.RESULT_KEY,
+            this,
+            (requestKey, bundle) -> {
+                String uriString = bundle.getString(PlantPhotoCaptureFragment.EXTRA_PHOTO_URI);
+                if (uriString != null && !uriString.isEmpty()) {
+                    Uri captured = Uri.parse(uriString);
+                    photoUri = captured;
+                    if (photoView != null) {
+                        photoView.setImageURI(captured);
+                        photoView.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+        );
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -98,9 +121,11 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         photoView = view.findViewById(R.id.image_photo);
 
         Button pickPhoto = view.findViewById(R.id.btn_pick_photo);
+        Button capturePhoto = view.findViewById(R.id.btn_capture_photo);
         Button saveButton = view.findViewById(R.id.btn_save);
 
         pickPhoto.setOnClickListener(v -> photoPicker.launch("image/*"));
+        capturePhoto.setOnClickListener(v -> launchCameraCapture());
 
         Bundle args = getArguments();
         if (args != null) {
@@ -158,6 +183,10 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             .format(new Date(epoch));
     }
 
+    private void launchCameraCapture() {
+        FragmentManager manager = getParentFragmentManager();
+        PlantPhotoCaptureFragment.show(manager, android.R.id.content);
+    }
     @Override
     public String getName() {
         return getText(nameInput);

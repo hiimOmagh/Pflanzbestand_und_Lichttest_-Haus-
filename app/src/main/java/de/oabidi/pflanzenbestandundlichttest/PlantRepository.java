@@ -184,6 +184,25 @@ public class PlantRepository {
         });
     }
 
+    public void getPlant(long plantId, Consumer<Plant> callback) {
+        getPlant(plantId, callback, null);
+    }
+
+    public void getPlant(long plantId, Consumer<Plant> callback, Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                Plant plant = plantDao.findById(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(plant));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
     public void insert(Plant plant, Runnable callback) {
         insert(plant, callback, null);
     }

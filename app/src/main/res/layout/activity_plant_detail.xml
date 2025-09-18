@@ -56,6 +56,12 @@
             android:src="@drawable/ic_launcher_foreground"
             tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
+        <Button
+            android:id="@+id/detail_capture_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:text="@string/action_capture_photo" />
 
         <Button
             android:id="@+id/detail_diary"

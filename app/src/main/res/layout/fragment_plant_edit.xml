@@ -85,6 +85,12 @@
             android:text="@string/action_pick_photo" />
 
         <Button
+            android:id="@+id/btn_capture_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action_capture_photo" />
+
+        <Button
             android:id="@+id/btn_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

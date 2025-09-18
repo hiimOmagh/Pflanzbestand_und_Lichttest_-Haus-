@@ -2,10 +2,12 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,12 +16,15 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.concurrent.ExecutorService;
+
+import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 
 /**
  * Activity responsible for showing detailed information about a plant.
@@ -42,6 +47,10 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
     private PlantRepository repository;
+    private ImageView photoView;
+    private long plantId;
+    private Uri photoUri;
+    private String plantName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,15 +61,15 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
 
         repository = ((RepositoryProvider) getApplication()).getRepository();
 
-        long plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
+        plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
         String description = getIntent().getStringExtra("description"); // Additional notes about the plant
         String species = getIntent().getStringExtra("species"); // Botanical species identifier
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
+        plantName = name;
         String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
-        Uri photoUri = null;
-        if (photoUriStr != null && !photoUriStr.isEmpty()) {
+        if (!TextUtils.isEmpty(photoUriStr)) {
             photoUri = Uri.parse(photoUriStr);
         }
 
@@ -69,8 +78,9 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         TextView speciesView = findViewById(R.id.detail_species);
         TextView locationHintView = findViewById(R.id.detail_location_hint);
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
-        ImageView photoView = findViewById(R.id.detail_photo_uri);
+        photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
+        Button captureButton = findViewById(R.id.detail_capture_photo);
 
         if (!(getApplicationContext() instanceof ExecutorProvider)) {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
@@ -84,19 +94,24 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         speciesView.setText(presenter.getTextOrFallback(species));
         locationHintView.setText(presenter.getTextOrFallback(locationHint));
         acquiredAtView.setText(presenter.formatAcquiredAt(acquiredAtEpoch));
-        if (photoUri == null) {
-            photoView.setVisibility(View.GONE);
-        } else {
-            photoView.setImageURI(photoUri);
-            photoView.setVisibility(View.VISIBLE);
-            String cdName = (name == null || name.isEmpty())
-                ? getString(R.string.unknown)
-                : name;
-            photoView.setContentDescription(
-                getString(R.string.plant_photo_desc_format, cdName));
-        }
+        updatePhotoView(photoUri);
 
         diaryButton.setOnClickListener(v -> presenter.onDiaryClicked());
+        captureButton.setOnClickListener(v -> launchCamera());
+
+        getSupportFragmentManager().setFragmentResultListener(
+            PlantPhotoCaptureFragment.RESULT_KEY,
+            this,
+            (requestKey, bundle) -> {
+                String uriString = bundle.getString(PlantPhotoCaptureFragment.EXTRA_PHOTO_URI);
+                if (!TextUtils.isEmpty(uriString)) {
+                    Uri newUri = Uri.parse(uriString);
+                    photoUri = newUri;
+                    updatePhotoView(newUri);
+                    persistPhotoUri(newUri);
+                }
+            }
+        );
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
@@ -105,6 +120,44 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    private void launchCamera() {
+        PlantPhotoCaptureFragment.show(getSupportFragmentManager(), android.R.id.content);
+    }
+
+    private void updatePhotoView(@Nullable Uri uri) {
+        if (photoView == null) {
+            return;
+        }
+        if (uri == null) {
+            photoView.setVisibility(View.GONE);
+            photoView.setImageURI(null);
+            photoView.setContentDescription(null);
+        } else {
+            photoView.setImageURI(uri);
+            photoView.setVisibility(View.VISIBLE);
+            String cdName = (plantName == null || plantName.isEmpty())
+                ? getString(R.string.unknown)
+                : plantName;
+            photoView.setContentDescription(
+                getString(R.string.plant_photo_desc_format, cdName));
+        }
+    }
+
+    private void persistPhotoUri(@NonNull Uri uri) {
+        if (plantId <= 0) {
+            return;
+        }
+        repository.getPlant(plantId, plant -> {
+            if (plant == null) {
+                Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            plant.setPhotoUri(uri);
+            repository.update(plant, null, e ->
+                Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
+        }, e -> Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
     }
 
     @Override

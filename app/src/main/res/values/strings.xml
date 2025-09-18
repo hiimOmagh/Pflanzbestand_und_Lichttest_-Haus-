@@ -113,6 +113,11 @@
     <string name="hint_acquired">Acquired</string>
     <string name="hint_notes">Notes</string>
     <string name="action_pick_photo">Pick Photo</string>
+    <string name="action_capture_photo">Capture Photo</string>
+    <string name="action_close_camera">Close camera</string>
+    <string name="photo_capture_success">Photo captured</string>
+    <string name="photo_capture_failed">Unable to save photo</string>
+    <string name="photo_capture_permission_denied">Camera permission denied</string>
     <string name="action_save_plant">Save</string>
     <string name="error_required">Required</string>
     <string name="error_ppfd_range">Min must be less than max</string>
