@@ -70,11 +70,16 @@ public class ImportManager {
     private final ExecutorService executor;
 
     public ImportManager(@NonNull Context context) {
+        this(context, resolveExecutor(context));
+    }
+
+    @NonNull
+    private static ExecutorService resolveExecutor(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
         if (!(appContext instanceof ExecutorProvider)) {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
-        this(context, ((ExecutorProvider) appContext).getIoExecutor());
+        return ((ExecutorProvider) appContext).getIoExecutor();
     }
 
     public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
