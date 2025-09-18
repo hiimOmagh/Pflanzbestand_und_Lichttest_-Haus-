@@ -1,5 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.data.util;
 
+import static de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager.*;
+
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -11,22 +13,22 @@ import java.util.Objects;
 
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
-class SpeciesTargetsSectionParser implements ImportManager.SectionParser {
+class SpeciesTargetsSectionParser implements SectionParser {
     @VisibleForTesting
     @NonNull
     @Override
-    public ImportManager.Section getSection() {
-        return ImportManager.Section.SPECIES_TARGETS;
+    public Section getSection() {
+        return Section.SPECIES_TARGETS;
     }
 
     @VisibleForTesting
     @Override
-    public boolean parseSection(@NonNull ImportManager.SectionReader reader,
-                                @NonNull ImportManager.SectionContext context) throws IOException {
+    public boolean parseSection(@NonNull SectionReader reader,
+                                @NonNull SectionContext context) throws IOException {
         boolean imported = false;
-        ImportManager.SectionRow row;
+        SectionRow row;
         while ((row = reader.nextRow()) != null) {
-            List<String> parts = ImportManager.parseCsv(row.line);
+            List<String> parts = parseCsv(row.line);
             if (parts.size() >= 3) {
                 try {
                     String speciesKey = parts.get(0);
@@ -36,12 +38,12 @@ class SpeciesTargetsSectionParser implements ImportManager.SectionParser {
                     context.db.speciesTargetDao().insert(target);
                     imported = true;
                 } catch (Exception e) {
-                    Log.e(ImportManager.TAG, "Malformed species target row: " + row.line, e);
-                    context.warnings.add(new ImportManager.ImportWarning("species targets", row.lineNumber, "malformed row"));
+                    Log.e(TAG, "Malformed species target row: " + row.line, e);
+                    context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
                 }
             } else {
-                Log.e(ImportManager.TAG, "Malformed species target row: " + row.line);
-                context.warnings.add(new ImportManager.ImportWarning("species targets", row.lineNumber, "malformed row"));
+                Log.e(TAG, "Malformed species target row: " + row.line);
+                context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
             }
         }
         return imported;
