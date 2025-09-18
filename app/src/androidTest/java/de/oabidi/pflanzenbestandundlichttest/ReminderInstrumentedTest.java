@@ -19,6 +19,7 @@ import org.robolectric.shadows.ShadowSystemClock;
 import org.robolectric.annotation.Config;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -44,13 +45,63 @@ public class ReminderInstrumentedTest {
      * Schedule a reminder and advance time to ensure a notification is posted.
      */
     @Test
-    public void reminderTriggersNotification() {
+    public void reminderTriggersNotification() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
+        PlantDatabase db = PlantDatabase.getDatabase(context);
         long triggerAt = System.currentTimeMillis() + 1000;
 
+        Plant plant = new Plant("Alarm Plant", null, null, null, System.currentTimeMillis(), null);
+        long[] plantIdHolder = new long[1];
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            plantIdHolder[0] = db.plantDao().insert(plant);
+            plantLatch.countDown();
+        });
+        assertTrue("Plant inserted", plantLatch.await(2, TimeUnit.SECONDS));
+        long plantId = plantIdHolder[0];
+
+        Reminder reminder = new Reminder(triggerAt, "Water test plant", plantId);
+        long[] reminderIdHolder = new long[1];
+        CountDownLatch reminderLatch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            reminderIdHolder[0] = db.reminderDao().insert(reminder);
+            reminderLatch.countDown();
+        });
+        assertTrue("Reminder inserted", reminderLatch.await(2, TimeUnit.SECONDS));
+        long reminderId = reminderIdHolder[0];
+
+        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, plantId);
+
+        AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        ShadowAlarmManager shadowAm = Shadows.shadowOf(am);
+        ShadowAlarmManager.ScheduledAlarm alarm = shadowAm.getNextScheduledAlarm();
+        assertNotNull("Alarm scheduled", alarm);
+
+        ShadowPendingIntent pending = Shadows.shadowOf(alarm.operation);
+        Intent scheduledIntent = pending.getSavedIntent();
+        assertNotNull("Scheduled intent", scheduledIntent);
+
+        Reminder[] restoredHolder = new Reminder[1];
+        CountDownLatch loadLatch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            List<Reminder> reminders = db.reminderDao().getAll();
+            restoredHolder[0] = reminders.isEmpty() ? null : reminders.get(0);
+            loadLatch.countDown();
+        });
+        assertTrue("Reminder restored", loadLatch.await(2, TimeUnit.SECONDS));
+        Reminder restoredReminder = restoredHolder[0];
+        assertNotNull("Reminder retrieved", restoredReminder);
+
+        assertEquals(restoredReminder.getMessage(), scheduledIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
+        assertEquals(restoredReminder.getId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_ID, -1));
         assertEquals(restoredReminder.getPlantId(), scheduledIntent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1));
 
         ShadowSystemClock.advanceBy(Duration.ofSeconds(2));
+        alarm.operation.send();
+
+        CountDownLatch completionLatch = new CountDownLatch(1);
+        PlantDatabase.databaseWriteExecutor.execute(completionLatch::countDown);
+        assertTrue("Receiver completed", completionLatch.await(2, TimeUnit.SECONDS));
 
         NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         ShadowNotificationManager shadowNm = Shadows.shadowOf(nm);
