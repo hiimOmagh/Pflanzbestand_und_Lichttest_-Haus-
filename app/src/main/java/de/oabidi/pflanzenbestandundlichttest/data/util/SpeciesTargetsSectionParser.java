@@ -12,12 +12,14 @@ import java.util.Objects;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
 class SpeciesTargetsSectionParser implements ImportManager.SectionParser {
+    @VisibleForTesting
     @NonNull
     @Override
     public ImportManager.Section getSection() {
         return ImportManager.Section.SPECIES_TARGETS;
     }
 
+    @VisibleForTesting
     @Override
     public boolean parseSection(@NonNull ImportManager.SectionReader reader,
                                 @NonNull ImportManager.SectionContext context) throws IOException {
