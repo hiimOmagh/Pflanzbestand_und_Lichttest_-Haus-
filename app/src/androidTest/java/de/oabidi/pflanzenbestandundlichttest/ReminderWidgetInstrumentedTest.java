@@ -1,11 +1,11 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
-import android.app.PendingIntent;
+import android.app.Application;
 import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.RemoteViews;
+import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -14,8 +14,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAppWidgetManager;
-import org.robolectric.shadows.ShadowPendingIntent;
-import org.robolectric.shadows.ShadowRemoteViews;
+import org.robolectric.shadows.ShadowApplication;
 
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -31,12 +30,12 @@ public class ReminderWidgetInstrumentedTest {
 
     @Test
     public void widgetUpdatesWithScheduledReminderAndButtonLaunchesMeasure() throws Exception {
-        Context context = ApplicationProvider.getApplicationContext();
+        Application application = ApplicationProvider.getApplicationContext();
+        Context context = application;
 
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         ShadowAppWidgetManager shadowAppWidgetManager = Shadows.shadowOf(appWidgetManager);
-        ComponentName componentName = new ComponentName(context, ReminderWidgetProvider.class);
-        int widgetId = shadowAppWidgetManager.createAppWidget(componentName, R.layout.widget_reminder);
+        int widgetId = shadowAppWidgetManager.createWidget(ReminderWidgetProvider.class, R.layout.widget_reminder);
 
         long triggerAt = System.currentTimeMillis() + 60000;
         Reminder reminder = new Reminder(triggerAt, "Water widget", 1);
@@ -64,13 +63,20 @@ public class ReminderWidgetInstrumentedTest {
         PlantDatabase.databaseWriteExecutor.execute(updateLatch::countDown);
         assertTrue(updateLatch.await(2, TimeUnit.SECONDS));
 
-        RemoteViews views = shadowAppWidgetManager.getRemoteViews(widgetId);
-        ShadowRemoteViews shadowViews = Shadows.shadowOf(views);
-        assertEquals("Water widget", shadowViews.getTextViewText(R.id.widget_reminder_text));
+        android.view.View widgetView = shadowAppWidgetManager.getViewFor(widgetId);
+        assertNotNull(widgetView);
 
-        PendingIntent measurePending = shadowViews.getOnClickPendingIntent(R.id.widget_measure_button);
-        ShadowPendingIntent shadowPending = Shadows.shadowOf(measurePending);
-        Intent launchIntent = shadowPending.getSavedIntent();
+        TextView reminderText = widgetView.findViewById(R.id.widget_reminder_text);
+        assertNotNull(reminderText);
+        assertEquals("Water widget", reminderText.getText().toString());
+
+        Button measureButton = widgetView.findViewById(R.id.widget_measure_button);
+        assertNotNull(measureButton);
+        measureButton.performClick();
+
+        ShadowApplication shadowApplication = Shadows.shadowOf(application);
+        Intent launchIntent = shadowApplication.getNextStartedActivity();
+        assertNotNull(launchIntent);
         assertEquals(MainActivity.class.getName(), Objects.requireNonNull(launchIntent.getComponent()).getClassName());
         assertTrue(launchIntent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false));
     }
