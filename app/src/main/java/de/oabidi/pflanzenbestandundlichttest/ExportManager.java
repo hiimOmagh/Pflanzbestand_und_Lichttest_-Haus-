@@ -49,12 +49,7 @@ public class ExportManager {
     }
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
-        Context appContext = context.getApplicationContext();
-        if (!(appContext instanceof ExecutorProvider)) {
-            throw new IllegalStateException("Application context does not implement ExecutorProvider");
-        }
-        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
-        this(context, repository, executor);
+        this(context, repository, requireExecutor(context));
     }
 
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository,
@@ -62,6 +57,14 @@ public class ExportManager {
         this.context = context.getApplicationContext();
         this.bulkDao = repository.bulkDao();
         this.executor = executor;
+    }
+
+    private static ExecutorService requireExecutor(@NonNull Context context) {
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        return ((ExecutorProvider) appContext).getIoExecutor();
     }
 
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
