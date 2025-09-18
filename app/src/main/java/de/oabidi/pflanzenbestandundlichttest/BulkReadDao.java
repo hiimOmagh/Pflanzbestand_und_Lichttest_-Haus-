@@ -5,6 +5,8 @@ import androidx.room.Query;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+
 /**
  * Specialized DAO providing bulk read access for export and import operations.
  */
@@ -33,6 +35,14 @@ public interface BulkReadDao {
     /** Retrieves diary entries associated with the given plant. */
     @Query("SELECT * FROM DiaryEntry WHERE plantId = :plantId")
     List<DiaryEntry> getDiaryEntriesForPlant(long plantId);
+
+    /** Retrieves all gallery photos. */
+    @Query("SELECT * FROM PlantPhoto")
+    List<PlantPhoto> getAllPlantPhotos();
+
+    /** Retrieves gallery photos associated with the given plant. */
+    @Query("SELECT * FROM PlantPhoto WHERE plantId = :plantId")
+    List<PlantPhoto> getPlantPhotosForPlant(long plantId);
 
     /** Retrieves all reminders. */
     @Query("SELECT * FROM Reminder")

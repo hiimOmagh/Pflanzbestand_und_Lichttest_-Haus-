@@ -39,6 +39,8 @@ public class ExportManagerMethodsTest {
         @Override public List<Measurement> getMeasurementsForPlant(long plantId) { return Collections.emptyList(); }
         @Override public List<DiaryEntry> getAllDiaryEntries() { return Collections.emptyList(); }
         @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { return Collections.emptyList(); }
+        @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() { return Collections.emptyList(); }
+        @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) { return Collections.emptyList(); }
         @Override public List<Reminder> getAllReminders() { return Collections.emptyList(); }
         @Override public List<Reminder> getRemindersForPlant(long plantId) { return Collections.emptyList(); }
         @Override public List<SpeciesTarget> getAllSpeciesTargets() { return Collections.emptyList(); }
@@ -52,6 +54,8 @@ public class ExportManagerMethodsTest {
         @Override public List<Measurement> getMeasurementsForPlant(long plantId) { throw fail(); }
         @Override public List<DiaryEntry> getAllDiaryEntries() { throw fail(); }
         @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { throw fail(); }
+        @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() { throw fail(); }
+        @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) { throw fail(); }
         @Override public List<Reminder> getAllReminders() { throw fail(); }
         @Override public List<Reminder> getRemindersForPlant(long plantId) { throw fail(); }
         @Override public List<SpeciesTarget> getAllSpeciesTargets() { throw fail(); }
@@ -103,9 +107,9 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
         ctor.setAccessible(true);
-        Object data = ctor.newInstance(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvtest");
         dir.mkdirs();
@@ -121,11 +125,11 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
         ctor.setAccessible(true);
         Plant plant = new Plant("p", null, null, null, 0L, Uri.parse("content://missing"));
         plant.setId(1);
-        Object data = ctor.newInstance(Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvfail");
         dir.mkdirs();

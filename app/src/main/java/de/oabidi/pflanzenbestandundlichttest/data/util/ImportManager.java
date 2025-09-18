@@ -55,7 +55,9 @@ import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -251,6 +253,12 @@ public class ImportManager {
                                             cleanupTasks.add(() -> PhotoManager.deletePhoto(context, diaryPhoto));
                                         }
                                     }
+                                    for (PlantPhoto photo : bulk.getAllPlantPhotos()) {
+                                        final String galleryPhoto = photo.getUri();
+                                        if (galleryPhoto != null && !galleryPhoto.isEmpty()) {
+                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, galleryPhoto));
+                                        }
+                                    }
                                     for (Reminder reminder : bulk.getAllReminders()) {
                                         final long reminderId = reminder.getId();
                                         cleanupTasks.add(() -> ReminderScheduler.cancelReminder(context, reminderId));
@@ -405,6 +413,7 @@ public class ImportManager {
                         sectionReader,
                         Arrays.asList(
                             new PlantsSectionParser(),
+                            new PlantPhotosSectionParser(),
                             new SpeciesTargetsSectionParser(),
                             new MeasurementsSectionParser(),
                             new DiaryEntriesSectionParser(),
@@ -641,6 +650,71 @@ public class ImportManager {
         }
     }
 
+    boolean insertPlantPhotoRow(List<String> parts, Mode mode, File baseDir,
+                                Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                int currentLine, List<Uri> restoredUris,
+                                PlantDatabase db) {
+        if (parts.size() < 4) {
+            Log.e(TAG, "Malformed plant photo row: " + parts);
+            warnings.add(new ImportWarning("plant photos", currentLine, "malformed row"));
+            return false;
+        }
+        try {
+            long id = Long.parseLong(parts.get(0));
+            long plantId;
+            try {
+                plantId = Long.parseLong(parts.get(1));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("plant photos", currentLine, "invalid plant id"));
+                return false;
+            }
+            if (mode == Mode.MERGE) {
+                Long mappedId = plantIdMap.get(plantId);
+                if (mappedId == null) {
+                    warnings.add(new ImportWarning("plant photos", currentLine, "unknown plant"));
+                    return false;
+                }
+                plantId = mappedId;
+            }
+            String fileName = parts.get(2);
+            long createdAt;
+            try {
+                createdAt = Long.parseLong(parts.get(3));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("plant photos", currentLine, "invalid timestamp"));
+                return false;
+            }
+            if (fileName.isEmpty()) {
+                warnings.add(new ImportWarning("plant photos", currentLine, "photo missing"));
+                return false;
+            }
+            File exported = new File(baseDir, fileName);
+            if (!exported.isFile()) {
+                warnings.add(new ImportWarning("plant photos", currentLine, "photo missing"));
+                return false;
+            }
+            Uri savedUri;
+            try {
+                savedUri = PhotoManager.savePlantPhoto(context, Uri.fromFile(exported));
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to persist plant photo from " + exported, e);
+                warnings.add(new ImportWarning("plant photos", currentLine, "photo missing"));
+                return false;
+            }
+            restoredUris.add(savedUri);
+            PlantPhoto photo = new PlantPhoto(plantId, savedUri.toString(), createdAt);
+            if (mode == Mode.REPLACE) {
+                photo.setId(id);
+            }
+            db.plantPhotoDao().insert(photo);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Malformed plant photo row: " + parts, e);
+            warnings.add(new ImportWarning("plant photos", currentLine, "malformed row"));
+            return false;
+        }
+    }
+
     boolean insertMeasurementRow(List<String> parts, Mode mode,
                                  Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                  int currentLine, NumberFormat nf,
@@ -711,9 +785,8 @@ public class ImportManager {
     }
 
     private void cleanupUris(List<Uri> uris) {
-        ContentResolver resolver = context.getContentResolver();
         for (Uri uri : uris) {
-            resolver.delete(uri, null, null);
+            PhotoManager.deletePhoto(context, uri);
         }
     }
 
@@ -780,6 +853,7 @@ public class ImportManager {
     public enum Section {
         NONE(""),
         PLANTS("Plants"),
+        PLANT_PHOTOS("PlantPhotos"),
         SPECIES_TARGETS("SpeciesTargets"),
         MEASUREMENTS("Measurements"),
         DIARY_ENTRIES("DiaryEntries"),

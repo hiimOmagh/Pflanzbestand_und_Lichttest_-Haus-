@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -10,6 +11,8 @@ import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.List;
@@ -35,6 +38,7 @@ public class PlantRepository {
     private final DiaryDao diaryDao;
     private final SpeciesTargetDao speciesTargetDao;
     private final ReminderDao reminderDao;
+    private final PlantPhotoDao plantPhotoDao;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
@@ -73,6 +77,7 @@ public class PlantRepository {
         diaryDao = db.diaryDao();
         speciesTargetDao = db.speciesTargetDao();
         reminderDao = db.reminderDao();
+        plantPhotoDao = db.plantPhotoDao();
         bulkDao = db.bulkDao();
     }
 
@@ -228,9 +233,12 @@ public class PlantRepository {
 
     public void delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
         AtomicReference<List<Reminder>> remindersRef = new AtomicReference<>(Collections.emptyList());
+        AtomicReference<List<PlantPhoto>> plantPhotosRef = new AtomicReference<>(Collections.emptyList());
         runAsync(() -> {
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
             remindersRef.set(reminders);
+            List<PlantPhoto> photos = plantPhotoDao.getForPlant(plant.getId());
+            plantPhotosRef.set(photos);
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
             if (prefs.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1) == plant.getId()) {
@@ -238,10 +246,78 @@ public class PlantRepository {
             }
         }, () -> {
             PhotoManager.deletePhoto(context, plant.getPhotoUri());
+            for (PlantPhoto photo : plantPhotosRef.get()) {
+                PhotoManager.deletePhoto(context, photo.getUri());
+            }
             for (Reminder reminder : remindersRef.get()) {
                 ReminderScheduler.cancelReminder(context, reminder.getId());
             }
         }, callback, errorCallback);
+    }
+
+    public void addPlantPhoto(long plantId, Uri sourceUri, Consumer<PlantPhoto> callback) {
+        addPlantPhoto(plantId, sourceUri, callback, null);
+    }
+
+    public void addPlantPhoto(long plantId, Uri sourceUri, Consumer<PlantPhoto> callback,
+                              Consumer<Exception> errorCallback) {
+        if (sourceUri == null) {
+            if (errorCallback != null) {
+                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("sourceUri")));
+            }
+            return;
+        }
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                Uri stored = PhotoManager.savePlantPhoto(context, sourceUri);
+                PlantPhoto photo = new PlantPhoto(plantId, stored.toString(), System.currentTimeMillis());
+                long id = plantPhotoDao.insert(photo);
+                photo.setId(id);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(photo));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void deletePlantPhoto(PlantPhoto photo, Runnable callback) {
+        deletePlantPhoto(photo, callback, null);
+    }
+
+    public void deletePlantPhoto(PlantPhoto photo, Runnable callback, Consumer<Exception> errorCallback) {
+        if (photo == null) {
+            if (errorCallback != null) {
+                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("photo")));
+            }
+            return;
+        }
+        final String uri = photo.getUri();
+        runAsync(() -> plantPhotoDao.deleteForPlant(photo.getPlantId(), photo.getId()),
+            () -> PhotoManager.deletePhoto(context, uri), callback, errorCallback);
+    }
+
+    public void plantPhotosForPlant(long plantId, Consumer<List<PlantPhoto>> callback) {
+        plantPhotosForPlant(plantId, callback, null);
+    }
+
+    public void plantPhotosForPlant(long plantId, Consumer<List<PlantPhoto>> callback,
+                                    Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<PlantPhoto> result = plantPhotoDao.getForPlant(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {

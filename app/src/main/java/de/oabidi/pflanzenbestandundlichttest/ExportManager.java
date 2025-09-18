@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 
 /**
@@ -140,15 +141,21 @@ public class ExportManager {
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
                 measurements = bulkDao.getMeasurementsForPlant(plantId);
                 diaryEntries = bulkDao.getDiaryEntriesForPlant(plantId);
+                List<PlantPhoto> photos = bulkDao.getPlantPhotosForPlant(plantId);
                 reminders = bulkDao.getRemindersForPlant(plantId);
+                List<PlantPhoto> plantPhotos = photos != null ? photos : Collections.emptyList();
+                List<PlantPhoto> finalPlantPhotos = plantPhotos;
+                return new ExportData(plants, measurements, diaryEntries, reminders,
+                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos);
             } else {
                 plants = bulkDao.getAllPlants();
                 measurements = bulkDao.getAllMeasurements();
                 diaryEntries = bulkDao.getAllDiaryEntries();
+                List<PlantPhoto> plantPhotos = bulkDao.getAllPlantPhotos();
                 reminders = bulkDao.getAllReminders();
+                return new ExportData(plants, measurements, diaryEntries, reminders,
+                    bulkDao.getAllSpeciesTargets(), plantPhotos);
             }
-            List<SpeciesTarget> targets = bulkDao.getAllSpeciesTargets();
-            return new ExportData(plants, measurements, diaryEntries, reminders, targets);
         } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);
             throw new IOException("Failed to load data", e);
@@ -177,6 +184,23 @@ public class ExportManager {
                     escape(p.getLocationHint()),
                     p.getAcquiredAtEpoch(),
                     escape(photoName)));
+            }
+
+            writer.write("\nPlantPhotos\n");
+            writer.write("id,plantId,uri,createdAt\n");
+            for (PlantPhoto photo : data.plantPhotos) {
+                String photoName = "";
+                String uriString = photo.getUri();
+                if (uriString != null && !uriString.isEmpty()) {
+                    Uri photoUri = Uri.parse(uriString);
+                    photoName = "plant_photo_" + photo.getId() + "_" + getFileName(photoUri);
+                    copyUriToFile(photoUri, new File(tempDir, photoName));
+                }
+                writer.write(String.format(Locale.US, "%d,%d,%s,%d\n",
+                    photo.getId(),
+                    photo.getPlantId(),
+                    escape(photoName),
+                    photo.getCreatedAt()));
             }
 
             writer.write("\nSpeciesTargets\n");
@@ -302,14 +326,16 @@ public class ExportManager {
         final List<DiaryEntry> diaryEntries;
         final List<Reminder> reminders;
         final List<SpeciesTarget> targets;
+        final List<PlantPhoto> plantPhotos;
 
         ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
-                   List<Reminder> reminders, List<SpeciesTarget> targets) {
+                   List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos) {
             this.plants = plants;
             this.measurements = measurements;
             this.diaryEntries = diaryEntries;
             this.reminders = reminders;
             this.targets = targets;
+            this.plantPhotos = plantPhotos;
         }
     }
 }

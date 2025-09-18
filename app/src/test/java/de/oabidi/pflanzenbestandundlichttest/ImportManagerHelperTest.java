@@ -41,6 +41,7 @@ import java.util.zip.ZipOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -116,6 +117,15 @@ public class ImportManagerHelperTest {
         long plantId = db.plantDao().insert(existing);
         existing.setId(plantId);
 
+        File galleryPhoto = File.createTempFile("gallery_existing", ".jpg", context.getCacheDir());
+        assertTrue(galleryPhoto.exists());
+        PlantPhoto gallery = new PlantPhoto();
+        gallery.setPlantId(plantId);
+        gallery.setUri(Uri.fromFile(galleryPhoto).toString());
+        gallery.setCreatedAt(System.currentTimeMillis());
+        db.plantPhotoDao().insert(gallery);
+        assertFalse(db.plantPhotoDao().getForPlant(plantId).isEmpty());
+
         long triggerAt = System.currentTimeMillis() + 1000L;
         Reminder reminder = new Reminder(triggerAt, "Water", plantId);
         long reminderId = db.reminderDao().insert(reminder);
@@ -142,8 +152,10 @@ public class ImportManagerHelperTest {
         assertNotNull(warningsHolder[0]);
         assertTrue(warningsHolder[0].isEmpty());
         assertFalse(photo.exists());
+        assertFalse(galleryPhoto.exists());
         assertNull(shadowAlarmManager.getNextScheduledAlarm());
         assertNotNull(db.plantDao().findById(1));
+        assertTrue(db.plantPhotoDao().getForPlant(plantId).isEmpty());
         //noinspection ResultOfMethodCallIgnored
         zipFile.delete();
     }
@@ -158,6 +170,15 @@ public class ImportManagerHelperTest {
         Plant existing = new Plant("Existing", null, null, null, 0L, Uri.fromFile(photo));
         long plantId = db.plantDao().insert(existing);
         existing.setId(plantId);
+
+        File galleryPhoto = File.createTempFile("gallery_existing_error", ".jpg", context.getCacheDir());
+        assertTrue(galleryPhoto.exists());
+        PlantPhoto gallery = new PlantPhoto();
+        gallery.setPlantId(plantId);
+        gallery.setUri(Uri.fromFile(galleryPhoto).toString());
+        gallery.setCreatedAt(System.currentTimeMillis());
+        db.plantPhotoDao().insert(gallery);
+        assertFalse(db.plantPhotoDao().getForPlant(plantId).isEmpty());
 
         long triggerAt = System.currentTimeMillis() + 1000L;
         Reminder reminder = new Reminder(triggerAt, "Water", plantId);
@@ -188,11 +209,34 @@ public class ImportManagerHelperTest {
         assertNotNull(warningsHolder[0]);
         assertTrue(warningsHolder[0].isEmpty());
         assertTrue(photo.exists());
+        assertTrue(galleryPhoto.exists());
         shadowAlarmManager = Shadows.shadowOf(alarmManager);
         assertNotNull(shadowAlarmManager.getNextScheduledAlarm());
         assertNotNull(db.plantDao().findById(plantId));
+        assertTrue(galleryPhoto.exists());
         //noinspection ResultOfMethodCallIgnored
         zipFile.delete();
+    }
+
+    @Test
+    public void insertPlantPhotoRow_invalidPlantId() throws Exception {
+        ImportManager importer = new ImportManager(context, executor);
+        List<String> parts = new ArrayList<>();
+        parts.add("0");
+        parts.add("notanid");
+        parts.add("file.jpg");
+        parts.add("123");
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Method m = ImportManager.class.getDeclaredMethod("insertPlantPhotoRow", List.class,
+            ImportManager.Mode.class, File.class, Map.class, List.class, int.class,
+            List.class, PlantDatabase.class);
+        m.setAccessible(true);
+        boolean inserted = (boolean) m.invoke(importer, parts, ImportManager.Mode.REPLACE,
+            context.getCacheDir(), new HashMap<Long, Long>(), warnings, 1,
+            new ArrayList<Uri>(), db);
+        assertFalse(inserted);
+        assertEquals(1, warnings.size());
+        assertEquals("invalid plant id", warnings.get(0).reason);
     }
 
     private File createImportArchive(boolean includeMalicious) throws Exception {
@@ -244,6 +288,8 @@ public class ImportManagerHelperTest {
         if (includePlant) {
             builder.append("1,Test Plant,,,,0,\n");
         }
+        builder.append("\nPlantPhotos\n")
+            .append("id,plantId,uri,createdAt\n");
         builder.append("\nSpeciesTargets\n")
             .append("speciesKey,ppfdMin,ppfdMax\n")
             .append("\nMeasurements\n")

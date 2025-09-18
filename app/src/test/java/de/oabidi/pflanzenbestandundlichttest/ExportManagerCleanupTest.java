@@ -63,6 +63,8 @@ public class ExportManagerCleanupTest {
                 @Override public List<Measurement> getMeasurementsForPlant(long plantId) { return Collections.emptyList(); }
                 @Override public List<DiaryEntry> getAllDiaryEntries() { return Collections.emptyList(); }
                 @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { return Collections.emptyList(); }
+                @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() { return Collections.emptyList(); }
+                @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) { return Collections.emptyList(); }
                 @Override public List<Reminder> getAllReminders() { return Collections.emptyList(); }
                 @Override public List<Reminder> getRemindersForPlant(long plantId) { return Collections.emptyList(); }
                 @Override public List<SpeciesTarget> getAllSpeciesTargets() { return Collections.emptyList(); }

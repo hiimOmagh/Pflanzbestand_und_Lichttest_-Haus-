@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.data.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -111,6 +112,26 @@ public class SectionParserTest {
         assertTrue(imported);
         assertEquals(1, warnings.size());
         assertEquals("species targets", warnings.get(0).category);
+    }
+
+    @Test
+    public void plantPhotosParserReportsWarnings() throws Exception {
+        String csv = "PlantPhotos\n" +
+            "id,plantId,uri,createdAt\n" +
+            "1,1,missing.jpg,0\n" +
+            "2,notid,photo.jpg,0\n" +
+            "SpeciesTargets\n" +
+            "key,ppfdMin,ppfdMax\n";
+        ImportManager.SectionReader sectionReader = newSectionReader(csv);
+        assertEquals(ImportManager.Section.PLANT_PHOTOS, sectionReader.nextSection(importer));
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser();
+        ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
+            new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
+        boolean imported = parser.parseSection(sectionReader, context);
+        assertFalse(imported);
+        assertEquals(2, warnings.size());
+        assertEquals("plant photos", warnings.get(0).category);
     }
 
     @Test
