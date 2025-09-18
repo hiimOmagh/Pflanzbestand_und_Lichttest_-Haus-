@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -82,11 +82,40 @@ public class PlantRepository {
     }
 
     private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(action, (Supplier<Runnable>) null, callback, errorCallback);
+    }
+
+    private void runAsync(Runnable action, Runnable postAction, Runnable callback,
+                          Consumer<Exception> errorCallback) {
+        runAsync(action, postAction == null ? null : () -> postAction, callback, errorCallback);
+    }
+
+    private void runAsync(Runnable action, Supplier<Runnable> postActionSupplier, Runnable callback,
+                          Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
                 action.run();
-                if (callback != null) {
-                    mainHandler.post(callback);
+                Runnable postAction = null;
+                if (postActionSupplier != null) {
+                    postAction = postActionSupplier.get();
+                }
+                if (postAction == null) {
+                    if (callback != null) {
+                        mainHandler.post(callback);
+                    }
+                } else {
+                    ioExecutor.execute(() -> {
+                        try {
+                            postAction.run();
+                            if (callback != null) {
+                                mainHandler.post(callback);
+                            }
+                        } catch (Exception e) {
+                            if (errorCallback != null) {
+                                mainHandler.post(() -> errorCallback.accept(e));
+                            }
+                        }
+                    });
                 }
             } catch (Exception e) {
                 if (errorCallback != null) {
@@ -94,22 +123,6 @@ public class PlantRepository {
                 }
             }
         });
-    }
-
-    private void runBlockingOnIo(Runnable task) {
-        Future<?> future = ioExecutor.submit(task);
-        try {
-            future.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("IO task interrupted", e);
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof RuntimeException) {
-                throw (RuntimeException) cause;
-            }
-            throw new RuntimeException("IO task failed", cause);
-        }
     }
 
     // ... (rest of the class remains the same) ...
@@ -194,20 +207,21 @@ public class PlantRepository {
     }
 
     public void delete(Plant plant, Runnable callback, Consumer<Exception> errorCallback) {
+        AtomicReference<List<Reminder>> remindersRef = new AtomicReference<>(Collections.emptyList());
         runAsync(() -> {
             List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
+            remindersRef.set(reminders);
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
             if (prefs.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1) == plant.getId()) {
                 prefs.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
             }
-            runBlockingOnIo(() -> {
-                PhotoManager.deletePhoto(context, plant.getPhotoUri());
-                for (Reminder reminder : reminders) {
-                    ReminderScheduler.cancelReminder(context, reminder.getId());
-                }
-            });
-            }, callback, errorCallback);
+        }, () -> {
+            PhotoManager.deletePhoto(context, plant.getPhotoUri());
+            for (Reminder reminder : remindersRef.get()) {
+                ReminderScheduler.cancelReminder(context, reminder.getId());
+            }
+        }, callback, errorCallback);
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {
@@ -215,10 +229,11 @@ public class PlantRepository {
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
+        AtomicReference<Runnable> postActionRef = new AtomicReference<>();
         runAsync(() -> {
             measurementDao.insert(measurement);
-            checkDliAlerts(measurement.getPlantId());
-        }, callback, errorCallback);
+            postActionRef.set(checkDliAlerts(measurement.getPlantId()));
+        }, postActionRef::get, callback, errorCallback);
     }
 
     public void updateMeasurement(Measurement measurement, Runnable callback) {
@@ -237,10 +252,10 @@ public class PlantRepository {
         runAsync(() -> measurementDao.delete(measurement), callback, errorCallback);
     }
 
-    private void checkDliAlerts(long plantId) {
+    private Runnable checkDliAlerts(long plantId) {
         SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
         if (!prefs.getBoolean(SettingsKeys.KEY_DLI_ALERTS_ENABLED, false)) {
-            return;
+            return null;
         }
         String thresholdStr = prefs.getString(SettingsKeys.KEY_DLI_ALERT_THRESHOLD, "3");
         int threshold;
@@ -250,7 +265,7 @@ public class PlantRepository {
             threshold = 3;
         }
         if (threshold <= 0) {
-            return;
+            return null;
         }
         String hoursStr = prefs.getString(SettingsKeys.KEY_LIGHT_HOURS, "12");
         float lightHours;
@@ -262,11 +277,11 @@ public class PlantRepository {
 
         Plant plant = plantDao.findById(plantId);
         if (plant == null || plant.getSpecies() == null || plant.getSpecies().isEmpty()) {
-            return;
+            return null;
         }
         SpeciesTarget target = speciesTargetDao.findBySpeciesKey(plant.getSpecies());
         if (target == null) {
-            return;
+            return null;
         }
 
         float minDli = LightMath.dliFromPpfd(target.getPpfdMin(), lightHours);
@@ -314,16 +329,19 @@ public class PlantRepository {
             List<Reminder> reminders = reminderDao.getForPlant(plantId);
             for (Reminder r : reminders) {
                 if (message.equals(r.getMessage())) {
-                    return;
+                    return null;
                 }
             }
             long triggerAt = System.currentTimeMillis();
             Reminder reminder = new Reminder(triggerAt, message, plantId);
             long id = reminderDao.insert(reminder);
-            runBlockingOnIo(() ->
-                ReminderScheduler.scheduleReminderAt(context, triggerAt, message, id, plantId)
-            );
+            final long finalTriggerAt = triggerAt;
+            final String finalMessage = message;
+            final long finalId = id;
+            final long finalPlantId = plantId;
+            return () -> ReminderScheduler.scheduleReminderAt(context, finalTriggerAt, finalMessage, finalId, finalPlantId);
         }
+        return null;
     }
 
     private long startOfDay(long time) {
@@ -357,10 +375,9 @@ public class PlantRepository {
     }
 
     public void deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> {
-            diaryDao.delete(entry);
-            runBlockingOnIo(() -> PhotoManager.deletePhoto(context, entry.getPhotoUri()));
-        }, callback, errorCallback);
+        final String photoUri = entry.getPhotoUri();
+        runAsync(() -> diaryDao.delete(entry), () -> PhotoManager.deletePhoto(context, photoUri),
+            callback, errorCallback);
     }
 
     public void getAllReminders(Consumer<List<Reminder>> callback) {

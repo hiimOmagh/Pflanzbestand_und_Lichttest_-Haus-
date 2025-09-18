@@ -21,8 +21,10 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import java.lang.reflect.Field;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,13 +47,14 @@ public class PlantRepositoryTest {
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
         instance.set(null, db);
-        ioExecutor = TestExecutors.newImmediateExecutor();
+        ioExecutor = Executors.newSingleThreadExecutor();
         repository = new PlantRepository(context, ioExecutor);
     }
 
     @After
     public void tearDown() throws Exception {
-        ioExecutor.shutdown();
+        ioExecutor.shutdownNow();
+        ioExecutor.awaitTermination(5, TimeUnit.SECONDS);
         db.close();
         Field instance = PlantDatabase.class.getDeclaredField("INSTANCE");
         instance.setAccessible(true);
@@ -400,5 +403,130 @@ public class PlantRepositoryTest {
         }, e -> fail("error callback"));
         awaitLatch(verifyLatch);
         assertNull("Alarm cancelled", shadowAm.getNextScheduledAlarm());
+    }
+
+    @Test
+    public void deletePlantWaitsForIoBeforeCallback() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        CountDownLatch ioStarted = new CountDownLatch(1);
+        CountDownLatch allowIo = new CountDownLatch(1);
+        BlockingExecutor blockingExecutor = new BlockingExecutor(ioStarted, allowIo);
+        PlantRepository blockingRepo = new PlantRepository(context, blockingExecutor);
+
+        Plant plant = new Plant();
+        plant.setName("Async");
+        plant.setAcquiredAtEpoch(0L);
+        File image = File.createTempFile("async", ".jpg");
+        plant.setPhotoUri(Uri.fromFile(image));
+
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        blockingRepo.insert(plant, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        blockingRepo.delete(plant, deleteLatch::countDown);
+
+        try {
+            assertTrue("IO work should be queued", ioStarted.await(2, TimeUnit.SECONDS));
+            assertEquals("Callback must wait for IO to finish", 1, deleteLatch.getCount());
+
+            allowIo.countDown();
+            awaitLatch(deleteLatch);
+        } finally {
+            allowIo.countDown();
+            blockingExecutor.shutdownNow();
+            blockingExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    public void deleteDiaryEntryWaitsForIoBeforeCallback() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        CountDownLatch ioStarted = new CountDownLatch(1);
+        CountDownLatch allowIo = new CountDownLatch(1);
+        BlockingExecutor blockingExecutor = new BlockingExecutor(ioStarted, allowIo);
+        PlantRepository blockingRepo = new PlantRepository(context, blockingExecutor);
+
+        Plant plant = new Plant();
+        plant.setName("DiaryAsync");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        blockingRepo.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        File image = File.createTempFile("diary", ".jpg");
+        DiaryEntry entry = new DiaryEntry(plant.getId(), 1L, DiaryEntry.TYPE_WATER, "note");
+        entry.setPhotoUri(Uri.fromFile(image).toString());
+        CountDownLatch entryLatch = new CountDownLatch(1);
+        blockingRepo.insertDiaryEntry(entry, entryLatch::countDown);
+        awaitLatch(entryLatch);
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        blockingRepo.deleteDiaryEntry(entry, deleteLatch::countDown);
+
+        try {
+            assertTrue("IO work should be queued", ioStarted.await(2, TimeUnit.SECONDS));
+            assertEquals("Callback must wait for IO to finish", 1, deleteLatch.getCount());
+
+            allowIo.countDown();
+            awaitLatch(deleteLatch);
+        } finally {
+            allowIo.countDown();
+            blockingExecutor.shutdownNow();
+            blockingExecutor.awaitTermination(5, TimeUnit.SECONDS);
+        }
+    }
+
+    private static final class BlockingExecutor extends AbstractExecutorService {
+        private final ExecutorService delegate = Executors.newSingleThreadExecutor();
+        private final CountDownLatch startLatch;
+        private final CountDownLatch releaseLatch;
+        private volatile boolean shutdown;
+
+        BlockingExecutor(CountDownLatch startLatch, CountDownLatch releaseLatch) {
+            this.startLatch = startLatch;
+            this.releaseLatch = releaseLatch;
+        }
+
+        @Override
+        public void shutdown() {
+            shutdown = true;
+            delegate.shutdown();
+        }
+
+        @Override
+        public java.util.List<Runnable> shutdownNow() {
+            shutdown = true;
+            return delegate.shutdownNow();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return delegate.isTerminated();
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return delegate.awaitTermination(timeout, unit);
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            delegate.execute(() -> {
+                startLatch.countDown();
+                try {
+                    releaseLatch.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                command.run();
+            });
+        }
     }
 }
