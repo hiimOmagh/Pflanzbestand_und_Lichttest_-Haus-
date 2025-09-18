@@ -124,7 +124,7 @@ public class PlantDiaryInstrumentedTest {
             SystemClock.sleep(500);
 
             onView(withId(R.id.stats_placeholder)).check(matches(isDisplayed()));
-            onView(withId(R.id.stats_plant_selector)).check(matches(not(isDisplayed())));
+            onView(withId(R.id.stats_select_plants)).check(matches(not(isDisplayed())));
             onView(withId(R.id.stats_chart)).check(matches(not(isDisplayed())));
             onView(withId(R.id.stats_view_measurements)).check(matches(not(isEnabled())));
         }
