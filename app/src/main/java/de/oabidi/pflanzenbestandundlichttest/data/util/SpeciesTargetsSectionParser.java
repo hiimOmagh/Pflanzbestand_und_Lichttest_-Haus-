@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-@VisibleForTesting
+import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+
 class SpeciesTargetsSectionParser implements ImportManager.SectionParser {
     @NonNull
     @Override
