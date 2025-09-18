@@ -95,15 +95,16 @@ public class PlantRepository {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
                 action.run();
-                Runnable postAction = null;
+                Runnable suppliedPostAction = null;
                 if (postActionSupplier != null) {
-                    postAction = postActionSupplier.get();
+                    suppliedPostAction = postActionSupplier.get();
                 }
-                if (postAction == null) {
+                if (suppliedPostAction == null) {
                     if (callback != null) {
                         mainHandler.post(callback);
                     }
                 } else {
+                    final Runnable postAction = suppliedPostAction;
                     ioExecutor.execute(() -> {
                         try {
                             postAction.run();
