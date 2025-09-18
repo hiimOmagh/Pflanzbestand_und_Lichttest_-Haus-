@@ -37,14 +37,9 @@ public class PlantListPresenter {
     private final ImportManager importManager;
 
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
-        Context appContext = context.getApplicationContext();
-        if (!(appContext instanceof ExecutorProvider)) {
-            throw new IllegalStateException("Application context does not implement ExecutorProvider");
-        }
-        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
-        this(view, repository, appContext,
-            new ExportManager(appContext, repository, executor),
-            new ImportManager(appContext, executor));
+        this(view, repository, ensureAppContext(context),
+            createExportManager(context, repository),
+            createImportManager(context));
     }
 
     public PlantListPresenter(View view, PlantRepository repository, Context context,
@@ -54,6 +49,28 @@ public class PlantListPresenter {
         this.context = context.getApplicationContext();
         this.exportManager = exportManager;
         this.importManager = importManager;
+    }
+
+    private static Context ensureAppContext(Context context) {
+        Context appContext = context.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        return appContext;
+    }
+
+    private static ExecutorService getIoExecutor(Context appContext) {
+        return ((ExecutorProvider) appContext).getIoExecutor();
+    }
+
+    private static ExportManager createExportManager(Context context, PlantRepository repository) {
+        Context appContext = ensureAppContext(context);
+        return new ExportManager(appContext, repository, getIoExecutor(appContext));
+    }
+
+    private static ImportManager createImportManager(Context context) {
+        Context appContext = ensureAppContext(context);
+        return new ImportManager(appContext, getIoExecutor(appContext));
     }
 
     public void refreshPlants() {
