@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
+import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Entity;
+import androidx.room.Insert;
 import androidx.room.PrimaryKey;
+import androidx.room.Query;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
@@ -81,7 +83,17 @@ public class PlantDatabaseMigrationTest {
     )
     @TypeConverters({Converters.class})
     abstract static class PlantDatabaseV4 extends RoomDatabase {
-        public abstract PlantDao plantDao();
+        public abstract PlantDaoV4 plantDao();
+    }
+
+    /** Minimal DAO used for seeding the version 4 database in tests. */
+    @Dao
+    interface PlantDaoV4 {
+        @Insert
+        long insert(Plant plant);
+
+        @Query("SELECT * FROM Plant ORDER BY name ASC")
+        List<Plant> getAll();
     }
 
     /** Measurement entity used in version 4 without DLI or note columns. */
