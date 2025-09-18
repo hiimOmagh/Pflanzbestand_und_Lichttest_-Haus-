@@ -10,6 +10,8 @@ constraintlayout = "2.2.1"
 room = "2.8.0"
 robolectric = "4.16"
 androidxTestCore = "1.7.0"
+fragmentTesting = "1.8.9"
+mockito = "5.19.0"
 preference = "1.2.1"
 firebaseCrashlytics = "20.0.1"
 googleGmsGoogleServices = "4.4.3"
@@ -28,6 +30,8 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+fragment-testing = { group = "androidx.fragment", name = "fragment-testing", version.ref = "fragmentTesting" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
 viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }

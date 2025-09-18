@@ -52,7 +52,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (repository == null) {
-            repository = RepositoryProvider.getRepository(requireContext());
+            repository = RepositoryProvider.getRepository(context);
         }
     }
 

@@ -65,6 +65,14 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (repository == null) {
+            repository = RepositoryProvider.getRepository(context);
+        }
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
@@ -72,11 +80,13 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
         }
-        if (repository == null) {
-            repository = RepositoryProvider.getRepository(requireContext());
+        PlantRepository repo = repository;
+        if (repo == null) {
+            repo = RepositoryProvider.getRepository(requireContext());
+            repository = repo;
         }
         Context context = requireContext().getApplicationContext();
-        presenter = new DiaryPresenter(this, repository, plantId, context);
+        presenter = new DiaryPresenter(this, repo, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(
