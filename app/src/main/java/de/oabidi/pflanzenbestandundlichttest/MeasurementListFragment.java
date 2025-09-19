@@ -15,7 +15,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.snackbar.Snackbar;
+
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 
 /**
  * Fragment displaying all measurements for a plant.
@@ -66,8 +69,11 @@ public class MeasurementListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         RecyclerView listView = view.findViewById(R.id.measurement_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        listView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
         filterSpinner = view.findViewById(R.id.measurement_filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
             requireContext(),

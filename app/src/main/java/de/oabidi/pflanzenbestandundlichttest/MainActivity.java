@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
@@ -16,6 +18,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -37,11 +43,44 @@ public class MainActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         repository = ((RepositoryProvider) getApplication()).getRepository();
         presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
 
+        View navHost = findViewById(R.id.nav_host_fragment);
+        View navigationContainer = findViewById(R.id.navigation_container);
         exportProgressBar = findViewById(R.id.export_progress_bar);
+
+        final int navHostPaddingStart = ViewCompat.getPaddingStart(navHost);
+        final int navHostPaddingTop = navHost.getPaddingTop();
+        final int navHostPaddingEnd = ViewCompat.getPaddingEnd(navHost);
+        final int navHostPaddingBottom = navHost.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(navHost, (view, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            ViewCompat.setPaddingRelative(
+                view,
+                navHostPaddingStart,
+                navHostPaddingTop + systemBars.top,
+                navHostPaddingEnd,
+                navHostPaddingBottom);
+            return insets;
+        });
+
+        final int containerPaddingStart = ViewCompat.getPaddingStart(navigationContainer);
+        final int containerPaddingTop = navigationContainer.getPaddingTop();
+        final int containerPaddingEnd = ViewCompat.getPaddingEnd(navigationContainer);
+        final int containerPaddingBottom = navigationContainer.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(navigationContainer, (view, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            ViewCompat.setPaddingRelative(
+                view,
+                containerPaddingStart,
+                containerPaddingTop,
+                containerPaddingEnd,
+                containerPaddingBottom + systemBars.bottom);
+            return insets;
+        });
 
         exportLauncher = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/zip"),
@@ -56,6 +95,21 @@ public class MainActivity extends AppCompatActivity implements MainView {
             presenter::onNotificationPermissionResult);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+        final int bottomNavPaddingStart = ViewCompat.getPaddingStart(bottomNavigationView);
+        final int bottomNavPaddingTop = bottomNavigationView.getPaddingTop();
+        final int bottomNavPaddingEnd = ViewCompat.getPaddingEnd(bottomNavigationView);
+        final int bottomNavPaddingBottom = bottomNavigationView.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (view, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            ViewCompat.setPaddingRelative(
+                view,
+                bottomNavPaddingStart,
+                bottomNavPaddingTop,
+                bottomNavPaddingEnd,
+                bottomNavPaddingBottom + systemBars.bottom);
+            return insets;
+        });
+        ViewCompat.requestApplyInsets(navHost);
         bottomNavigationView.setOnItemSelectedListener(item ->
             presenter.onNavigationItemSelected(item.getItemId()));
 

@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**
@@ -37,6 +38,8 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.applySystemWindowInsetsPadding(view, false, true, false, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         luxView = view.findViewById(R.id.calibration_lux_value);
         ppfdInput = view.findViewById(R.id.calibration_ppfd_input);
         Button confirmButton = view.findViewById(R.id.calibration_confirm_button);

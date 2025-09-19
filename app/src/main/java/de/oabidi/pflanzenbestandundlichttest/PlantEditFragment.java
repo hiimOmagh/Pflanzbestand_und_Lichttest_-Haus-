@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 
 /**
@@ -113,6 +115,10 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        ScrollView scrollView = (ScrollView) view;
+        scrollView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(scrollView, false, false, false, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(scrollView);
         nameInput = view.findViewById(R.id.input_name);
         speciesInput = view.findViewById(R.id.input_species);
         locationInput = view.findViewById(R.id.input_location);

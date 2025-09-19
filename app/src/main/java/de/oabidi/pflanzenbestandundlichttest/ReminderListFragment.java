@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -56,8 +58,11 @@ public class ReminderListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         RecyclerView recyclerView = view.findViewById(R.id.reminder_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
         adapter = new ReminderAdapter(this::showEditDialog);
         recyclerView.setAdapter(adapter);
         if (repository == null) {

@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import java.util.List;
@@ -65,6 +66,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.applySystemWindowInsetsPadding(view, false, true, false, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         luxRawView = view.findViewById(R.id.lux_raw_value);
         luxView = view.findViewById(R.id.lux_value);
         ppfdView = view.findViewById(R.id.ppfd_value);

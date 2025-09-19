@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+
 import java.util.ArrayList;
 
 /**
@@ -49,12 +51,16 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             repository = RepositoryProvider.getRepository(requireContext());
         }
 
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         RecyclerView recyclerView = view.findViewById(R.id.target_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
         adapter = new SpeciesTargetAdapter(this);
         recyclerView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_target);
+        InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
         fab.setOnClickListener(v -> showDialog(null));
 
         loadTargets();

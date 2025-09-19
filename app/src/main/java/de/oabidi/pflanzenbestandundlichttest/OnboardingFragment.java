@@ -17,6 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**
@@ -39,6 +40,9 @@ public class OnboardingFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.applySystemWindowInsetsPadding(view, false, true, false, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         ViewPager2 pager = view.findViewById(R.id.onboarding_pager);
         pager.setAdapter(new OnboardingAdapter(new int[]{
             R.string.onboarding_plant_setup,

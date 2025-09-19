@@ -30,6 +30,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -106,8 +108,11 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         RecyclerView listView = view.findViewById(R.id.diary_list);
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        listView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
 
         Spinner filterSpinner = view.findViewById(R.id.diary_filter_spinner);
         ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
@@ -185,6 +190,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         listView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_entry);
+        InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
 
         if (plantId < 0) {
             listView.setVisibility(View.GONE);

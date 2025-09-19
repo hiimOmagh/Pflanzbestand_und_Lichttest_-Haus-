@@ -19,9 +19,10 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.SearchView;
+
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 /**
@@ -142,8 +144,11 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.requestApplyInsetsWhenAttached(view);
         RecyclerView recyclerView = view.findViewById(R.id.plant_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
         adapter = new PlantAdapter(this);
         recyclerView.setAdapter(adapter);
         Context context = requireContext().getApplicationContext();
