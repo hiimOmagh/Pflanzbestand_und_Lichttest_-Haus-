@@ -147,7 +147,7 @@ public class ImportManagerParseHelpersTest {
         AtomicInteger progress = new AtomicInteger();
         List<int[]> updates = new ArrayList<>();
         ImportManager.ProgressCallback callback = (current, total) ->
-            updates.add(new int[] {current, total});
+            updates.add(new int[]{current, total});
         m.invoke(importer, progress, callback, 7);
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
         assertEquals(1, updates.size());

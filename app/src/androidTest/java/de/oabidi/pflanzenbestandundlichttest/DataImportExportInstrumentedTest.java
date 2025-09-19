@@ -19,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
 import android.app.AlarmManager;
 import android.content.Intent;
 
@@ -56,6 +57,20 @@ public class DataImportExportInstrumentedTest {
         assertTrue(latch.await(10, TimeUnit.SECONDS));
         return result.get();
     }
+
+    private static void clearDir(File dir) {
+        File[] children = dir.listFiles();
+        if (children != null) {
+            for (File child : children) {
+                if (child.isDirectory()) {
+                    clearDir(child);
+                }
+                //noinspection ResultOfMethodCallIgnored
+                child.delete();
+            }
+        }
+    }
+
     @Test
     public void testExportImportRestoresData() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
@@ -63,7 +78,7 @@ public class DataImportExportInstrumentedTest {
         ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
         PlantRepository repository = new PlantRepository(appContext, executor);
         ShadowAlarmManager.reset();
-        
+
         // Insert species target and plant with measurement and diary entry
         SpeciesTarget target = new SpeciesTarget("ExportSpecies", 10f, 20f);
         awaitDb(() -> {
@@ -281,19 +296,6 @@ public class DataImportExportInstrumentedTest {
                 baos.write(buf, 0, len);
             }
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
-        }
-    }
-
-    private static void clearDir(File dir) {
-        File[] children = dir.listFiles();
-        if (children != null) {
-            for (File child : children) {
-                if (child.isDirectory()) {
-                    clearDir(child);
-                }
-                //noinspection ResultOfMethodCallIgnored
-                child.delete();
-            }
         }
     }
 }

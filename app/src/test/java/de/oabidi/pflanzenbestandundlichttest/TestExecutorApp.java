@@ -2,7 +2,9 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import java.util.concurrent.ExecutorService;
 
-/** Test application providing deterministic executors. */
+/**
+ * Test application providing deterministic executors.
+ */
 public class TestExecutorApp extends PlantApp {
     private ExecutorService testExecutor;
 

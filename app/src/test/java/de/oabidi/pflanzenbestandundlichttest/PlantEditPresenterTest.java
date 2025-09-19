@@ -21,56 +21,6 @@ public class PlantEditPresenterTest {
     private RecordingRepository repository;
     private PlantEditPresenter presenter;
 
-    private static class FakeView implements PlantEditView {
-        String name = "";
-        String species = null;
-        String location = null;
-        String notes = null;
-        long acquired = 123L;
-        Uri photo;
-        long id;
-        boolean nameErrorShown;
-        Plant finished;
-        String errorMessage;
-
-        @Override
-        public String getName() { return name; }
-        @Override
-        public String getSpecies() { return species; }
-        @Override
-        public String getLocation() { return location; }
-        @Override
-        public String getNotes() { return notes; }
-        @Override
-        public long getAcquiredEpoch() { return acquired; }
-        @Override
-        public Uri getPhotoUri() { return photo; }
-        @Override
-        public long getPlantId() { return id; }
-        @Override
-        public void showNameError() { nameErrorShown = true; }
-        @Override
-        public void finishWithResult(Plant plant) { finished = plant; }
-        @Override
-        public void showError(String message) { errorMessage = message; }
-    }
-
-    private static class RecordingRepository extends PlantRepository {
-        Plant inserted;
-        Plant updated;
-        RecordingRepository(Context context) { super(context); }
-        @Override
-        public void insert(Plant plant, Runnable cb) {
-            inserted = plant;
-            if (cb != null) { cb.run(); }
-        }
-        @Override
-        public void update(Plant plant, Runnable cb) {
-            updated = plant;
-            if (cb != null) { cb.run(); }
-        }
-    }
-
     @Before
     public void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -107,5 +57,93 @@ public class PlantEditPresenterTest {
         assertNull(repository.inserted);
         assertNotNull(view.finished);
         assertEquals(5L, view.finished.getId());
+    }
+
+    private static class FakeView implements PlantEditView {
+        String name = "";
+        String species = null;
+        String location = null;
+        String notes = null;
+        long acquired = 123L;
+        Uri photo;
+        long id;
+        boolean nameErrorShown;
+        Plant finished;
+        String errorMessage;
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getSpecies() {
+            return species;
+        }
+
+        @Override
+        public String getLocation() {
+            return location;
+        }
+
+        @Override
+        public String getNotes() {
+            return notes;
+        }
+
+        @Override
+        public long getAcquiredEpoch() {
+            return acquired;
+        }
+
+        @Override
+        public Uri getPhotoUri() {
+            return photo;
+        }
+
+        @Override
+        public long getPlantId() {
+            return id;
+        }
+
+        @Override
+        public void showNameError() {
+            nameErrorShown = true;
+        }
+
+        @Override
+        public void finishWithResult(Plant plant) {
+            finished = plant;
+        }
+
+        @Override
+        public void showError(String message) {
+            errorMessage = message;
+        }
+    }
+
+    private static class RecordingRepository extends PlantRepository {
+        Plant inserted;
+        Plant updated;
+
+        RecordingRepository(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void insert(Plant plant, Runnable cb) {
+            inserted = plant;
+            if (cb != null) {
+                cb.run();
+            }
+        }
+
+        @Override
+        public void update(Plant plant, Runnable cb) {
+            updated = plant;
+            if (cb != null) {
+                cb.run();
+            }
+        }
     }
 }

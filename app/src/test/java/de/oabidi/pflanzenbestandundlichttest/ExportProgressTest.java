@@ -25,36 +25,6 @@ import java.util.Objects;
 public class ExportProgressTest {
     private Context context;
 
-    private static class FakeView implements MainView {
-        final List<int[]> progress = new ArrayList<>();
-        String lastExportFileName;
-        @Override public void navigateToFragment(androidx.fragment.app.Fragment fragment, boolean addToBackStack) { }
-        @Override public void showToast(int messageResId) { }
-        @Override public void showToast(String message) { }
-        @Override public void showLongToast(int messageResId) { }
-        @Override public void showExportProgress(int current, int total) { progress.add(new int[]{current, total}); }
-        @Override public void showProgressBar() { }
-        @Override public void hideProgressBar() { }
-        @Override public void selectNavigationItem(int itemId) { }
-        @Override public void requestNotificationPermission(String permission) { }
-        @Override public void launchExport(String fileName) { lastExportFileName = fileName; }
-        @Override public void launchImport(String[] mimeTypes) { }
-        @Override public void showImportWarnings(String message) { }
-    }
-
-    private static class FakeExportManager extends ExportManager {
-        FakeExportManager(Context context) {
-            super(context, new PlantRepository(context, TestExecutors.newImmediateExecutor()));
-        }
-        @Override
-        public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
-            Objects.requireNonNull(progressCallback).onProgress(1, 3);
-            progressCallback.onProgress(2, 3);
-            progressCallback.onProgress(3, 3);
-            callback.onComplete(true);
-        }
-    }
-
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
@@ -75,8 +45,77 @@ public class ExportProgressTest {
 
         presenter.handleExportResult(Uri.parse("content://test"));
         assertEquals(3, view.progress.size());
-        assertArrayEquals(new int[]{1,3}, view.progress.get(0));
-        assertArrayEquals(new int[]{2,3}, view.progress.get(1));
-        assertArrayEquals(new int[]{3,3}, view.progress.get(2));
+        assertArrayEquals(new int[]{1, 3}, view.progress.get(0));
+        assertArrayEquals(new int[]{2, 3}, view.progress.get(1));
+        assertArrayEquals(new int[]{3, 3}, view.progress.get(2));
+    }
+
+    private static class FakeView implements MainView {
+        final List<int[]> progress = new ArrayList<>();
+        String lastExportFileName;
+
+        @Override
+        public void navigateToFragment(androidx.fragment.app.Fragment fragment, boolean addToBackStack) {
+        }
+
+        @Override
+        public void showToast(int messageResId) {
+        }
+
+        @Override
+        public void showToast(String message) {
+        }
+
+        @Override
+        public void showLongToast(int messageResId) {
+        }
+
+        @Override
+        public void showExportProgress(int current, int total) {
+            progress.add(new int[]{current, total});
+        }
+
+        @Override
+        public void showProgressBar() {
+        }
+
+        @Override
+        public void hideProgressBar() {
+        }
+
+        @Override
+        public void selectNavigationItem(int itemId) {
+        }
+
+        @Override
+        public void requestNotificationPermission(String permission) {
+        }
+
+        @Override
+        public void launchExport(String fileName) {
+            lastExportFileName = fileName;
+        }
+
+        @Override
+        public void launchImport(String[] mimeTypes) {
+        }
+
+        @Override
+        public void showImportWarnings(String message) {
+        }
+    }
+
+    private static class FakeExportManager extends ExportManager {
+        FakeExportManager(Context context) {
+            super(context, new PlantRepository(context, TestExecutors.newImmediateExecutor()));
+        }
+
+        @Override
+        public void export(@NonNull Uri uri, @NonNull Callback callback, ProgressCallback progressCallback) {
+            Objects.requireNonNull(progressCallback).onProgress(1, 3);
+            progressCallback.onProgress(2, 3);
+            progressCallback.onProgress(3, 3);
+            callback.onComplete(true);
+        }
     }
 }

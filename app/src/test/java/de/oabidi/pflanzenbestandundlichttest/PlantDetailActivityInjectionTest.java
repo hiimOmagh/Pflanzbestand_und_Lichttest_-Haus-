@@ -21,19 +21,6 @@ import org.robolectric.annotation.Config;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = PlantDetailActivityInjectionTest.TestApp.class)
 public class PlantDetailActivityInjectionTest {
-    public static class TestApp extends Application implements RepositoryProvider {
-        private PlantRepository repository;
-
-        @Override
-        public PlantRepository getRepository() {
-            return repository;
-        }
-
-        void setRepository(PlantRepository repository) {
-            this.repository = repository;
-        }
-    }
-
     @Test
     public void usesInjectedRepository() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
@@ -57,5 +44,18 @@ public class PlantDetailActivityInjectionTest {
         field.setAccessible(true);
         PlantRepository usedRepo = (PlantRepository) field.get(activity);
         assertSame(fakeRepo, usedRepo);
+    }
+
+    public static class TestApp extends Application implements RepositoryProvider {
+        private PlantRepository repository;
+
+        @Override
+        public PlantRepository getRepository() {
+            return repository;
+        }
+
+        void setRepository(PlantRepository repository) {
+            this.repository = repository;
+        }
     }
 }

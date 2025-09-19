@@ -63,7 +63,7 @@ public class ImportManagerCleanupTest {
     public void imagesRemovedOnFailedImport() throws Exception {
         ImportManager importer = new ImportManager(context, executor);
 
-        File baseDir = new File(context.getCacheDir(), "import" );
+        File baseDir = new File(context.getCacheDir(), "import");
         baseDir.mkdirs();
         File image = new File(baseDir, "photo.jpg");
         try (FileOutputStream fos = new FileOutputStream(image)) {

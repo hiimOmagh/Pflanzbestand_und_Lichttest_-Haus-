@@ -26,54 +26,6 @@ public class MainPresenterTest {
     private MainPresenter presenter;
     private PlantRepository repository;
 
-    private static class FakeRepository extends PlantRepository {
-        FakeRepository(Context context) { super(context); }
-    }
-
-    private static class FakeView implements MainView {
-        Fragment lastFragment;
-        boolean lastAddToBack;
-        Integer lastSelectedId;
-
-        @Override
-        public void navigateToFragment(Fragment fragment, boolean addToBackStack) {
-            lastFragment = fragment;
-            lastAddToBack = addToBackStack;
-        }
-
-        @Override
-        public void showToast(int messageResId) { }
-
-        @Override
-        public void showToast(String message) { }
-
-        @Override
-        public void showLongToast(int messageResId) { }
-
-        @Override
-        public void showExportProgress(int current, int total) { }
-
-        @Override public void showProgressBar() { }
-        @Override public void hideProgressBar() { }
-
-        @Override
-        public void selectNavigationItem(int itemId) {
-            lastSelectedId = itemId;
-        }
-
-        @Override
-        public void requestNotificationPermission(String permission) { }
-
-        @Override
-        public void launchExport(String fileName) { }
-
-        @Override
-        public void launchImport(String[] mimeTypes) { }
-
-        @Override
-        public void showImportWarnings(String message) { }
-    }
-
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
@@ -133,5 +85,68 @@ public class MainPresenterTest {
         intent.putExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, true);
         presenter.onCreate(null, intent);
         assertEquals(Integer.valueOf(R.id.nav_measure), view.lastSelectedId);
+    }
+
+    private static class FakeRepository extends PlantRepository {
+        FakeRepository(Context context) {
+            super(context);
+        }
+    }
+
+    private static class FakeView implements MainView {
+        Fragment lastFragment;
+        boolean lastAddToBack;
+        Integer lastSelectedId;
+
+        @Override
+        public void navigateToFragment(Fragment fragment, boolean addToBackStack) {
+            lastFragment = fragment;
+            lastAddToBack = addToBackStack;
+        }
+
+        @Override
+        public void showToast(int messageResId) {
+        }
+
+        @Override
+        public void showToast(String message) {
+        }
+
+        @Override
+        public void showLongToast(int messageResId) {
+        }
+
+        @Override
+        public void showExportProgress(int current, int total) {
+        }
+
+        @Override
+        public void showProgressBar() {
+        }
+
+        @Override
+        public void hideProgressBar() {
+        }
+
+        @Override
+        public void selectNavigationItem(int itemId) {
+            lastSelectedId = itemId;
+        }
+
+        @Override
+        public void requestNotificationPermission(String permission) {
+        }
+
+        @Override
+        public void launchExport(String fileName) {
+        }
+
+        @Override
+        public void launchImport(String[] mimeTypes) {
+        }
+
+        @Override
+        public void showImportWarnings(String message) {
+        }
     }
 }

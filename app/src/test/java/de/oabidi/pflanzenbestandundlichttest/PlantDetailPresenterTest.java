@@ -22,33 +22,6 @@ public class PlantDetailPresenterTest {
     private FakeView view;
     private Uri dummyUri = Uri.parse("file://test");
 
-    private static class FakeView implements PlantDetailView {
-        boolean success;
-        boolean failure;
-        @Override public void showExportSuccess() { success = true; }
-        @Override public void showExportFailure() { failure = true; }
-        @Override public void launchExport() { }
-        @Override public void navigateToDiary(long plantId) { }
-        @Override public String getPlaceholderDash() { return "-"; }
-        @Override public String getUnknownDateText() { return "unknown"; }
-    }
-
-    private static class FakeExportManager extends ExportManager {
-        boolean result;
-        Uri uri;
-        long plantId;
-        FakeExportManager(Context context, boolean result) {
-            PlantRepository fakeRepo = new PlantRepository(context, TestExecutors.newImmediateExecutor());
-            this.result = result;
-        }
-        @Override
-        public void export(@NonNull Uri uri, long plantId, @NonNull Callback cb) {
-            this.uri = uri;
-            this.plantId = plantId;
-            cb.onComplete(result);
-        }
-    }
-
     @Before
     public void setUp() {
         view = new FakeView();
@@ -84,5 +57,56 @@ public class PlantDetailPresenterTest {
         assertEquals("-", presenter.getTextOrFallback(null));
         assertEquals("-", presenter.getTextOrFallback(""));
         assertEquals("abc", presenter.getTextOrFallback("abc"));
+    }
+
+    private static class FakeView implements PlantDetailView {
+        boolean success;
+        boolean failure;
+
+        @Override
+        public void showExportSuccess() {
+            success = true;
+        }
+
+        @Override
+        public void showExportFailure() {
+            failure = true;
+        }
+
+        @Override
+        public void launchExport() {
+        }
+
+        @Override
+        public void navigateToDiary(long plantId) {
+        }
+
+        @Override
+        public String getPlaceholderDash() {
+            return "-";
+        }
+
+        @Override
+        public String getUnknownDateText() {
+            return "unknown";
+        }
+    }
+
+    private static class FakeExportManager extends ExportManager {
+        boolean result;
+        Uri uri;
+        long plantId;
+
+        FakeExportManager(Context context, boolean result) {
+            PlantRepository fakeRepo = new PlantRepository(context, TestExecutors.newImmediateExecutor());
+            this.result = result;
+        }
+
+        @Override
+        public void export(@NonNull Uri uri, long plantId, @NonNull Callback cb) {
+            this.uri = uri;
+            this.plantId = plantId;
+            cb.onComplete(result);
+        }
     }
 }

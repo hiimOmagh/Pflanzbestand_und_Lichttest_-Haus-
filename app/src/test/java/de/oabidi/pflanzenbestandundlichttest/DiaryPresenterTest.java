@@ -24,39 +24,6 @@ import java.util.function.Consumer;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class DiaryPresenterTest {
-    private static class StubRepository extends PlantRepository {
-        private final List<DiaryEntry> entries;
-        StubRepository(Context context, List<DiaryEntry> entries) {
-            super(context);
-            this.entries = entries;
-        }
-        @Override
-        public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback,
-                                       Consumer<Exception> errorCallback) {
-            if (callback != null) {
-                callback.accept(entries);
-            }
-        }
-    }
-
-    private static class FailingRepository extends PlantRepository {
-        FailingRepository(Context context) { super(context); }
-        @Override
-        public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback,
-                                       Consumer<Exception> errorCallback) {
-            if (errorCallback != null) {
-                errorCallback.accept(new RuntimeException("fail"));
-            }
-        }
-    }
-
-    private static class StubView implements DiaryPresenter.View {
-        List<DiaryEntry> shown;
-        String error;
-        @Override public void showEntries(List<DiaryEntry> entries) { shown = entries; }
-        @Override public void showError(String message) { error = message; }
-    }
-
     @Test
     public void loadEntriesUsesRepository() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -108,5 +75,51 @@ public class DiaryPresenterTest {
 
         PlantRepository expectedRepository = ((RepositoryProvider) context).getRepository();
         assertSame(expectedRepository, fragmentRepository);
+    }
+
+    private static class StubRepository extends PlantRepository {
+        private final List<DiaryEntry> entries;
+
+        StubRepository(Context context, List<DiaryEntry> entries) {
+            super(context);
+            this.entries = entries;
+        }
+
+        @Override
+        public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback,
+                                       Consumer<Exception> errorCallback) {
+            if (callback != null) {
+                callback.accept(entries);
+            }
+        }
+    }
+
+    private static class FailingRepository extends PlantRepository {
+        FailingRepository(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback,
+                                       Consumer<Exception> errorCallback) {
+            if (errorCallback != null) {
+                errorCallback.accept(new RuntimeException("fail"));
+            }
+        }
+    }
+
+    private static class StubView implements DiaryPresenter.View {
+        List<DiaryEntry> shown;
+        String error;
+
+        @Override
+        public void showEntries(List<DiaryEntry> entries) {
+            shown = entries;
+        }
+
+        @Override
+        public void showError(String message) {
+            error = message;
+        }
     }
 }

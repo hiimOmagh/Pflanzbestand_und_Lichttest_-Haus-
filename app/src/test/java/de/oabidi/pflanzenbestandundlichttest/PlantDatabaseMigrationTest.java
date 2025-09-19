@@ -68,6 +68,18 @@ public class PlantDatabaseMigrationTest {
     }
 
     /**
+     * Minimal DAO used for seeding the version 4 database in tests.
+     */
+    @Dao
+    interface PlantDaoV4 {
+        @Insert
+        long insert(Plant plant);
+
+        @Query("SELECT * FROM Plant ORDER BY name ASC")
+        List<Plant> getAll();
+    }
+
+    /**
      * Version 4 of the database without the {@code plantId} column in reminders.
      */
     @Database(
@@ -86,17 +98,9 @@ public class PlantDatabaseMigrationTest {
         public abstract PlantDaoV4 plantDao();
     }
 
-    /** Minimal DAO used for seeding the version 4 database in tests. */
-    @Dao
-    interface PlantDaoV4 {
-        @Insert
-        long insert(Plant plant);
-
-        @Query("SELECT * FROM Plant ORDER BY name ASC")
-        List<Plant> getAll();
-    }
-
-    /** Measurement entity used in version 4 without DLI or note columns. */
+    /**
+     * Measurement entity used in version 4 without DLI or note columns.
+     */
     @Entity
     static class MeasurementV4 {
         @PrimaryKey(autoGenerate = true)
@@ -107,7 +111,9 @@ public class PlantDatabaseMigrationTest {
         public Float ppfd;
     }
 
-    /** Reminder entity prior to version 5 without the {@code plantId} reference. */
+    /**
+     * Reminder entity prior to version 5 without the {@code plantId} reference.
+     */
     @Entity
     static class ReminderV4 {
         @PrimaryKey(autoGenerate = true)

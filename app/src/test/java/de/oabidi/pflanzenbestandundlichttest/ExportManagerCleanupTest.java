@@ -26,12 +26,6 @@ public class ExportManagerCleanupTest {
     private Context context;
     private ExecutorService executor;
 
-    @Before
-    public void setUp() {
-        context = ApplicationProvider.getApplicationContext();
-        executor = ((ExecutorProvider) context).getIoExecutor();
-    }
-
     private static void deleteRecursive(File f) {
         if (f.isDirectory()) {
             File[] children = f.listFiles();
@@ -45,36 +39,10 @@ public class ExportManagerCleanupTest {
         f.delete();
     }
 
-    private static class FailingWriteRepository extends PlantRepository {
-        private final BulkReadDao dao;
-
-        FailingWriteRepository(Context ctx) {
-            super(ctx);
-            dao = new BulkReadDao() {
-                @Override
-                public List<Plant> getAllPlants() {
-                    Plant p = new Plant("p", null, null, null, 0L, Uri.parse("content://missing"));
-                    p.setId(1);
-                    return Collections.singletonList(p);
-                }
-
-                @Override public Plant getPlant(long id) { return null; }
-                @Override public List<Measurement> getAllMeasurements() { return Collections.emptyList(); }
-                @Override public List<Measurement> getMeasurementsForPlant(long plantId) { return Collections.emptyList(); }
-                @Override public List<DiaryEntry> getAllDiaryEntries() { return Collections.emptyList(); }
-                @Override public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) { return Collections.emptyList(); }
-                @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() { return Collections.emptyList(); }
-                @Override public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) { return Collections.emptyList(); }
-                @Override public List<Reminder> getAllReminders() { return Collections.emptyList(); }
-                @Override public List<Reminder> getRemindersForPlant(long plantId) { return Collections.emptyList(); }
-                @Override public List<SpeciesTarget> getAllSpeciesTargets() { return Collections.emptyList(); }
-            };
-        }
-
-        @Override
-        public BulkReadDao bulkDao() {
-            return dao;
-        }
+    @Before
+    public void setUp() {
+        context = ApplicationProvider.getApplicationContext();
+        executor = ((ExecutorProvider) context).getIoExecutor();
     }
 
     @Test
@@ -106,5 +74,76 @@ public class ExportManagerCleanupTest {
         String[] remaining = cacheDir.list((dir, name) -> name.startsWith("export_"));
         assertNotNull(remaining);
         assertEquals(0, remaining.length);
+    }
+
+    private static class FailingWriteRepository extends PlantRepository {
+        private final BulkReadDao dao;
+
+        FailingWriteRepository(Context ctx) {
+            super(ctx);
+            dao = new BulkReadDao() {
+                @Override
+                public List<Plant> getAllPlants() {
+                    Plant p = new Plant("p", null, null, null, 0L, Uri.parse("content://missing"));
+                    p.setId(1);
+                    return Collections.singletonList(p);
+                }
+
+                @Override
+                public Plant getPlant(long id) {
+                    return null;
+                }
+
+                @Override
+                public List<Measurement> getAllMeasurements() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<Measurement> getMeasurementsForPlant(long plantId) {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<DiaryEntry> getAllDiaryEntries() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<DiaryEntry> getDiaryEntriesForPlant(long plantId) {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<Reminder> getAllReminders() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<Reminder> getRemindersForPlant(long plantId) {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<SpeciesTarget> getAllSpeciesTargets() {
+                    return Collections.emptyList();
+                }
+            };
+        }
+
+        @Override
+        public BulkReadDao bulkDao() {
+            return dao;
+        }
     }
 }

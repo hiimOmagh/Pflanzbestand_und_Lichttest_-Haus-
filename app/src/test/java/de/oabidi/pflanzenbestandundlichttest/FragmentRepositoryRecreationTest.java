@@ -41,6 +41,18 @@ public class FragmentRepositoryRecreationTest {
         TestPlantApplication.setRepository(null);
     }
 
+    private static PlantRepository getRepository(Fragment fragment) {
+        try {
+            Field field = fragment.getClass().getDeclaredField("repository");
+            field.setAccessible(true);
+            PlantRepository repo = (PlantRepository) field.get(fragment);
+            assertNotNull("Repository should be initialized", repo);
+            return repo;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new AssertionError("Unable to access repository field", e);
+        }
+    }
+
     @Before
     public void resetRepository() {
         TestPlantApplication.setRepository(sharedRepository);
@@ -78,28 +90,12 @@ public class FragmentRepositoryRecreationTest {
         scenario.onFragment(fragment -> assertSame(sharedRepository, getRepository(fragment)));
     }
 
-    private static PlantRepository getRepository(Fragment fragment) {
-        try {
-            Field field = fragment.getClass().getDeclaredField("repository");
-            field.setAccessible(true);
-            PlantRepository repo = (PlantRepository) field.get(fragment);
-            assertNotNull("Repository should be initialized", repo);
-            return repo;
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new AssertionError("Unable to access repository field", e);
-        }
-    }
-
     /**
      * Minimal application exposing a shared repository for tests.
      */
     public static class TestPlantApplication extends Application implements RepositoryProvider, ExecutorProvider {
         private static PlantRepository repository;
         private ExecutorService executor;
-
-        static void setRepository(PlantRepository repo) {
-            repository = repo;
-        }
 
         @Override
         public void onCreate() {
@@ -112,6 +108,10 @@ public class FragmentRepositoryRecreationTest {
         @Override
         public PlantRepository getRepository() {
             return repository;
+        }
+
+        static void setRepository(PlantRepository repo) {
+            repository = repo;
         }
 
         @Override
