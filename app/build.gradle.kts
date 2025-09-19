@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "de.oabidi.pflanzenbestandundlichttest"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "de.oabidi.pflanzenbestandundlichttest"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 

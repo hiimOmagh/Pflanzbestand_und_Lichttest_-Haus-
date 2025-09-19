@@ -43,7 +43,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.oabidi.pflanzenbestandundlichttest.BuildConfig;
 import de.oabidi.pflanzenbestandundlichttest.R;
 
 /**
@@ -240,7 +239,7 @@ public class PlantPhotoCaptureFragment extends Fragment {
         }
         Context context = requireContext();
         Uri uri = FileProvider.getUriForFile(context,
-            BuildConfig.APPLICATION_ID + ".fileprovider", photoFile);
+            context.getPackageName() + ".fileprovider", photoFile);
         Bundle result = new Bundle();
         result.putString(EXTRA_PHOTO_URI, uri.toString());
         getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
