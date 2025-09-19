@@ -1,5 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -18,11 +20,21 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.graphics.Insets;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 
@@ -43,14 +55,38 @@ import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFra
  *   <li>{@code photoUri} – string form of the plant photo URI; empty string when unavailable</li>
  * </ul>
  */
-public class PlantDetailActivity extends AppCompatActivity implements PlantDetailView {
+public class PlantDetailActivity extends AppCompatActivity
+    implements PlantDetailView, LightSensorHelper.OnLuxChangedListener {
+    private static final float LUX_MEDIUM_THRESHOLD = 300f;
+    private static final float LUX_HIGH_THRESHOLD = 1000f;
+    private static final float LUMA_MEDIUM_THRESHOLD = 90f;
+    private static final float LUMA_HIGH_THRESHOLD = 170f;
+    private static final float CAMERA_EMA_ALPHA = 0.15f;
+
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
     private PlantRepository repository;
     private ImageView photoView;
     private long plantId;
     private Uri photoUri;
     private String plantName;
+    @Nullable
+    private LightSensorHelper lightSensorHelper;
+    private boolean hasAmbientSensor;
+    private TextView ambientValueView;
+    private TextView ambientBandView;
+    private TextView cameraValueView;
+    private TextView cameraBandView;
+    private View ambientColumn;
+    private View lightMeterSpacer;
+    private ExecutorService cameraExecutor;
+    @Nullable
+    private ProcessCameraProvider cameraProvider;
+    @Nullable
+    private ImageAnalysis imageAnalysis;
+    private float smoothedCameraLuma = Float.NaN;
+    private boolean cameraPermissionDenied;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +117,51 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
         Button captureButton = findViewById(R.id.detail_capture_photo);
+
+        ambientValueView = findViewById(R.id.detail_ambient_value);
+        ambientBandView = findViewById(R.id.detail_ambient_band);
+        cameraValueView = findViewById(R.id.detail_camera_value);
+        cameraBandView = findViewById(R.id.detail_camera_band);
+        ambientColumn = findViewById(R.id.detail_ambient_column);
+        lightMeterSpacer = findViewById(R.id.detail_light_meter_spacer);
+
+        if (ambientValueView != null) {
+            ambientValueView.setText(R.string.light_meter_lux_placeholder);
+        }
+        if (ambientBandView != null) {
+            ambientBandView.setText(R.string.light_meter_band_placeholder);
+        }
+        if (cameraValueView != null) {
+            cameraValueView.setText(R.string.light_meter_camera_placeholder);
+        }
+        if (cameraBandView != null) {
+            cameraBandView.setText(R.string.light_meter_band_placeholder);
+        }
+
+        lightSensorHelper = new LightSensorHelper(this, this, 6);
+        hasAmbientSensor = lightSensorHelper.hasLightSensor();
+        if (!hasAmbientSensor) {
+            if (ambientColumn != null) {
+                ambientColumn.setVisibility(View.GONE);
+            }
+            if (lightMeterSpacer != null) {
+                lightMeterSpacer.setVisibility(View.GONE);
+            }
+        }
+
+        cameraExecutor = Executors.newSingleThreadExecutor();
+        cameraPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                if (granted) {
+                    cameraPermissionDenied = false;
+                    startCameraAnalysis();
+                } else {
+                    cameraPermissionDenied = true;
+                    showCameraPermissionDenied();
+                }
+            }
+        );
 
         if (!(getApplicationContext() instanceof ExecutorProvider)) {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
@@ -122,8 +203,228 @@ public class PlantDetailActivity extends AppCompatActivity implements PlantDetai
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (hasAmbientSensor && lightSensorHelper != null) {
+            lightSensorHelper.start();
+        }
+        startCameraUpdatesIfPossible();
+    }
+
+    @Override
+    protected void onPause() {
+        if (lightSensorHelper != null) {
+            lightSensorHelper.stop();
+        }
+        stopCameraAnalysis();
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopCameraAnalysis();
+        if (lightSensorHelper != null) {
+            lightSensorHelper.stop();
+        }
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdownNow();
+            cameraExecutor = null;
+        }
+        super.onDestroy();
+    }
+
     private void launchCamera() {
         PlantPhotoCaptureFragment.show(getSupportFragmentManager(), android.R.id.content);
+    }
+
+    private void startCameraUpdatesIfPossible() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionDenied = false;
+            startCameraAnalysis();
+        } else if (!cameraPermissionDenied && cameraPermissionLauncher != null) {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        } else {
+            showCameraPermissionDenied();
+        }
+    }
+
+    private void startCameraAnalysis() {
+        if (cameraExecutor == null || cameraExecutor.isShutdown()) {
+            cameraExecutor = Executors.newSingleThreadExecutor();
+        }
+        if (cameraValueView != null) {
+            runOnUiThread(() -> {
+                cameraValueView.setText(R.string.light_meter_camera_placeholder);
+                if (cameraBandView != null) {
+                    cameraBandView.setText(R.string.light_meter_band_placeholder);
+                }
+            });
+        }
+        if (cameraProvider != null) {
+            bindImageAnalysis(cameraProvider);
+            return;
+        }
+        final ListenableFuture<ProcessCameraProvider> providerFuture =
+            ProcessCameraProvider.getInstance(this);
+        providerFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider provider = providerFuture.get();
+                cameraProvider = provider;
+                bindImageAnalysis(provider);
+            } catch (ExecutionException | InterruptedException e) {
+                showCameraUnavailable();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void bindImageAnalysis(@NonNull ProcessCameraProvider provider) {
+        if (imageAnalysis != null) {
+            provider.unbind(imageAnalysis);
+        }
+        imageAnalysis = new ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+            .build();
+        if (cameraExecutor == null || cameraExecutor.isShutdown()) {
+            cameraExecutor = Executors.newSingleThreadExecutor();
+        }
+        imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeLuma);
+        try {
+            provider.bindToLifecycle(this, CameraSelector.DEFAULT_FRONT_CAMERA, imageAnalysis);
+        } catch (IllegalArgumentException e) {
+            try {
+                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, imageAnalysis);
+            } catch (IllegalArgumentException inner) {
+                provider.unbind(imageAnalysis);
+                imageAnalysis = null;
+                showCameraUnavailable();
+            }
+        }
+    }
+
+    private void analyzeLuma(@NonNull ImageProxy image) {
+        try {
+            ImageProxy.PlaneProxy[] planes = image.getPlanes();
+            if (planes.length == 0) {
+                return;
+            }
+            ByteBuffer buffer = planes[0].getBuffer();
+            if (buffer == null) {
+                return;
+            }
+            int remaining = buffer.remaining();
+            if (remaining <= 0) {
+                return;
+            }
+            float sum = 0f;
+            while (buffer.hasRemaining()) {
+                sum += (buffer.get() & 0xFF);
+            }
+            float average = sum / remaining;
+            updateCameraLuma(average);
+        } finally {
+            image.close();
+        }
+    }
+
+    private void updateCameraLuma(float luma) {
+        float ema;
+        synchronized (this) {
+            if (Float.isNaN(smoothedCameraLuma)) {
+                smoothedCameraLuma = luma;
+            } else {
+                smoothedCameraLuma += CAMERA_EMA_ALPHA * (luma - smoothedCameraLuma);
+            }
+            ema = smoothedCameraLuma;
+        }
+        final float displayValue = ema;
+        runOnUiThread(() -> {
+            if (cameraValueView == null || cameraBandView == null) {
+                return;
+            }
+            cameraValueView.setText(getString(R.string.light_meter_camera_value, displayValue));
+            setBandText(cameraBandView, bandForLuma(displayValue));
+        });
+    }
+
+    private void stopCameraAnalysis() {
+        smoothedCameraLuma = Float.NaN;
+        if (cameraProvider != null && imageAnalysis != null) {
+            cameraProvider.unbind(imageAnalysis);
+            imageAnalysis = null;
+        }
+    }
+
+    private void showCameraPermissionDenied() {
+        if (cameraValueView != null && cameraBandView != null) {
+            cameraValueView.setText(R.string.light_meter_camera_permission_required);
+            cameraBandView.setText(R.string.light_meter_band_placeholder);
+        }
+    }
+
+    private void showCameraUnavailable() {
+        runOnUiThread(() -> {
+            if (cameraValueView != null && cameraBandView != null) {
+                cameraValueView.setText(R.string.light_meter_camera_unavailable);
+                cameraBandView.setText(R.string.light_meter_band_placeholder);
+            }
+        });
+    }
+
+    @Override
+    public void onLuxChanged(float rawLux, float avgLux) {
+        runOnUiThread(() -> {
+            if (ambientValueView == null || ambientBandView == null) {
+                return;
+            }
+            ambientValueView.setText(getString(R.string.light_meter_lux_value, avgLux));
+            setBandText(ambientBandView, bandForLux(avgLux));
+        });
+    }
+
+    private void setBandText(@NonNull TextView view, @NonNull LightBand band) {
+        int resId;
+        switch (band) {
+            case LOW:
+                resId = R.string.light_band_low;
+                break;
+            case MEDIUM:
+                resId = R.string.light_band_medium;
+                break;
+            case HIGH:
+            default:
+                resId = R.string.light_band_high;
+                break;
+        }
+        view.setText(resId);
+    }
+
+    private LightBand bandForLux(float lux) {
+        if (lux < LUX_MEDIUM_THRESHOLD) {
+            return LightBand.LOW;
+        } else if (lux < LUX_HIGH_THRESHOLD) {
+            return LightBand.MEDIUM;
+        } else {
+            return LightBand.HIGH;
+        }
+    }
+
+    private LightBand bandForLuma(float luma) {
+        if (luma < LUMA_MEDIUM_THRESHOLD) {
+            return LightBand.LOW;
+        } else if (luma < LUMA_HIGH_THRESHOLD) {
+            return LightBand.MEDIUM;
+        } else {
+            return LightBand.HIGH;
+        }
+    }
+
+    private enum LightBand {
+        LOW,
+        MEDIUM,
+        HIGH
     }
 
     private void updatePhotoView(@Nullable Uri uri) {
