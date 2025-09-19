@@ -2,15 +2,16 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -28,15 +30,24 @@ import androidx.core.graphics.Insets;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
+import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoLoader;
+import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
 
 /**
  * Activity responsible for showing detailed information about a plant.
@@ -67,10 +78,13 @@ public class PlantDetailActivity extends AppCompatActivity
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private PlantRepository repository;
-    private ImageView photoView;
+    private RecyclerView photoGrid;
+    private View photoEmptyView;
+    private PlantPhotoAdapter plantPhotoAdapter;
+    private PlantPhotoLoader plantPhotoLoader;
     private long plantId;
-    private Uri photoUri;
     private String plantName;
+    private boolean scrollToNewestOnNextUpdate;
     @Nullable
     private LightSensorHelper lightSensorHelper;
     private boolean hasAmbientSensor;
@@ -104,19 +118,15 @@ public class PlantDetailActivity extends AppCompatActivity
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         plantName = name;
-        String photoUriStr = getIntent().getStringExtra("photoUri"); // String form of the plant photo URI
-        if (!TextUtils.isEmpty(photoUriStr)) {
-            photoUri = Uri.parse(photoUriStr);
-        }
-
         TextView nameView = findViewById(R.id.detail_name);
         TextView descriptionView = findViewById(R.id.detail_description);
         TextView speciesView = findViewById(R.id.detail_species);
         TextView locationHintView = findViewById(R.id.detail_location_hint);
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
-        photoView = findViewById(R.id.detail_photo_uri);
         View diaryButton = findViewById(R.id.detail_diary);
-        Button captureButton = findViewById(R.id.detail_capture_photo);
+        Button addPhotoButton = findViewById(R.id.detail_add_photo);
+        photoGrid = findViewById(R.id.detail_photo_grid);
+        photoEmptyView = findViewById(R.id.detail_photo_empty);
 
         ambientValueView = findViewById(R.id.detail_ambient_value);
         ambientBandView = findViewById(R.id.detail_ambient_band);
@@ -175,10 +185,11 @@ public class PlantDetailActivity extends AppCompatActivity
         speciesView.setText(presenter.getTextOrFallback(species));
         locationHintView.setText(presenter.getTextOrFallback(locationHint));
         acquiredAtView.setText(presenter.formatAcquiredAt(acquiredAtEpoch));
-        updatePhotoView(photoUri);
+        setupPhotoGallery(executor);
+        refreshPlantPhotos(null);
 
         diaryButton.setOnClickListener(v -> presenter.onDiaryClicked());
-        captureButton.setOnClickListener(v -> launchCamera());
+        addPhotoButton.setOnClickListener(v -> launchCamera());
 
         getSupportFragmentManager().setFragmentResultListener(
             PlantPhotoCaptureFragment.RESULT_KEY,
@@ -187,9 +198,18 @@ public class PlantDetailActivity extends AppCompatActivity
                 String uriString = bundle.getString(PlantPhotoCaptureFragment.EXTRA_PHOTO_URI);
                 if (!TextUtils.isEmpty(uriString)) {
                     Uri newUri = Uri.parse(uriString);
-                    photoUri = newUri;
-                    updatePhotoView(newUri);
-                    persistPhotoUri(newUri);
+                    handleCapturedPhoto(newUri);
+                }
+            }
+        );
+
+        getSupportFragmentManager().setFragmentResultListener(
+            PlantPhotoViewerFragment.RESULT_KEY,
+            this,
+            (requestKey, bundle) -> {
+                boolean refresh = bundle.getBoolean(PlantPhotoViewerFragment.EXTRA_REFRESH_GALLERY, false);
+                if (refresh) {
+                    refreshPlantPhotos(null);
                 }
             }
         );
@@ -203,9 +223,126 @@ public class PlantDetailActivity extends AppCompatActivity
         });
     }
 
+    private void setupPhotoGallery(@NonNull ExecutorService executor) {
+        if (photoGrid == null) {
+            return;
+        }
+        plantPhotoLoader = new PlantPhotoLoader(this, executor);
+        plantPhotoAdapter = new PlantPhotoAdapter(plantPhotoLoader, new PlantPhotoAdapter.Callbacks() {
+            @Override
+            public void onPhotoClicked(@NonNull PlantPhoto photo) {
+                showPhotoViewer(photo);
+            }
+
+            @Override
+            public void onPhotoLongClicked(@NonNull PlantPhoto photo) {
+                confirmDeletePhoto(photo);
+            }
+        });
+        photoGrid.setLayoutManager(new GridLayoutManager(this, calculatePhotoSpanCount()));
+        photoGrid.setAdapter(plantPhotoAdapter);
+        photoGrid.setHasFixedSize(true);
+        updateGalleryVisibility();
+    }
+
+    private int calculatePhotoSpanCount() {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        int widthDp = (int) (metrics.widthPixels / metrics.density);
+        if (widthDp >= 720) {
+            return 5;
+        }
+        if (widthDp >= 600) {
+            return 4;
+        }
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            return 4;
+        }
+        return 3;
+    }
+
+    private void refreshPlantPhotos(@Nullable Runnable completion) {
+        if (plantPhotoAdapter == null) {
+            if (completion != null) {
+                completion.run();
+            }
+            return;
+        }
+        if (plantId <= 0) {
+            plantPhotoAdapter.submitList(Collections.emptyList());
+            updateGalleryVisibility();
+            if (completion != null) {
+                completion.run();
+            }
+            return;
+        }
+        repository.plantPhotosForPlant(plantId, photos -> {
+            List<PlantPhoto> copy = new ArrayList<>(photos);
+            plantPhotoAdapter.submitList(copy);
+            updateGalleryVisibility();
+            if (scrollToNewestOnNextUpdate) {
+                scrollToNewestOnNextUpdate = false;
+                if (!copy.isEmpty() && photoGrid != null) {
+                    photoGrid.post(() -> photoGrid.smoothScrollToPosition(0));
+                }
+            }
+            if (completion != null) {
+                completion.run();
+            }
+        }, e -> {
+            Toast.makeText(this, R.string.plant_photo_load_failed, Toast.LENGTH_SHORT).show();
+            if (completion != null) {
+                completion.run();
+            }
+        });
+    }
+
+    private void updateGalleryVisibility() {
+        if (photoGrid == null || photoEmptyView == null) {
+            return;
+        }
+        boolean hasPhotos = plantPhotoAdapter != null && plantPhotoAdapter.getItemCount() > 0;
+        photoGrid.setVisibility(hasPhotos ? View.VISIBLE : View.GONE);
+        photoEmptyView.setVisibility(hasPhotos ? View.GONE : View.VISIBLE);
+    }
+
+    private void handleCapturedPhoto(@NonNull Uri uri) {
+        if (plantId <= 0) {
+            Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        repository.addPlantPhoto(plantId, uri, photo -> {
+            scrollToNewestOnNextUpdate = true;
+            refreshPlantPhotos(null);
+        }, e -> Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
+    }
+
+    private void confirmDeletePhoto(@NonNull PlantPhoto photo) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.plant_photo_delete_title)
+            .setMessage(R.string.plant_photo_delete_message)
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> deletePhoto(photo))
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+    }
+
+    private void deletePhoto(@NonNull PlantPhoto photo) {
+        repository.deletePlantPhoto(photo, () -> {
+            Toast.makeText(this, R.string.plant_photo_delete_success, Toast.LENGTH_SHORT).show();
+            refreshPlantPhotos(null);
+        }, e -> Toast.makeText(this, R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show());
+    }
+
+    private void showPhotoViewer(@NonNull PlantPhoto photo) {
+        if (plantId <= 0) {
+            return;
+        }
+        PlantPhotoViewerFragment.show(getSupportFragmentManager(), plantId, photo.getId(), plantName);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        refreshPlantPhotos(null);
         if (hasAmbientSensor && lightSensorHelper != null) {
             lightSensorHelper.start();
         }
@@ -425,40 +562,6 @@ public class PlantDetailActivity extends AppCompatActivity
         LOW,
         MEDIUM,
         HIGH
-    }
-
-    private void updatePhotoView(@Nullable Uri uri) {
-        if (photoView == null) {
-            return;
-        }
-        if (uri == null) {
-            photoView.setVisibility(View.GONE);
-            photoView.setImageURI(null);
-            photoView.setContentDescription(null);
-        } else {
-            photoView.setImageURI(uri);
-            photoView.setVisibility(View.VISIBLE);
-            String cdName = (plantName == null || plantName.isEmpty())
-                ? getString(R.string.unknown)
-                : plantName;
-            photoView.setContentDescription(
-                getString(R.string.plant_photo_desc_format, cdName));
-        }
-    }
-
-    private void persistPhotoUri(@NonNull Uri uri) {
-        if (plantId <= 0) {
-            return;
-        }
-        repository.getPlant(plantId, plant -> {
-            if (plant == null) {
-                Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            plant.setPhotoUri(uri);
-            repository.update(plant, null, e ->
-                Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
-        }, e -> Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
     }
 
     @Override

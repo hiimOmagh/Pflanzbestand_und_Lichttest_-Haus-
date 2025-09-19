@@ -1,167 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".PlantDetailActivity">
 
-    <LinearLayout
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/main"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbarStyle="outsideOverlay">
 
-        <TextView
-            android:id="@+id/detail_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="8dp"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/detail_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/detail_species"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/detail_location_hint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/detail_acquired_at"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="4dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/detail_light_meter_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="16dp"
-            android:text="@string/light_meter_title"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:id="@+id/detail_light_meter_rows"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/detail_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="8dp">
+            android:padding="16dp">
 
             <LinearLayout
-                android:id="@+id/detail_ambient_column"
+                android:id="@+id/detail_metadata_container"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
-                    android:id="@+id/detail_ambient_label"
+                    android:id="@+id/detail_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/light_meter_ambient_label"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:paddingBottom="8dp"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    tools:text="Aloe Vera" />
 
                 <TextView
-                    android:id="@+id/detail_ambient_value"
+                    android:id="@+id/detail_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    tools:text="Succulent that prefers bright indirect light." />
+
+                <TextView
+                    android:id="@+id/detail_species"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:textSize="16sp"
+                    tools:text="Aloe barbadensis" />
+
+                <TextView
+                    android:id="@+id/detail_location_hint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingTop="4dp"
-                    android:text="@string/light_meter_lux_placeholder"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/detail_ambient_band"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingTop="2dp"
-                    android:text="@string/light_meter_band_placeholder"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <Space
-                android:id="@+id/detail_light_meter_spacer"
-                android:layout_width="16dp"
-                android:layout_height="0dp" />
-
-            <LinearLayout
-                android:id="@+id/detail_camera_column"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/detail_camera_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/light_meter_camera_label"
                     android:textSize="16sp"
-                    android:textStyle="bold" />
+                    tools:text="South-facing window" />
 
                 <TextView
-                    android:id="@+id/detail_camera_value"
+                    android:id="@+id/detail_acquired_at"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:paddingTop="4dp"
-                    android:text="@string/light_meter_camera_placeholder"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    tools:text="Acquired Jan 5, 2024" />
 
                 <TextView
-                    android:id="@+id/detail_camera_band"
+                    android:id="@+id/detail_light_meter_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:paddingTop="2dp"
-                    android:text="@string/light_meter_band_placeholder"
-                    android:textSize="14sp" />
+                    android:paddingTop="16dp"
+                    android:text="@string/light_meter_title"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/detail_light_meter_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp">
+
+                    <LinearLayout
+                        android:id="@+id/detail_ambient_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/detail_ambient_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/light_meter_ambient_label"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detail_ambient_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="4dp"
+                            android:text="@string/light_meter_lux_placeholder"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/detail_ambient_band"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="2dp"
+                            android:text="@string/light_meter_band_placeholder"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <Space
+                        android:id="@+id/detail_light_meter_spacer"
+                        android:layout_width="16dp"
+                        android:layout_height="0dp" />
+
+                    <LinearLayout
+                        android:id="@+id/detail_camera_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/detail_camera_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/light_meter_camera_label"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/detail_camera_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="4dp"
+                            android:text="@string/light_meter_camera_placeholder"
+                            android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/detail_camera_band"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="2dp"
+                            android:text="@string/light_meter_band_placeholder"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/detail_light_meter_note"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:text="@string/light_meter_ev100_note"
+                    android:textSize="12sp" />
             </LinearLayout>
-        </LinearLayout>
 
-        <TextView
-            android:id="@+id/detail_light_meter_note"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:text="@string/light_meter_ev100_note"
-            android:textSize="12sp" />
+            <LinearLayout
+                android:id="@+id/detail_gallery_section"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/detail_metadata_container">
 
-        <ImageView
-            android:id="@+id/detail_photo_uri"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/plant_photo_desc"
-            android:paddingTop="4dp"
-            android:src="@drawable/ic_launcher_foreground"
-            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+                <TextView
+                    android:id="@+id/detail_photo_empty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/plant_photo_gallery_empty"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    tools:text="No gallery photos yet" />
 
-        <Button
-            android:id="@+id/detail_capture_photo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:text="@string/action_capture_photo" />
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/detail_photo_grid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"
+                    tools:itemCount="6"
+                    tools:listitem="@layout/item_plant_photo"
+                    tools:visibility="visible" />
+            </LinearLayout>
 
-        <Button
-            android:id="@+id/detail_diary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/action_view_diary"
-            android:paddingTop="8dp" />
-    </LinearLayout>
-</ScrollView>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/detail_add_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/action_add_photo"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/detail_gallery_section" />
+
+            <Button
+                android:id="@+id/detail_diary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:paddingTop="8dp"
+                android:text="@string/action_view_diary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/detail_add_photo"
+                app:layout_constraintBottom_toBottomOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

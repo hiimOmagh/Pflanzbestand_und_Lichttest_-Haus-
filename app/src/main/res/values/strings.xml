@@ -118,6 +118,16 @@
     <string name="photo_capture_success">Photo captured</string>
     <string name="photo_capture_failed">Unable to save photo</string>
     <string name="photo_capture_permission_denied">Camera permission denied</string>
+    <string name="plant_photo_gallery_empty">No gallery photos yet</string>
+    <string name="plant_photo_delete_title">Delete photo?</string>
+    <string name="plant_photo_delete_message">This will remove the photo from the gallery.</string>
+    <string name="plant_photo_delete_success">Photo deleted</string>
+    <string name="plant_photo_delete_failed">Unable to delete photo</string>
+    <string name="plant_photo_viewer_title">Plant photos</string>
+    <string name="plant_photo_delete_action">Delete</string>
+    <string name="action_close">Close</string>
+    <string name="plant_photo_position">%1$d of %2$d</string>
+    <string name="plant_photo_load_failed">Unable to load photos</string>
     <string name="light_meter_title">Light meter</string>
     <string name="light_meter_ambient_label">Ambient sensor</string>
     <string name="light_meter_camera_label">Camera luma</string>
