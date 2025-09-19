@@ -146,10 +146,14 @@ public class PlantPhotoCaptureFragment extends Fragment {
             != PackageManager.PERMISSION_GRANTED) {
             toRequest.add(Manifest.permission.CAMERA);
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-            && ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES)
+                != PackageManager.PERMISSION_GRANTED) {
+                toRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
+            }
+        } else if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED) {
-            toRequest.add(Manifest.permission.READ_MEDIA_IMAGES);
+            toRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE);
         }
         if (toRequest.isEmpty()) {
             startCamera();

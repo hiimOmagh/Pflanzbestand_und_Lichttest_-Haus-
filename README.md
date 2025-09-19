@@ -4,7 +4,8 @@
 
 This Android sample demonstrates simple plant management combined with light testing. The main
 screen lists example plants and measures ambient light to calculate PPFD and DLI, helping evaluate
-indoor conditions for plant growth.
+indoor conditions for plant growth. The application targets Android 14 (API level 34) while
+supporting devices running Android 7.0 (API level 24) and above.
 
 ## Build and setup
 
