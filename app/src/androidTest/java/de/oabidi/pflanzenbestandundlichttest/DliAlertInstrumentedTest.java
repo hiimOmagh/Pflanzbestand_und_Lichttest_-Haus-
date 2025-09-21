@@ -82,7 +82,7 @@ public class DliAlertInstrumentedTest {
         awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().insert(first));
 
         Measurement second = new Measurement(plant.getId(), now, 0f, 50f, null, null);
-        awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().insert(first));
+        awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().insert(second));
 
         ShadowSystemClock.advanceBy(Duration.ofSeconds(1));
         CountDownLatch latch = new CountDownLatch(1);
