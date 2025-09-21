@@ -72,6 +72,32 @@ public class ReminderReceiver extends BroadcastReceiver {
         String message = intent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE);
         long reminderId = intent.getLongExtra(ReminderScheduler.EXTRA_ID, -1);
         long plantId = intent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1);
+        String safeMessage = message != null ? message : "";
+
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Log.w(
+                "ReminderReceiver",
+                "Notification permission missing. Scheduling fallback reminder"
+            );
+            NotificationPermissionFallback.recordMissingPermission(context, reminderId, plantId, safeMessage);
+            boolean rescheduled = ReminderScheduler.scheduleReminder(
+                context,
+                repo,
+                1,
+                safeMessage,
+                plantId,
+                e -> Log.w("ReminderReceiver", "Failed to reschedule reminder after permission denial", e)
+            );
+            if (!rescheduled) {
+                Log.w(
+                    "ReminderReceiver",
+                    "Unable to enqueue retry reminder after permission denial"
+                );
+            }
+            repo.deleteReminderById(reminderId, null);
+            return;
+        }
+
         createChannel(context);
         int notificationId = (int) System.currentTimeMillis();
 
@@ -93,7 +119,7 @@ public class ReminderReceiver extends BroadcastReceiver {
             Intent snoozeIntent = new Intent(context, ReminderReceiver.class);
             snoozeIntent.setAction(ACTION_SNOOZE);
             snoozeIntent.putExtra(EXTRA_NOTIFICATION_ID, notificationId);
-            snoozeIntent.putExtra(ReminderScheduler.EXTRA_MESSAGE, message);
+            snoozeIntent.putExtra(ReminderScheduler.EXTRA_MESSAGE, safeMessage);
             snoozeIntent.putExtra(ReminderScheduler.EXTRA_ID, reminderId);
             snoozeIntent.putExtra(ReminderScheduler.EXTRA_PLANT_ID, plantId);
             PendingIntent snoozePending = PendingIntent.getBroadcast(
@@ -119,22 +145,12 @@ public class ReminderReceiver extends BroadcastReceiver {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(message)
+                .setContentText(safeMessage)
                 .setAutoCancel(true)
                 .setContentIntent(contentPending)
                 .addAction(0, context.getString(R.string.reminder_mark_done), donePending)
                 .addAction(0, context.getString(R.string.reminder_snooze), snoozePending);
 
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
             NotificationManagerCompat.from(context).notify(notificationId, builder.build());
         });
     }

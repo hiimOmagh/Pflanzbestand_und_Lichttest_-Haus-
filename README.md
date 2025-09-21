@@ -51,6 +51,14 @@ To execute only the statistics fragment test, run:
    plants.
 5. Use the search action to filter plants by name, species, or location hint.
 
+### Reminder notifications
+
+Reminder alarms require the `POST_NOTIFICATIONS` runtime permission on Android 13 and later. When a
+scheduled reminder fires without the permission, the receiver now records the missed delivery in a
+small shared-preferences queue so the app can later prompt the user, and it automatically
+reschedules the reminder for the following day. This ensures that watering or measurement tasks are
+not silently dropped while still respecting the user's current permission choice.
+
 ## Data Backup
 
 Data can be exported and imported via the menu. When importing a backup, you can choose to **merge**
