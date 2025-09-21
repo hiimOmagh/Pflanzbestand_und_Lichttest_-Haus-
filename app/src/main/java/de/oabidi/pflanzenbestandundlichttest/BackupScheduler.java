@@ -39,7 +39,7 @@ public class BackupScheduler extends BroadcastReceiver {
             cleanupOldBackups(dir);
             String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
                 .format(new Date());
-            File out = new File(dir, "backup-" + timestamp + ".zip");
+            File out = new File(dir, "backup-" + timestamp + ".json.zip");
             Uri uri = Uri.fromFile(out);
             PlantRepository repo = repository != null
                 ? repository
@@ -49,7 +49,7 @@ public class BackupScheduler extends BroadcastReceiver {
                 throw new IllegalStateException("Application context does not implement ExecutorProvider");
             }
             ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
-            new ExportManager(context, repo, executor).export(uri, success -> result.finish());
+            new ExportManager(context, repo, executor).exportJson(uri, success -> result.finish());
         } else {
             result.finish();
         }

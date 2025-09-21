@@ -98,7 +98,9 @@ public class PlantDetailPresenterTest {
         long plantId;
 
         FakeExportManager(Context context, boolean result) {
-            PlantRepository fakeRepo = new PlantRepository(context, TestExecutors.newImmediateExecutor());
+            super(context,
+                new PlantRepository(context.getApplicationContext(), TestExecutors.newImmediateExecutor()),
+                TestExecutors.newImmediateExecutor());
             this.result = result;
         }
 

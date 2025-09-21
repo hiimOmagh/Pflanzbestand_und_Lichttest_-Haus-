@@ -7,6 +7,7 @@ import android.app.Application;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentFactory;
 import androidx.fragment.app.testing.FragmentScenario;
 
 import org.junit.AfterClass;
@@ -64,7 +65,7 @@ public class FragmentRepositoryRecreationTest {
             PlantListFragment.class,
             null,
             R.style.Theme_Pflanzenbestand,
-            null);
+            (FragmentFactory) null);
 
         scenario.onFragment(fragment -> assertSame(sharedRepository, getRepository(fragment)));
 
@@ -81,7 +82,7 @@ public class FragmentRepositoryRecreationTest {
             DiaryFragment.class,
             args,
             R.style.Theme_Pflanzenbestand,
-            null);
+            (FragmentFactory) null);
 
         scenario.onFragment(fragment -> assertSame(sharedRepository, getRepository(fragment)));
 

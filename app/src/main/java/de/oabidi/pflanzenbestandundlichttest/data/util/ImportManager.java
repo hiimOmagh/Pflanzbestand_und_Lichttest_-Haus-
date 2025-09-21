@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest.data.util;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -10,7 +11,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
+import android.util.JsonReader;
+import android.util.JsonToken;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -161,184 +165,130 @@ public class ImportManager {
             if (!tempDir.mkdirs()) {
                 tempDir = null;
             }
+            ArchiveKind archiveKind = determineArchiveKind(uri);
             if (tempDir != null) {
-                String tempCanonical = null;
-                try {
-                    tempCanonical = tempDir.getCanonicalPath();
-                } catch (IOException e) {
-                    Log.e(TAG, "Failed to resolve temp directory", e);
-                }
-                if (tempCanonical == null) {
-                    error = ImportError.IO_ERROR;
-                } else {
-                    final String tempCanonicalWithSep = tempCanonical.endsWith(File.separator)
-                        ? tempCanonical
-                        : tempCanonical + File.separator;
-                    final long totalBytes = queryArchiveSize(uri);
-                    final int archiveSteps = computeArchiveSteps(totalBytes);
-                    final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
+                if (archiveKind == ArchiveKind.JSON_STREAM) {
                     final AtomicInteger progress = new AtomicInteger(0);
-
+                    final int totalSteps = SECTION_PROGRESS_STEPS;
+                    File dataFile = new File(tempDir, "data.json");
                     try (InputStream is = context.getContentResolver().openInputStream(uri);
-                         CountingInputStream countingIs = new CountingInputStream(is);
-                         ZipInputStream zis = new ZipInputStream(countingIs)) {
-                        ArchiveProgressTracker tracker = new ArchiveProgressTracker(totalBytes,
-                            archiveSteps, progress, totalSteps, progressCallback);
-                        ZipEntry zipEntry;
-                        File csvFile = null;
+                         OutputStream os = new FileOutputStream(dataFile)) {
+                        if (is == null) {
+                            throw new IOException("Unable to open input stream");
+                        }
                         byte[] buffer = new byte[8192];
-                        while ((zipEntry = zis.getNextEntry()) != null) {
-                            tracker.update(countingIs.getCount());
-                            String entryName = zipEntry.getName();
-                            File outFile = new File(tempDir, entryName);
-                            String outCanonical;
-                            try {
-                                outCanonical = outFile.getCanonicalPath();
-                            } catch (IOException e) {
-                                Log.w(TAG, "Skipping zip entry with invalid path: " + entryName, e);
-                                zis.closeEntry();
+                        int len;
+                        while ((len = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, len);
+                        }
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to read JSON import", e);
+                        error = ImportError.IO_ERROR;
+                    }
+                    if (error == null) {
+                        ProcessResult resultObj = processDataFile(dataFile, true, tempDir, mode,
+                            warnings, progressCallback, progress, totalSteps);
+                        success = resultObj.success;
+                        error = resultObj.error;
+                    }
+                    FileUtils.deleteRecursive(tempDir);
+                } else {
+                    String tempCanonical = null;
+                    try {
+                        tempCanonical = tempDir.getCanonicalPath();
+                    } catch (IOException e) {
+                        Log.e(TAG, "Failed to resolve temp directory", e);
+                    }
+                    if (tempCanonical == null) {
+                        error = ImportError.IO_ERROR;
+                        FileUtils.deleteRecursive(tempDir);
+                    } else {
+                        final String tempCanonicalWithSep = tempCanonical.endsWith(File.separator)
+                            ? tempCanonical
+                            : tempCanonical + File.separator;
+                        final long totalBytes = queryArchiveSize(uri);
+                        final int archiveSteps = computeArchiveSteps(totalBytes);
+                        final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
+                        final AtomicInteger progress = new AtomicInteger(0);
+
+                        try (InputStream is = context.getContentResolver().openInputStream(uri);
+                             CountingInputStream countingIs = new CountingInputStream(is);
+                             ZipInputStream zis = new ZipInputStream(countingIs)) {
+                            ArchiveProgressTracker tracker = new ArchiveProgressTracker(totalBytes,
+                                archiveSteps, progress, totalSteps, progressCallback);
+                            ZipEntry zipEntry;
+                            File csvFile = null;
+                            File jsonFile = null;
+                            byte[] buffer = new byte[8192];
+                            while ((zipEntry = zis.getNextEntry()) != null) {
                                 tracker.update(countingIs.getCount());
-                                continue;
-                            }
-                            if (!outCanonical.equals(tempCanonical)
-                                && !outCanonical.startsWith(tempCanonicalWithSep)) {
-                                Log.w(TAG, "Skipping suspicious zip entry: " + entryName);
-                                zis.closeEntry();
-                                tracker.update(countingIs.getCount());
-                                continue;
+                                String entryName = zipEntry.getName();
+                                File outFile = new File(tempDir, entryName);
+                                String outCanonical;
+                                try {
+                                    outCanonical = outFile.getCanonicalPath();
+                                } catch (IOException e) {
+                                    Log.w(TAG, "Skipping zip entry with invalid path: " + entryName, e);
+                                    zis.closeEntry();
+                                    tracker.update(countingIs.getCount());
+                                    continue;
+                                }
+                                if (!outCanonical.equals(tempCanonical)
+                                    && !outCanonical.startsWith(tempCanonicalWithSep)) {
+                                    Log.w(TAG, "Skipping suspicious zip entry: " + entryName);
+                                    zis.closeEntry();
+                                    tracker.update(countingIs.getCount());
+                                    continue;
                             }
                             if (zipEntry.isDirectory()) {
                                 if (!outFile.isDirectory() && !outFile.mkdirs()) {
                                     Log.w(TAG, "Failed to create directory for zip entry: " + entryName);
+                                    }
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
+                                continue;
                                 }
-                                zis.closeEntry();
-                                tracker.update(countingIs.getCount());
-                                continue;
-                            }
-                            File parent = outFile.getParentFile();
-                            if (parent != null && !parent.exists() && !parent.mkdirs()) {
-                                Log.w(TAG, "Failed to create parent directories for zip entry: " + entryName);
-                                zis.closeEntry();
-                                tracker.update(countingIs.getCount());
-                                continue;
-                            }
-                            try (OutputStream fos = new FileOutputStream(outFile)) {
-                                int len;
-                                while ((len = zis.read(buffer)) > 0) {
-                                    fos.write(buffer, 0, len);
+                                File parent = outFile.getParentFile();
+                                if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                                    Log.w(TAG, "Failed to create parent directories for zip entry: " + entryName);
+                                    zis.closeEntry();
                                     tracker.update(countingIs.getCount());
+                                    continue;
                                 }
-                            }
-                            if (entryName.endsWith(".csv")) {
-                                csvFile = outFile;
-                            }
-                            zis.closeEntry();
-                            tracker.update(countingIs.getCount());
-                        }
-                        tracker.complete();
-                        if (csvFile != null) {
-                            PlantDatabase db = PlantDatabase.getDatabase(context);
-                            final boolean[] successHolder = {false};
-                            final ImportError[] errorHolder = {null};
-                            final List<Runnable> cleanupTasks = new ArrayList<>();
-                            if (mode == Mode.REPLACE) {
-                                BulkReadDao bulk = db.bulkDao();
-                                try {
-                                    for (Plant plant : bulk.getAllPlants()) {
-                                        final Uri plantPhoto = plant.getPhotoUri();
-                                        if (plantPhoto != null) {
-                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, plantPhoto));
-                                        }
+                                try (OutputStream fos = new FileOutputStream(outFile)) {
+                                    int len;
+                                    while ((len = zis.read(buffer)) > 0) {
+                                        fos.write(buffer, 0, len);
+                                        tracker.update(countingIs.getCount());
                                     }
-                                    for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
-                                        final String diaryPhoto = diaryEntry.getPhotoUri();
-                                        if (diaryPhoto != null && !diaryPhoto.isEmpty()) {
-                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, diaryPhoto));
-                                        }
-                                    }
-                                    for (PlantPhoto photo : bulk.getAllPlantPhotos()) {
-                                        final String galleryPhoto = photo.getUri();
-                                        if (galleryPhoto != null && !galleryPhoto.isEmpty()) {
-                                            cleanupTasks.add(() -> PhotoManager.deletePhoto(context, galleryPhoto));
-                                        }
-                                    }
-                                    for (Reminder reminder : bulk.getAllReminders()) {
-                                        final long reminderId = reminder.getId();
-                                        cleanupTasks.add(() -> ReminderScheduler.cancelReminder(context, reminderId));
-                                    }
-                                } catch (Exception e) {
-                                    Log.e(TAG, "Failed to collect cleanup targets", e);
-                                    errorHolder[0] = ImportError.IO_ERROR;
                                 }
-                            }
-                            if (errorHolder[0] == null) {
-                                try {
-                                    File finalCsvFile = csvFile;
-                                    File finalTempDir = tempDir;
-                                    db.runInTransaction(() -> {
-                                        if (mode == Mode.REPLACE) {
-                                            try {
-                                                db.clearAllTables();
-                                            } catch (Exception e) {
-                                                Log.e(TAG, "Failed to clear database", e);
-                                                errorHolder[0] = ImportError.IO_ERROR;
-                                                throw new RuntimeException(e);
-                                            }
-                                        }
-                                        if (errorHolder[0] == null) {
-                                            try (BufferedReader reader = new BufferedReader(
-                                                new InputStreamReader(new FileInputStream(finalCsvFile), StandardCharsets.UTF_8))) {
-                                                ImportError parseResult = parseAndInsert(
-                                                    reader, finalTempDir, mode, warnings,
-                                                    progressCallback, progress, totalSteps);
-                                                if (parseResult != null) {
-                                                    errorHolder[0] = parseResult;
-                                                    throw new RuntimeException();
-                                                }
-                                                successHolder[0] = true;
-                                            } catch (IOException e) {
-                                                Log.e(TAG, "Failed to parse import file", e);
-                                                errorHolder[0] = ImportError.IO_ERROR;
-                                                throw new RuntimeException(e);
-                                            }
-                                        }
-                                    });
-                                } catch (RuntimeException e) {
-                                    // Transaction failed; errorHolder already set
+                                if (entryName.endsWith(".csv")) {
+                                    csvFile = outFile;
+                                } else if (entryName.endsWith(".json")) {
+                                    jsonFile = outFile;
                                 }
+                                zis.closeEntry();
+                                tracker.update(countingIs.getCount());
                             }
-                            if (mode == Mode.REPLACE && successHolder[0] && !cleanupTasks.isEmpty()) {
-                                List<Runnable> tasks = new ArrayList<>(cleanupTasks);
-                                Runnable cleanupRunnable = () -> {
-                                    for (Runnable task : tasks) {
-                                        try {
-                                            task.run();
-                                        } catch (Exception e) {
-                                            Log.w(TAG, "Cleanup task failed", e);
-                                        }
-                                    }
-                                };
-                                try {
-                                    executor.execute(cleanupRunnable);
-                                } catch (RuntimeException e) {
-                                    Log.w(TAG, "Unable to schedule cleanup tasks", e);
-                                    cleanupRunnable.run();
-                                }
+                            tracker.complete();
+                            boolean useJson = jsonFile != null
+                                && (archiveKind == ArchiveKind.JSON_ZIP || csvFile == null);
+                            File dataFile = useJson ? jsonFile : csvFile;
+                            if (dataFile != null) {
+                                ProcessResult resultObj = processDataFile(dataFile, useJson, tempDir,
+                                    mode, warnings, progressCallback, progress, totalSteps);
+                                success = resultObj.success;
+                                error = resultObj.error;
+                            } else {
+                                error = ImportError.IO_ERROR;
                             }
-                            error = errorHolder[0];
-                            success = successHolder[0];
-                            if (error != null) {
-                                success = false;
-                            }
-                        } else {
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to open import file", e);
+                            success = false;
                             error = ImportError.IO_ERROR;
+                        } finally {
+                            FileUtils.deleteRecursive(tempDir);
                         }
-                    } catch (IOException e) {
-                        Log.e(TAG, "Failed to open import file", e);
-                        success = false;
-                        error = ImportError.IO_ERROR;
-                    } finally {
-                        FileUtils.deleteRecursive(tempDir);
                     }
                 }
             } else {
@@ -450,6 +400,192 @@ public class ImportManager {
         return null;
     }
 
+    @VisibleForTesting
+    @Nullable
+    ImportError parseAndInsertJson(JsonReader reader, File baseDir, Mode mode,
+                                   List<ImportWarning> warnings,
+                                   @Nullable ProgressCallback progressCallback,
+                                   AtomicInteger progress,
+                                   int totalSteps) throws IOException {
+        PlantDatabase db = PlantDatabase.getDatabase(context);
+        Map<Long, Long> plantIdMap = new HashMap<>();
+        final boolean[] importedAny = {false};
+        final NumberFormat nf = NumberFormat.getInstance(Locale.US);
+        nf.setGroupingUsed(false);
+        List<Uri> restoredUris = new ArrayList<>();
+        final ImportError[] errorHolder = {null};
+        try {
+            db.runInTransaction(() -> {
+                try {
+                    reader.beginObject();
+                    boolean versionSeen = false;
+                    while (reader.hasNext()) {
+                        String name = reader.nextName();
+                        switch (name) {
+                            case "version":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    errorHolder[0] = ImportError.MISSING_VERSION;
+                                    throw new RuntimeException();
+                                }
+                                int version = reader.nextInt();
+                                ImportError versionError = validateVersionNumber(version);
+                                if (versionError != null) {
+                                    errorHolder[0] = versionError;
+                                    throw new RuntimeException();
+                                }
+                                versionSeen = true;
+                                break;
+                            case "plants":
+                                if (!versionSeen) {
+                                    errorHolder[0] = ImportError.MISSING_VERSION;
+                                    reader.skipValue();
+                                    throw new RuntimeException();
+                                }
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonPlantsArray(reader, mode, baseDir, plantIdMap,
+                                    warnings, restoredUris, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "plantPhotos":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonPlantPhotosArray(reader, mode, baseDir,
+                                    plantIdMap, warnings, restoredUris, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "plantCalibrations":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonPlantCalibrationsArray(reader, mode, plantIdMap,
+                                    warnings, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "speciesTargets":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonSpeciesTargetsArray(reader, warnings, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "measurements":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonMeasurementsArray(reader, mode, plantIdMap,
+                                    warnings, nf, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "diaryEntries":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonDiaryEntriesArray(reader, mode, baseDir,
+                                    plantIdMap, warnings, restoredUris, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            case "reminders":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else if (parseJsonRemindersArray(reader, mode, plantIdMap,
+                                    warnings, db)) {
+                                    importedAny[0] = true;
+                                }
+                                stepProgress(progress, progressCallback, totalSteps);
+                                break;
+                            default:
+                                reader.skipValue();
+                                break;
+                        }
+                        if (errorHolder[0] != null) {
+                            break;
+                        }
+                    }
+                    reader.endObject();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (RuntimeException e) {
+            cleanupUris(restoredUris);
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            }
+            if (errorHolder[0] != null) {
+                return errorHolder[0];
+            }
+            Log.e(TAG, "Failed to parse JSON import", e);
+            return ImportError.IO_ERROR;
+        }
+        if (errorHolder[0] != null) {
+            cleanupUris(restoredUris);
+            return errorHolder[0];
+        }
+        if (!importedAny[0]) {
+            cleanupUris(restoredUris);
+            return ImportError.NO_DATA;
+        }
+        return null;
+    }
+
+    private ArchiveKind determineArchiveKind(@NonNull Uri uri) {
+        String type = null;
+        try {
+            type = context.getContentResolver().getType(uri);
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to determine MIME type", e);
+        }
+        if (type != null) {
+            String lower = type.toLowerCase(Locale.US);
+            if (lower.contains("json")) {
+                return ArchiveKind.JSON_STREAM;
+            }
+        }
+        String name = resolveDisplayName(uri);
+        if (name != null) {
+            String lowerName = name.toLowerCase(Locale.US);
+            if (lowerName.endsWith(".json.zip")) {
+                return ArchiveKind.JSON_ZIP;
+            }
+            if (lowerName.endsWith(".json")) {
+                return ArchiveKind.JSON_STREAM;
+            }
+        }
+        return ArchiveKind.ZIP;
+    }
+
+    @Nullable
+    private String resolveDisplayName(@NonNull Uri uri) {
+        Cursor cursor = null;
+        try {
+            cursor = context.getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                String name = cursor.getString(0);
+                if (name != null) {
+                    return name;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Unable to query display name", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        String lastSegment = uri.getLastPathSegment();
+        return lastSegment != null ? lastSegment : null;
+    }
+
     private long queryArchiveSize(@NonNull Uri uri) {
         try (ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r")) {
             if (pfd != null) {
@@ -488,6 +624,10 @@ public class ImportManager {
         } catch (Exception e) {
             return ImportError.INVALID_VERSION;
         }
+        return validateVersionNumber(version);
+    }
+
+    private @Nullable ImportError validateVersionNumber(int version) {
         boolean supported = false;
         for (int supportedVersion : SUPPORTED_VERSIONS) {
             if (supportedVersion == version) {
@@ -843,10 +983,578 @@ public class ImportManager {
         }
     }
 
+    private boolean parseJsonPlantsArray(JsonReader reader, Mode mode, File baseDir,
+                                         Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                         List<Uri> restoredUris, PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            String name = null;
+            String description = null;
+            String species = null;
+            String location = null;
+            long acquired = 0L;
+            String photo = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long plantId = readNullableLong(reader);
+                        id = plantId != null ? plantId : 0L;
+                        break;
+                    case "name":
+                        name = readOptionalString(reader);
+                        break;
+                    case "description":
+                        description = readOptionalString(reader);
+                        break;
+                    case "species":
+                        species = readOptionalString(reader);
+                        break;
+                    case "locationHint":
+                        location = readOptionalString(reader);
+                        break;
+                    case "acquiredAtEpoch":
+                        Long acquiredValue = readNullableLong(reader);
+                        acquired = acquiredValue != null ? acquiredValue : 0L;
+                        break;
+                    case "photo":
+                        photo = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(7);
+            parts.add(Long.toString(id));
+            parts.add(name != null ? name : "");
+            parts.add(description != null ? description : "");
+            parts.add(species != null ? species : "");
+            parts.add(location != null ? location : "");
+            parts.add(Long.toString(acquired));
+            parts.add(photo != null ? photo : "");
+            if (parsePlantRow(parts, mode, baseDir, plantIdMap, warnings, index, restoredUris, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonPlantPhotosArray(JsonReader reader, Mode mode, File baseDir,
+                                              Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                              List<Uri> restoredUris, PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            long plantId = 0L;
+            String fileName = null;
+            long createdAt = 0L;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long value = readNullableLong(reader);
+                        id = value != null ? value : 0L;
+                        break;
+                    case "plantId":
+                        Long pValue = readNullableLong(reader);
+                        plantId = pValue != null ? pValue : 0L;
+                        break;
+                    case "fileName":
+                        fileName = readOptionalString(reader);
+                        break;
+                    case "createdAt":
+                        Long createdValue = readNullableLong(reader);
+                        createdAt = createdValue != null ? createdValue : 0L;
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(4);
+            parts.add(Long.toString(id));
+            parts.add(Long.toString(plantId));
+            parts.add(fileName != null ? fileName : "");
+            parts.add(Long.toString(createdAt));
+            if (insertPlantPhotoRow(parts, mode, baseDir, plantIdMap, warnings, index, restoredUris, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonPlantCalibrationsArray(JsonReader reader, Mode mode,
+                                                    Map<Long, Long> plantIdMap,
+                                                    List<ImportWarning> warnings,
+                                                    PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long plantId = 0L;
+            Float ambient = null;
+            Float camera = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "plantId":
+                        Long value = readNullableLong(reader);
+                        plantId = value != null ? value : 0L;
+                        break;
+                    case "ambientFactor":
+                        ambient = readNullableFloat(reader);
+                        break;
+                    case "cameraFactor":
+                        camera = readNullableFloat(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(3);
+            parts.add(Long.toString(plantId));
+            parts.add(ambient != null ? Float.toString(ambient) : "");
+            parts.add(camera != null ? Float.toString(camera) : "");
+            if (insertCalibrationRow(parts, mode, plantIdMap, warnings, index, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonMeasurementsArray(JsonReader reader, Mode mode,
+                                               Map<Long, Long> plantIdMap,
+                                               List<ImportWarning> warnings,
+                                               NumberFormat nf, PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            long plantId = 0L;
+            long time = 0L;
+            Float lux = null;
+            Float ppfd = null;
+            Float dli = null;
+            String note = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long idValue = readNullableLong(reader);
+                        id = idValue != null ? idValue : 0L;
+                        break;
+                    case "plantId":
+                        Long plantValue = readNullableLong(reader);
+                        plantId = plantValue != null ? plantValue : 0L;
+                        break;
+                    case "timeEpoch":
+                        Long timeValue = readNullableLong(reader);
+                        time = timeValue != null ? timeValue : 0L;
+                        break;
+                    case "luxAvg":
+                        lux = readNullableFloat(reader);
+                        break;
+                    case "ppfd":
+                        ppfd = readNullableFloat(reader);
+                        break;
+                    case "dli":
+                        dli = readNullableFloat(reader);
+                        break;
+                    case "note":
+                        note = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(7);
+            parts.add(Long.toString(id));
+            parts.add(Long.toString(plantId));
+            parts.add(Long.toString(time));
+            parts.add(lux != null ? Float.toString(lux) : "0");
+            parts.add(ppfd != null ? Float.toString(ppfd) : "");
+            parts.add(dli != null ? Float.toString(dli) : "");
+            parts.add(note != null ? note : "");
+            if (insertMeasurementRow(parts, mode, plantIdMap, warnings, index, nf, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonDiaryEntriesArray(JsonReader reader, Mode mode, File baseDir,
+                                               Map<Long, Long> plantIdMap,
+                                               List<ImportWarning> warnings,
+                                               List<Uri> restoredUris, PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            long plantId = 0L;
+            long time = 0L;
+            String type = null;
+            String note = null;
+            String photo = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long idValue = readNullableLong(reader);
+                        id = idValue != null ? idValue : 0L;
+                        break;
+                    case "plantId":
+                        Long plantValue = readNullableLong(reader);
+                        plantId = plantValue != null ? plantValue : 0L;
+                        break;
+                    case "timeEpoch":
+                        Long timeValue = readNullableLong(reader);
+                        time = timeValue != null ? timeValue : 0L;
+                        break;
+                    case "type":
+                        type = readOptionalString(reader);
+                        break;
+                    case "note":
+                        note = readOptionalString(reader);
+                        break;
+                    case "photo":
+                        photo = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(6);
+            parts.add(Long.toString(id));
+            parts.add(Long.toString(plantId));
+            parts.add(Long.toString(time));
+            parts.add(type != null ? type : "");
+            parts.add(note != null ? note : "");
+            parts.add(photo != null ? photo : "");
+            if (insertDiaryRow(parts, mode, baseDir, plantIdMap, warnings, index, restoredUris, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonRemindersArray(JsonReader reader, Mode mode,
+                                            Map<Long, Long> plantIdMap,
+                                            List<ImportWarning> warnings,
+                                            PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            long plantId = 0L;
+            long triggerAt = 0L;
+            String message = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long idValue = readNullableLong(reader);
+                        id = idValue != null ? idValue : 0L;
+                        break;
+                    case "plantId":
+                        Long plantValue = readNullableLong(reader);
+                        plantId = plantValue != null ? plantValue : 0L;
+                        break;
+                    case "triggerAt":
+                        Long triggerValue = readNullableLong(reader);
+                        triggerAt = triggerValue != null ? triggerValue : 0L;
+                        break;
+                    case "message":
+                        message = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(4);
+            parts.add(Long.toString(id));
+            parts.add(Long.toString(plantId));
+            parts.add(Long.toString(triggerAt));
+            parts.add(message != null ? message : "");
+            if (insertReminderRow(parts, mode, plantIdMap, warnings, index, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private boolean parseJsonSpeciesTargetsArray(JsonReader reader, List<ImportWarning> warnings,
+                                                 PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            String speciesKey = null;
+            SpeciesTarget.StageTarget seedling = null;
+            SpeciesTarget.StageTarget vegetative = null;
+            SpeciesTarget.StageTarget flower = null;
+            String tolerance = null;
+            String source = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "speciesKey":
+                        speciesKey = readOptionalString(reader);
+                        break;
+                    case "seedling":
+                        seedling = readStage(reader);
+                        break;
+                    case "vegetative":
+                        vegetative = readStage(reader);
+                        break;
+                    case "flower":
+                        flower = readStage(reader);
+                        break;
+                    case "tolerance":
+                        tolerance = readOptionalString(reader);
+                        break;
+                    case "source":
+                        source = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            if (speciesKey == null || speciesKey.trim().isEmpty()) {
+                warnings.add(new ImportWarning("species targets", index, "malformed row"));
+            } else {
+                String toleranceValue = tolerance != null && !tolerance.isEmpty() ? tolerance : null;
+                String sourceValue = source != null && !source.isEmpty() ? source : null;
+                SpeciesTarget target = new SpeciesTarget(speciesKey,
+                    seedling, vegetative, flower, toleranceValue, sourceValue);
+                db.speciesTargetDao().insert(target);
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return imported;
+    }
+
+    private SpeciesTarget.StageTarget readStage(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        Float ppfdMin = null;
+        Float ppfdMax = null;
+        Float dliMin = null;
+        Float dliMax = null;
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case "ppfdMin":
+                    ppfdMin = readNullableFloat(reader);
+                    break;
+                case "ppfdMax":
+                    ppfdMax = readNullableFloat(reader);
+                    break;
+                case "dliMin":
+                    dliMin = readNullableFloat(reader);
+                    break;
+                case "dliMax":
+                    dliMax = readNullableFloat(reader);
+                    break;
+                default:
+                    reader.skipValue();
+                    break;
+            }
+        }
+        reader.endObject();
+        if (ppfdMin == null && ppfdMax == null && dliMin == null && dliMax == null) {
+            return null;
+        }
+        return new SpeciesTarget.StageTarget(ppfdMin, ppfdMax, dliMin, dliMax);
+    }
+
+    private String readOptionalString(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        return reader.nextString();
+    }
+
+    private Long readNullableLong(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        return reader.nextLong();
+    }
+
+    private Float readNullableFloat(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        return (float) reader.nextDouble();
+    }
+
     private void cleanupUris(List<Uri> uris) {
         for (Uri uri : uris) {
             PhotoManager.deletePhoto(context, uri);
         }
+    }
+
+    private ProcessResult processDataFile(File dataFile, boolean isJson, File baseDir,
+                                          Mode mode, List<ImportWarning> warnings,
+                                          @Nullable ProgressCallback progressCallback,
+                                          AtomicInteger progress, int totalSteps) {
+        PlantDatabase db = PlantDatabase.getDatabase(context);
+        final boolean[] successHolder = {false};
+        final ImportError[] errorHolder = {null};
+        final List<Runnable> cleanupTasks = new ArrayList<>();
+        if (mode == Mode.REPLACE) {
+            BulkReadDao bulk = db.bulkDao();
+            try {
+                for (Plant plant : bulk.getAllPlants()) {
+                    final Uri plantPhoto = plant.getPhotoUri();
+                    if (plantPhoto != null) {
+                        cleanupTasks.add(() -> PhotoManager.deletePhoto(context, plantPhoto));
+                    }
+                }
+                for (DiaryEntry diaryEntry : bulk.getAllDiaryEntries()) {
+                    final String diaryPhoto = diaryEntry.getPhotoUri();
+                    if (diaryPhoto != null && !diaryPhoto.isEmpty()) {
+                        cleanupTasks.add(() -> PhotoManager.deletePhoto(context, diaryPhoto));
+                    }
+                }
+                for (PlantPhoto photo : bulk.getAllPlantPhotos()) {
+                    final String galleryPhoto = photo.getUri();
+                    if (galleryPhoto != null && !galleryPhoto.isEmpty()) {
+                        cleanupTasks.add(() -> PhotoManager.deletePhoto(context, galleryPhoto));
+                    }
+                }
+                for (Reminder reminder : bulk.getAllReminders()) {
+                    final long reminderId = reminder.getId();
+                    cleanupTasks.add(() -> ReminderScheduler.cancelReminder(context, reminderId));
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to collect cleanup targets", e);
+                errorHolder[0] = ImportError.IO_ERROR;
+            }
+        }
+        if (errorHolder[0] == null) {
+            try {
+                File finalDataFile = dataFile;
+                File finalBaseDir = baseDir;
+                boolean finalIsJson = isJson;
+                db.runInTransaction(() -> {
+                    if (mode == Mode.REPLACE) {
+                        try {
+                            db.clearAllTables();
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to clear database", e);
+                            errorHolder[0] = ImportError.IO_ERROR;
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    if (errorHolder[0] == null) {
+                        try {
+                            if (finalIsJson) {
+                                try (JsonReader reader = new JsonReader(new InputStreamReader(
+                                    new FileInputStream(finalDataFile), StandardCharsets.UTF_8))) {
+                                    ImportError parseResult = parseAndInsertJson(reader, finalBaseDir,
+                                        mode, warnings, progressCallback, progress, totalSteps);
+                                    if (parseResult != null) {
+                                        errorHolder[0] = parseResult;
+                                        throw new RuntimeException();
+                                    }
+                                    successHolder[0] = true;
+                                }
+                            } else {
+                                try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                                    new FileInputStream(finalDataFile), StandardCharsets.UTF_8))) {
+                                    ImportError parseResult = parseAndInsert(reader, finalBaseDir, mode,
+                                        warnings, progressCallback, progress, totalSteps);
+                                    if (parseResult != null) {
+                                        errorHolder[0] = parseResult;
+                                        throw new RuntimeException();
+                                    }
+                                    successHolder[0] = true;
+                                }
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, "Failed to parse import file", e);
+                            errorHolder[0] = ImportError.IO_ERROR;
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+            } catch (RuntimeException e) {
+                // Transaction failure; errorHolder already set
+            }
+        }
+        if (mode == Mode.REPLACE && successHolder[0] && !cleanupTasks.isEmpty()) {
+            List<Runnable> tasks = new ArrayList<>(cleanupTasks);
+            Runnable cleanupRunnable = () -> {
+                for (Runnable task : tasks) {
+                    try {
+                        task.run();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Cleanup task failed", e);
+                    }
+                }
+            };
+            try {
+                executor.execute(cleanupRunnable);
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Unable to schedule cleanup tasks", e);
+                cleanupRunnable.run();
+            }
+        }
+        ImportError finalError = errorHolder[0];
+        boolean finalSuccess = successHolder[0];
+        if (finalError != null) {
+            finalSuccess = false;
+        }
+        return new ProcessResult(finalSuccess, finalError);
     }
 
     private Uri restoreImage(File exportedImage) {
@@ -954,6 +1662,23 @@ public class ImportManager {
      */
     public interface ProgressCallback {
         void onProgress(int current, int total);
+    }
+
+    private enum ArchiveKind {
+        ZIP,
+        JSON_ZIP,
+        JSON_STREAM
+    }
+
+    private static final class ProcessResult {
+        final boolean success;
+        @Nullable
+        final ImportError error;
+
+        ProcessResult(boolean success, @Nullable ImportError error) {
+            this.success = success;
+            this.error = error;
+        }
     }
 
     @VisibleForTesting

@@ -6,6 +6,8 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+
 /**
  * Presenter contract for main screen orchestration.
  */
@@ -30,4 +32,7 @@ public interface MainPresenter {
 
     /** Respond to bottom navigation item selections. */
     boolean onNavigationItemSelected(int itemId);
+
+    /** Persist the user's export format choice and start the export flow. */
+    void onExportFormatChosen(ExportManager.Format format);
 }

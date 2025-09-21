@@ -41,7 +41,9 @@ public class ExportProgressTest {
 
         boolean handled = presenter.onOptionsItemSelected(R.id.action_export_data);
         assertTrue(handled);
-        assertEquals(context.getString(R.string.export_file_name), view.lastExportFileName);
+        assertEquals(ExportManager.Format.JSON, view.lastFormatPrompted);
+        presenter.onExportFormatChosen(view.lastFormatPrompted);
+        assertEquals(context.getString(R.string.export_file_name_json), view.lastExportFileName);
 
         presenter.handleExportResult(Uri.parse("content://test"));
         assertEquals(3, view.progress.size());
@@ -53,6 +55,7 @@ public class ExportProgressTest {
     private static class FakeView implements MainView {
         final List<int[]> progress = new ArrayList<>();
         String lastExportFileName;
+        ExportManager.Format lastFormatPrompted;
 
         @Override
         public void navigateToFragment(androidx.fragment.app.Fragment fragment, boolean addToBackStack) {
@@ -97,6 +100,11 @@ public class ExportProgressTest {
         }
 
         @Override
+        public void showExportFormatChooser(ExportManager.Format currentFormat) {
+            lastFormatPrompted = currentFormat;
+        }
+
+        @Override
         public void launchImport(String[] mimeTypes) {
         }
 
@@ -116,6 +124,12 @@ public class ExportProgressTest {
             progressCallback.onProgress(2, 3);
             progressCallback.onProgress(3, 3);
             callback.onComplete(true);
+        }
+
+        @Override
+        public void exportJson(@NonNull Uri uri, @NonNull Callback callback,
+                               ProgressCallback progressCallback) {
+            export(uri, callback, progressCallback);
         }
     }
 }

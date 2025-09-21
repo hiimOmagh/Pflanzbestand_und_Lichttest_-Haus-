@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.lang.reflect.Method;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -77,10 +78,26 @@ public class ImportManagerCleanupTest {
             "1,newPlant,desc,species,loc,0,photo.jpg\n";
 
         BufferedReader reader = new BufferedReader(new StringReader(csv));
-        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
-        ImportManager.ImportError error = importer.parseAndInsert(
-            reader, baseDir, ImportManager.Mode.REPLACE,
-            warnings, null, new AtomicInteger(0), 0);
+        Method parseAndInsert = ImportManager.class.getDeclaredMethod(
+            "parseAndInsert",
+            BufferedReader.class,
+            File.class,
+            ImportManager.Mode.class,
+            List.class,
+            ImportManager.ProgressCallback.class,
+            AtomicInteger.class,
+            int.class);
+        parseAndInsert.setAccessible(true);
+        AtomicInteger progress = new AtomicInteger(0);
+        ImportManager.ImportError error = (ImportManager.ImportError) parseAndInsert.invoke(
+            importer,
+            reader,
+            baseDir,
+            ImportManager.Mode.REPLACE,
+            warnings,
+            null,
+            progress,
+            0);
         assertNotNull(error);
 
         Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);

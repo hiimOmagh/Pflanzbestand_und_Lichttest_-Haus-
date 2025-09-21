@@ -25,6 +25,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+
 /**
  * Activity hosting the main navigation of the app.
  */
@@ -193,6 +195,26 @@ public class MainActivity extends AppCompatActivity implements MainView {
     @Override
     public void launchExport(String fileName) {
         exportLauncher.launch(fileName);
+    }
+
+    @Override
+    public void showExportFormatChooser(ExportManager.Format currentFormat) {
+        String[] options = {
+            getString(R.string.export_format_option_csv),
+            getString(R.string.export_format_option_json)
+        };
+        int selected = currentFormat == ExportManager.Format.JSON ? 1 : 0;
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.export_format_title)
+            .setSingleChoiceItems(options, selected, (dialog, which) -> {
+                ExportManager.Format format = which == 1
+                    ? ExportManager.Format.JSON
+                    : ExportManager.Format.CSV;
+                dialog.dismiss();
+                presenter.onExportFormatChosen(format);
+            })
+            .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.dismiss())
+            .show();
     }
 
     @Override

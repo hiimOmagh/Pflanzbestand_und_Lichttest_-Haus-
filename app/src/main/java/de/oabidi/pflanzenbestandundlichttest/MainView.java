@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.fragment.app.Fragment;
 
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+
 /**
  * View contract for {@link MainPresenter} interactions with the main screen.
  */
@@ -38,6 +40,9 @@ public interface MainView {
 
     /** Launch an export document picker with the given file name. */
     void launchExport(String fileName);
+
+    /** Display a dialog allowing the user to choose an export format. */
+    void showExportFormatChooser(ExportManager.Format currentFormat);
 
     /** Launch an import document picker with the specified MIME types. */
     void launchImport(String[] mimeTypes);

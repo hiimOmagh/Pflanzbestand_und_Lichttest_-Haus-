@@ -59,6 +59,11 @@ public final class SettingsKeys {
     public static final String KEY_AUTO_BACKUP = "auto_backup";
 
     /**
+     * Preferred export file format.
+     */
+    public static final String KEY_EXPORT_FORMAT = "export_format";
+
+    /**
      * Selected application theme (light, dark, or system default).
      */
     public static final String KEY_THEME = "theme";

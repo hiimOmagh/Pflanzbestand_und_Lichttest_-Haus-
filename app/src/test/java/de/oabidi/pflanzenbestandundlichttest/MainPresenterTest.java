@@ -15,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 
 /**
  * Unit tests for {@link MainPresenterImpl} verifying navigation and onboarding logic.
@@ -141,6 +142,9 @@ public class MainPresenterTest {
         public void launchExport(String fileName) {
         }
 
+        @Override
+        public void showExportFormatChooser(ExportManager.Format currentFormat) {
+        }
         @Override
         public void launchImport(String[] mimeTypes) {
         }

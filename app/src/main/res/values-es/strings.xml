@@ -132,6 +132,10 @@
     <string name="menu_calibrate">Calibrar</string>
     <string name="action_add_photo">Agregar foto</string>
     <string name="export_file_name">plant_data.zip</string>
+    <string name="export_file_name_json">plant_data.json.zip</string>
+    <string name="export_format_title">Elegir formato de copia de seguridad</string>
+    <string name="export_format_option_csv">CSV + medios (ZIP)</string>
+    <string name="export_format_option_json">Archivo JSON</string>
     <string name="export_success">Exportación exitosa</string>
     <string name="export_failure">Fallo en la exportación</string>
     <string name="export_progress">Exportando %1$d/%2$d</string>
