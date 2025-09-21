@@ -35,6 +35,10 @@ public class MainActivity extends AppCompatActivity implements MainView {
     public static final String EXTRA_NAVIGATE_MEASURE =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
 
+    /** Intent extra to open the diary screen for logging tasks. */
+    public static final String EXTRA_NAVIGATE_DIARY =
+        "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_DIARY";
+
     private PlantRepository repository;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;

@@ -215,6 +215,10 @@
     </string-array>
     <string name="widget_no_reminders">No pending reminders</string>
     <string name="widget_measure_now">Measure Now</string>
+    <string name="widget_log_light">Log Light</string>
+    <string name="widget_mark_done">Mark Done</string>
+    <string name="widget_reminder_marked_done">Reminder marked done</string>
+    <string name="widget_reminder_mark_done_error">Unable to update reminder</string>
     <string name="range_low">Low</string>
     <string name="range_ok">OK</string>
     <string name="range_high">High</string>

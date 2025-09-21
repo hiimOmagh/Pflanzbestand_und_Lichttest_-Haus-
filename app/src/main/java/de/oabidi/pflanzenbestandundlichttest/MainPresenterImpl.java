@@ -59,6 +59,8 @@ public class MainPresenterImpl implements MainPresenter {
             boolean hasOnboarded = preferences.getBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false);
             if (!hasOnboarded) {
                 view.navigateToFragment(OnboardingFragment.newInstance(repository), false);
+            } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_DIARY, false)) {
+                view.selectNavigationItem(R.id.nav_diary);
             } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false)) {
                 view.selectNavigationItem(R.id.nav_measure);
             } else {
@@ -69,7 +71,9 @@ public class MainPresenterImpl implements MainPresenter {
 
     @Override
     public void onNewIntent(Intent intent) {
-        if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false)) {
+        if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_DIARY, false)) {
+            view.selectNavigationItem(R.id.nav_diary);
+        } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false)) {
             view.selectNavigationItem(R.id.nav_measure);
         }
     }
