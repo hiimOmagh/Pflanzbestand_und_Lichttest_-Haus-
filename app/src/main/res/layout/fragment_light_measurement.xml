@@ -85,6 +85,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/camera_dli_value" />
 
+    <Spinner
+        android:id="@+id/stage_selector"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/plant_selector" />
+
     <Button
         android:id="@+id/measurement_save_button"
         android:layout_width="wrap_content"
@@ -94,7 +106,7 @@
         android:enabled="false"
         android:text="@string/measurement_save"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/plant_selector" />
+        app:layout_constraintTop_toBottomOf="@id/stage_selector" />
 
     <TextView
         android:id="@+id/location_check_value"

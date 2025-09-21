@@ -32,3 +32,32 @@ Each feature will be isolated in its own fragment and associated resources:
 - Use `TODO(name): description` comments to flag follow-up work. Link to issue numbers when available.
 - Adhere to the project's `.editorconfig` for indentation (4 spaces), line length (100 chars), and UTF-8 encoding.
 - Java code should follow the [Android Java Style Guide](https://source.android.com/docs/setup/contribute/code-style).
+
+## Species target data schema
+
+Species-specific light targets are bundled in `app/src/main/assets/targets.json` and exported via the
+"SpeciesTargets" section in CSV backups. Each species entry is keyed by `speciesKey` and defines
+stage-specific PPFD and DLI ranges, optional tolerance notes, and a source reference:
+
+```json
+{
+  "speciesKey": "basil",
+  "tolerance": "moderate",
+  "source": "Default dataset",
+  "seedling": { "ppfdMin": 100, "ppfdMax": 180, "dliMin": 4.3, "dliMax": 7.8 },
+  "vegetative": { "ppfdMin": 150, "ppfdMax": 300, "dliMin": 6.5, "dliMax": 13.0 },
+  "flower": { "ppfdMin": 180, "ppfdMax": 320, "dliMin": 7.8, "dliMax": 13.8 }
+}
+```
+
+The exported CSV mirrors this structure using the following columns:
+
+```
+speciesKey,
+seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,
+vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,
+flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,
+tolerance,source
+```
+
+Importers treat missing values as `NULL` and compute DLI from PPFD during legacy migrations.

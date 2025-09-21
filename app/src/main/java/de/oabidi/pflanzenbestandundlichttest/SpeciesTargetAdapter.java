@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -51,28 +52,101 @@ public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTarg
 
             @Override
             public boolean areContentsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
-                return oldItem.getPpfdMin() == newItem.getPpfdMin()
-                    && oldItem.getPpfdMax() == newItem.getPpfdMax();
+                return Objects.equals(oldItem.getTolerance(), newItem.getTolerance())
+                    && Objects.equals(oldItem.getSource(), newItem.getSource())
+                    && Objects.equals(oldItem.getSeedlingStage(), newItem.getSeedlingStage())
+                    && Objects.equals(oldItem.getVegetativeStage(), newItem.getVegetativeStage())
+                    && Objects.equals(oldItem.getFlowerStage(), newItem.getFlowerStage());
             }
         };
 
     static class TargetViewHolder extends RecyclerView.ViewHolder {
-        private final TextView textView;
+        private final TextView speciesView;
+        private final TextView toleranceView;
+        private final TextView seedlingView;
+        private final TextView vegetativeView;
+        private final TextView flowerView;
+        private final TextView sourceView;
 
         TargetViewHolder(View itemView) {
             super(itemView);
-            textView = itemView.findViewById(R.id.target_text);
+            speciesView = itemView.findViewById(R.id.target_species_name);
+            toleranceView = itemView.findViewById(R.id.target_tolerance);
+            seedlingView = itemView.findViewById(R.id.target_stage_seedling);
+            vegetativeView = itemView.findViewById(R.id.target_stage_vegetative);
+            flowerView = itemView.findViewById(R.id.target_stage_flower);
+            sourceView = itemView.findViewById(R.id.target_source);
         }
 
         void bind(SpeciesTarget target, OnTargetClickListener listener) {
-            String display = itemView.getContext().getString(R.string.format_species_target,
-                target.getSpeciesKey(), target.getPpfdMin(), target.getPpfdMax());
-            textView.setText(display);
+            speciesView.setText(target.getSpeciesKey());
+
+            String tolerance = target.getTolerance();
+            if (tolerance != null && !tolerance.trim().isEmpty()) {
+                toleranceView.setVisibility(View.VISIBLE);
+                toleranceView.setText(itemView.getContext().getString(R.string.format_tolerance, tolerance));
+            } else {
+                toleranceView.setVisibility(View.GONE);
+            }
+
+            bindStage(seedlingView, R.string.label_stage_seedling, target.getSeedlingStage());
+            bindStage(vegetativeView, R.string.label_stage_vegetative, target.getVegetativeStage());
+            bindStage(flowerView, R.string.label_stage_flower, target.getFlowerStage());
+
+            String source = target.getSource();
+            if (source != null && !source.trim().isEmpty()) {
+                sourceView.setVisibility(View.VISIBLE);
+                sourceView.setText(itemView.getContext().getString(R.string.format_source, source));
+            } else {
+                sourceView.setVisibility(View.GONE);
+            }
+
             itemView.setOnClickListener(v -> listener.onTargetClick(target));
             itemView.setOnLongClickListener(v -> {
                 listener.onTargetLongClick(target);
                 return true;
             });
+        }
+
+        private void bindStage(TextView view, int labelRes, SpeciesTarget.StageTarget stage) {
+            if (stage == null || !stage.hasRange()) {
+                view.setVisibility(View.GONE);
+                return;
+            }
+            String label = itemView.getContext().getString(labelRes);
+            boolean hasPpfd = stage.getPpfdMin() != null || stage.getPpfdMax() != null;
+            boolean hasDli = stage.getDliMin() != null || stage.getDliMax() != null;
+            String formatted;
+            if (hasPpfd && hasDli) {
+                formatted = itemView.getContext().getString(R.string.format_stage_range,
+                    label,
+                    formatValue(stage.getPpfdMin()),
+                    formatValue(stage.getPpfdMax()),
+                    formatValue(stage.getDliMin()),
+                    formatValue(stage.getDliMax()));
+            } else if (hasPpfd) {
+                formatted = itemView.getContext().getString(R.string.format_stage_range_ppfd_only,
+                    label,
+                    formatValue(stage.getPpfdMin()),
+                    formatValue(stage.getPpfdMax()));
+            } else if (hasDli) {
+                formatted = itemView.getContext().getString(R.string.format_stage_range_dli_only,
+                    label,
+                    formatValue(stage.getDliMin()),
+                    formatValue(stage.getDliMax()));
+            } else {
+                view.setVisibility(View.GONE);
+                return;
+            }
+            view.setText(formatted);
+            view.setVisibility(View.VISIBLE);
+        }
+
+        private String formatValue(Float value) {
+            if (value == null) {
+                return itemView.getContext().getString(R.string.placeholder_dash);
+            }
+            return String.format(Locale.getDefault(), "%.1f", value);
         }
     }
 }

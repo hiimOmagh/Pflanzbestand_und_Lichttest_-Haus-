@@ -168,7 +168,7 @@ public class ExportManager {
         File csvFile = new File(tempDir, "data.csv");
         try (BufferedWriter writer = new BufferedWriter(
             new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
-            writer.write("Version,1\n\n");
+            writer.write("Version,2\n\n");
             writer.write("Plants\n");
             writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
             for (Plant p : data.plants) {
@@ -215,12 +215,29 @@ public class ExportManager {
             }
 
             writer.write("\nSpeciesTargets\n");
-            writer.write("speciesKey,ppfdMin,ppfdMax\n");
+            writer.write("speciesKey,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
+                + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"
+                + "flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,tolerance,source\n");
             for (SpeciesTarget t : data.targets) {
-                writer.write(String.format(Locale.US, "%s,%f,%f\n",
+                SpeciesTarget.StageTarget seedling = t.getSeedlingStage();
+                SpeciesTarget.StageTarget vegetative = t.getVegetativeStage();
+                SpeciesTarget.StageTarget flower = t.getFlowerStage();
+                writer.write(String.format(Locale.US, "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                     escape(t.getSpeciesKey()),
-                    t.getPpfdMin(),
-                    t.getPpfdMax()));
+                    formatFloat(seedling != null ? seedling.getPpfdMin() : null),
+                    formatFloat(seedling != null ? seedling.getPpfdMax() : null),
+                    formatFloat(seedling != null ? seedling.getDliMin() : null),
+                    formatFloat(seedling != null ? seedling.getDliMax() : null),
+                    formatFloat(vegetative != null ? vegetative.getPpfdMin() : null),
+                    formatFloat(vegetative != null ? vegetative.getPpfdMax() : null),
+                    formatFloat(vegetative != null ? vegetative.getDliMin() : null),
+                    formatFloat(vegetative != null ? vegetative.getDliMax() : null),
+                    formatFloat(flower != null ? flower.getPpfdMin() : null),
+                    formatFloat(flower != null ? flower.getPpfdMax() : null),
+                    formatFloat(flower != null ? flower.getDliMin() : null),
+                    formatFloat(flower != null ? flower.getDliMax() : null),
+                    escape(t.getTolerance()),
+                    escape(t.getSource())));
             }
 
             writer.write("\nMeasurements\n");
@@ -329,6 +346,10 @@ public class ExportManager {
             escaped = "\"" + escaped + "\"";
         }
         return escaped;
+    }
+
+    private static String formatFloat(@Nullable Float value) {
+        return value != null ? Float.toString(value) : "";
     }
 
     private static class ExportData {

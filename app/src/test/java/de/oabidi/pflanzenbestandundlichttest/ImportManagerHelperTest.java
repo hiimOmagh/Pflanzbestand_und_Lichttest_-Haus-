@@ -282,7 +282,7 @@ public class ImportManagerHelperTest {
 
     private String buildCsv(boolean includePlant) {
         StringBuilder builder = new StringBuilder();
-        builder.append("Version,1\n\n")
+        builder.append("Version,2\n\n")
             .append("Plants\n")
             .append("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
         if (includePlant) {
@@ -296,7 +296,9 @@ public class ImportManagerHelperTest {
             builder.append("1,0.0185,0.0185\n");
         }
         builder.append("\nSpeciesTargets\n")
-            .append("speciesKey,ppfdMin,ppfdMax\n")
+            .append("speciesKey,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
+                + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"
+                + "flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,tolerance,source\n")
             .append("\nMeasurements\n")
             .append("id,plantId,timeEpoch,luxAvg,ppfd\n")
             .append("\nDiaryEntries\n")

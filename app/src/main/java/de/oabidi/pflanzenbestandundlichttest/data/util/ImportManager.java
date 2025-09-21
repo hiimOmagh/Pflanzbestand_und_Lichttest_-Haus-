@@ -65,12 +65,14 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
  */
 public class ImportManager {
     static final String TAG = "ImportManager";
-    private static final int SUPPORTED_VERSION = 1;
+    private static final int CURRENT_VERSION = 2;
+    private static final int[] SUPPORTED_VERSIONS = {1, 2};
     private static final int SECTION_PROGRESS_STEPS = Section.values().length - 1;
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor;
+    private int importVersion = CURRENT_VERSION;
 
     public ImportManager(@NonNull Context context) {
         this(context, resolveExecutor(context));
@@ -408,7 +410,7 @@ public class ImportManager {
                 try {
                     SectionReader sectionReader = new SectionReader(reader, lineNumber);
                     SectionContext context = new SectionContext(this, mode, baseDir,
-                        plantIdMap, warnings, restoredUris, db, nf);
+                        plantIdMap, warnings, restoredUris, db, nf, importVersion);
                     SectionCoordinator coordinator = new SectionCoordinator(
                         this,
                         sectionReader,
@@ -486,9 +488,17 @@ public class ImportManager {
         } catch (Exception e) {
             return ImportError.INVALID_VERSION;
         }
-        if (version != SUPPORTED_VERSION) {
+        boolean supported = false;
+        for (int supportedVersion : SUPPORTED_VERSIONS) {
+            if (supportedVersion == version) {
+                supported = true;
+                break;
+            }
+        }
+        if (!supported) {
             return ImportError.UNSUPPORTED_VERSION;
         }
+        importVersion = version;
         return null;
     }
 
@@ -1010,6 +1020,7 @@ public class ImportManager {
         final List<Uri> restoredUris;
         final PlantDatabase db;
         final NumberFormat numberFormat;
+        final int version;
 
         public SectionContext(@NonNull ImportManager manager,
                               @NonNull Mode mode,
@@ -1018,7 +1029,8 @@ public class ImportManager {
                               @NonNull List<ImportWarning> warnings,
                               @NonNull List<Uri> restoredUris,
                               @NonNull PlantDatabase db,
-                              @NonNull NumberFormat numberFormat) {
+                              @NonNull NumberFormat numberFormat,
+                              int version) {
             this.manager = manager;
             this.mode = mode;
             this.baseDir = baseDir;
@@ -1027,6 +1039,7 @@ public class ImportManager {
             this.restoredUris = restoredUris;
             this.db = db;
             this.numberFormat = numberFormat;
+            this.version = version;
         }
     }
 

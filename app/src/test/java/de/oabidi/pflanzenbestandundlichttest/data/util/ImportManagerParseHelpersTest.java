@@ -42,6 +42,10 @@ import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class ImportManagerParseHelpersTest {
+    private static final String SPECIES_TARGETS_HEADER =
+        "speciesKey,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
+            + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"
+            + "flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,tolerance,source";
     private PlantDatabase db;
     private Context context;
     private ImportManager importer;
@@ -67,7 +71,8 @@ public class ImportManagerParseHelpersTest {
             warnings,
             restoredUris,
             db,
-            nf
+            nf,
+            2
         );
     }
 
@@ -119,8 +124,12 @@ public class ImportManagerParseHelpersTest {
         assertEquals(ImportManager.ImportError.INVALID_VERSION, err);
 
         err = (ImportManager.ImportError)
-            m.invoke(importer, new BufferedReader(new StringReader("Version,2")));
+            m.invoke(importer, new BufferedReader(new StringReader("Version,3")));
         assertEquals(ImportManager.ImportError.UNSUPPORTED_VERSION, err);
+
+        err = (ImportManager.ImportError)
+            m.invoke(importer, new BufferedReader(new StringReader("Version,2")));
+        assertNull(err);
 
         err = (ImportManager.ImportError)
             m.invoke(importer, new BufferedReader(new StringReader("Version,1")));
@@ -186,8 +195,8 @@ public class ImportManagerParseHelpersTest {
             "plantId,ambientFactor,cameraFactor\n" +
             "1,0.02,0.03\n" +
             "SpeciesTargets\n" +
-            "key,ppfdMin,ppfdMax\n" +
-            "species,5,10\n" +
+            SPECIES_TARGETS_HEADER + "\n" +
+            "species,5,10,1,2,5,10,3,4,5,10,5,6,,\n" +
             "Measurements\n" +
             "id,plantId,timestamp,lux,ppfd,dli,note\n" +
             "1,1,0,10,1,1,note\n" +

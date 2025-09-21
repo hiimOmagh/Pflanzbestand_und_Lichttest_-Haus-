@@ -66,7 +66,10 @@ public class ImportExportEncodingTest {
     public void roundTripWithNonUtf8Default() throws Exception {
         Charset original = forceDefaultCharset(StandardCharsets.US_ASCII);
         try {
-            SpeciesTarget target = new SpeciesTarget("roundTrip€", 100f, 200f);
+            SpeciesTarget.StageTarget seedling = new SpeciesTarget.StageTarget(90f, 150f, 3.9f, 6.5f);
+            SpeciesTarget.StageTarget vegetative = new SpeciesTarget.StageTarget(110f, 210f, 4.7f, 9.1f);
+            SpeciesTarget.StageTarget flower = new SpeciesTarget.StageTarget(130f, 230f, 5.6f, 9.9f);
+            SpeciesTarget target = new SpeciesTarget("roundTrip€", seedling, vegetative, flower, "médiocre", "source€");
             db.speciesTargetDao().insert(target);
 
             File exportFile = new File(context.getCacheDir(), "export.zip");
@@ -74,7 +77,7 @@ public class ImportExportEncodingTest {
                 exportFile.delete();
             }
             PlantRepository repository = new PlantRepository(context, executor);
-            ExportManager exporter = new ExportManager(context, executor);
+            ExportManager exporter = new ExportManager(context, (PlantRepository) executor);
             CountDownLatch exportLatch = new CountDownLatch(1);
             final boolean[] exportSuccess = {false};
             exporter.export(Uri.fromFile(exportFile), success -> {
@@ -102,8 +105,21 @@ public class ImportExportEncodingTest {
 
             SpeciesTarget loaded = db.speciesTargetDao().findBySpeciesKey("roundTrip€");
             assertNotNull(loaded);
-            assertEquals(100f, loaded.getPpfdMin(), 0.001f);
-            assertEquals(200f, loaded.getPpfdMax(), 0.001f);
+            assertNotNull(loaded);
+            assertEquals("médiocre", loaded.getTolerance());
+            assertEquals("source€", loaded.getSource());
+            assertEquals(90f, loaded.getSeedlingStage().getPpfdMin(), 0.001f);
+            assertEquals(150f, loaded.getSeedlingStage().getPpfdMax(), 0.001f);
+            assertEquals(3.9f, loaded.getSeedlingStage().getDliMin(), 0.001f);
+            assertEquals(6.5f, loaded.getSeedlingStage().getDliMax(), 0.001f);
+            assertEquals(110f, loaded.getVegetativeStage().getPpfdMin(), 0.001f);
+            assertEquals(210f, loaded.getVegetativeStage().getPpfdMax(), 0.001f);
+            assertEquals(4.7f, loaded.getVegetativeStage().getDliMin(), 0.001f);
+            assertEquals(9.1f, loaded.getVegetativeStage().getDliMax(), 0.001f);
+            assertEquals(130f, loaded.getFlowerStage().getPpfdMin(), 0.001f);
+            assertEquals(230f, loaded.getFlowerStage().getPpfdMax(), 0.001f);
+            assertEquals(5.6f, loaded.getFlowerStage().getDliMin(), 0.001f);
+            assertEquals(9.9f, loaded.getFlowerStage().getDliMax(), 0.001f);
         } finally {
             forceDefaultCharset(original);
         }

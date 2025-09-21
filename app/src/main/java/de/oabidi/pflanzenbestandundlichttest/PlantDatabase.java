@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -47,7 +48,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         PlantPhoto.class,
         PlantCalibration.class
     },
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -152,6 +153,41 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_12_13 = new Migration(12, 13) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS SpeciesTarget_new (" +
+                    "speciesKey TEXT NOT NULL PRIMARY KEY, " +
+                    "seedling_ppfdMin REAL, " +
+                    "seedling_ppfdMax REAL, " +
+                    "seedling_dliMin REAL, " +
+                    "seedling_dliMax REAL, " +
+                    "vegetative_ppfdMin REAL, " +
+                    "vegetative_ppfdMax REAL, " +
+                    "vegetative_dliMin REAL, " +
+                    "vegetative_dliMax REAL, " +
+                    "flower_ppfdMin REAL, " +
+                    "flower_ppfdMax REAL, " +
+                    "flower_dliMin REAL, " +
+                    "flower_dliMax REAL, " +
+                    "tolerance TEXT, " +
+                    "source TEXT)"
+            );
+            database.execSQL(
+                "INSERT INTO SpeciesTarget_new (" +
+                    "speciesKey, seedling_ppfdMin, seedling_ppfdMax, seedling_dliMin, seedling_dliMax, " +
+                    "vegetative_ppfdMin, vegetative_ppfdMax, vegetative_dliMin, vegetative_dliMax, " +
+                    "flower_ppfdMin, flower_ppfdMax, flower_dliMin, flower_dliMax, tolerance, source" +
+                    ") SELECT speciesKey, ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, " +
+                    "ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, NULL, NULL " +
+                    "FROM SpeciesTarget"
+            );
+            database.execSQL("DROP TABLE IF EXISTS SpeciesTarget");
+            database.execSQL("ALTER TABLE SpeciesTarget_new RENAME TO SpeciesTarget");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     /** Provides access to stored light measurements. */
@@ -179,7 +215,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
                         .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
-                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {
@@ -207,12 +243,44 @@ public abstract class PlantDatabase extends RoomDatabase {
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
                 String key = obj.getString("speciesKey");
-                float min = (float) obj.getDouble("ppfdMin");
-                float max = (float) obj.getDouble("ppfdMax");
-                dao.insert(new SpeciesTarget(key, min, max));
+                SpeciesTarget.StageTarget seedling = parseStage(obj.optJSONObject("seedling"));
+                SpeciesTarget.StageTarget vegetative = parseStage(obj.optJSONObject("vegetative"));
+                SpeciesTarget.StageTarget flower = parseStage(obj.optJSONObject("flower"));
+                String tolerance = optString(obj, "tolerance");
+                String source = optString(obj, "source");
+                dao.insert(new SpeciesTarget(key, seedling, vegetative, flower, tolerance, source));
             }
         } catch (IOException | JSONException e) {
             Log.e("PlantDatabase", "Failed to seed species targets", e);
         }
+    }
+
+    private static SpeciesTarget.StageTarget parseStage(@Nullable JSONObject object) throws JSONException {
+        if (object == null) {
+            return new SpeciesTarget.StageTarget();
+        }
+        Float ppfdMin = optFloat(object, "ppfdMin");
+        Float ppfdMax = optFloat(object, "ppfdMax");
+        Float dliMin = optFloat(object, "dliMin");
+        Float dliMax = optFloat(object, "dliMax");
+        return new SpeciesTarget.StageTarget(ppfdMin, ppfdMax, dliMin, dliMax);
+    }
+
+    private static Float optFloat(JSONObject object, String key) throws JSONException {
+        if (!object.has(key)) {
+            return null;
+        }
+        double value = object.optDouble(key, Double.NaN);
+        return Double.isNaN(value) ? null : (float) value;
+    }
+
+    private static String optString(JSONObject object, String key) {
+        if (object.has(key)) {
+            String value = object.optString(key, null);
+            if (value != null && !value.trim().isEmpty()) {
+                return value;
+            }
+        }
+        return null;
     }
 }

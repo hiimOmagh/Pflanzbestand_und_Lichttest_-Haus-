@@ -39,6 +39,10 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class SectionParserTest {
+    private static final String SPECIES_TARGETS_HEADER =
+        "speciesKey,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
+            + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"
+            + "flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,tolerance,source";
     private PlantDatabase db;
     private Context context;
     private ImportManager importer;
@@ -80,7 +84,7 @@ public class SectionParserTest {
             "2\n" +
             "3,Valid,,species,loc,notnumber,\n" +
             "SpeciesTargets\n" +
-            "key,ppfdMin,ppfdMax\n";
+            SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         assertEquals(ImportManager.Section.PLANTS, sectionReader.nextSection(importer));
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
@@ -98,8 +102,8 @@ public class SectionParserTest {
     @Test
     public void speciesTargetsParserMalformedRows() throws Exception {
         String csv = "SpeciesTargets\n" +
-            "key,ppfdMin,ppfdMax\n" +
-            "species,10,20\n" +
+            SPECIES_TARGETS_HEADER + "\n" +
+            "species,10,20,,,,10,20,,,,10,20,,,,note,src\n" +
             "bad,row\n" +
             "Measurements\n" +
             "id,plantId,timestamp,lux,ppfd,dli,note\n";
@@ -122,7 +126,7 @@ public class SectionParserTest {
             "1,1,missing.jpg,0\n" +
             "2,notid,photo.jpg,0\n" +
             "SpeciesTargets\n" +
-            "key,ppfdMin,ppfdMax\n";
+            SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         assertEquals(ImportManager.Section.PLANT_PHOTOS, sectionReader.nextSection(importer));
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
@@ -143,7 +147,7 @@ public class SectionParserTest {
             "2,invalid,0.03\n" +
             "3,0.04,\n" +
             "SpeciesTargets\n" +
-            "key,ppfdMin,ppfdMax\n";
+            SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         assertEquals(ImportManager.Section.PLANT_CALIBRATIONS, sectionReader.nextSection(importer));
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
@@ -249,7 +253,8 @@ public class SectionParserTest {
             warnings,
             restoredUris,
             db,
-            nf
+            nf,
+            2
         );
     }
 

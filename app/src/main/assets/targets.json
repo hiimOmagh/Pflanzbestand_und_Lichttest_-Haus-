@@ -1,6 +1,34 @@
 [
-    { "speciesKey": "basil", "ppfdMin": 150, "ppfdMax": 300 },
-    { "speciesKey": "lettuce", "ppfdMin": 100, "ppfdMax": 200 },
-    { "speciesKey": "tomato", "ppfdMin": 250, "ppfdMax": 400 },
-    { "speciesKey": "cucumber", "ppfdMin": 200, "ppfdMax": 350 }
+    {
+        "speciesKey": "basil",
+        "tolerance": "moderate",
+        "source": "Default dataset",
+        "seedling": { "ppfdMin": 100, "ppfdMax": 180, "dliMin": 4.3, "dliMax": 7.8 },
+        "vegetative": { "ppfdMin": 150, "ppfdMax": 300, "dliMin": 6.5, "dliMax": 13.0 },
+        "flower": { "ppfdMin": 180, "ppfdMax": 320, "dliMin": 7.8, "dliMax": 13.8 }
+    },
+    {
+        "speciesKey": "lettuce",
+        "tolerance": "high",
+        "source": "Default dataset",
+        "seedling": { "ppfdMin": 80, "ppfdMax": 140, "dliMin": 3.5, "dliMax": 6.0 },
+        "vegetative": { "ppfdMin": 100, "ppfdMax": 220, "dliMin": 4.3, "dliMax": 9.5 },
+        "flower": { "ppfdMin": 120, "ppfdMax": 240, "dliMin": 5.2, "dliMax": 10.4 }
+    },
+    {
+        "speciesKey": "tomato",
+        "tolerance": "low",
+        "source": "Default dataset",
+        "seedling": { "ppfdMin": 150, "ppfdMax": 250, "dliMin": 6.5, "dliMax": 10.8 },
+        "vegetative": { "ppfdMin": 250, "ppfdMax": 400, "dliMin": 10.8, "dliMax": 17.3 },
+        "flower": { "ppfdMin": 300, "ppfdMax": 450, "dliMin": 13.0, "dliMax": 19.4 }
+    },
+    {
+        "speciesKey": "cucumber",
+        "tolerance": "moderate",
+        "source": "Default dataset",
+        "seedling": { "ppfdMin": 150, "ppfdMax": 250, "dliMin": 6.5, "dliMax": 10.8 },
+        "vegetative": { "ppfdMin": 200, "ppfdMax": 350, "dliMin": 8.6, "dliMax": 15.1 },
+        "flower": { "ppfdMin": 220, "ppfdMax": 380, "dliMin": 9.5, "dliMax": 16.4 }
+    }
 ]

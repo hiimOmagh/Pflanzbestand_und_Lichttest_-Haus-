@@ -44,6 +44,11 @@ public final class SettingsKeys {
     public static final String KEY_SELECTED_PLANT = "selectedPlantId";
 
     /**
+     * Active growth stage used in the measurement screen.
+     */
+    public static final String KEY_SELECTED_STAGE = "selectedStage";
+
+    /**
      * Flag indicating whether the user has completed the onboarding flow.
      */
     public static final String KEY_HAS_ONBOARDED = "has_onboarded";

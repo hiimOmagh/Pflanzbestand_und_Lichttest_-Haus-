@@ -50,6 +50,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView ppfdView;
     private TextView dliView;
     private Spinner plantSelector;
+    private Spinner stageSelector;
     private Button saveMeasurementButton;
     private TextView locationCheckView;
     private TextView cameraLumaView;
@@ -74,6 +75,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private boolean cameraPermissionDenied;
     private boolean cameraUnavailable;
+    private boolean updatingStageSelection;
     private static final float DEFAULT_CALIBRATION = 0.0185f;
 
     public static LightMeasurementFragment newInstance(PlantRepository repository) {
@@ -119,6 +121,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         cameraPpfdView = view.findViewById(R.id.camera_ppfd_value);
         cameraDliView = view.findViewById(R.id.camera_dli_value);
         plantSelector = view.findViewById(R.id.plant_selector);
+        stageSelector = view.findViewById(R.id.stage_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
         Button calibrateButton = view.findViewById(R.id.measurement_calibrate_button);
@@ -141,6 +144,19 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         repository = repo;
         presenter = new LightMeasurementPresenter(this, repo, context, DEFAULT_CALIBRATION, sampleSize);
         cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> presenter.onCameraLumaChanged(raw, smoothed));
+
+        ArrayAdapter<CharSequence> stageAdapter = ArrayAdapter.createFromResource(requireContext(),
+            R.array.growth_stage_labels, android.R.layout.simple_spinner_item);
+        stageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        stageSelector.setAdapter(stageAdapter);
+
+        String storedStage = preferences.getString(SettingsKeys.KEY_SELECTED_STAGE,
+            SpeciesTarget.GrowthStage.VEGETATIVE.name());
+        SpeciesTarget.GrowthStage initialStage = parseStage(storedStage);
+        updatingStageSelection = true;
+        stageSelector.setSelection(stageToIndex(initialStage));
+        updatingStageSelection = false;
+        presenter.setActiveStage(initialStage);
 
         if (cameraLumaView != null) {
             cameraLumaView.setText(R.string.camera_luma_placeholder);
@@ -173,6 +189,22 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedPlantId = -1;
                 preferences.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
+            }
+        });
+
+        stageSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
+                if (updatingStageSelection) {
+                    return;
+                }
+                SpeciesTarget.GrowthStage stage = stageFromIndex(position);
+                preferences.edit().putString(SettingsKeys.KEY_SELECTED_STAGE, stage.name()).apply();
+                presenter.setActiveStage(stage);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
 
@@ -510,6 +542,48 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void showError(String message) {
         if (isAdded()) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void showSelectedStage(SpeciesTarget.GrowthStage stage) {
+        updatingStageSelection = true;
+        stageSelector.setSelection(stageToIndex(stage));
+        updatingStageSelection = false;
+    }
+
+    private SpeciesTarget.GrowthStage parseStage(String value) {
+        if (value == null) {
+            return SpeciesTarget.GrowthStage.VEGETATIVE;
+        }
+        try {
+            return SpeciesTarget.GrowthStage.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            return SpeciesTarget.GrowthStage.VEGETATIVE;
+        }
+    }
+
+    private int stageToIndex(SpeciesTarget.GrowthStage stage) {
+        switch (stage) {
+            case SEEDLING:
+                return 0;
+            case FLOWER:
+                return 2;
+            case VEGETATIVE:
+            default:
+                return 1;
+        }
+    }
+
+    private SpeciesTarget.GrowthStage stageFromIndex(int index) {
+        switch (index) {
+            case 0:
+                return SpeciesTarget.GrowthStage.SEEDLING;
+            case 2:
+                return SpeciesTarget.GrowthStage.FLOWER;
+            case 1:
+            default:
+                return SpeciesTarget.GrowthStage.VEGETATIVE;
         }
     }
 

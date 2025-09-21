@@ -18,6 +18,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         void showRangeStatus(String status);
         void showPlants(List<Plant> plants);
         void showError(String message);
+        void showSelectedStage(SpeciesTarget.GrowthStage stage);
     }
 
     private static final float DEFAULT_CALIBRATION = 0.0185f;
@@ -69,6 +70,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private final PlantRepository plantRepository;
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
+    private SpeciesTarget.GrowthStage activeStage = SpeciesTarget.GrowthStage.VEGETATIVE;
     private float calibrationFactor;
     private float cameraCalibrationFactor;
     private int sampleSize;
@@ -150,14 +152,21 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         if (plants == null || index < 0 || index >= plants.size()) {
             speciesTarget = null;
             applyDefaultCalibration();
+            view.showSelectedStage(activeStage);
             return;
         }
         String speciesKey = plants.get(index).getSpecies();
         if (speciesKey != null && !speciesKey.isEmpty()) {
-            plantRepository.getSpeciesTarget(speciesKey, target -> speciesTarget = target,
-                e -> view.showError(context.getString(R.string.error_database)));
+            plantRepository.getSpeciesTarget(speciesKey, target -> {
+                speciesTarget = target;
+                if (speciesTarget != null && !speciesTarget.hasStage(activeStage)) {
+                    activeStage = speciesTarget.getDefaultStage();
+                }
+                view.showSelectedStage(activeStage);
+            }, e -> view.showError(context.getString(R.string.error_database)));
         } else {
             speciesTarget = null;
+            view.showSelectedStage(activeStage);
         }
         Plant selectedPlant = plants.get(index);
         long plantId = selectedPlant.getId();
@@ -178,25 +187,9 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public void onLuxChanged(float rawLux, float lux) {
         float ppfd = LightMath.ppfdFromLux(lux, calibrationFactor);
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
-        String statusText = context.getString(R.string.unknown);
-        if (speciesTarget != null) {
-            LightMath.RangeStatus status = LightMath.rangeCheck(ppfd, speciesTarget.getPpfdMin(), speciesTarget.getPpfdMax());
-            switch (status) {
-                case LOW:
-                    statusText = context.getString(R.string.range_low);
-                    break;
-                case HIGH:
-                    statusText = context.getString(R.string.range_high);
-                    break;
-                case OK:
-                default:
-                    statusText = context.getString(R.string.range_ok);
-                    break;
-            }
-        }
         ambientReading = new LightReading(LightReading.Source.AMBIENT, rawLux, lux, ppfd, dli);
         dispatchReadings();
-        view.showRangeStatus(statusText);
+        view.showRangeStatus(buildRangeStatus(ppfd, dli));
     }
 
     public void onCameraLumaChanged(float rawLuma, float smoothedLuma) {
@@ -204,6 +197,75 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         float dli = LightMath.dliFromPpfd(ppfd, lightHours);
         cameraReading = new LightReading(LightReading.Source.CAMERA, rawLuma, smoothedLuma, ppfd, dli);
         dispatchReadings();
+    }
+
+    public void setActiveStage(SpeciesTarget.GrowthStage stage) {
+        if (stage == null) {
+            return;
+        }
+        activeStage = stage;
+        if (speciesTarget != null && !speciesTarget.hasStage(activeStage)) {
+            activeStage = speciesTarget.getDefaultStage();
+        }
+        view.showSelectedStage(activeStage);
+        if (ambientReading != null) {
+            view.showRangeStatus(buildRangeStatus(ambientReading.getPpfd(), ambientReading.getDli()));
+        }
+    }
+
+    public SpeciesTarget.GrowthStage getActiveStage() {
+        return activeStage;
+    }
+
+    private String buildRangeStatus(float ppfd, float dli) {
+        if (speciesTarget == null) {
+            return context.getString(R.string.unknown);
+        }
+        SpeciesTarget.GrowthStage displayStage = speciesTarget.hasStage(activeStage)
+            ? activeStage
+            : speciesTarget.getDefaultStage();
+        SpeciesTarget.StageTarget stageTarget = speciesTarget.getStageOrFallback(activeStage);
+        if (stageTarget == null) {
+            return context.getString(R.string.unknown);
+        }
+
+        LightMath.RangeStatus status = null;
+        if (stageTarget.getPpfdMin() != null && stageTarget.getPpfdMax() != null) {
+            status = LightMath.rangeCheck(ppfd, stageTarget.getPpfdMin(), stageTarget.getPpfdMax());
+        } else if (stageTarget.getDliMin() != null && stageTarget.getDliMax() != null) {
+            status = LightMath.rangeCheck(dli, stageTarget.getDliMin(), stageTarget.getDliMax());
+        }
+        if (status == null) {
+            return context.getString(R.string.unknown);
+        }
+        int statusRes;
+        switch (status) {
+            case LOW:
+                statusRes = R.string.range_low;
+                break;
+            case HIGH:
+                statusRes = R.string.range_high;
+                break;
+            case OK:
+            default:
+                statusRes = R.string.range_ok;
+                break;
+        }
+        return context.getString(R.string.format_stage_status,
+            context.getString(getStageLabelRes(displayStage)),
+            context.getString(statusRes));
+    }
+
+    private int getStageLabelRes(SpeciesTarget.GrowthStage stage) {
+        switch (stage) {
+            case SEEDLING:
+                return R.string.label_stage_seedling;
+            case FLOWER:
+                return R.string.label_stage_flower;
+            case VEGETATIVE:
+            default:
+                return R.string.label_stage_vegetative;
+        }
     }
 
     private void dispatchReadings() {

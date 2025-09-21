@@ -75,13 +75,36 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         LayoutInflater inflater = LayoutInflater.from(requireContext());
         View dialogView = inflater.inflate(R.layout.dialog_species_target, null);
         EditText keyEdit = dialogView.findViewById(R.id.edit_species_key);
-        EditText minEdit = dialogView.findViewById(R.id.edit_ppfd_min);
-        EditText maxEdit = dialogView.findViewById(R.id.edit_ppfd_max);
+        EditText seedlingPpfdMin = dialogView.findViewById(R.id.edit_seedling_ppfd_min);
+        EditText seedlingPpfdMax = dialogView.findViewById(R.id.edit_seedling_ppfd_max);
+        EditText seedlingDliMin = dialogView.findViewById(R.id.edit_seedling_dli_min);
+        EditText seedlingDliMax = dialogView.findViewById(R.id.edit_seedling_dli_max);
+        EditText vegetativePpfdMin = dialogView.findViewById(R.id.edit_vegetative_ppfd_min);
+        EditText vegetativePpfdMax = dialogView.findViewById(R.id.edit_vegetative_ppfd_max);
+        EditText vegetativeDliMin = dialogView.findViewById(R.id.edit_vegetative_dli_min);
+        EditText vegetativeDliMax = dialogView.findViewById(R.id.edit_vegetative_dli_max);
+        EditText flowerPpfdMin = dialogView.findViewById(R.id.edit_flower_ppfd_min);
+        EditText flowerPpfdMax = dialogView.findViewById(R.id.edit_flower_ppfd_max);
+        EditText flowerDliMin = dialogView.findViewById(R.id.edit_flower_dli_min);
+        EditText flowerDliMax = dialogView.findViewById(R.id.edit_flower_dli_max);
+        EditText toleranceEdit = dialogView.findViewById(R.id.edit_tolerance);
+        EditText sourceEdit = dialogView.findViewById(R.id.edit_source);
+
+        StageFields seedlingFields = new StageFields(seedlingPpfdMin, seedlingPpfdMax, seedlingDliMin, seedlingDliMax);
+        StageFields vegetativeFields = new StageFields(vegetativePpfdMin, vegetativePpfdMax, vegetativeDliMin, vegetativeDliMax);
+        StageFields flowerFields = new StageFields(flowerPpfdMin, flowerPpfdMax, flowerDliMin, flowerDliMax);
 
         if (target != null) {
             keyEdit.setText(target.getSpeciesKey());
-            minEdit.setText(String.valueOf(target.getPpfdMin()));
-            maxEdit.setText(String.valueOf(target.getPpfdMax()));
+            populateStage(seedlingFields, target.getSeedlingStage());
+            populateStage(vegetativeFields, target.getVegetativeStage());
+            populateStage(flowerFields, target.getFlowerStage());
+            if (target.getTolerance() != null) {
+                toleranceEdit.setText(target.getTolerance());
+            }
+            if (target.getSource() != null) {
+                sourceEdit.setText(target.getSource());
+            }
         }
 
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -93,32 +116,26 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
 
         dialog.setOnShowListener(d -> {
             Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            TextWatcher watcher = new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    positive.setEnabled(isInputValid(
-                        keyEdit.getText().toString(),
-                        parseFloat(minEdit.getText().toString()),
-                        parseFloat(maxEdit.getText().toString())));
-                }
-            };
+            SimpleTextWatcher watcher = new SimpleTextWatcher(() -> positive.setEnabled(isInputValid(
+                keyEdit.getText().toString(),
+                seedlingFields,
+                vegetativeFields,
+                flowerFields)));
 
             keyEdit.addTextChangedListener(watcher);
-            minEdit.addTextChangedListener(watcher);
-            maxEdit.addTextChangedListener(watcher);
+            seedlingFields.attachWatcher(watcher);
+            vegetativeFields.attachWatcher(watcher);
+            flowerFields.attachWatcher(watcher);
 
             positive.setOnClickListener(v -> {
-                if (validateInputs(keyEdit, minEdit, maxEdit)) {
+                if (validateInputs(keyEdit, seedlingFields, vegetativeFields, flowerFields)) {
                     String key = keyEdit.getText().toString();
-                    float min = parseFloat(minEdit.getText().toString());
-                    float max = parseFloat(maxEdit.getText().toString());
-                    SpeciesTarget newTarget = new SpeciesTarget(key, min, max);
+                    SpeciesTarget.StageTarget seedling = buildStage(seedlingFields);
+                    SpeciesTarget.StageTarget vegetative = buildStage(vegetativeFields);
+                    SpeciesTarget.StageTarget flower = buildStage(flowerFields);
+                    String tolerance = emptyToNull(toleranceEdit.getText().toString());
+                    String source = emptyToNull(sourceEdit.getText().toString());
+                    SpeciesTarget newTarget = new SpeciesTarget(key, seedling, vegetative, flower, tolerance, source);
                     repository.insertSpeciesTarget(newTarget, this::loadTargets,
                         e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
                     dialog.dismiss();
@@ -128,21 +145,31 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             // initialize button state
             positive.setEnabled(isInputValid(
                 keyEdit.getText().toString(),
-                parseFloat(minEdit.getText().toString()),
-                parseFloat(maxEdit.getText().toString())));
+                seedlingFields,
+                vegetativeFields,
+                flowerFields));
         });
 
         dialog.show();
     }
 
-    static boolean isInputValid(String key, float min, float max) {
-        return !key.trim().isEmpty() && min < max;
+    static boolean isInputValid(String key, StageFields... stages) {
+        if (key.trim().isEmpty()) {
+            return false;
+        }
+        boolean hasStage = false;
+        for (StageFields fields : stages) {
+            ValidationResult result = validateStage(fields, false);
+            if (!result.valid) {
+                return false;
+            }
+            hasStage |= result.hasValues;
+        }
+        return hasStage;
     }
 
-    private boolean validateInputs(EditText keyEdit, EditText minEdit, EditText maxEdit) {
+    private boolean validateInputs(EditText keyEdit, StageFields... stages) {
         String key = keyEdit.getText().toString();
-        float min = parseFloat(minEdit.getText().toString());
-        float max = parseFloat(maxEdit.getText().toString());
         boolean valid = true;
         if (key.trim().isEmpty()) {
             keyEdit.setError(getString(R.string.error_required));
@@ -150,23 +177,181 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         } else {
             keyEdit.setError(null);
         }
-        if (min >= max) {
-            String error = getString(R.string.error_ppfd_range);
-            minEdit.setError(error);
-            maxEdit.setError(error);
+        boolean hasStage = false;
+        for (StageFields fields : stages) {
+            ValidationResult result = validateStage(fields, true);
+            valid &= result.valid;
+            hasStage |= result.hasValues;
+        }
+        if (!hasStage) {
+            Snackbar.make(requireView(), R.string.error_stage_required, Snackbar.LENGTH_LONG).show();
             valid = false;
-        } else {
-            minEdit.setError(null);
-            maxEdit.setError(null);
         }
         return valid;
     }
 
-    private float parseFloat(String value) {
+    private void populateStage(StageFields fields, @Nullable SpeciesTarget.StageTarget stage) {
+        if (stage == null) {
+            return;
+        }
+        if (stage.getPpfdMin() != null) {
+            fields.ppfdMin.setText(formatFloat(stage.getPpfdMin()));
+        }
+        if (stage.getPpfdMax() != null) {
+            fields.ppfdMax.setText(formatFloat(stage.getPpfdMax()));
+        }
+        if (stage.getDliMin() != null) {
+            fields.dliMin.setText(formatFloat(stage.getDliMin()));
+        }
+        if (stage.getDliMax() != null) {
+            fields.dliMax.setText(formatFloat(stage.getDliMax()));
+        }
+    }
+
+    private String formatFloat(float value) {
+        if ((long) value == value) {
+            return String.valueOf((long) value);
+        }
+        return String.valueOf(value);
+    }
+
+    private SpeciesTarget.StageTarget buildStage(StageFields fields) {
+        Float ppfdMin = parseNullable(fields.ppfdMin.getText().toString());
+        Float ppfdMax = parseNullable(fields.ppfdMax.getText().toString());
+        Float dliMin = parseNullable(fields.dliMin.getText().toString());
+        Float dliMax = parseNullable(fields.dliMax.getText().toString());
+        return new SpeciesTarget.StageTarget(ppfdMin, ppfdMax, dliMin, dliMax);
+    }
+
+    private Float parseNullable(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
         try {
-            return Float.parseFloat(value);
+            return Float.parseFloat(value.trim());
         } catch (NumberFormatException e) {
-            return 0f;
+            return null;
+        }
+    }
+
+    private static String emptyToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private static ValidationResult validateStage(StageFields fields, boolean showErrors) {
+        boolean valid = true;
+        boolean hasValues = false;
+
+        ValidationResult ppfd = validateRange(fields.ppfdMin, fields.ppfdMax, showErrors);
+        valid &= ppfd.valid;
+        hasValues |= ppfd.hasValues;
+
+        ValidationResult dli = validateRange(fields.dliMin, fields.dliMax, showErrors);
+        valid &= dli.valid;
+        hasValues |= dli.hasValues;
+
+        return new ValidationResult(valid, hasValues);
+    }
+
+    private static ValidationResult validateRange(EditText minField, EditText maxField, boolean showErrors) {
+        String minText = minField.getText().toString().trim();
+        String maxText = maxField.getText().toString().trim();
+        boolean hasMin = !minText.isEmpty();
+        boolean hasMax = !maxText.isEmpty();
+        if (!hasMin && !hasMax) {
+            if (showErrors) {
+                minField.setError(null);
+                maxField.setError(null);
+            }
+            return new ValidationResult(true, false);
+        }
+        if (!hasMin || !hasMax) {
+            if (showErrors) {
+                String error = minField.getContext().getString(R.string.error_required);
+                if (!hasMin) {
+                    minField.setError(error);
+                }
+                if (!hasMax) {
+                    maxField.setError(error);
+                }
+            }
+            return new ValidationResult(false, false);
+        }
+        try {
+            float min = Float.parseFloat(minText);
+            float max = Float.parseFloat(maxText);
+            if (min >= max) {
+                if (showErrors) {
+                    String error = minField.getContext().getString(R.string.error_ppfd_range);
+                    minField.setError(error);
+                    maxField.setError(error);
+                }
+                return new ValidationResult(false, true);
+            }
+        } catch (NumberFormatException e) {
+            if (showErrors) {
+                String error = minField.getContext().getString(R.string.error_positive_number);
+                minField.setError(error);
+                maxField.setError(error);
+            }
+            return new ValidationResult(false, false);
+        }
+        if (showErrors) {
+            minField.setError(null);
+            maxField.setError(null);
+        }
+        return new ValidationResult(true, true);
+    }
+
+    private static class StageFields {
+        final EditText ppfdMin;
+        final EditText ppfdMax;
+        final EditText dliMin;
+        final EditText dliMax;
+
+        StageFields(EditText ppfdMin, EditText ppfdMax, EditText dliMin, EditText dliMax) {
+            this.ppfdMin = ppfdMin;
+            this.ppfdMax = ppfdMax;
+            this.dliMin = dliMin;
+            this.dliMax = dliMax;
+        }
+
+        void attachWatcher(TextWatcher watcher) {
+            ppfdMin.addTextChangedListener(watcher);
+            ppfdMax.addTextChangedListener(watcher);
+            dliMin.addTextChangedListener(watcher);
+            dliMax.addTextChangedListener(watcher);
+        }
+    }
+
+    private static class ValidationResult {
+        final boolean valid;
+        final boolean hasValues;
+
+        ValidationResult(boolean valid, boolean hasValues) {
+            this.valid = valid;
+            this.hasValues = hasValues;
+        }
+    }
+
+    private static class SimpleTextWatcher implements TextWatcher {
+        private final Runnable onChange;
+
+        SimpleTextWatcher(Runnable onChange) {
+            this.onChange = onChange;
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            onChange.run();
         }
     }
 

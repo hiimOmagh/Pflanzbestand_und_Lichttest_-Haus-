@@ -53,7 +53,10 @@ public class ImportExportSpeciesTargetTest {
 
     @Test
     public void speciesTargetRoundTrip() throws Exception {
-        SpeciesTarget target = new SpeciesTarget("roundTrip", 100f, 200f);
+        SpeciesTarget.StageTarget seedling = new SpeciesTarget.StageTarget(80f, 120f, 3.5f, 5.2f);
+        SpeciesTarget.StageTarget vegetative = new SpeciesTarget.StageTarget(100f, 220f, 4.3f, 9.5f);
+        SpeciesTarget.StageTarget flower = new SpeciesTarget.StageTarget(120f, 240f, 5.2f, 10.4f);
+        SpeciesTarget target = new SpeciesTarget("roundTrip", seedling, vegetative, flower, "moderate", "unit test");
         db.speciesTargetDao().insert(target);
 
         File exportFile = new File(context.getCacheDir(), "export.zip");
@@ -92,7 +95,26 @@ public class ImportExportSpeciesTargetTest {
 
         SpeciesTarget loaded = db.speciesTargetDao().findBySpeciesKey("roundTrip");
         assertNotNull(loaded);
-        assertEquals(100f, loaded.getPpfdMin(), 0.001f);
-        assertEquals(200f, loaded.getPpfdMax(), 0.001f);
+        assertNotNull(loaded);
+        SpeciesTarget.StageTarget loadedSeedling = loaded.getSeedlingStage();
+        SpeciesTarget.StageTarget loadedVegetative = loaded.getVegetativeStage();
+        SpeciesTarget.StageTarget loadedFlower = loaded.getFlowerStage();
+        assertNotNull(loadedSeedling);
+        assertNotNull(loadedVegetative);
+        assertNotNull(loadedFlower);
+        assertEquals(80f, loadedSeedling.getPpfdMin(), 0.001f);
+        assertEquals(120f, loadedSeedling.getPpfdMax(), 0.001f);
+        assertEquals(3.5f, loadedSeedling.getDliMin(), 0.001f);
+        assertEquals(5.2f, loadedSeedling.getDliMax(), 0.001f);
+        assertEquals(100f, loadedVegetative.getPpfdMin(), 0.001f);
+        assertEquals(220f, loadedVegetative.getPpfdMax(), 0.001f);
+        assertEquals(4.3f, loadedVegetative.getDliMin(), 0.001f);
+        assertEquals(9.5f, loadedVegetative.getDliMax(), 0.001f);
+        assertEquals(120f, loadedFlower.getPpfdMin(), 0.001f);
+        assertEquals(240f, loadedFlower.getPpfdMax(), 0.001f);
+        assertEquals(5.2f, loadedFlower.getDliMin(), 0.001f);
+        assertEquals(10.4f, loadedFlower.getDliMax(), 0.001f);
+        assertEquals("moderate", loaded.getTolerance());
+        assertEquals("unit test", loaded.getSource());
     }
 }

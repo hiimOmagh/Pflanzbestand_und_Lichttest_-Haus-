@@ -1,9 +1,11 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Entity;
@@ -22,6 +24,10 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
+
+import de.oabidi.pflanzenbestandundlichttest.LightMath;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
 /**
  * Verifies that migrating from database version 4 to the current version preserves existing plants.
@@ -68,6 +74,50 @@ public class PlantDatabaseMigrationTest {
 
         assertEquals(1, plants.size());
         assertEquals("Test", plants.get(0).getName());
+    }
+
+    @Test
+    public void migrate12To13_transformsSpeciesTargets() {
+        Context context = ApplicationProvider.getApplicationContext();
+
+        PlantDatabaseV12 v12 = Room.databaseBuilder(context, PlantDatabaseV12.class, DB_NAME)
+            .allowMainThreadQueries()
+            .build();
+        SpeciesTargetV12 legacy = new SpeciesTargetV12();
+        legacy.speciesKey = "legacy";
+        legacy.ppfdMin = 120f;
+        legacy.ppfdMax = 240f;
+        v12.speciesTargetDao().insert(legacy);
+        v12.close();
+
+        PlantDatabase migrated = Room.databaseBuilder(context, PlantDatabase.class, DB_NAME)
+            .addMigrations(
+                PlantDatabase.MIGRATION_2_3,
+                PlantDatabase.MIGRATION_3_4,
+                PlantDatabase.MIGRATION_4_5,
+                PlantDatabase.MIGRATION_5_6,
+                PlantDatabase.MIGRATION_6_7,
+                PlantDatabase.MIGRATION_7_8,
+                PlantDatabase.MIGRATION_8_9,
+                PlantDatabase.MIGRATION_9_10,
+                PlantDatabase.MIGRATION_10_11,
+                PlantDatabase.MIGRATION_11_12,
+                PlantDatabase.MIGRATION_12_13)
+            .allowMainThreadQueries()
+            .build();
+
+        SpeciesTarget migratedTarget = migrated.speciesTargetDao().findBySpeciesKey("legacy");
+        migrated.close();
+
+        assertNotNull(migratedTarget);
+        assertEquals(120f, migratedTarget.getSeedlingStage().getPpfdMin(), 0.001f);
+        assertEquals(240f, migratedTarget.getSeedlingStage().getPpfdMax(), 0.001f);
+        assertEquals(120f, migratedTarget.getVegetativeStage().getPpfdMin(), 0.001f);
+        assertEquals(240f, migratedTarget.getVegetativeStage().getPpfdMax(), 0.001f);
+        assertEquals(120f, migratedTarget.getFlowerStage().getPpfdMin(), 0.001f);
+        assertEquals(240f, migratedTarget.getFlowerStage().getPpfdMax(), 0.001f);
+        assertEquals(LightMath.dliFromPpfd(120f, 12f), migratedTarget.getSeedlingStage().getDliMin(), 0.001f);
+        assertEquals(LightMath.dliFromPpfd(240f, 12f), migratedTarget.getSeedlingStage().getDliMax(), 0.001f);
     }
 
     /**
@@ -123,5 +173,40 @@ public class PlantDatabaseMigrationTest {
         public long id;
         public long triggerAt;
         public String message;
+    }
+
+    @Dao
+    interface SpeciesTargetDaoV12 {
+        @Insert
+        void insert(SpeciesTargetV12 target);
+    }
+
+    @Entity
+    static class SpeciesTargetV12 {
+        @PrimaryKey
+        @NonNull
+        public String speciesKey;
+        public float ppfdMin;
+        public float ppfdMax;
+    }
+
+    @Database(
+        entities = {
+            Plant.class,
+            Measurement.class,
+            DiaryEntry.class,
+            SpeciesTargetV12.class,
+            Reminder.class,
+            PlantFts.class,
+            DiaryEntryFts.class,
+            PlantPhoto.class,
+            PlantCalibration.class
+        },
+        version = 12,
+        exportSchema = false
+    )
+    @TypeConverters({Converters.class})
+    abstract static class PlantDatabaseV12 extends RoomDatabase {
+        public abstract SpeciesTargetDaoV12 speciesTargetDao();
     }
 }

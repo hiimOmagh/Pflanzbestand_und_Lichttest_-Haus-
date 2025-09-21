@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
@@ -419,8 +420,15 @@ public class PlantRepository {
             return null;
         }
 
-        float minDli = LightMath.dliFromPpfd(target.getPpfdMin(), lightHours);
-        float maxDli = LightMath.dliFromPpfd(target.getPpfdMax(), lightHours);
+        SpeciesTarget.GrowthStage stage = target.getDefaultStage();
+        SpeciesTarget.StageTarget stageTarget = target.getStage(stage);
+        Float minDli = resolveDli(stageTarget != null ? stageTarget.getDliMin() : null,
+            stageTarget != null ? stageTarget.getPpfdMin() : null, lightHours);
+        Float maxDli = resolveDli(stageTarget != null ? stageTarget.getDliMax() : null,
+            stageTarget != null ? stageTarget.getPpfdMax() : null, lightHours);
+        if (minDli == null || maxDli == null) {
+            return null;
+        }
 
         long todayStart = startOfDay(System.currentTimeMillis());
         int lowStreak = 0;
@@ -487,6 +495,17 @@ public class PlantRepository {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTimeInMillis();
+    }
+
+    @Nullable
+    private Float resolveDli(@Nullable Float dli, @Nullable Float ppfd, float lightHours) {
+        if (dli != null) {
+            return dli;
+        }
+        if (ppfd != null) {
+            return LightMath.dliFromPpfd(ppfd, lightHours);
+        }
+        return null;
     }
 
     public void insertDiaryEntry(DiaryEntry entry, Runnable callback) {
