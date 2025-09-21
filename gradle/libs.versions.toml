@@ -18,6 +18,7 @@ googleGmsGoogleServices = "4.4.3"
 googleFirebaseCrashlytics = "3.0.6"
 viewpager2 = "1.1.0"
 camerax = "1.5.0"
+photoview = "2.3.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -40,6 +41,7 @@ camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = 
 camerax-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 camerax-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 camerax-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+photoview = { group = "com.github.chrisbanes", name = "PhotoView", version.ref = "photoview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

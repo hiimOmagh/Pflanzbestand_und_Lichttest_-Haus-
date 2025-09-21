@@ -15,8 +15,11 @@ import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 
@@ -33,6 +36,7 @@ public class PlantPhotoLoader {
     private final ExecutorService executor;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final LruCache<String, Bitmap> bitmapCache;
+    private final Set<String> inflightPrefetches = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public PlantPhotoLoader(@NonNull Context context, @NonNull ExecutorService executor) {
         this.appContext = context.getApplicationContext();
@@ -68,6 +72,25 @@ public class PlantPhotoLoader {
                     target.setImageBitmap(bitmap);
                 }
             });
+        });
+    }
+
+    /**
+     * Preloads the provided photo into the in-memory cache to speed up subsequent binds.
+     */
+    public void prefetch(@NonNull String uriString) {
+        if (bitmapCache.get(uriString) != null || !inflightPrefetches.add(uriString)) {
+            return;
+        }
+        executor.execute(() -> {
+            try {
+                Bitmap bitmap = decodeBitmap(uriString);
+                if (bitmap != null) {
+                    bitmapCache.put(uriString, bitmap);
+                }
+            } finally {
+                inflightPrefetches.remove(uriString);
+            }
         });
     }
 

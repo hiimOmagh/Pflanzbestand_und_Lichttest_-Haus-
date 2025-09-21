@@ -6,17 +6,20 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
+import com.github.chrisbanes.photoview.PhotoView;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -65,6 +68,10 @@ public class PlantPhotoViewerFragment extends Fragment {
     private boolean refreshRequested;
     private int currentIndex;
     private ViewPager2.OnPageChangeCallback pageChangeCallback;
+    private ItemTouchHelper swipeToDeleteHelper;
+    private ItemTouchHelper.SimpleCallback swipeCallback;
+    @Nullable
+    private PendingDeletion pendingDeletion;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -97,6 +104,24 @@ public class PlantPhotoViewerFragment extends Fragment {
         pager = view.findViewById(R.id.photo_pager);
         pager.setAdapter(pagerAdapter);
         pagerAdapter.setHasStableIds(true);
+        RecyclerView pagerRecycler = (RecyclerView) pager.getChildAt(0);
+        if (pagerRecycler != null) {
+            swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.UP | ItemTouchHelper.DOWN) {
+                @Override
+                public boolean onMove(@NonNull RecyclerView recyclerView,
+                                      @NonNull RecyclerView.ViewHolder viewHolder,
+                                      @NonNull RecyclerView.ViewHolder target) {
+                    return false;
+                }
+
+                @Override
+                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                    handlePhotoSwiped(viewHolder.getBindingAdapterPosition());
+                }
+            };
+            swipeToDeleteHelper = new ItemTouchHelper(swipeCallback);
+            swipeToDeleteHelper.attachToRecyclerView(pagerRecycler);
+        }
         pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -121,6 +146,15 @@ public class PlantPhotoViewerFragment extends Fragment {
     public void onDestroyView() {
         if (pageChangeCallback != null && pager != null) {
             pager.unregisterOnPageChangeCallback(pageChangeCallback);
+        }
+        if (swipeToDeleteHelper != null) {
+            swipeToDeleteHelper.attachToRecyclerView(null);
+            swipeToDeleteHelper = null;
+        }
+        swipeCallback = null;
+        if (pendingDeletion != null && pendingDeletion.snackbar != null) {
+            pendingDeletion.snackbar.dismiss();
+            pendingDeletion = null;
         }
         pageChangeCallback = null;
         pager = null;
@@ -224,6 +258,93 @@ public class PlantPhotoViewerFragment extends Fragment {
         }, e -> Toast.makeText(requireContext(), R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show());
     }
 
+    private void handlePhotoSwiped(int position) {
+        if (position == RecyclerView.NO_POSITION) {
+            pagerAdapter.notifyDataSetChanged();
+            return;
+        }
+        PlantPhoto photo = pagerAdapter.getItem(position);
+        if (photo == null) {
+            pagerAdapter.notifyItemChanged(position);
+            return;
+        }
+        pagerAdapter.removeAt(position);
+        if (pendingDeletion != null && pendingDeletion.snackbar != null) {
+            pendingDeletion.snackbar.dismiss();
+        }
+        int itemCount = pagerAdapter.getItemCount();
+        if (itemCount > 0) {
+            currentIndex = Math.min(position, itemCount - 1);
+            if (pager != null) {
+                pager.setCurrentItem(currentIndex, false);
+            }
+        } else {
+            currentIndex = 0;
+        }
+        updateSubtitle(currentIndex);
+        showUndoSnackbar(photo, position);
+    }
+
+    private void showUndoSnackbar(@NonNull PlantPhoto photo, int position) {
+        View root = getView();
+        if (root == null) {
+            deletePhoto(photo);
+            return;
+        }
+        Snackbar snackbar = Snackbar.make(root, R.string.plant_photo_pending_delete, Snackbar.LENGTH_LONG);
+        PendingDeletion deletion = new PendingDeletion(photo, position, snackbar);
+        pendingDeletion = deletion;
+        snackbar.setAction(R.string.action_undo, v -> {
+            if (pendingDeletion != null && pendingDeletion.photo.getId() == photo.getId()) {
+                pendingDeletion.undone = true;
+                pagerAdapter.insertAt(position, photo);
+                currentIndex = position;
+                if (pager != null) {
+                    pager.setCurrentItem(position, false);
+                }
+                updateSubtitle(currentIndex);
+            }
+        });
+        snackbar.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                if (pendingDeletion != null && pendingDeletion.photo.getId() == photo.getId()) {
+                    PendingDeletion dismissed = pendingDeletion;
+                    pendingDeletion = null;
+                    if (!dismissed.undone) {
+                        deletePhoto(photo);
+                    }
+                }
+            }
+        });
+        snackbar.show();
+    }
+
+    @VisibleForTesting
+    @Nullable
+    ItemTouchHelper.SimpleCallback getSwipeCallbackForTesting() {
+        return swipeCallback;
+    }
+
+    @VisibleForTesting
+    @Nullable
+    PendingDeletion getPendingDeletionForTesting() {
+        return pendingDeletion;
+    }
+
+    static final class PendingDeletion {
+        final PlantPhoto photo;
+        final int position;
+        final Snackbar snackbar;
+        boolean undone;
+
+        PendingDeletion(@NonNull PlantPhoto photo, int position, @NonNull Snackbar snackbar) {
+            this.photo = photo;
+            this.position = position;
+            this.snackbar = snackbar;
+        }
+    }
+
     private void closeSelf() {
         if (refreshRequested) {
             Bundle result = new Bundle();
@@ -252,6 +373,7 @@ public class PlantPhotoViewerFragment extends Fragment {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.bind(items.get(position));
+            prefetchAround(position);
         }
 
         @Override
@@ -268,6 +390,20 @@ public class PlantPhotoViewerFragment extends Fragment {
             items.clear();
             items.addAll(photos);
             notifyDataSetChanged();
+        }
+
+        void removeAt(int index) {
+            if (index < 0 || index >= items.size()) {
+                return;
+            }
+            items.remove(index);
+            notifyItemRemoved(index);
+        }
+
+        void insertAt(int index, @NonNull PlantPhoto photo) {
+            int clamped = Math.max(0, Math.min(index, items.size()));
+            items.add(clamped, photo);
+            notifyItemInserted(clamped);
         }
 
         int indexOf(long photoId) {
@@ -293,8 +429,15 @@ public class PlantPhotoViewerFragment extends Fragment {
             holder.recycle();
         }
 
+        private void prefetchAround(int position) {
+            int next = position + 1;
+            if (next < items.size()) {
+                loader.prefetch(items.get(next).getUri());
+            }
+        }
+
         static class ViewHolder extends RecyclerView.ViewHolder {
-            private final ImageView imageView;
+            private final PhotoView imageView;
             private final PlantPhotoLoader loader;
 
             ViewHolder(@NonNull View itemView, @NonNull PlantPhotoLoader loader) {
@@ -304,11 +447,13 @@ public class PlantPhotoViewerFragment extends Fragment {
             }
 
             void bind(@NonNull PlantPhoto photo) {
+                imageView.setScale(1.0f, false);
                 loader.loadInto(imageView, photo.getUri());
             }
 
             void recycle() {
                 loader.clear(imageView);
+                imageView.setScale(1.0f, false);
             }
         }
     }

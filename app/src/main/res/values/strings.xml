@@ -129,6 +129,7 @@
     <string name="plant_photo_delete_message">This will remove the photo from the gallery.</string>
     <string name="plant_photo_delete_success">Photo deleted</string>
     <string name="plant_photo_delete_failed">Unable to delete photo</string>
+    <string name="plant_photo_pending_delete">Photo deleted</string>
     <string name="plant_photo_viewer_title">Plant photos</string>
     <string name="plant_photo_delete_action">Delete</string>
     <string name="action_close">Close</string>

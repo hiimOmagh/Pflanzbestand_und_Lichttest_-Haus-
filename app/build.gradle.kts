@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
+    implementation(libs.photoview)
     implementation(libs.room.runtime)
     implementation(libs.firebase.crashlytics)
     annotationProcessor(libs.room.compiler)
