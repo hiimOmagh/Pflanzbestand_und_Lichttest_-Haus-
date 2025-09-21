@@ -34,6 +34,7 @@ import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -132,6 +133,33 @@ public class SectionParserTest {
         assertFalse(imported);
         assertEquals(2, warnings.size());
         assertEquals("plant photos", warnings.get(0).category);
+    }
+
+    @Test
+    public void plantCalibrationsParserValidatesRows() throws Exception {
+        String csv = "PlantCalibrations\n" +
+            "plantId,ambientFactor,cameraFactor\n" +
+            "1,0.02,0.03\n" +
+            "2,invalid,0.03\n" +
+            "3,0.04,\n" +
+            "SpeciesTargets\n" +
+            "key,ppfdMin,ppfdMax\n";
+        ImportManager.SectionReader sectionReader = newSectionReader(csv);
+        assertEquals(ImportManager.Section.PLANT_CALIBRATIONS, sectionReader.nextSection(importer));
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Map<Long, Long> plantIdMap = new HashMap<>();
+        plantIdMap.put(1L, 1L);
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantCalibrationsSectionParser();
+        ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
+            plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
+        boolean imported = parser.parseSection(sectionReader, context);
+        assertTrue(imported);
+        assertEquals(2, warnings.size());
+        assertEquals("calibrations", warnings.get(0).category);
+        List<PlantCalibration> calibrations = db.plantCalibrationDao().getAll();
+        assertEquals(1, calibrations.size());
+        assertEquals(0.02f, calibrations.get(0).getAmbientFactor(), 0.0001f);
+        assertEquals(0.03f, calibrations.get(0).getCameraFactor(), 0.0001f);
     }
 
     @Test

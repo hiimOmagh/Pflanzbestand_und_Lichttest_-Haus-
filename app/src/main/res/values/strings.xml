@@ -137,11 +137,11 @@
     <string name="light_meter_title">Light meter</string>
     <string name="light_meter_ambient_label">Ambient sensor</string>
     <string name="light_meter_camera_label">Camera luma</string>
-    <string name="light_meter_lux_placeholder">— lx</string>
-    <string name="light_meter_camera_placeholder">Luma —</string>
-    <string name="light_meter_band_placeholder">Band —</string>
-    <string name="light_meter_lux_value">%.0f lx</string>
-    <string name="light_meter_camera_value">Luma %.0f</string>
+    <string name="light_meter_lux_placeholder" translatable="false">— lx</string>
+    <string name="light_meter_camera_placeholder" translatable="false">Luma —</string>
+    <string name="light_meter_band_placeholder" translatable="false">Band —</string>
+    <string name="light_meter_lux_value" translatable="false">%.0f lx</string>
+    <string name="light_meter_camera_value" translatable="false">Luma %.0f</string>
     <string name="light_band_low">Low</string>
     <string name="light_band_medium">Medium</string>
     <string name="light_band_high">High</string>
@@ -153,6 +153,8 @@
     <string name="error_ppfd_range">Min must be less than max</string>
     <string name="calibration_instructions">Place the sensor under known lighting, enter the PPFD, then confirm.</string>
     <string name="label_known_ppfd">Known PPFD:</string>
+    <string name="label_ambient_factor">Ambient factor:</string>
+    <string name="label_camera_factor">Camera factor:</string>
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
     <string name="action_add_photo">Add Photo</string>

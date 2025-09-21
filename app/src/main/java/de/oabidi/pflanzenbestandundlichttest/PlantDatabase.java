@@ -23,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 
@@ -42,9 +44,10 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         Reminder.class,
         PlantFts.class,
         DiaryEntryFts.class,
-        PlantPhoto.class
+        PlantPhoto.class,
+        PlantCalibration.class
     },
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -135,6 +138,20 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_11_12 = new Migration(11, 12) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS PlantCalibration (" +
+                    "plantId INTEGER PRIMARY KEY NOT NULL, " +
+                    "ambientFactor REAL NOT NULL, " +
+                    "cameraFactor REAL NOT NULL, " +
+                    "FOREIGN KEY(plantId) REFERENCES Plant(id) ON DELETE CASCADE)"
+            );
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_PlantCalibration_plantId ON PlantCalibration(plantId)");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     /** Provides access to stored light measurements. */
@@ -151,6 +168,8 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract PlantPhotoDao plantPhotoDao();
 
+    public abstract PlantCalibrationDao plantCalibrationDao();
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -159,7 +178,8 @@ public abstract class PlantDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
+                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {

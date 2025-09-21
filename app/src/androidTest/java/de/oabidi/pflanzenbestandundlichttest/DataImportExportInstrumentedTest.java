@@ -28,6 +28,7 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -108,6 +109,12 @@ public class DataImportExportInstrumentedTest {
             return null;
         });
 
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).plantCalibrationDao()
+                .insertOrUpdate(new PlantCalibration(plant.getId(), 0.05f, 0.07f));
+            return null;
+        });
+
         Measurement m = new Measurement(plant.getId(), 1000L, 1f, 2f, 1f, "note");
         awaitDb(() -> {
             PlantDatabase.getDatabase(context).measurementDao().insert(m);
@@ -154,12 +161,14 @@ public class DataImportExportInstrumentedTest {
         int measurementCount = awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().getAll().size());
         int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
         int reminderCount = awaitDb(() -> PlantDatabase.getDatabase(context).reminderDao().getAll().size());
+        int calibrationCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().size());
 
         assertEquals(1, plantCount);
         assertEquals(1, targetCount);
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
         assertEquals(1, reminderCount);
+        assertEquals(1, calibrationCount);
 
         Measurement restoredMeasurement = awaitDb(
             () -> PlantDatabase.getDatabase(context).measurementDao().getAll().get(0)
@@ -201,6 +210,12 @@ public class DataImportExportInstrumentedTest {
         );
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());
+
+        PlantCalibration restoredCalibration = awaitDb(
+            () -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().get(0)
+        );
+        assertEquals(0.05f, restoredCalibration.getAmbientFactor(), 0.0001f);
+        assertEquals(0.07f, restoredCalibration.getCameraFactor(), 0.0001f);
         assertEquals(plant.getId(), restoredReminder.getPlantId());
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

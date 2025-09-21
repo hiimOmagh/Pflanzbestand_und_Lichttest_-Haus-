@@ -182,6 +182,9 @@ public class ImportManagerParseHelpersTest {
             "1,Plant,,,loc,0,\n" +
             "PlantPhotos\n" +
             "id,plantId,uri,createdAt\n" +
+            "PlantCalibrations\n" +
+            "plantId,ambientFactor,cameraFactor\n" +
+            "1,0.02,0.03\n" +
             "SpeciesTargets\n" +
             "key,ppfdMin,ppfdMax\n" +
             "species,5,10\n" +
@@ -198,6 +201,7 @@ public class ImportManagerParseHelpersTest {
         List<ImportManager.SectionParser> parsers = Arrays.asList(
             new de.oabidi.pflanzenbestandundlichttest.data.util.PlantsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.data.util.PlantCalibrationsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.SpeciesTargetsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.MeasurementsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.DiaryEntriesSectionParser(),
@@ -212,10 +216,10 @@ public class ImportManagerParseHelpersTest {
         List<Integer> updates = new ArrayList<>();
         ImportManager.ProgressCallback callback = (current, total) -> updates.add(current);
         de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator coordinator = new de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator(
-            importer, sectionReader, parsers, context, progress, callback, 6);
+            importer, sectionReader, parsers, context, progress, callback, 7);
         assertTrue(coordinator.process());
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-        assertEquals(6, updates.size());
+        assertEquals(7, updates.size());
         for (int i = 0; i < updates.size(); i++) {
             assertEquals(i + 1, (int) updates.get(i));
         }

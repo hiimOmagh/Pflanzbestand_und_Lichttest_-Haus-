@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 
 import static org.junit.Assert.*;
 
@@ -77,6 +78,12 @@ public class DataRoundTripInstrumentedTest {
             return null;
         });
 
+        awaitDb(() -> {
+            PlantDatabase.getDatabase(context).plantCalibrationDao()
+                .insertOrUpdate(new PlantCalibration(plant.getId(), 0.04f, 0.06f));
+            return null;
+        });
+
         DiaryEntry entry = new DiaryEntry(plant.getId(), 1234L, "note", "round");
         entry.setPhotoUri(diaryPhotoUri.toString());
         awaitDb(() -> {
@@ -108,8 +115,10 @@ public class DataRoundTripInstrumentedTest {
         // Verify counts
         int plantCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().size());
         int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
+        int calibrationCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().size());
         assertEquals(1, plantCount);
         assertEquals(1, diaryCount);
+        assertEquals(1, calibrationCount);
 
         // Verify plant photo restored
         Plant restoredPlant = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().get(0));
@@ -138,5 +147,11 @@ public class DataRoundTripInstrumentedTest {
             }
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
         }
+
+        PlantCalibration restoredCalibration = awaitDb(
+            () -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().get(0)
+        );
+        assertEquals(0.04f, restoredCalibration.getAmbientFactor(), 0.0001f);
+        assertEquals(0.06f, restoredCalibration.getCameraFactor(), 0.0001f);
     }
 }

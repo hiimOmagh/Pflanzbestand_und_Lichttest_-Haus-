@@ -55,7 +55,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView cameraLumaView;
     private TextView cameraPpfdView;
     private TextView cameraDliView;
-    private float calibrationFactor;
     private float lastLux;
     private float lastPpfd;
     private float lastDli;
@@ -75,6 +74,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private ActivityResultLauncher<String> cameraPermissionLauncher;
     private boolean cameraPermissionDenied;
     private boolean cameraUnavailable;
+    private static final float DEFAULT_CALIBRATION = 0.0185f;
 
     public static LightMeasurementFragment newInstance(PlantRepository repository) {
         LightMeasurementFragment fragment = new LightMeasurementFragment();
@@ -125,12 +125,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
-        String calibrationString = preferences.getString(SettingsKeys.KEY_CALIBRATION, "0.0185");
-        try {
-            calibrationFactor = Float.parseFloat(calibrationString);
-        } catch (NumberFormatException e) {
-            calibrationFactor = 0.0185f;
-        }
         String sampleSizeString = preferences.getString(SettingsKeys.KEY_SAMPLE_SIZE, "10");
         try {
             sampleSize = Integer.parseInt(sampleSizeString);
@@ -144,7 +138,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         PlantRepository repo = repository != null
             ? repository
             : RepositoryProvider.getRepository(context);
-        presenter = new LightMeasurementPresenter(this, repo, context, calibrationFactor, sampleSize);
+        repository = repo;
+        presenter = new LightMeasurementPresenter(this, repo, context, DEFAULT_CALIBRATION, sampleSize);
         cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> presenter.onCameraLumaChanged(raw, smoothed));
 
         if (cameraLumaView != null) {
@@ -210,13 +205,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     public void onResume() {
         super.onResume();
         resetSaveButton();
-        String calibrationString = preferences.getString(SettingsKeys.KEY_CALIBRATION, Float.toString(calibrationFactor));
-        float k;
-        try {
-            k = Float.parseFloat(calibrationString);
-        } catch (NumberFormatException e) {
-            k = 0.0185f;
-        }
         String sizeString = preferences.getString(SettingsKeys.KEY_SAMPLE_SIZE, Integer.toString(sampleSize));
         int size;
         try {
@@ -234,10 +222,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         } catch (NumberFormatException e) {
             hours = lightHours;
         }
-        if (k != calibrationFactor) {
-            calibrationFactor = k;
-            presenter.setCalibrationFactor(calibrationFactor);
-        }
         if (size != sampleSize) {
             sampleSize = size;
             presenter.setSampleSize(sampleSize);
@@ -246,6 +230,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             lightHours = hours;
         }
         presenter.setLightHours(lightHours);
+        refreshCalibrationForSelection();
         presenter.start();
         startCameraUpdatesIfPossible();
     }
@@ -283,11 +268,37 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     }
 
     private void navigateToCalibration() {
-        CalibrationFragment fragment = new CalibrationFragment();
+        CalibrationFragment fragment = CalibrationFragment.newInstance(selectedPlantId);
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)
             .commit();
+    }
+
+    private void refreshCalibrationForSelection() {
+        if (repository == null) {
+            return;
+        }
+        if (selectedPlantId != -1) {
+            repository.getPlantCalibration(selectedPlantId, calibration -> {
+                if (calibration != null) {
+                    presenter.setCalibrationFactor(calibration.getAmbientFactor());
+                    presenter.setCameraCalibrationFactor(calibration.getCameraFactor());
+                } else {
+                    presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
+                    presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+                }
+            }, e -> {
+                presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
+                presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+                if (isAdded()) {
+                    showError(getString(R.string.error_database));
+                }
+            });
+        } else {
+            presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
+            presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+        }
     }
 
     private void startCameraUpdatesIfPossible() {

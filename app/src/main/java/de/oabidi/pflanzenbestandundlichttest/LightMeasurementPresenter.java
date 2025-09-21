@@ -1,10 +1,13 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
 import java.util.List;
+
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**
  * Presenter handling light sensor measurements and related calculations.
@@ -16,6 +19,8 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         void showPlants(List<Plant> plants);
         void showError(String message);
     }
+
+    private static final float DEFAULT_CALIBRATION = 0.0185f;
 
     public static final class LightReading {
         public enum Source {
@@ -144,6 +149,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public void selectPlant(int index) {
         if (plants == null || index < 0 || index >= plants.size()) {
             speciesTarget = null;
+            applyDefaultCalibration();
             return;
         }
         String speciesKey = plants.get(index).getSpecies();
@@ -153,6 +159,19 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         } else {
             speciesTarget = null;
         }
+        Plant selectedPlant = plants.get(index);
+        long plantId = selectedPlant.getId();
+        plantRepository.getPlantCalibration(plantId, calibration -> {
+            if (calibration != null) {
+                setCalibrationFactor(calibration.getAmbientFactor());
+                setCameraCalibrationFactor(calibration.getCameraFactor());
+            } else {
+                applyDefaultCalibration();
+            }
+        }, e -> {
+            applyDefaultCalibration();
+            view.showError(context.getString(R.string.error_database));
+        });
     }
 
     @Override
@@ -189,5 +208,23 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     private void dispatchReadings() {
         view.showLightData(ambientReading, cameraReading);
+    }
+
+    private void applyDefaultCalibration() {
+        SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+        float defaultValue = DEFAULT_CALIBRATION;
+        String stored = prefs.getString(SettingsKeys.KEY_CALIBRATION, null);
+        if (stored != null) {
+            try {
+                float parsed = Float.parseFloat(stored);
+                if (parsed > 0f && !Float.isNaN(parsed) && !Float.isInfinite(parsed)) {
+                    defaultValue = parsed;
+                }
+            } catch (NumberFormatException ignored) {
+                // Keep default
+            }
+        }
+        setCalibrationFactor(defaultValue);
+        setCameraCalibrationFactor(defaultValue);
     }
 }

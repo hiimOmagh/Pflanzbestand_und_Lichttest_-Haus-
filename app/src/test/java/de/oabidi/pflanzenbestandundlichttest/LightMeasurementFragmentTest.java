@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import static org.junit.Assert.*;
 
 import android.content.Context;
+import android.os.Looper;
 
 import androidx.fragment.app.FragmentActivity;
 import androidx.test.core.app.ApplicationProvider;
@@ -11,8 +12,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -44,29 +48,54 @@ public class LightMeasurementFragmentTest {
     }
 
     @Test
-    public void fragmentUsesDefaultWhenCalibrationPreferenceMalformed() throws Exception {
+    public void fragmentLoadsCalibrationFromRepository() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        // Write malformed calibration factor to preferences
+        PlantRepository repo = new PlantRepository(context, TestExecutors.newImmediateExecutor());
+
+        Plant plant = new Plant();
+        plant.setName("Test");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repo.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        CountDownLatch saveLatch = new CountDownLatch(1);
+        repo.savePlantCalibration(plant.getId(), 0.05f, 0.07f, saveLatch::countDown);
+        awaitLatch(saveLatch);
+
         context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)
-            .edit().putString(SettingsKeys.KEY_CALIBRATION, "invalid").apply();
+            .edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, plant.getId()).apply();
 
         FragmentActivity activity = Robolectric.buildActivity(FragmentActivity.class).setup().get();
-        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(
-            new PlantRepository(context, TestExecutors.newImmediateExecutor()));
+        LightMeasurementFragment fragment = LightMeasurementFragment.newInstance(repo);
         activity.getSupportFragmentManager().beginTransaction()
             .replace(android.R.id.content, fragment)
             .commitNow();
 
-        // Verify default calibration factor was used
-        Field calibrationField = LightMeasurementFragment.class.getDeclaredField("calibrationFactor");
-        calibrationField.setAccessible(true);
-        assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);
+        // Allow asynchronous callbacks to execute
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-        // Inject another malformed value and trigger onResume()
-        context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)
-            .edit().putString(SettingsKeys.KEY_CALIBRATION, "NaN").apply();
-        fragment.onPause();
-        fragment.onResume();
-        assertEquals(0.0185f, calibrationField.getFloat(fragment), 0.0001f);
+        Field presenterField = LightMeasurementFragment.class.getDeclaredField("presenter");
+        presenterField.setAccessible(true);
+        LightMeasurementPresenter presenter = (LightMeasurementPresenter) presenterField.get(fragment);
+
+        Field ambientField = LightMeasurementPresenter.class.getDeclaredField("calibrationFactor");
+        ambientField.setAccessible(true);
+        Field cameraField = LightMeasurementPresenter.class.getDeclaredField("cameraCalibrationFactor");
+        cameraField.setAccessible(true);
+
+        assertEquals(0.05f, ambientField.getFloat(presenter), 0.0001f);
+        assertEquals(0.07f, cameraField.getFloat(presenter), 0.0001f);
+    }
+
+    private void awaitLatch(CountDownLatch latch) throws InterruptedException {
+        long end = System.currentTimeMillis() + 2000;
+        while (System.currentTimeMillis() < end) {
+            Shadows.shadowOf(Looper.getMainLooper()).idle();
+            if (latch.await(100, TimeUnit.MILLISECONDS)) {
+                return;
+            }
+        }
+        fail("Callback not invoked");
     }
 }

@@ -55,6 +55,7 @@ import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -414,6 +415,7 @@ public class ImportManager {
                         Arrays.asList(
                             new PlantsSectionParser(),
                             new PlantPhotosSectionParser(),
+                            new PlantCalibrationsSectionParser(),
                             new SpeciesTargetsSectionParser(),
                             new MeasurementsSectionParser(),
                             new DiaryEntriesSectionParser(),
@@ -715,6 +717,53 @@ public class ImportManager {
         }
     }
 
+    boolean insertCalibrationRow(List<String> parts, Mode mode,
+                                 Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                 int currentLine, PlantDatabase db) {
+        if (parts.size() < 3) {
+            Log.e(TAG, "Malformed calibration row: " + parts);
+            warnings.add(new ImportWarning("calibrations", currentLine, "malformed row"));
+            return false;
+        }
+        try {
+            long plantId;
+            try {
+                plantId = Long.parseLong(parts.get(0));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("calibrations", currentLine, "invalid plant id"));
+                return false;
+            }
+            if (mode == Mode.MERGE) {
+                Long mappedId = plantIdMap.get(plantId);
+                if (mappedId == null) {
+                    warnings.add(new ImportWarning("calibrations", currentLine, "unknown plant"));
+                    return false;
+                }
+                plantId = mappedId;
+            }
+            float ambient;
+            float camera;
+            try {
+                ambient = Float.parseFloat(parts.get(1));
+                camera = Float.parseFloat(parts.get(2));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("calibrations", currentLine, "invalid factor"));
+                return false;
+            }
+            if (ambient <= 0f || camera <= 0f) {
+                warnings.add(new ImportWarning("calibrations", currentLine, "non-positive factor"));
+                return false;
+            }
+            PlantCalibration calibration = new PlantCalibration(plantId, ambient, camera);
+            db.plantCalibrationDao().insertOrUpdate(calibration);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Malformed calibration row: " + parts, e);
+            warnings.add(new ImportWarning("calibrations", currentLine, "malformed row"));
+            return false;
+        }
+    }
+
     boolean insertMeasurementRow(List<String> parts, Mode mode,
                                  Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                  int currentLine, NumberFormat nf,
@@ -854,6 +903,7 @@ public class ImportManager {
         NONE(""),
         PLANTS("Plants"),
         PLANT_PHOTOS("PlantPhotos"),
+        PLANT_CALIBRATIONS("PlantCalibrations"),
         SPECIES_TARGETS("SpeciesTargets"),
         MEASUREMENTS("Measurements"),
         DIARY_ENTRIES("DiaryEntries"),

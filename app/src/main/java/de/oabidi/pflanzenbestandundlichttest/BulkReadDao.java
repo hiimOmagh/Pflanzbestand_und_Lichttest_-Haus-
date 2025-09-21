@@ -5,6 +5,7 @@ import androidx.room.Query;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
 /**
@@ -55,4 +56,12 @@ public interface BulkReadDao {
     /** Retrieves all species targets. */
     @Query("SELECT * FROM SpeciesTarget")
     List<SpeciesTarget> getAllSpeciesTargets();
+
+    /** Retrieves all plant calibrations. */
+    @Query("SELECT * FROM PlantCalibration")
+    List<PlantCalibration> getAllPlantCalibrations();
+
+    /** Retrieves calibrations associated with the given plant. */
+    @Query("SELECT * FROM PlantCalibration WHERE plantId = :plantId")
+    List<PlantCalibration> getPlantCalibrationsForPlant(long plantId);
 }

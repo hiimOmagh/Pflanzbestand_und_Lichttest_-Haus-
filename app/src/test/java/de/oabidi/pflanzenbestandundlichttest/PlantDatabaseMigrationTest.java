@@ -57,7 +57,10 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_5_6,
                 PlantDatabase.MIGRATION_6_7,
                 PlantDatabase.MIGRATION_7_8,
-                PlantDatabase.MIGRATION_8_9)
+                PlantDatabase.MIGRATION_8_9,
+                PlantDatabase.MIGRATION_9_10,
+                PlantDatabase.MIGRATION_10_11,
+                PlantDatabase.MIGRATION_11_12)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();

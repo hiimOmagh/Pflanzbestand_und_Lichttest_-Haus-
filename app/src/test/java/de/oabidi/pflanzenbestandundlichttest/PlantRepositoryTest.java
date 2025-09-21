@@ -28,6 +28,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+
 /**
  * Unit tests for {@link PlantRepository} verifying basic CRUD operations and
  * that callbacks are dispatched on the main thread.
@@ -475,6 +477,56 @@ public class PlantRepositoryTest {
             blockingExecutor.shutdownNow();
             blockingExecutor.awaitTermination(5, TimeUnit.SECONDS);
         }
+    }
+
+    @Test
+    public void calibrationOperations() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Fern");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        CountDownLatch missingLatch = new CountDownLatch(1);
+        final PlantCalibration[] initial = new PlantCalibration[1];
+        repository.getPlantCalibration(plant.getId(), calibration -> {
+            initial[0] = calibration;
+            missingLatch.countDown();
+        });
+        awaitLatch(missingLatch);
+        assertNull(initial[0]);
+
+        CountDownLatch saveLatch = new CountDownLatch(1);
+        repository.savePlantCalibration(plant.getId(), 0.02f, 0.03f, saveLatch::countDown);
+        awaitLatch(saveLatch);
+
+        CountDownLatch loadLatch = new CountDownLatch(1);
+        final PlantCalibration[] holder = new PlantCalibration[1];
+        repository.getPlantCalibration(plant.getId(), calibration -> {
+            holder[0] = calibration;
+            loadLatch.countDown();
+        });
+        awaitLatch(loadLatch);
+        assertNotNull(holder[0]);
+        assertEquals(plant.getId(), holder[0].getPlantId());
+        assertEquals(0.02f, holder[0].getAmbientFactor(), 0.0001f);
+        assertEquals(0.03f, holder[0].getCameraFactor(), 0.0001f);
+
+        CountDownLatch updateLatch = new CountDownLatch(1);
+        repository.savePlantCalibration(plant.getId(), 0.05f, 0.06f, updateLatch::countDown);
+        awaitLatch(updateLatch);
+
+        CountDownLatch reloadLatch = new CountDownLatch(1);
+        final PlantCalibration[] updated = new PlantCalibration[1];
+        repository.getPlantCalibration(plant.getId(), calibration -> {
+            updated[0] = calibration;
+            reloadLatch.countDown();
+        });
+        awaitLatch(reloadLatch);
+        assertNotNull(updated[0]);
+        assertEquals(0.05f, updated[0].getAmbientFactor(), 0.0001f);
+        assertEquals(0.06f, updated[0].getCameraFactor(), 0.0001f);
     }
 
     private static final class BlockingExecutor extends AbstractExecutorService {

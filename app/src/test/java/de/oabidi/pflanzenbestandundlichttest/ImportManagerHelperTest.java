@@ -290,6 +290,11 @@ public class ImportManagerHelperTest {
         }
         builder.append("\nPlantPhotos\n")
             .append("id,plantId,uri,createdAt\n");
+        builder.append("\nPlantCalibrations\n")
+            .append("plantId,ambientFactor,cameraFactor\n");
+        if (includePlant) {
+            builder.append("1,0.0185,0.0185\n");
+        }
         builder.append("\nSpeciesTargets\n")
             .append("speciesKey,ppfdMin,ppfdMax\n")
             .append("\nMeasurements\n")

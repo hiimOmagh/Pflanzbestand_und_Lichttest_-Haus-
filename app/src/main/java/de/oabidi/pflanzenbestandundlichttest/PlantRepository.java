@@ -11,6 +11,8 @@ import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
@@ -39,6 +41,7 @@ public class PlantRepository {
     private final SpeciesTargetDao speciesTargetDao;
     private final ReminderDao reminderDao;
     private final PlantPhotoDao plantPhotoDao;
+    private final PlantCalibrationDao plantCalibrationDao;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
@@ -78,12 +81,48 @@ public class PlantRepository {
         speciesTargetDao = db.speciesTargetDao();
         reminderDao = db.reminderDao();
         plantPhotoDao = db.plantPhotoDao();
+        plantCalibrationDao = db.plantCalibrationDao();
         bulkDao = db.bulkDao();
     }
 
     /** Exposes bulk read operations for export and import managers. */
     public BulkReadDao bulkDao() {
         return bulkDao;
+    }
+
+    /** Retrieves the calibration entry for the specified plant. */
+    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
+        getPlantCalibration(plantId, callback, null);
+    }
+
+    /** Retrieves the calibration entry for the specified plant. */
+    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
+                                    Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                PlantCalibration calibration = plantCalibrationDao.getForPlant(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(calibration));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    /** Stores the calibration for the specified plant. */
+    public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
+                                     Runnable callback) {
+        savePlantCalibration(plantId, ambientFactor, cameraFactor, callback, null);
+    }
+
+    /** Stores the calibration for the specified plant. */
+    public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
+                                     Runnable callback, Consumer<Exception> errorCallback) {
+        PlantCalibration calibration = new PlantCalibration(plantId, ambientFactor, cameraFactor);
+        runAsync(() -> plantCalibrationDao.insertOrUpdate(calibration), callback, errorCallback);
     }
 
     private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {

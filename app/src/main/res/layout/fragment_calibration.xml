@@ -46,13 +46,59 @@
         app:layout_constraintBaseline_toBaselineOf="@id/calibration_ppfd_label"
         app:layout_constraintStart_toEndOf="@id/calibration_ppfd_label" />
 
+    <TextView
+        android:id="@+id/calibration_ambient_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/label_ambient_factor"
+        app:layout_constraintStart_toStartOf="@id/calibration_ppfd_label"
+        app:layout_constraintTop_toBottomOf="@id/calibration_ppfd_label" />
+
+    <EditText
+        android:id="@+id/calibration_ambient_input"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:digits="0123456789."
+        android:ems="4"
+        android:hint="@string/hint_positive_number"
+        android:inputType="numberDecimal"
+        android:minWidth="64dp"
+        android:minHeight="48dp"
+        app:layout_constraintBaseline_toBaselineOf="@id/calibration_ambient_label"
+        app:layout_constraintStart_toEndOf="@id/calibration_ambient_label" />
+
+    <TextView
+        android:id="@+id/calibration_camera_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/label_camera_factor"
+        app:layout_constraintStart_toStartOf="@id/calibration_ambient_label"
+        app:layout_constraintTop_toBottomOf="@id/calibration_ambient_label" />
+
+    <EditText
+        android:id="@+id/calibration_camera_input"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:digits="0123456789."
+        android:ems="4"
+        android:hint="@string/hint_positive_number"
+        android:inputType="numberDecimal"
+        android:minWidth="64dp"
+        android:minHeight="48dp"
+        app:layout_constraintBaseline_toBaselineOf="@id/calibration_camera_label"
+        app:layout_constraintStart_toEndOf="@id/calibration_camera_label" />
+
     <Button
         android:id="@+id/calibration_confirm_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="@string/action_calibrate"
-        app:layout_constraintStart_toStartOf="@id/calibration_ppfd_label"
-        app:layout_constraintTop_toBottomOf="@id/calibration_ppfd_label" />
+        app:layout_constraintStart_toStartOf="@id/calibration_camera_label"
+        app:layout_constraintTop_toBottomOf="@id/calibration_camera_label" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

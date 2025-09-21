@@ -126,6 +126,8 @@
     <string name="error_ppfd_range">El mínimo debe ser menor que el máximo</string>
     <string name="calibration_instructions">Coloque el sensor bajo una iluminación conocida, introduzca el PPFD y luego confirme.</string>
     <string name="label_known_ppfd">PPFD conocido:</string>
+    <string name="label_ambient_factor">Factor ambiental:</string>
+    <string name="label_camera_factor">Factor de cámara:</string>
     <string name="action_calibrate">Confirmar</string>
     <string name="menu_calibrate">Calibrar</string>
     <string name="action_add_photo">Agregar foto</string>

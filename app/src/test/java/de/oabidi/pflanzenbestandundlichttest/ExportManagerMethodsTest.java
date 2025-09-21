@@ -26,6 +26,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class ExportManagerMethodsTest {
@@ -66,9 +68,9 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
         ctor.setAccessible(true);
-        Object data = ctor.newInstance(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvtest");
         dir.mkdirs();
@@ -84,11 +86,11 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
         ctor.setAccessible(true);
         Plant plant = new Plant("p", null, null, null, 0L, Uri.parse("content://missing"));
         plant.setId(1);
-        Object data = ctor.newInstance(Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvfail");
         dir.mkdirs();
@@ -237,6 +239,16 @@ public class ExportManagerMethodsTest {
         public List<SpeciesTarget> getAllSpeciesTargets() {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<PlantCalibration> getAllPlantCalibrations() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<PlantCalibration> getPlantCalibrationsForPlant(long plantId) {
+            return Collections.emptyList();
+        }
     }
 
     private static class FailingBulkDao implements BulkReadDao {
@@ -296,6 +308,16 @@ public class ExportManagerMethodsTest {
 
         @Override
         public List<SpeciesTarget> getAllSpeciesTargets() {
+            throw fail();
+        }
+
+        @Override
+        public List<PlantCalibration> getAllPlantCalibrations() {
+            throw fail();
+        }
+
+        @Override
+        public List<PlantCalibration> getPlantCalibrationsForPlant(long plantId) {
             throw fail();
         }
     }

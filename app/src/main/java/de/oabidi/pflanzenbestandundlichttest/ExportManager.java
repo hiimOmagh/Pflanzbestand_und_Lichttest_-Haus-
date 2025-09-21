@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
+import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 
@@ -143,10 +144,11 @@ public class ExportManager {
                 diaryEntries = bulkDao.getDiaryEntriesForPlant(plantId);
                 List<PlantPhoto> photos = bulkDao.getPlantPhotosForPlant(plantId);
                 reminders = bulkDao.getRemindersForPlant(plantId);
+                List<PlantCalibration> calibrations = bulkDao.getPlantCalibrationsForPlant(plantId);
                 List<PlantPhoto> plantPhotos = photos != null ? photos : Collections.emptyList();
                 List<PlantPhoto> finalPlantPhotos = plantPhotos;
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos);
+                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos, calibrations);
             } else {
                 plants = bulkDao.getAllPlants();
                 measurements = bulkDao.getAllMeasurements();
@@ -154,7 +156,7 @@ public class ExportManager {
                 List<PlantPhoto> plantPhotos = bulkDao.getAllPlantPhotos();
                 reminders = bulkDao.getAllReminders();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), plantPhotos);
+                    bulkDao.getAllSpeciesTargets(), plantPhotos, bulkDao.getAllPlantCalibrations());
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);
@@ -201,6 +203,15 @@ public class ExportManager {
                     photo.getPlantId(),
                     escape(photoName),
                     photo.getCreatedAt()));
+            }
+
+            writer.write("\nPlantCalibrations\n");
+            writer.write("plantId,ambientFactor,cameraFactor\n");
+            for (PlantCalibration calibration : data.calibrations) {
+                writer.write(String.format(Locale.US, "%d,%f,%f\n",
+                    calibration.getPlantId(),
+                    calibration.getAmbientFactor(),
+                    calibration.getCameraFactor()));
             }
 
             writer.write("\nSpeciesTargets\n");
@@ -327,15 +338,18 @@ public class ExportManager {
         final List<Reminder> reminders;
         final List<SpeciesTarget> targets;
         final List<PlantPhoto> plantPhotos;
+        final List<PlantCalibration> calibrations;
 
         ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
-                   List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos) {
+                   List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos,
+                   List<PlantCalibration> calibrations) {
             this.plants = plants;
             this.measurements = measurements;
             this.diaryEntries = diaryEntries;
             this.reminders = reminders;
             this.targets = targets;
             this.plantPhotos = plantPhotos;
+            this.calibrations = calibrations;
         }
     }
 }
