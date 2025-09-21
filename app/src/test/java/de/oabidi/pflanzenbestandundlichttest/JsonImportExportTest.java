@@ -133,4 +133,83 @@ public class JsonImportExportTest {
         assertEquals(1, targets.size());
         assertEquals("json-species", targets.get(0).getSpeciesKey());
     }
+
+    @Test
+    public void jsonExportImport_singlePlantHappyPath() throws Exception {
+        Plant plantA = new Plant("Json Plant A", null, "speciesA", null, 2222L, null);
+        long plantAId = db.plantDao().insert(plantA);
+        Plant plantB = new Plant("Json Plant B", null, "speciesB", null, 3333L, null);
+        db.plantDao().insert(plantB);
+
+        Measurement measurementA = new Measurement(plantAId, 4444L, 90f, 35f, 3.5f, "A note");
+        db.measurementDao().insert(measurementA);
+        DiaryEntry diaryA = new DiaryEntry(plantAId, 5555L, DiaryEntry.TYPE_OTHER, "A diary");
+        db.diaryDao().insert(diaryA);
+        Reminder reminderA = new Reminder(6666L, "A reminder", plantAId);
+        long reminderAId = db.reminderDao().insert(reminderA);
+        reminderA.setId(reminderAId);
+        PlantCalibration calibrationA = new PlantCalibration(plantAId, 1.5f, 2.6f);
+        db.plantCalibrationDao().insertOrUpdate(calibrationA);
+
+        SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(70f, 110f, 2.5f, 4.5f);
+        SpeciesTarget target = new SpeciesTarget("json-species-single", stage, stage, stage, "wide", "unit");
+        db.speciesTargetDao().insert(target);
+
+        File exportFile = new File(context.getCacheDir(), "json-export-single.zip");
+        if (exportFile.exists()) {
+            exportFile.delete();
+        }
+        PlantRepository repository = new PlantRepository(context, executor);
+        ExportManager exporter = new ExportManager(context, repository, executor);
+        CountDownLatch exportLatch = new CountDownLatch(1);
+        final boolean[] exportSuccess = {false};
+        exporter.exportJson(Uri.fromFile(exportFile), plantAId, success -> {
+            exportSuccess[0] = success;
+            exportLatch.countDown();
+        });
+        assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(exportSuccess[0]);
+
+        db.clearAllTables();
+
+        ImportManager importer = new ImportManager(context, executor);
+        CountDownLatch importLatch = new CountDownLatch(1);
+        final boolean[] importSuccess = {false};
+        final ImportManager.ImportError[] errorHolder = {null};
+        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE,
+            (success, err, warnings, message) -> {
+                importSuccess[0] = success;
+                errorHolder[0] = err;
+                importLatch.countDown();
+            });
+        assertTrue(importLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(importSuccess[0]);
+        assertNull(errorHolder[0]);
+
+        List<Plant> plants = db.plantDao().getAll();
+        assertEquals(1, plants.size());
+        assertEquals("Json Plant A", plants.get(0).getName());
+
+        List<Measurement> measurements = db.measurementDao().getAll();
+        assertEquals(1, measurements.size());
+        assertEquals(plantAId, measurements.get(0).getPlantId());
+        assertEquals(35f, measurements.get(0).getPpfd(), 0.0001f);
+
+        List<DiaryEntry> diaries = db.diaryDao().getAll();
+        assertEquals(1, diaries.size());
+        assertEquals("A diary", diaries.get(0).getNote());
+
+        List<Reminder> reminders = db.reminderDao().getAll();
+        assertEquals(1, reminders.size());
+        assertEquals("A reminder", reminders.get(0).getMessage());
+
+        List<PlantCalibration> calibrations = db.plantCalibrationDao().getAll();
+        assertEquals(1, calibrations.size());
+        assertEquals(1.5f, calibrations.get(0).getAmbientFactor(), 0.0001f);
+        assertEquals(2.6f, calibrations.get(0).getCameraFactor(), 0.0001f);
+
+        List<SpeciesTarget> targets = db.speciesTargetDao().getAll();
+        assertEquals(1, targets.size());
+        assertEquals("json-species-single", targets.get(0).getSpeciesKey());
+    }
 }

@@ -1,63 +1,122 @@
 # Architecture
 
-This document outlines the planned high-level structure of the project and conventions for contributors.
+This document captures the current high-level structure of the app, the MVP relationships between
+screens, and the data pipelines that feed Room and background work.
 
 ## Module layout
-- `app`: hosts Android application code and resources.
+- `app` – Android application module containing Activities, Fragments, presenters, Room database,
+  background workers, and instrumentation tests.
 
-## Planned fragment structure
-Each feature will be isolated in its own fragment and associated resources:
+## MVP overview
 
-- **Plants** – `PlantListFragment` for listing plants and `PlantDetailFragment` for details.
-- **Measurement** – `LightMeasurementFragment` uses the device light sensor to compute PPFD and DLI.
-- **Diary** – `DiaryFragment` allows adding notes per plant.
-- **Stats** – `StatsFragment` aggregates historical measurements.
+Each screen is implemented as a Fragment (or the hosting `MainActivity`) paired with a presenter that
+owns the business logic. Presenters communicate exclusively with `PlantRepository`, which exposes
+asynchronous APIs backed by Room DAOs.
 
-## Resource naming conventions
-- Layouts: `fragment_<feature>.xml` for fragments and `activity_<screen>.xml` for activities.
-- Strings, ids, drawables and other resources: prefix with feature area (`plant_`, `measurement_`, `diary_`, `stats_`).
-- Names are lowercase `snake_case`.
-- Java classes use `UpperCamelCase`; fragments end with `Fragment` and view models end with `ViewModel`.
-
-## Feature / fragment map
-
-| Feature area | Expected fragments                         | Key files / resources                                                                        |
-|--------------|--------------------------------------------|----------------------------------------------------------------------------------------------|
-| Plants       | `PlantListFragment`, `PlantDetailFragment` | `fragment_plant_list.xml`, `fragment_plant_detail.xml`, `PlantRepository.java`, `Plant.java` |
-| Measurement  | `LightMeasurementFragment`                 | `fragment_measurement.xml`, `LightSensorHelper.java`                                         |
-| Diary        | `DiaryFragment`                            | `fragment_diary.xml`, `DiaryEntry.java`, `DiaryRepository.java`                              |
-| Stats        | `StatsFragment`                            | `fragment_stats.xml`, `StatisticsCalculator.java`                                            |
-
-## TODO markers and style guides
-- Use `TODO(name): description` comments to flag follow-up work. Link to issue numbers when available.
-- Adhere to the project's `.editorconfig` for indentation (4 spaces), line length (100 chars), and UTF-8 encoding.
-- Java code should follow the [Android Java Style Guide](https://source.android.com/docs/setup/contribute/code-style).
-
-## Species target data schema
-
-Species-specific light targets are bundled in `app/src/main/assets/targets.json` and exported via the
-"SpeciesTargets" section in CSV backups. Each species entry is keyed by `speciesKey` and defines
-stage-specific PPFD and DLI ranges, optional tolerance notes, and a source reference:
-
-```json
-{
-  "speciesKey": "basil",
-  "tolerance": "moderate",
-  "source": "Default dataset",
-  "seedling": { "ppfdMin": 100, "ppfdMax": 180, "dliMin": 4.3, "dliMax": 7.8 },
-  "vegetative": { "ppfdMin": 150, "ppfdMax": 300, "dliMin": 6.5, "dliMax": 13.0 },
-  "flower": { "ppfdMin": 180, "ppfdMax": 320, "dliMin": 7.8, "dliMax": 13.8 }
-}
+```mermaid
+flowchart LR
+    subgraph UI
+        MainActivity
+        PlantListFragment
+        LightMeasurementFragment
+        DiaryFragment
+        StatsFragment
+        SpeciesTargetListFragment
+    end
+    subgraph Presenters
+        MainPresenterImpl
+        PlantListPresenter
+        LightMeasurementPresenter
+        DiaryPresenter
+        StatsPresenter
+    end
+    subgraph Data
+        PlantRepository
+        PlantDatabase[(Room DB)]
+    end
+    MainActivity -->|hosts| PlantListFragment
+    MainActivity --> LightMeasurementFragment
+    MainActivity --> DiaryFragment
+    MainActivity --> StatsFragment
+    MainActivity --> SpeciesTargetListFragment
+    PlantListFragment -->|delegates| PlantListPresenter
+    LightMeasurementFragment -->|delegates| LightMeasurementPresenter
+    DiaryFragment --> DiaryPresenter
+    StatsFragment --> StatsPresenter
+    MainActivity --> MainPresenterImpl
+    MainPresenterImpl --> PlantRepository
+    PlantListPresenter --> PlantRepository
+    LightMeasurementPresenter --> PlantRepository
+    DiaryPresenter --> PlantRepository
+    StatsPresenter --> PlantRepository
+    PlantRepository --> PlantDatabase
 ```
 
-The exported CSV mirrors this structure using the following columns:
+Repository callbacks are marshalled to the main thread, allowing presenters to update their attached
+views synchronously without leaking executors into the UI layer.
 
-```
-speciesKey,
-seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,
-vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,
-flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,
-tolerance,source
+## Data flow diagrams
+
+### Light measurement and calibration pipeline
+
+```mermaid
+flowchart LR
+    LightSensor --> LightSensorHelper --> LightMeasurementPresenter
+    Camera --> CameraLumaMonitor --> LightMeasurementPresenter
+    LightMeasurementPresenter -->|updates| LightMeasurementFragment
+    LightMeasurementPresenter -->|loads calibration| PlantRepository
+    PlantRepository --> PlantCalibrationDao
+    PlantRepository --> MeasurementDao
+    LightMeasurementFragment -->|opens| CalibrationFragment
+    CalibrationFragment --> LightSensorHelper
+    CalibrationFragment -->|save factors| PlantRepository --> PlantCalibrationDao
 ```
 
-Importers treat missing values as `NULL` and compute DLI from PPFD during legacy migrations.
+The presenter smooths readings from both the ambient light sensor and the camera luma monitor, applies
+per-plant calibration factors, and emits PPFD/DLI values to the fragment. The calibration fragment
+lets the user persist ambient and camera factors, which are stored in the `PlantCalibration` Room
+entity and fed back into future measurements.
+
+### Import / export pipeline
+
+```mermaid
+flowchart LR
+    User --> ExportManager --> BulkReadDao
+    BulkReadDao --> PlantDatabase
+    ExportManager -->|writes ZIP| data.json
+    data.json --> User
+    User --> ImportManager --> ImportParsers
+    ImportParsers --> PlantRepository
+    PlantRepository --> PlantDatabase
+```
+
+`ExportManager` gathers plants, measurements, diary entries, reminders, calibrations, species targets,
+and media paths via `BulkReadDao`, writes the chosen manifest format, and zips the result with copied
+media files. `ImportManager` detects JSON or CSV manifests, streams them through parser helpers, and
+persists the entities inside a Room transaction to ensure atomic imports.
+
+## Background work and scheduling
+
+Reminder notifications are routed through `ReminderScheduler`. On Android 12+ the scheduler delegates
+future triggers to `ReminderWorkManager`, which configures unique `WorkManager` jobs that invoke
+`ReminderWorker` when alarms should fire. On earlier API levels the scheduler falls back to
+`AlarmManager`, keeping the WorkManager code path ready once WorkManager is available on the device.
+Whenever reminders are created, updated, or cancelled the scheduler broadcasts a widget update so the
+home-screen quick actions reflect the latest state.
+
+## Calibration storage
+
+Per-plant calibration data lives in the `PlantCalibration` entity with columns `plantId`,
+`ambientFactor`, and `cameraFactor`. `PlantRepository` exposes `getPlantCalibration` and
+`savePlantCalibration` helpers used by both `LightMeasurementPresenter` (to refresh factors when a
+plant is selected) and `CalibrationFragment` (to persist user-entered values). Calibrations are
+exported in both CSV (`PlantCalibrations` section) and JSON (`plantCalibrations` array) backups and are
+restored during imports before any measurements are processed.
+
+## Resource and code conventions
+
+- Layout files follow `fragment_<feature>.xml` and `activity_<screen>.xml` naming.
+- Strings, IDs, and drawables are prefixed with their feature area (e.g. `measurement_*`, `diary_*`).
+- Java code adheres to the Android Open Source Project style guide; fragments end in `Fragment`,
+  presenters end in `Presenter`, and DAO interfaces live alongside their entities.
+- Use `TODO(name):` comments for follow-up work and keep indentation at 4 spaces with UTF-8 encoding.
