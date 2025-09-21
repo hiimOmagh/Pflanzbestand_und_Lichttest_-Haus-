@@ -12,6 +12,12 @@
     <string name="format_raw_lux">Raw lux: %.2f</string>
     <string name="format_ppfd">PPFD: %.2f µmol/m²/s</string>
     <string name="format_dli">DLI: %.2f mol/m²/day</string>
+    <string name="camera_luma_placeholder">Camera luma: —</string>
+    <string name="camera_ppfd_placeholder">Camera PPFD: —</string>
+    <string name="camera_dli_placeholder">Camera DLI: —</string>
+    <string name="format_camera_luma">Camera luma: %.0f</string>
+    <string name="format_camera_ppfd">Camera PPFD: %.2f µmol/m²/s</string>
+    <string name="format_camera_dli">Camera DLI: %.2f mol/m²/day</string>
     <string name="location_check_placeholder">Location check: —</string>
     <string name="format_location_check">Location check: %s</string>
     <string name="new_plant_name">New Plant</string>

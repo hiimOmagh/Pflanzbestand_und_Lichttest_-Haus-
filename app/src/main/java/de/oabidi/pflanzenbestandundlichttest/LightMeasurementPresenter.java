@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import java.util.List;
 
 /**
@@ -9,10 +11,51 @@ import java.util.List;
  */
 public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChangedListener {
     public interface View {
-        void showLightData(float rawLux, float lux, float ppfd, float dli);
+        void showLightData(@Nullable LightReading ambient, @Nullable LightReading camera);
         void showRangeStatus(String status);
         void showPlants(List<Plant> plants);
         void showError(String message);
+    }
+
+    public static final class LightReading {
+        public enum Source {
+            AMBIENT,
+            CAMERA
+        }
+
+        private final Source source;
+        private final float raw;
+        private final float value;
+        private final float ppfd;
+        private final float dli;
+
+        public LightReading(Source source, float raw, float value, float ppfd, float dli) {
+            this.source = source;
+            this.raw = raw;
+            this.value = value;
+            this.ppfd = ppfd;
+            this.dli = dli;
+        }
+
+        public Source getSource() {
+            return source;
+        }
+
+        public float getRaw() {
+            return raw;
+        }
+
+        public float getValue() {
+            return value;
+        }
+
+        public float getPpfd() {
+            return ppfd;
+        }
+
+        public float getDli() {
+            return dli;
+        }
     }
 
     private final View view;
@@ -22,10 +65,15 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
     private float calibrationFactor;
+    private float cameraCalibrationFactor;
     private int sampleSize;
     private boolean sensing = false;
 
     private float lightHours = 12f;
+    @Nullable
+    private LightReading ambientReading;
+    @Nullable
+    private LightReading cameraReading;
 
     public LightMeasurementPresenter(View view, PlantRepository plantRepository, Context context,
                                      float calibrationFactor, int sampleSize) {
@@ -33,6 +81,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.plantRepository = plantRepository;
         this.context = context.getApplicationContext();
         this.calibrationFactor = calibrationFactor;
+        this.cameraCalibrationFactor = calibrationFactor;
         this.sampleSize = sampleSize;
         lightSensorHelper = new LightSensorHelper(this.context, this, sampleSize);
     }
@@ -55,6 +104,11 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     public void setCalibrationFactor(float calibrationFactor) {
         this.calibrationFactor = calibrationFactor;
+        this.cameraCalibrationFactor = calibrationFactor;
+    }
+
+    public void setCameraCalibrationFactor(float cameraCalibrationFactor) {
+        this.cameraCalibrationFactor = cameraCalibrationFactor;
     }
 
     public void setSampleSize(int sampleSize) {
@@ -121,7 +175,19 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
                     break;
             }
         }
-        view.showLightData(rawLux, lux, ppfd, dli);
+        ambientReading = new LightReading(LightReading.Source.AMBIENT, rawLux, lux, ppfd, dli);
+        dispatchReadings();
         view.showRangeStatus(statusText);
+    }
+
+    public void onCameraLumaChanged(float rawLuma, float smoothedLuma) {
+        float ppfd = LightMath.ppfdFromLux(smoothedLuma, cameraCalibrationFactor);
+        float dli = LightMath.dliFromPpfd(ppfd, lightHours);
+        cameraReading = new LightReading(LightReading.Source.CAMERA, rawLuma, smoothedLuma, ppfd, dli);
+        dispatchReadings();
+    }
+
+    private void dispatchReadings() {
+        view.showLightData(ambientReading, cameraReading);
     }
 }

@@ -56,10 +56,21 @@ public class LightMeasurementInstrumentedTest {
                     presenterField.setAccessible(true);
                     LightMeasurementPresenter presenter = (LightMeasurementPresenter) presenterField.get(fragment);
                     Objects.requireNonNull(presenter).onLuxChanged(500f, 500f);
+                    presenter.onCameraLumaChanged(120f, 120f);
                 } catch (NoSuchFieldException | IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
             });
+
+            float cameraPpfd = 120f * 0.0185f;
+            float cameraDli = cameraPpfd * 12f * 0.0036f;
+            String expectedCameraLuma = context.getString(R.string.format_camera_luma, 120f);
+            String expectedCameraPpfd = context.getString(R.string.format_camera_ppfd, cameraPpfd);
+            String expectedCameraDli = context.getString(R.string.format_camera_dli, cameraDli);
+
+            onView(withId(R.id.camera_luma_value)).check(matches(withText(expectedCameraLuma)));
+            onView(withId(R.id.camera_ppfd_value)).check(matches(withText(expectedCameraPpfd)));
+            onView(withId(R.id.camera_dli_value)).check(matches(withText(expectedCameraDli)));
 
             // Save the measurement
             onView(withId(R.id.measurement_save_button)).perform(click());

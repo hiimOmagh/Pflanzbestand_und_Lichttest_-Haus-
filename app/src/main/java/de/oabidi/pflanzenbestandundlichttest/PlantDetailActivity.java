@@ -24,7 +24,6 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.content.ContextCompat;
@@ -35,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
@@ -72,7 +71,6 @@ public class PlantDetailActivity extends AppCompatActivity
     private static final float LUX_HIGH_THRESHOLD = 1000f;
     private static final float LUMA_MEDIUM_THRESHOLD = 90f;
     private static final float LUMA_HIGH_THRESHOLD = 170f;
-    private static final float CAMERA_EMA_ALPHA = 0.15f;
 
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
@@ -99,7 +97,7 @@ public class PlantDetailActivity extends AppCompatActivity
     private ProcessCameraProvider cameraProvider;
     @Nullable
     private ImageAnalysis imageAnalysis;
-    private float smoothedCameraLuma = Float.NaN;
+    private CameraLumaMonitor cameraLumaMonitor;
     private boolean cameraPermissionDenied;
 
     @Override
@@ -160,6 +158,13 @@ public class PlantDetailActivity extends AppCompatActivity
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor();
+        cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> runOnUiThread(() -> {
+            if (cameraValueView == null || cameraBandView == null) {
+                return;
+            }
+            cameraValueView.setText(getString(R.string.light_meter_camera_value, smoothed));
+            setBandText(cameraBandView, bandForLuma(smoothed));
+        }));
         cameraPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             granted -> {
@@ -427,7 +432,16 @@ public class PlantDetailActivity extends AppCompatActivity
         if (cameraExecutor == null || cameraExecutor.isShutdown()) {
             cameraExecutor = Executors.newSingleThreadExecutor();
         }
-        imageAnalysis.setAnalyzer(cameraExecutor, this::analyzeLuma);
+        if (cameraLumaMonitor == null) {
+            cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> runOnUiThread(() -> {
+                if (cameraValueView == null || cameraBandView == null) {
+                    return;
+                }
+                cameraValueView.setText(getString(R.string.light_meter_camera_value, smoothed));
+                setBandText(cameraBandView, bandForLuma(smoothed));
+            }));
+        }
+        imageAnalysis.setAnalyzer(cameraExecutor, cameraLumaMonitor);
         try {
             provider.bindToLifecycle(this, CameraSelector.DEFAULT_FRONT_CAMERA, imageAnalysis);
         } catch (IllegalArgumentException e) {
@@ -441,53 +455,10 @@ public class PlantDetailActivity extends AppCompatActivity
         }
     }
 
-    private void analyzeLuma(@NonNull ImageProxy image) {
-        try {
-            ImageProxy.PlaneProxy[] planes = image.getPlanes();
-            if (planes.length == 0) {
-                return;
-            }
-            ByteBuffer buffer = planes[0].getBuffer();
-            if (buffer == null) {
-                return;
-            }
-            int remaining = buffer.remaining();
-            if (remaining <= 0) {
-                return;
-            }
-            float sum = 0f;
-            while (buffer.hasRemaining()) {
-                sum += (buffer.get() & 0xFF);
-            }
-            float average = sum / remaining;
-            updateCameraLuma(average);
-        } finally {
-            image.close();
-        }
-    }
-
-    private void updateCameraLuma(float luma) {
-        float ema;
-        synchronized (this) {
-            if (Float.isNaN(smoothedCameraLuma)) {
-                smoothedCameraLuma = luma;
-            } else {
-                smoothedCameraLuma += CAMERA_EMA_ALPHA * (luma - smoothedCameraLuma);
-            }
-            ema = smoothedCameraLuma;
-        }
-        final float displayValue = ema;
-        runOnUiThread(() -> {
-            if (cameraValueView == null || cameraBandView == null) {
-                return;
-            }
-            cameraValueView.setText(getString(R.string.light_meter_camera_value, displayValue));
-            setBandText(cameraBandView, bandForLuma(displayValue));
-        });
-    }
-
     private void stopCameraAnalysis() {
-        smoothedCameraLuma = Float.NaN;
+        if (cameraLumaMonitor != null) {
+            cameraLumaMonitor.reset();
+        }
         if (cameraProvider != null && imageAnalysis != null) {
             cameraProvider.unbind(imageAnalysis);
             imageAnalysis = null;

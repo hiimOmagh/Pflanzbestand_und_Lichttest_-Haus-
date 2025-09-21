@@ -11,6 +11,7 @@
         android:layout_margin="16dp"
         android:text="@string/lux_raw_placeholder"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -21,6 +22,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/lux_placeholder"
         app:layout_constraintStart_toStartOf="@id/lux_raw_value"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
         app:layout_constraintTop_toBottomOf="@id/lux_raw_value" />
 
     <TextView
@@ -30,6 +32,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/ppfd_placeholder"
         app:layout_constraintStart_toStartOf="@id/lux_value"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
         app:layout_constraintTop_toBottomOf="@id/lux_value" />
 
     <TextView
@@ -41,42 +44,76 @@
         app:layout_constraintStart_toStartOf="@id/ppfd_value"
         app:layout_constraintTop_toBottomOf="@id/ppfd_value" />
 
+    <TextView
+        android:id="@+id/camera_luma_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/camera_luma_placeholder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/camera_ppfd_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/camera_ppfd_placeholder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/camera_luma_value" />
+
+    <TextView
+        android:id="@+id/camera_dli_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/camera_dli_placeholder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/camera_ppfd_value" />
+
     <Spinner
         android:id="@+id/plant_selector"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
         android:minHeight="48dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@id/dli_value"
-        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/camera_dli_value" />
 
     <Button
         android:id="@+id/measurement_save_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:enabled="false"
         android:text="@string/measurement_save"
-        app:layout_constraintStart_toStartOf="@id/dli_value"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/plant_selector" />
 
     <TextView
         android:id="@+id/location_check_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="@string/location_check_placeholder"
-        app:layout_constraintStart_toStartOf="@id/measurement_save_button"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/measurement_save_button" />
 
     <Button
         android:id="@+id/measurement_calibrate_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
         android:text="@string/menu_calibrate"
-        app:layout_constraintStart_toStartOf="@id/location_check_value"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/location_check_value" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

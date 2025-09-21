@@ -1,7 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -9,21 +11,33 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
-import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**
  * Fragment responsible for displaying live light measurements.
@@ -38,6 +52,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private Spinner plantSelector;
     private Button saveMeasurementButton;
     private TextView locationCheckView;
+    private TextView cameraLumaView;
+    private TextView cameraPpfdView;
+    private TextView cameraDliView;
     private float calibrationFactor;
     private float lastLux;
     private float lastPpfd;
@@ -49,11 +66,37 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private SharedPreferences preferences;
     private LightMeasurementPresenter presenter;
     private boolean hasValidReading = false;
+    private CameraLumaMonitor cameraLumaMonitor;
+    private ExecutorService cameraExecutor;
+    @Nullable
+    private ProcessCameraProvider cameraProvider;
+    @Nullable
+    private ImageAnalysis cameraImageAnalysis;
+    private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private boolean cameraPermissionDenied;
+    private boolean cameraUnavailable;
 
     public static LightMeasurementFragment newInstance(PlantRepository repository) {
         LightMeasurementFragment fragment = new LightMeasurementFragment();
         fragment.repository = repository;
         return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        cameraPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                if (granted) {
+                    cameraPermissionDenied = false;
+                    startCameraAnalysis();
+                } else {
+                    cameraPermissionDenied = true;
+                    showCameraPermissionDenied();
+                }
+            }
+        );
     }
 
     @Nullable
@@ -72,6 +115,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         luxView = view.findViewById(R.id.lux_value);
         ppfdView = view.findViewById(R.id.ppfd_value);
         dliView = view.findViewById(R.id.dli_value);
+        cameraLumaView = view.findViewById(R.id.camera_luma_value);
+        cameraPpfdView = view.findViewById(R.id.camera_ppfd_value);
+        cameraDliView = view.findViewById(R.id.camera_dli_value);
         plantSelector = view.findViewById(R.id.plant_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
@@ -99,6 +145,17 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             ? repository
             : RepositoryProvider.getRepository(context);
         presenter = new LightMeasurementPresenter(this, repo, context, calibrationFactor, sampleSize);
+        cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> presenter.onCameraLumaChanged(raw, smoothed));
+
+        if (cameraLumaView != null) {
+            cameraLumaView.setText(R.string.camera_luma_placeholder);
+        }
+        if (cameraPpfdView != null) {
+            cameraPpfdView.setText(R.string.camera_ppfd_placeholder);
+        }
+        if (cameraDliView != null) {
+            cameraDliView.setText(R.string.camera_dli_placeholder);
+        }
 
         if (savedInstanceState != null) {
             selectedPlantId = savedInstanceState.getLong("selectedPlantId", -1);
@@ -190,12 +247,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
         presenter.setLightHours(lightHours);
         presenter.start();
+        startCameraUpdatesIfPossible();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         presenter.stop();
+        stopCameraAnalysis();
         resetSaveButton();
     }
 
@@ -213,12 +272,150 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onDestroy() {
+        stopCameraAnalysis();
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdownNow();
+            cameraExecutor = null;
+        }
+        super.onDestroy();
+    }
+
     private void navigateToCalibration() {
         CalibrationFragment fragment = new CalibrationFragment();
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)
             .commit();
+    }
+
+    private void startCameraUpdatesIfPossible() {
+        if (!isAdded()) {
+            return;
+        }
+        Context context = requireContext();
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED) {
+            cameraPermissionDenied = false;
+            cameraUnavailable = false;
+            startCameraAnalysis();
+        } else if (!cameraPermissionDenied && cameraPermissionLauncher != null) {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+        } else {
+            showCameraPermissionDenied();
+        }
+    }
+
+    private void startCameraAnalysis() {
+        if (!isAdded()) {
+            return;
+        }
+        if (cameraExecutor == null || cameraExecutor.isShutdown()) {
+            cameraExecutor = Executors.newSingleThreadExecutor();
+        }
+        cameraUnavailable = false;
+        if (cameraLumaMonitor != null) {
+            cameraLumaMonitor.reset();
+        }
+        showCameraPlaceholders();
+        if (cameraProvider != null) {
+            bindCameraAnalysis(cameraProvider);
+            return;
+        }
+        Context context = requireContext();
+        final ListenableFuture<ProcessCameraProvider> providerFuture =
+            ProcessCameraProvider.getInstance(context);
+        providerFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider provider = providerFuture.get();
+                cameraProvider = provider;
+                bindCameraAnalysis(provider);
+            } catch (ExecutionException | InterruptedException e) {
+                showCameraUnavailable();
+            }
+        }, ContextCompat.getMainExecutor(context));
+    }
+
+    private void bindCameraAnalysis(@NonNull ProcessCameraProvider provider) {
+        if (cameraImageAnalysis != null) {
+            provider.unbind(cameraImageAnalysis);
+        }
+        cameraImageAnalysis = new ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+            .build();
+        if (cameraExecutor == null || cameraExecutor.isShutdown()) {
+            cameraExecutor = Executors.newSingleThreadExecutor();
+        }
+        if (cameraLumaMonitor == null) {
+            cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> presenter.onCameraLumaChanged(raw, smoothed));
+        }
+        cameraImageAnalysis.setAnalyzer(cameraExecutor, cameraLumaMonitor);
+        try {
+            provider.bindToLifecycle(getViewLifecycleOwner(), CameraSelector.DEFAULT_FRONT_CAMERA, cameraImageAnalysis);
+        } catch (IllegalArgumentException e) {
+            try {
+                provider.bindToLifecycle(getViewLifecycleOwner(), CameraSelector.DEFAULT_BACK_CAMERA, cameraImageAnalysis);
+            } catch (IllegalArgumentException inner) {
+                provider.unbind(cameraImageAnalysis);
+                cameraImageAnalysis = null;
+                showCameraUnavailable();
+            }
+        }
+    }
+
+    private void stopCameraAnalysis() {
+        if (cameraLumaMonitor != null) {
+            cameraLumaMonitor.reset();
+        }
+        if (cameraProvider != null && cameraImageAnalysis != null) {
+            cameraProvider.unbind(cameraImageAnalysis);
+            cameraImageAnalysis = null;
+        }
+        if (!cameraPermissionDenied && !cameraUnavailable) {
+            showCameraPlaceholders();
+        }
+    }
+
+    private void showCameraPlaceholders() {
+        if (cameraLumaView != null) {
+            cameraLumaView.setText(R.string.camera_luma_placeholder);
+        }
+        if (cameraPpfdView != null) {
+            cameraPpfdView.setText(R.string.camera_ppfd_placeholder);
+        }
+        if (cameraDliView != null) {
+            cameraDliView.setText(R.string.camera_dli_placeholder);
+        }
+    }
+
+    private void showCameraPermissionDenied() {
+        cameraPermissionDenied = true;
+        cameraUnavailable = false;
+        if (cameraLumaView != null) {
+            cameraLumaView.setText(R.string.light_meter_camera_permission_required);
+        }
+        if (cameraPpfdView != null) {
+            cameraPpfdView.setText(R.string.camera_ppfd_placeholder);
+        }
+        if (cameraDliView != null) {
+            cameraDliView.setText(R.string.camera_dli_placeholder);
+        }
+    }
+
+    private void showCameraUnavailable() {
+        cameraUnavailable = true;
+        cameraPermissionDenied = false;
+        if (cameraLumaView != null) {
+            cameraLumaView.setText(R.string.light_meter_camera_unavailable);
+        }
+        if (cameraPpfdView != null) {
+            cameraPpfdView.setText(R.string.camera_ppfd_placeholder);
+        }
+        if (cameraDliView != null) {
+            cameraDliView.setText(R.string.camera_dli_placeholder);
+        }
     }
 
     private void resetSaveButton() {
@@ -229,18 +426,38 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     }
 
     @Override
-    public void showLightData(float rawLux, float lux, float ppfd, float dli) {
-        luxRawView.setText(getString(R.string.format_raw_lux, rawLux));
-        luxView.setText(getString(R.string.format_lux, lux));
-        ppfdView.setText(getString(R.string.format_ppfd, ppfd));
-        dliView.setText(getString(R.string.format_dli, dli));
-        lastLux = lux;
-        lastPpfd = ppfd;
-        lastDli = dli;
-        if (!hasValidReading) {
-            saveMeasurementButton.setEnabled(true);
-            hasValidReading = true;
+    public void showLightData(@Nullable LightMeasurementPresenter.LightReading ambient,
+                              @Nullable LightMeasurementPresenter.LightReading camera) {
+        View view = getView();
+        if (view == null) {
+            return;
         }
+        view.post(() -> {
+            if (ambient != null) {
+                luxRawView.setText(getString(R.string.format_raw_lux, ambient.getRaw()));
+                luxView.setText(getString(R.string.format_lux, ambient.getValue()));
+                ppfdView.setText(getString(R.string.format_ppfd, ambient.getPpfd()));
+                dliView.setText(getString(R.string.format_dli, ambient.getDli()));
+                lastLux = ambient.getValue();
+                lastPpfd = ambient.getPpfd();
+                lastDli = ambient.getDli();
+                if (!hasValidReading && saveMeasurementButton != null) {
+                    saveMeasurementButton.setEnabled(true);
+                    hasValidReading = true;
+                }
+            }
+            if (camera != null) {
+                if (cameraLumaView != null) {
+                    cameraLumaView.setText(getString(R.string.format_camera_luma, camera.getValue()));
+                }
+                if (cameraPpfdView != null) {
+                    cameraPpfdView.setText(getString(R.string.format_camera_ppfd, camera.getPpfd()));
+                }
+                if (cameraDliView != null) {
+                    cameraDliView.setText(getString(R.string.format_camera_dli, camera.getDli()));
+                }
+            }
+        });
     }
 
     @Override
