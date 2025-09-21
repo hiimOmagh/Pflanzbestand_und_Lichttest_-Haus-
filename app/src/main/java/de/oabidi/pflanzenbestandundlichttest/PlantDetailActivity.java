@@ -20,7 +20,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -322,7 +322,7 @@ public class PlantDetailActivity extends AppCompatActivity
     }
 
     private void confirmDeletePhoto(@NonNull PlantPhoto photo) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
             .setTitle(R.string.plant_photo_delete_title)
             .setMessage(R.string.plant_photo_delete_message)
             .setPositiveButton(android.R.string.ok, (dialog, which) -> deletePhoto(photo))

@@ -10,7 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.text.TextUtils;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -191,7 +191,7 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
             names[i] = p.getName();
             checked[i] = selectedPlantIds.contains(p.getId());
         }
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.select_plants)
             .setMultiChoiceItems(names, checked, (dialog, which, isChecked) -> {
                 long id = plants.get(which).getId();

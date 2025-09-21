@@ -11,7 +11,7 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -95,7 +95,7 @@ public class MeasurementListFragment extends Fragment {
             EditText input = new EditText(requireContext());
             input.setHint(R.string.measurement_add_note);
             input.setText(measurement.getNote());
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.measurement_add_note)
                 .setView(input)
                 .setPositiveButton(android.R.string.ok, (d, w) -> {
@@ -107,7 +107,7 @@ public class MeasurementListFragment extends Fragment {
                 .show();
         }, measurement -> {
             String message = getString(R.string.confirm_delete_measurement);
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.action_delete_measurement)
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, (d, w) ->

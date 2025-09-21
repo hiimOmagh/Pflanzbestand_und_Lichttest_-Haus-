@@ -82,7 +82,9 @@ action while viewing a plant to save only its measurements, diary entries, and r
 ## Appearance
 
 The Settings screen includes a **Theme** option with Light, Dark, and System default modes. The
-selected mode is stored in shared preferences and applied whenever the app starts.
+selected mode is stored in shared preferences and applied whenever the app starts. The main
+navigation chrome now uses Material 3 components – a top app bar, navigation bar, and dialogs – so
+colors, typography, and shapes automatically match the active dynamic color scheme.
 
 ## Species PPFD targets
 

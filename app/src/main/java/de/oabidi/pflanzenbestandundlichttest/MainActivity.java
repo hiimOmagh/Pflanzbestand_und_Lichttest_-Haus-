@@ -6,12 +6,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -19,13 +17,15 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 
 /**
  * Activity hosting the main navigation of the app.
@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
     private MainPresenter presenter;
-    private ProgressBar exportProgressBar;
+    private LinearProgressIndicator exportProgressBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,39 +50,16 @@ public class MainActivity extends AppCompatActivity implements MainView {
         repository = ((RepositoryProvider) getApplication()).getRepository();
         presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
 
+        MaterialToolbar toolbar = findViewById(R.id.top_app_bar);
+        setSupportActionBar(toolbar);
+
         View navHost = findViewById(R.id.nav_host_fragment);
-        View navigationContainer = findViewById(R.id.navigation_container);
         exportProgressBar = findViewById(R.id.export_progress_bar);
+        NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
 
-        final int navHostPaddingStart = ViewCompat.getPaddingStart(navHost);
-        final int navHostPaddingTop = navHost.getPaddingTop();
-        final int navHostPaddingEnd = ViewCompat.getPaddingEnd(navHost);
-        final int navHostPaddingBottom = navHost.getPaddingBottom();
-        ViewCompat.setOnApplyWindowInsetsListener(navHost, (view, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            ViewCompat.setPaddingRelative(
-                view,
-                navHostPaddingStart,
-                navHostPaddingTop + systemBars.top,
-                navHostPaddingEnd,
-                navHostPaddingBottom);
-            return insets;
-        });
-
-        final int containerPaddingStart = ViewCompat.getPaddingStart(navigationContainer);
-        final int containerPaddingTop = navigationContainer.getPaddingTop();
-        final int containerPaddingEnd = ViewCompat.getPaddingEnd(navigationContainer);
-        final int containerPaddingBottom = navigationContainer.getPaddingBottom();
-        ViewCompat.setOnApplyWindowInsetsListener(navigationContainer, (view, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            ViewCompat.setPaddingRelative(
-                view,
-                containerPaddingStart,
-                containerPaddingTop,
-                containerPaddingEnd,
-                containerPaddingBottom + systemBars.bottom);
-            return insets;
-        });
+        InsetsUtils.applySystemWindowInsetsPadding(toolbar, true, true, true, false);
+        InsetsUtils.applySystemWindowInsetsPadding(bottomNavigationView, true, false, true, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(navHost);
 
         exportLauncher = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/zip"),
@@ -96,21 +73,6 @@ public class MainActivity extends AppCompatActivity implements MainView {
             new ActivityResultContracts.RequestPermission(),
             presenter::onNotificationPermissionResult);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
-        final int bottomNavPaddingStart = ViewCompat.getPaddingStart(bottomNavigationView);
-        final int bottomNavPaddingTop = bottomNavigationView.getPaddingTop();
-        final int bottomNavPaddingEnd = ViewCompat.getPaddingEnd(bottomNavigationView);
-        final int bottomNavPaddingBottom = bottomNavigationView.getPaddingBottom();
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (view, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            ViewCompat.setPaddingRelative(
-                view,
-                bottomNavPaddingStart,
-                bottomNavPaddingTop,
-                bottomNavPaddingEnd,
-                bottomNavPaddingBottom + systemBars.bottom);
-            return insets;
-        });
         ViewCompat.requestApplyInsets(navHost);
         bottomNavigationView.setOnItemSelectedListener(item ->
             presenter.onNavigationItemSelected(item.getItemId()));
@@ -172,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showProgressBar() {
+        exportProgressBar.setIndeterminate(false);
         exportProgressBar.setProgress(0);
         exportProgressBar.setVisibility(android.view.View.VISIBLE);
     }
@@ -183,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void selectNavigationItem(int itemId) {
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_nav);
+        NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
         bottomNavigationView.setSelectedItemId(itemId);
     }
 
@@ -204,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
             getString(R.string.export_format_option_json)
         };
         int selected = currentFormat == ExportManager.Format.JSON ? 1 : 0;
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
             .setTitle(R.string.export_format_title)
             .setSingleChoiceItems(options, selected, (dialog, which) -> {
                 ExportManager.Format format = which == 1
@@ -224,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void showImportWarnings(String message) {
-        new AlertDialog.Builder(this)
+        new MaterialAlertDialogBuilder(this)
             .setTitle(R.string.import_warnings_title)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)

@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -67,7 +68,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             View dialogView = LayoutInflater.from(requireContext()).inflate(
                 R.layout.dialog_progress, null);
             progressBar = dialogView.findViewById(R.id.progress_bar);
-            progressDialog = new AlertDialog.Builder(requireContext())
+            progressDialog = new MaterialAlertDialogBuilder(requireContext())
                 .setView(dialogView)
                 .setCancelable(false)
                 .create();
@@ -116,7 +117,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     }
 
     private void showImportChoiceDialog(@NonNull Uri uri) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.menu_import_data)
             .setMessage(R.string.import_choice_message)
             .setPositiveButton(R.string.import_merge, (d, w) -> presenter.startImport(uri, ImportManager.Mode.MERGE))
@@ -127,7 +128,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void showWarningDialog(@NonNull List<ImportManager.ImportWarning> warnings) {
         String message = ImportManager.summarizeWarnings(warnings);
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.import_warnings_title)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
@@ -261,13 +262,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             getString(R.string.action_edit_plant),
             getString(R.string.action_delete_plant)
         };
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setItems(options, (d, which) -> {
                 if (which == 0) {
                     navigateToEdit(plant);
                 } else if (which == 1) {
                     String message = getString(R.string.confirm_delete_plant);
-                    new AlertDialog.Builder(requireContext())
+                    new MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.action_delete_plant)
                         .setMessage(message)
                         .setPositiveButton(android.R.string.ok, (d2, w) ->

@@ -5,6 +5,7 @@
         <item name="colorOnPrimary">@color/colorOnPrimary</item>
         <item name="colorSecondary">@color/colorSecondary</item>
         <item name="colorOnSecondary">@color/colorOnSecondary</item>
+        <item name="android:layoutInflaterFactory">com.google.android.material.theme.MaterialComponentsViewInflater</item>
     </style>
 
     <style name="Theme.Pflanzenbestand" parent="Base.Theme.Pflanzenbestand" />

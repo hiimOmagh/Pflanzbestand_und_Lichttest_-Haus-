@@ -12,11 +12,12 @@ import android.text.TextWatcher;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -107,7 +108,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             }
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
             .setTitle(target == null ? R.string.action_add_target : R.string.action_edit_target)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, null)
@@ -362,7 +363,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
 
     @Override
     public void onTargetLongClick(SpeciesTarget target) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.action_delete_target)
             .setMessage(R.string.confirm_delete_target)
             .setPositiveButton(android.R.string.ok, (d, which) ->

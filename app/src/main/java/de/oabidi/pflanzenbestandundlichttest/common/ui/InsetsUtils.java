@@ -51,7 +51,8 @@ public final class InsetsUtils {
         final int paddingEnd = ViewCompat.getPaddingEnd(view);
         final int paddingBottom = view.getPaddingBottom();
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets systemBars = insets.getInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             ViewCompat.setPaddingRelative(
                 v,
                 applyLeft ? paddingStart + systemBars.left : paddingStart,
@@ -83,7 +84,8 @@ public final class InsetsUtils {
         final int marginEnd = MarginLayoutParamsCompat.getMarginEnd(marginParams);
         final int marginBottom = marginParams.bottomMargin;
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets systemBars = insets.getInsetsIgnoringVisibility(
+                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
             MarginLayoutParamsCompat.setMarginStart(lp, applyLeft ? marginStart + systemBars.left : marginStart);
             lp.topMargin = applyTop ? marginTop + systemBars.top : marginTop;

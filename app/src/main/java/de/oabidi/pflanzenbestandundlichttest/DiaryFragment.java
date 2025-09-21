@@ -20,12 +20,12 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AlertDialog;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
@@ -161,7 +161,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             }
             noteEdit.setText(entry.getNote());
 
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.action_edit_diary_entry)
                 .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
@@ -175,7 +175,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
         }, entry -> {
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.action_delete_diary_entry)
                 .setMessage(R.string.confirm_delete_diary_entry)
                 .setPositiveButton(android.R.string.ok, (d, w) ->
@@ -249,7 +249,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeSpinner.setAdapter(spinnerAdapter);
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.action_add_diary_entry)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
