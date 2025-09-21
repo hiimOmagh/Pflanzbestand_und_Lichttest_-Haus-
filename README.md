@@ -53,11 +53,13 @@ To execute only the statistics fragment test, run:
 
 ### Reminder notifications
 
-Reminder alarms require the `POST_NOTIFICATIONS` runtime permission on Android 13 and later. When a
-scheduled reminder fires without the permission, the receiver now records the missed delivery in a
-small shared-preferences queue so the app can later prompt the user, and it automatically
-reschedules the reminder for the following day. This ensures that watering or measurement tasks are
-not silently dropped while still respecting the user's current permission choice.
+Reminder delivery uses a WorkManager-backed scheduler on Android 12 and higher to request exact
+alarms when the `SCHEDULE_EXACT_ALARM` special permission is available, falling back to expedited
+jobs when it is not. Devices running Android 11 or lower continue to rely on `AlarmManager`. On
+Android 13+ the notification itself still requires the `POST_NOTIFICATIONS` runtime permission; when
+it is denied the receiver records the missed delivery in shared preferences and reschedules the
+reminder for the following day. See [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) for the complete
+permission matrix and troubleshooting tips.
 
 ## Data Backup
 

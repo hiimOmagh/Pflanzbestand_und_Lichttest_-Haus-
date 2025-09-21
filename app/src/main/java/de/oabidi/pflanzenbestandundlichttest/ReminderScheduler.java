@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 import java.util.function.Consumer;
 
@@ -57,20 +58,10 @@ public class ReminderScheduler {
     }
 
     public static void scheduleReminderAt(Context context, long triggerAt, String message, long id, long plantId) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(context, ReminderReceiver.class);
-        intent.setAction(ACTION_SHOW_REMINDER);
-        intent.putExtra(EXTRA_MESSAGE, message);
-        intent.putExtra(EXTRA_ID, id);
-        intent.putExtra(EXTRA_PLANT_ID, plantId);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-            context,
-            (int) id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-        if (alarmManager != null) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ReminderWorkManager.schedule(context, triggerAt, message, id, plantId);
+        } else {
+            scheduleWithAlarmManager(context, triggerAt, id, message, plantId);
         }
         sendWidgetUpdateBroadcast(context);
     }
@@ -82,20 +73,47 @@ public class ReminderScheduler {
      * @param id      identifier of the reminder to cancel
      */
     public static void cancelReminder(Context context, long id) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ReminderWorkManager.cancel(context, id);
+        }
+        cancelWithAlarmManager(context, id);
+        sendWidgetUpdateBroadcast(context);
+    }
+
+    private static void scheduleWithAlarmManager(Context context, long triggerAt, long id,
+                                                 String message, long plantId) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) {
             return;
         }
+        PendingIntent pendingIntent = createPendingIntent(context, id, message, plantId);
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+    }
+
+    private static void cancelWithAlarmManager(Context context, long id) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) {
+            return;
+        }
+        PendingIntent pendingIntent = createPendingIntent(context, id, null, -1);
+        alarmManager.cancel(pendingIntent);
+    }
+
+    private static PendingIntent createPendingIntent(Context context, long id, String message,
+                                                     long plantId) {
         Intent intent = new Intent(context, ReminderReceiver.class);
         intent.setAction(ACTION_SHOW_REMINDER);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+        if (message != null) {
+            intent.putExtra(EXTRA_MESSAGE, message);
+        }
+        intent.putExtra(EXTRA_ID, id);
+        intent.putExtra(EXTRA_PLANT_ID, plantId);
+        return PendingIntent.getBroadcast(
             context,
             (int) id,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-        alarmManager.cancel(pendingIntent);
-        sendWidgetUpdateBroadcast(context);
     }
 
     private static void sendWidgetUpdateBroadcast(Context context) {
