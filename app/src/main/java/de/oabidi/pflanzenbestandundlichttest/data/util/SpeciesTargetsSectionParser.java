@@ -25,11 +25,10 @@ class SpeciesTargetsSectionParser implements SectionParser {
 
     @VisibleForTesting
     @Override
-    public boolean parseSection(@NonNull SectionReader reader,
+    public boolean parseSection(@NonNull SectionChunk chunk,
                                 @NonNull SectionContext context) throws IOException {
         boolean imported = false;
-        SectionRow row;
-        while ((row = reader.nextRow()) != null) {
+        for (SectionRow row : chunk.getRows()) {
             List<String> parts = parseCsv(row.line);
             try {
                 SpeciesTarget target;

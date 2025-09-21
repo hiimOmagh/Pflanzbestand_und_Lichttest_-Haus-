@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -44,6 +45,7 @@ import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
@@ -71,7 +73,6 @@ public class ImportManager {
     static final String TAG = "ImportManager";
     private static final int CURRENT_VERSION = 2;
     private static final int[] SUPPORTED_VERSIONS = {1, 2};
-    private static final int SECTION_PROGRESS_STEPS = Section.values().length - 1;
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -169,7 +170,7 @@ public class ImportManager {
             if (tempDir != null) {
                 if (archiveKind == ArchiveKind.JSON_STREAM) {
                     final AtomicInteger progress = new AtomicInteger(0);
-                    final int totalSteps = SECTION_PROGRESS_STEPS;
+                    final AtomicInteger totalSteps = new AtomicInteger(0);
                     File dataFile = new File(tempDir, "data.json");
                     try (InputStream is = context.getContentResolver().openInputStream(uri);
                          OutputStream os = new FileOutputStream(dataFile)) {
@@ -208,7 +209,7 @@ public class ImportManager {
                             : tempCanonical + File.separator;
                         final long totalBytes = queryArchiveSize(uri);
                         final int archiveSteps = computeArchiveSteps(totalBytes);
-                        final int totalSteps = archiveSteps + SECTION_PROGRESS_STEPS;
+                        final AtomicInteger totalSteps = new AtomicInteger(archiveSteps);
                         final AtomicInteger progress = new AtomicInteger(0);
 
                         try (InputStream is = context.getContentResolver().openInputStream(uri);
@@ -336,13 +337,23 @@ public class ImportManager {
         }
     }
 
+    void publishProgress(@NonNull AtomicInteger progress,
+                         @Nullable ProgressCallback progressCallback,
+                         int totalSteps) {
+        if (progressCallback == null) {
+            return;
+        }
+        int current = progress.get();
+        mainHandler.post(() -> progressCallback.onProgress(current, totalSteps));
+    }
+
     @VisibleForTesting
     @Nullable
     ImportError parseAndInsert(BufferedReader reader, File baseDir, Mode mode,
                                List<ImportWarning> warnings,
                                @Nullable ProgressCallback progressCallback,
                                AtomicInteger progress,
-                               int totalSteps) throws IOException {
+                               AtomicInteger totalSteps) throws IOException {
         ImportError versionError = validateVersion(reader);
         if (versionError != null) {
             return versionError;
@@ -354,13 +365,14 @@ public class ImportManager {
         final NumberFormat nf = NumberFormat.getInstance(Locale.US);
         nf.setGroupingUsed(false);
         List<Uri> restoredUris = new ArrayList<>();
+        final AtomicBoolean cancelled = new AtomicBoolean(false);
         final AtomicInteger lineNumber = new AtomicInteger(1);
         try {
             db.runInTransaction(() -> {
                 try {
                     SectionReader sectionReader = new SectionReader(reader, lineNumber);
                     SectionContext context = new SectionContext(this, mode, baseDir,
-                        plantIdMap, warnings, restoredUris, db, nf, importVersion);
+                        plantIdMap, warnings, restoredUris, db, nf, importVersion, cancelled);
                     SectionCoordinator coordinator = new SectionCoordinator(
                         this,
                         sectionReader,
@@ -376,7 +388,8 @@ public class ImportManager {
                         context,
                         progress,
                         progressCallback,
-                        totalSteps
+                        totalSteps,
+                        cancelled
                     );
                     if (coordinator.process()) {
                         importedAny[0] = true;
@@ -406,7 +419,7 @@ public class ImportManager {
                                    List<ImportWarning> warnings,
                                    @Nullable ProgressCallback progressCallback,
                                    AtomicInteger progress,
-                                   int totalSteps) throws IOException {
+                                   AtomicInteger totalSteps) throws IOException {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
@@ -443,64 +456,85 @@ public class ImportManager {
                                 }
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonPlantsArray(reader, mode, baseDir, plantIdMap,
-                                    warnings, restoredUris, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonPlantsArray(reader, mode, baseDir,
+                                        plantIdMap, warnings, restoredUris, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "plantPhotos":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonPlantPhotosArray(reader, mode, baseDir,
-                                    plantIdMap, warnings, restoredUris, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonPlantsArray(reader, mode, baseDir,
+                                        plantIdMap, warnings, restoredUris, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "plantCalibrations":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonPlantCalibrationsArray(reader, mode, plantIdMap,
-                                    warnings, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonPlantCalibrationsArray(reader, mode,
+                                        plantIdMap, warnings, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "speciesTargets":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonSpeciesTargetsArray(reader, warnings, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonSpeciesTargetsArray(reader, warnings, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "measurements":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonMeasurementsArray(reader, mode, plantIdMap,
-                                    warnings, nf, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonMeasurementsArray(reader, mode,
+                                        plantIdMap, warnings, nf, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "diaryEntries":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonDiaryEntriesArray(reader, mode, baseDir,
-                                    plantIdMap, warnings, restoredUris, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonDiaryEntriesArray(reader, mode, baseDir,
+                                        plantIdMap, warnings, restoredUris, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             case "reminders":
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
-                                } else if (parseJsonRemindersArray(reader, mode, plantIdMap,
-                                    warnings, db)) {
-                                    importedAny[0] = true;
+                                } else {
+                                    ParseResult result = parseJsonRemindersArray(reader, mode, plantIdMap,
+                                        warnings, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
                                 }
-                                stepProgress(progress, progressCallback, totalSteps);
                                 break;
                             default:
                                 reader.skipValue();
@@ -602,7 +636,7 @@ public class ImportManager {
 
     @VisibleForTesting
     int computeArchiveSteps(long totalBytes) {
-        long maxSteps = (long) Integer.MAX_VALUE - SECTION_PROGRESS_STEPS;
+        long maxSteps = (long) Integer.MAX_VALUE / 2;
         if (maxSteps <= 0) {
             return 1;
         }
@@ -983,8 +1017,30 @@ public class ImportManager {
         }
     }
 
-    private boolean parseJsonPlantsArray(JsonReader reader, Mode mode, File baseDir,
-                                         Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+    private static final class ParseResult {
+        final boolean imported;
+        final int workUnits;
+
+        ParseResult(boolean imported, int workUnits) {
+            this.imported = imported;
+            this.workUnits = workUnits;
+        }
+    }
+
+    private void applySectionProgress(@NonNull ParseResult result,
+                                      @NonNull AtomicInteger totalSteps,
+                                      @NonNull AtomicInteger progress,
+                                      @Nullable ProgressCallback progressCallback) {
+        if (result.workUnits > 0) {
+            int newTotal = totalSteps.addAndGet(result.workUnits);
+            stepProgress(progress, progressCallback, newTotal, result.workUnits);
+        } else {
+            publishProgress(progress, progressCallback, totalSteps.get());
+        }
+    }
+
+    private ParseResult parseJsonPlantsArray(JsonReader reader, Mode mode, File baseDir,
+                                             Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                          List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
@@ -1044,10 +1100,10 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonPlantPhotosArray(JsonReader reader, Mode mode, File baseDir,
+    private ParseResult parseJsonPlantPhotosArray(JsonReader reader, Mode mode, File baseDir,
                                               Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                               List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
@@ -1094,13 +1150,13 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonPlantCalibrationsArray(JsonReader reader, Mode mode,
-                                                    Map<Long, Long> plantIdMap,
-                                                    List<ImportWarning> warnings,
-                                                    PlantDatabase db) throws IOException {
+    private ParseResult parseJsonPlantCalibrationsArray(JsonReader reader, Mode mode,
+                                                        Map<Long, Long> plantIdMap,
+                                                        List<ImportWarning> warnings,
+                                                        PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1138,13 +1194,13 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonMeasurementsArray(JsonReader reader, Mode mode,
-                                               Map<Long, Long> plantIdMap,
-                                               List<ImportWarning> warnings,
-                                               NumberFormat nf, PlantDatabase db) throws IOException {
+    private ParseResult parseJsonMeasurementsArray(JsonReader reader, Mode mode,
+                                                   Map<Long, Long> plantIdMap,
+                                                   List<ImportWarning> warnings,
+                                                   NumberFormat nf, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1204,10 +1260,10 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonDiaryEntriesArray(JsonReader reader, Mode mode, File baseDir,
+    private ParseResult parseJsonDiaryEntriesArray(JsonReader reader, Mode mode, File baseDir,
                                                Map<Long, Long> plantIdMap,
                                                List<ImportWarning> warnings,
                                                List<Uri> restoredUris, PlantDatabase db) throws IOException {
@@ -1265,10 +1321,10 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonRemindersArray(JsonReader reader, Mode mode,
+    private ParseResult parseJsonRemindersArray(JsonReader reader, Mode mode,
                                             Map<Long, Long> plantIdMap,
                                             List<ImportWarning> warnings,
                                             PlantDatabase db) throws IOException {
@@ -1316,10 +1372,10 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
-    private boolean parseJsonSpeciesTargetsArray(JsonReader reader, List<ImportWarning> warnings,
+    private ParseResult parseJsonSpeciesTargetsArray(JsonReader reader, List<ImportWarning> warnings,
                                                  PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
@@ -1372,7 +1428,7 @@ public class ImportManager {
             index++;
         }
         reader.endArray();
-        return imported;
+        return new ParseResult(imported, index - 1);
     }
 
     private SpeciesTarget.StageTarget readStage(JsonReader reader) throws IOException {
@@ -1445,7 +1501,7 @@ public class ImportManager {
     private ProcessResult processDataFile(File dataFile, boolean isJson, File baseDir,
                                           Mode mode, List<ImportWarning> warnings,
                                           @Nullable ProgressCallback progressCallback,
-                                          AtomicInteger progress, int totalSteps) {
+                                          AtomicInteger progress, AtomicInteger totalSteps) {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         final boolean[] successHolder = {false};
         final ImportError[] errorHolder = {null};
@@ -1686,7 +1742,11 @@ public class ImportManager {
         @NonNull
         Section getSection();
 
-        boolean parseSection(@NonNull SectionReader reader,
+        default int estimateWorkUnits(@NonNull SectionChunk chunk) {
+            return chunk.getRowCount();
+        }
+
+        boolean parseSection(@NonNull SectionChunk chunk,
                              @NonNull SectionContext context) throws IOException;
     }
 
@@ -1746,6 +1806,7 @@ public class ImportManager {
         final PlantDatabase db;
         final NumberFormat numberFormat;
         final int version;
+        final AtomicBoolean cancelled;
 
         public SectionContext(@NonNull ImportManager manager,
                               @NonNull Mode mode,
@@ -1755,7 +1816,8 @@ public class ImportManager {
                               @NonNull List<Uri> restoredUris,
                               @NonNull PlantDatabase db,
                               @NonNull NumberFormat numberFormat,
-                              int version) {
+                              int version,
+                              @NonNull AtomicBoolean cancelled) {
             this.manager = manager;
             this.mode = mode;
             this.baseDir = baseDir;
@@ -1765,6 +1827,7 @@ public class ImportManager {
             this.db = db;
             this.numberFormat = numberFormat;
             this.version = version;
+            this.cancelled = cancelled;
         }
     }
 
@@ -1780,6 +1843,39 @@ public class ImportManager {
     }
 
     @VisibleForTesting
+    static class SectionChunk {
+        private final Section section;
+        private final String header;
+        private final List<SectionRow> rows;
+
+        SectionChunk(@NonNull Section section, @NonNull String header,
+                     @NonNull List<SectionRow> rows) {
+            this.section = section;
+            this.header = header;
+            this.rows = Collections.unmodifiableList(new ArrayList<>(rows));
+        }
+
+        @NonNull
+        Section getSection() {
+            return section;
+        }
+
+        @NonNull
+        String getHeader() {
+            return header;
+        }
+
+        @NonNull
+        List<SectionRow> getRows() {
+            return rows;
+        }
+
+        int getRowCount() {
+            return rows.size();
+        }
+    }
+
+    @VisibleForTesting
     public static class SectionReader {
         private final BufferedReader reader;
         private final AtomicInteger lineNumber;
@@ -1791,14 +1887,14 @@ public class ImportManager {
         }
 
         @Nullable
-        public Section nextSection(@NonNull ImportManager manager) throws IOException {
+        public SectionChunk nextSectionChunk(@NonNull ImportManager manager) throws IOException {
             String headerLine;
             if (pendingHeader != null) {
                 headerLine = pendingHeader;
                 pendingHeader = null;
             } else {
                 while ((headerLine = reader.readLine()) != null) {
-                    int currentLine = lineNumber.incrementAndGet();
+                    lineNumber.incrementAndGet();
                     if (headerLine.trim().isEmpty()) {
                         continue;
                     }
@@ -1814,11 +1910,16 @@ public class ImportManager {
                 throw new IOException("Missing header row for section " + headerLine);
             }
             lineNumber.incrementAndGet();
-            return next;
+            List<SectionRow> rows = new ArrayList<>();
+            SectionRow row;
+            while ((row = nextRowInternal()) != null) {
+                rows.add(row);
+            }
+            return new SectionChunk(next, headerLine, rows);
         }
 
         @Nullable
-        SectionRow nextRow() throws IOException {
+        private SectionRow nextRowInternal() throws IOException {
             String line;
             while ((line = reader.readLine()) != null) {
                 int currentLine = lineNumber.incrementAndGet();
@@ -1840,13 +1941,13 @@ public class ImportManager {
         private final long totalBytes;
         private final int archiveSteps;
         private final AtomicInteger overallProgress;
-        private final int totalSteps;
+        private final AtomicInteger totalSteps;
         @Nullable
         private final ProgressCallback callback;
         private int lastReported;
 
         ArchiveProgressTracker(long totalBytes, int archiveSteps, AtomicInteger overallProgress,
-                               int totalSteps, @Nullable ProgressCallback callback) {
+                               AtomicInteger totalSteps, @Nullable ProgressCallback callback) {
             this.totalBytes = totalBytes;
             this.archiveSteps = archiveSteps;
             this.overallProgress = overallProgress;
@@ -1888,7 +1989,7 @@ public class ImportManager {
             }
             int delta = target - lastReported;
             lastReported = target;
-            stepProgress(overallProgress, callback, totalSteps, delta);
+            stepProgress(overallProgress, callback, totalSteps.get(), delta);
         }
     }
 }

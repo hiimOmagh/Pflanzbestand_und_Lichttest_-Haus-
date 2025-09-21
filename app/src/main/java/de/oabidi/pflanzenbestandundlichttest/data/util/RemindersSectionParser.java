@@ -15,11 +15,10 @@ class RemindersSectionParser implements ImportManager.SectionParser {
     }
 
     @Override
-    public boolean parseSection(@NonNull ImportManager.SectionReader reader,
+    public boolean parseSection(@NonNull ImportManager.SectionChunk chunk,
                                 @NonNull ImportManager.SectionContext context) throws IOException {
         boolean imported = false;
-        ImportManager.SectionRow row;
-        while ((row = reader.nextRow()) != null) {
+        for (ImportManager.SectionRow row : chunk.getRows()) {
             List<String> parts = ImportManager.parseCsv(row.line);
             if (context.manager.insertReminderRow(parts, context.mode,
                 context.plantIdMap, context.warnings, row.lineNumber, context.db)) {

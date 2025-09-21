@@ -16,11 +16,10 @@ class PlantPhotosSectionParser implements SectionParser {
     }
 
     @Override
-    public boolean parseSection(@NonNull SectionReader reader,
+    public boolean parseSection(@NonNull SectionChunk chunk,
                                 @NonNull SectionContext context) throws IOException {
         boolean imported = false;
-        SectionRow row;
-        while ((row = reader.nextRow()) != null) {
+        for (SectionRow row : chunk.getRows()) {
             List<String> parts = parseCsv(row.line);
             if (context.manager.insertPlantPhotoRow(parts, context.mode, context.baseDir,
                 context.plantIdMap, context.warnings, row.lineNumber,
