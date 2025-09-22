@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
@@ -72,7 +73,8 @@ public class ImportManagerParseHelpersTest {
             restoredUris,
             db,
             nf,
-            2
+            2,
+            new AtomicBoolean(false)
         );
     }
 
@@ -222,10 +224,11 @@ public class ImportManagerParseHelpersTest {
         ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
             plantIdMap, warnings, uris, newNumberFormat());
         AtomicInteger progress = new AtomicInteger();
+        AtomicInteger totalSteps = new AtomicInteger(7);
         List<Integer> updates = new ArrayList<>();
         ImportManager.ProgressCallback callback = (current, total) -> updates.add(current);
         de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator coordinator = new de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator(
-            importer, sectionReader, parsers, context, progress, callback, 7);
+            importer, sectionReader, parsers, context, progress, callback, totalSteps, context.cancelled);
         assertTrue(coordinator.process());
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
         assertEquals(7, updates.size());

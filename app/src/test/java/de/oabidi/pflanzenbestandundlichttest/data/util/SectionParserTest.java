@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest.data.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
@@ -86,14 +88,16 @@ public class SectionParserTest {
             "SpeciesTargets\n" +
             SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.PLANTS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.PLANTS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         List<Uri> uris = new ArrayList<>();
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, uris, newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(2, warnings.size());
         assertEquals("plants", warnings.get(0).category);
@@ -108,12 +112,14 @@ public class SectionParserTest {
             "Measurements\n" +
             "id,plantId,timestamp,lux,ppfd,dli,note\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.SPECIES_TARGETS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.SPECIES_TARGETS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.SpeciesTargetsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(1, warnings.size());
         assertEquals("species targets", warnings.get(0).category);
@@ -128,12 +134,14 @@ public class SectionParserTest {
             "SpeciesTargets\n" +
             SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.PLANT_PHOTOS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.PLANT_PHOTOS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
             new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertFalse(imported);
         assertEquals(2, warnings.size());
         assertEquals("plant photos", warnings.get(0).category);
@@ -149,14 +157,16 @@ public class SectionParserTest {
             "SpeciesTargets\n" +
             SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.PLANT_CALIBRATIONS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.PLANT_CALIBRATIONS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantCalibrationsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(2, warnings.size());
         assertEquals("calibrations", warnings.get(0).category);
@@ -175,14 +185,16 @@ public class SectionParserTest {
             "DiaryEntries\n" +
             "id,plantId,timestamp,type,note,photo\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.MEASUREMENTS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.MEASUREMENTS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.MeasurementsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(1, warnings.size());
         assertEquals("measurements", warnings.get(0).category);
@@ -198,7 +210,9 @@ public class SectionParserTest {
             "Reminders\n" +
             "id,plantId,triggerAt,message\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.DIARY_ENTRIES, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.DIARY_ENTRIES, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
@@ -206,7 +220,7 @@ public class SectionParserTest {
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.DiaryEntriesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, uris, newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(2, warnings.size());
         assertEquals("diary entries", warnings.get(0).category);
@@ -220,14 +234,16 @@ public class SectionParserTest {
             "2,1,bad,hi\n" +
             "3,1,0\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
-        assertEquals(ImportManager.Section.REMINDERS, sectionReader.nextSection(importer));
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.REMINDERS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
         ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.RemindersSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
-        boolean imported = parser.parseSection(sectionReader, context);
+        boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(2, warnings.size());
         assertEquals("reminders", warnings.get(0).category);
@@ -254,7 +270,8 @@ public class SectionParserTest {
             restoredUris,
             db,
             nf,
-            2
+            2,
+            new AtomicBoolean(false)
         );
     }
 

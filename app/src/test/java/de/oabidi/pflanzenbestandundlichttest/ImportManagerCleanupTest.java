@@ -86,8 +86,9 @@ public class ImportManagerCleanupTest {
             List.class,
             ImportManager.ProgressCallback.class,
             AtomicInteger.class,
-            int.class);
+            AtomicInteger.class);
         parseAndInsert.setAccessible(true);
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         AtomicInteger progress = new AtomicInteger(0);
         ImportManager.ImportError error = (ImportManager.ImportError) parseAndInsert.invoke(
             importer,
@@ -97,7 +98,7 @@ public class ImportManagerCleanupTest {
             warnings,
             null,
             progress,
-            0);
+            new AtomicInteger(0));
         assertNotNull(error);
 
         Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
