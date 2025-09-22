@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.os.Build;
 
 import androidx.work.Configuration;
-import androidx.work.Data;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import androidx.work.testing.SynchronousExecutor;
@@ -74,11 +73,6 @@ public class ReminderSchedulerTest {
         WorkInfo workInfo = workInfos.get(0);
         assertEquals(WorkInfo.State.ENQUEUED, workInfo.getState());
 
-        Data input = workInfo.getInputData();
-        assertEquals("Water", input.getString(ReminderWorker.KEY_MESSAGE));
-        assertEquals(reminderId, input.getLong(ReminderWorker.KEY_ID, -1));
-        assertEquals(plantId, input.getLong(ReminderWorker.KEY_PLANT_ID, -1));
-
         TestDriver testDriver = WorkManagerTestInitHelper.getTestDriver(context);
         assertNotNull(testDriver);
         int beforeCount = broadcasts.size();
@@ -88,8 +82,11 @@ public class ReminderSchedulerTest {
         assertEquals(beforeCount + 1, afterBroadcasts.size());
         Intent reminderIntent = afterBroadcasts.get(afterBroadcasts.size() - 1);
         assertEquals(ReminderScheduler.ACTION_SHOW_REMINDER, reminderIntent.getAction());
+        assertTrue(reminderIntent.hasExtra(ReminderScheduler.EXTRA_MESSAGE));
         assertEquals("Water", reminderIntent.getStringExtra(ReminderScheduler.EXTRA_MESSAGE));
+        assertTrue(reminderIntent.hasExtra(ReminderScheduler.EXTRA_ID));
         assertEquals(reminderId, reminderIntent.getLongExtra(ReminderScheduler.EXTRA_ID, -1));
+        assertTrue(reminderIntent.hasExtra(ReminderScheduler.EXTRA_PLANT_ID));
         assertEquals(plantId, reminderIntent.getLongExtra(ReminderScheduler.EXTRA_PLANT_ID, -1));
     }
 
