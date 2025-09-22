@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Entity;
@@ -87,6 +88,8 @@ public class PlantDatabaseMigrationTest {
         legacy.speciesKey = "legacy";
         legacy.ppfdMin = 120f;
         legacy.ppfdMax = 240f;
+        legacy.tolerance = "high";
+        legacy.source = "manual";
         v12.speciesTargetDao().insert(legacy);
         v12.close();
 
@@ -118,6 +121,8 @@ public class PlantDatabaseMigrationTest {
         assertEquals(240f, migratedTarget.getFlowerStage().getPpfdMax(), 0.001f);
         assertEquals(LightMath.dliFromPpfd(120f, 12f), migratedTarget.getSeedlingStage().getDliMin(), 0.001f);
         assertEquals(LightMath.dliFromPpfd(240f, 12f), migratedTarget.getSeedlingStage().getDliMax(), 0.001f);
+        assertEquals("high", migratedTarget.getTolerance());
+        assertEquals("manual", migratedTarget.getSource());
     }
 
     /**
@@ -188,6 +193,10 @@ public class PlantDatabaseMigrationTest {
         public String speciesKey;
         public float ppfdMin;
         public float ppfdMax;
+        @Nullable
+        public String tolerance;
+        @Nullable
+        public String source;
     }
 
     @Database(

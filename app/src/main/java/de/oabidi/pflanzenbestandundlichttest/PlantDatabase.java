@@ -180,7 +180,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     "vegetative_ppfdMin, vegetative_ppfdMax, vegetative_dliMin, vegetative_dliMax, " +
                     "flower_ppfdMin, flower_ppfdMax, flower_dliMin, flower_dliMax, tolerance, source" +
                     ") SELECT speciesKey, ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, " +
-                    "ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, NULL, NULL " +
+                    "ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, ppfdMin, ppfdMax, ppfdMin * 0.0432, ppfdMax * 0.0432, tolerance, source " +
                     "FROM SpeciesTarget"
             );
             database.execSQL("DROP TABLE IF EXISTS SpeciesTarget");
