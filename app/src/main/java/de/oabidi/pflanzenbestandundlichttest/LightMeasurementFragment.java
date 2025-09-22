@@ -471,16 +471,20 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     @Override
     public void showLightData(@Nullable LightMeasurementPresenter.LightReading ambient,
                               @Nullable LightMeasurementPresenter.LightReading camera) {
-        View view = getView();
-        if (view == null) {
+        View fragmentView = getView();
+        Context context = getContext();
+        if (fragmentView == null || context == null) {
             return;
         }
-        view.post(() -> {
+        fragmentView.post(() -> {
+            if (!isAdded() || fragmentView == null || fragmentView.getContext() == null || context == null) {
+                return;
+            }
             if (ambient != null) {
-                luxRawView.setText(getString(R.string.format_raw_lux, ambient.getRaw()));
-                luxView.setText(getString(R.string.format_lux, ambient.getValue()));
-                ppfdView.setText(getString(R.string.format_ppfd, ambient.getPpfd()));
-                dliView.setText(getString(R.string.format_dli, ambient.getDli()));
+                luxRawView.setText(context.getString(R.string.format_raw_lux, ambient.getRaw()));
+                luxView.setText(context.getString(R.string.format_lux, ambient.getValue()));
+                ppfdView.setText(context.getString(R.string.format_ppfd, ambient.getPpfd()));
+                dliView.setText(context.getString(R.string.format_dli, ambient.getDli()));
                 lastLux = ambient.getValue();
                 lastPpfd = ambient.getPpfd();
                 lastDli = ambient.getDli();
@@ -491,13 +495,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             }
             if (camera != null) {
                 if (cameraLumaView != null) {
-                    cameraLumaView.setText(getString(R.string.format_camera_luma, camera.getValue()));
+                    cameraLumaView.setText(context.getString(R.string.format_camera_luma, camera.getValue()));
                 }
                 if (cameraPpfdView != null) {
-                    cameraPpfdView.setText(getString(R.string.format_camera_ppfd, camera.getPpfd()));
+                    cameraPpfdView.setText(context.getString(R.string.format_camera_ppfd, camera.getPpfd()));
                 }
                 if (cameraDliView != null) {
-                    cameraDliView.setText(getString(R.string.format_camera_dli, camera.getDli()));
+                    cameraDliView.setText(context.getString(R.string.format_camera_dli, camera.getDli()));
                 }
             }
         });
