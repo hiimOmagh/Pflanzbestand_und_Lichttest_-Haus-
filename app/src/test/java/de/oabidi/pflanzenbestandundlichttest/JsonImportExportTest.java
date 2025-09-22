@@ -143,7 +143,7 @@ public class JsonImportExportTest {
 
         Measurement measurementA = new Measurement(plantAId, 4444L, 90f, 35f, 3.5f, "A note");
         db.measurementDao().insert(measurementA);
-        DiaryEntry diaryA = new DiaryEntry(plantAId, 5555L, DiaryEntry.TYPE_OTHER, "A diary");
+        DiaryEntry diaryA = new DiaryEntry(plantAId, 5555L, DiaryEntry.TYPE_PRUNE, "A diary");
         db.diaryDao().insert(diaryA);
         Reminder reminderA = new Reminder(6666L, "A reminder", plantAId);
         long reminderAId = db.reminderDao().insert(reminderA);
@@ -198,6 +198,7 @@ public class JsonImportExportTest {
         List<DiaryEntry> diaries = db.diaryDao().getAll();
         assertEquals(1, diaries.size());
         assertEquals("A diary", diaries.get(0).getNote());
+        assertEquals(DiaryEntry.TYPE_PRUNE, diaries.get(0).getType());
 
         List<Reminder> reminders = db.reminderDao().getAll();
         assertEquals(1, reminders.size());
