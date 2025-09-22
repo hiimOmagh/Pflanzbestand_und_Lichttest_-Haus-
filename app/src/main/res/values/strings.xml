@@ -245,6 +245,7 @@
     <string name="format_stage_range_ppfd_only">%1$s: PPFD %2$s – %3$s µmol/m²/s</string>
     <string name="format_stage_range_dli_only">%1$s: DLI %2$s – %3$s mol/m²/day</string>
     <string name="format_stage_status">%1$s – %2$s</string>
+    <string name="format_species_target">%1$s: %2$s - %3$s</string>
     <string-array name="growth_stage_labels">
         <item>@string/label_stage_seedling</item>
         <item>@string/label_stage_vegetative</item>
