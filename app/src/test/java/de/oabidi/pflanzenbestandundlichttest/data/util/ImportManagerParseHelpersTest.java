@@ -231,9 +231,12 @@ public class ImportManagerParseHelpersTest {
             importer, sectionReader, parsers, context, progress, callback, totalSteps, context.cancelled);
         assertTrue(coordinator.process());
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-        assertEquals(7, updates.size());
-        for (int i = 0; i < updates.size(); i++) {
-            assertEquals(i + 1, (int) updates.get(i));
-        }
+        List<Integer> expectedProgress = Arrays.asList(0, 1, 2, 3, 4, 5, 6);
+        assertEquals(
+            "Empty sections like PlantPhotos report zero work units, so only six positive "
+                + "steps follow the initial publish.",
+            expectedProgress,
+            updates
+        );
     }
 }
