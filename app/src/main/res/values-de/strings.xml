@@ -187,6 +187,7 @@
     </string-array>
     <string name="widget_no_reminders">Keine anstehenden Erinnerungen</string>
     <string name="widget_measure_now">Jetzt messen</string>
+    <string name="widget_reminder_mark_done_error">Erinnerung konnte nicht aktualisiert werden</string>
     <string name="range_low">Niedrig</string>
     <string name="range_ok">OK</string>
     <string name="range_high">Hoch</string>
@@ -199,6 +200,7 @@
     <string name="date_pattern">yyyy-MM-dd</string>
     <string name="chart_date_pattern">MM-dd</string>
     <string name="list_separator">, </string>
+    <string name="format_stage_status">%1$s – %2$s</string>
     <string name="format_species_target">%1$s: %2$s - %3$s</string>
     <string name="format_reminder_item">%1$s - %2$s</string>
     <string name="menu_help">Hilfe</string>
@@ -216,6 +218,7 @@
     <string name="plant_photo_delete_message">Dadurch wird das Foto aus der Galerie entfernt.</string>
     <string name="plant_photo_delete_success">Foto gelöscht</string>
     <string name="plant_photo_delete_failed">Foto konnte nicht gelöscht werden</string>
+    <string name="plant_photo_pending_delete">Foto gelöscht</string>
     <string name="plant_photo_viewer_title">Pflanzenfotos</string>
     <string name="plant_photo_delete_action">Löschen</string>
     <string name="action_close">Schließen</string>
@@ -229,4 +232,20 @@
     <string name="light_band_high">Hoch</string>
     <string name="light_meter_camera_permission_required">Kameraberechtigung ist erforderlich für Luminanzschätzungen.</string>
     <string name="light_meter_camera_unavailable">Kamera nicht verfügbar</string>
+    <string name="widget_log_light">Licht protokollieren</string>
+    <string name="widget_mark_done">Als erledigt markieren</string>
+    <string name="widget_reminder_marked_done">Erinnerung als erledigt markiert</string>
+    <string name="label_stage_seedling">Keimling</string>
+    <string name="label_stage_vegetative">Vegetativ</string>
+    <string name="label_stage_flower">Blüte</string>
+    <string name="hint_dli_min">Min. DLI</string>
+    <string name="hint_dli_max">Max. DLI</string>
+    <string name="hint_tolerance">Toleranzhinweise</string>
+    <string name="hint_source">Informationsquelle</string>
+    <string name="format_tolerance">Toleranz: %1$s</string>
+    <string name="format_source">Quelle: %1$s</string>
+    <string name="error_stage_required">Geben Sie mindestens einen Phasenbereich an.</string>
+    <string name="format_stage_range">%1$s: PPFD %2$s – %3$s µmol/m²/s, DLI %4$s – %5$s mol/m²/Tag</string>
+    <string name="format_stage_range_ppfd_only">%1$s: PPFD %2$s – %3$s µmol/m²/s</string>
+    <string name="format_stage_range_dli_only">%1$s: DLI %2$s – %3$s mol/m²/Tag</string>
 </resources>
