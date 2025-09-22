@@ -29,6 +29,7 @@ public class SpeciesTarget {
         public StageTarget() {
         }
 
+        @Ignore
         public StageTarget(@Nullable Float ppfdMin, @Nullable Float ppfdMax,
                            @Nullable Float dliMin, @Nullable Float dliMax) {
             this.ppfdMin = ppfdMin;
