@@ -126,6 +126,9 @@
     <string name="photo_capture_failed">Unable to save photo</string>
     <string name="photo_capture_permission_denied">Camera permission denied</string>
     <string name="plant_photo_gallery_empty">No gallery photos yet</string>
+    <string name="plant_detail_tab_details">Details</string>
+    <string name="plant_detail_tab_gallery">Gallery</string>
+    <string name="plant_detail_tab_environment">Environment</string>
     <string name="environment_log_temperature_hint">Temperature (°C)</string>
     <string name="environment_log_humidity_hint">Humidity (%)</string>
     <string name="environment_log_soil_hint">Soil moisture (%)</string>

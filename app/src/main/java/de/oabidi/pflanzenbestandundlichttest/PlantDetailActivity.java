@@ -11,7 +11,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,7 +19,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -31,9 +29,13 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +50,6 @@ import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFra
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoLoader;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
-import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogFragment;
 
 /**
  * Activity responsible for showing detailed information about a plant.
@@ -68,7 +69,10 @@ import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogF
  * </ul>
  */
 public class PlantDetailActivity extends AppCompatActivity
-    implements PlantDetailView, LightSensorHelper.OnLuxChangedListener {
+    implements PlantDetailView,
+    LightSensorHelper.OnLuxChangedListener,
+    PlantDetailInfoFragment.Callbacks,
+    PlantGalleryTabFragment.Callbacks {
     private static final float LUX_MEDIUM_THRESHOLD = 300f;
     private static final float LUX_HIGH_THRESHOLD = 1000f;
     private static final float LUMA_MEDIUM_THRESHOLD = 90f;
@@ -94,6 +98,10 @@ public class PlantDetailActivity extends AppCompatActivity
     private TextView cameraBandView;
     private View ambientColumn;
     private View lightMeterSpacer;
+    private ViewPager2 detailViewPager;
+    private TabLayout detailTabLayout;
+    private PlantDetailPagerAdapter pagerAdapter;
+    private ExecutorService ioExecutor;
     private ExecutorService cameraExecutor;
     @Nullable
     private ProcessCameraProvider cameraProvider;
@@ -101,8 +109,6 @@ public class PlantDetailActivity extends AppCompatActivity
     private ImageAnalysis imageAnalysis;
     private CameraLumaMonitor cameraLumaMonitor;
     private boolean cameraPermissionDenied;
-    @Nullable
-    private View environmentOverlayContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +117,8 @@ public class PlantDetailActivity extends AppCompatActivity
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
 
+        detailViewPager = findViewById(R.id.detail_view_pager);
+        detailTabLayout = findViewById(R.id.detail_tab_layout);
         repository = ((RepositoryProvider) getApplication()).getRepository();
 
         plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
@@ -120,48 +128,8 @@ public class PlantDetailActivity extends AppCompatActivity
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         plantName = name;
-        TextView nameView = findViewById(R.id.detail_name);
-        TextView descriptionView = findViewById(R.id.detail_description);
-        TextView speciesView = findViewById(R.id.detail_species);
-        TextView locationHintView = findViewById(R.id.detail_location_hint);
-        TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
-        View diaryButton = findViewById(R.id.detail_diary);
-        View environmentLogButton = findViewById(R.id.detail_environment_log);
-        Button addPhotoButton = findViewById(R.id.detail_add_photo);
-        photoGrid = findViewById(R.id.detail_photo_grid);
-        photoEmptyView = findViewById(R.id.detail_photo_empty);
-        environmentOverlayContainer = findViewById(R.id.detail_fragment_container);
-
-        ambientValueView = findViewById(R.id.detail_ambient_value);
-        ambientBandView = findViewById(R.id.detail_ambient_band);
-        cameraValueView = findViewById(R.id.detail_camera_value);
-        cameraBandView = findViewById(R.id.detail_camera_band);
-        ambientColumn = findViewById(R.id.detail_ambient_column);
-        lightMeterSpacer = findViewById(R.id.detail_light_meter_spacer);
-
-        if (ambientValueView != null) {
-            ambientValueView.setText(R.string.light_meter_lux_placeholder);
-        }
-        if (ambientBandView != null) {
-            ambientBandView.setText(R.string.light_meter_band_placeholder);
-        }
-        if (cameraValueView != null) {
-            cameraValueView.setText(R.string.light_meter_camera_placeholder);
-        }
-        if (cameraBandView != null) {
-            cameraBandView.setText(R.string.light_meter_band_placeholder);
-        }
-
         lightSensorHelper = new LightSensorHelper(this, this, 6);
         hasAmbientSensor = lightSensorHelper.hasLightSensor();
-        if (!hasAmbientSensor) {
-            if (ambientColumn != null) {
-                ambientColumn.setVisibility(View.GONE);
-            }
-            if (lightMeterSpacer != null) {
-                lightMeterSpacer.setVisibility(View.GONE);
-            }
-        }
 
         cameraExecutor = Executors.newSingleThreadExecutor();
         cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> runOnUiThread(() -> {
@@ -187,23 +155,35 @@ public class PlantDetailActivity extends AppCompatActivity
         if (!(getApplicationContext() instanceof ExecutorProvider)) {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
-        ExecutorService executor = ((ExecutorProvider) getApplicationContext()).getIoExecutor();
+        ioExecutor = ((ExecutorProvider) getApplicationContext()).getIoExecutor();
         presenter = new PlantDetailPresenter(this, plantId,
-            new ExportManager(this, repository, executor));
+            new ExportManager(this, repository, ioExecutor));
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
-        nameView.setText(presenter.getTextOrFallback(name));
-        descriptionView.setText(presenter.getTextOrFallback(description));
-        speciesView.setText(presenter.getTextOrFallback(species));
-        locationHintView.setText(presenter.getTextOrFallback(locationHint));
-        acquiredAtView.setText(presenter.formatAcquiredAt(acquiredAtEpoch));
-        setupPhotoGallery(executor);
-        refreshPlantPhotos(null);
 
-        diaryButton.setOnClickListener(v -> presenter.onDiaryClicked());
-        if (environmentLogButton != null) {
-            environmentLogButton.setOnClickListener(v -> presenter.onEnvironmentLogClicked());
-        }
-        addPhotoButton.setOnClickListener(v -> launchCamera());
+        String nameText = presenter.getTextOrFallback(name);
+        String descriptionText = presenter.getTextOrFallback(description);
+        String speciesText = presenter.getTextOrFallback(species);
+        String locationText = presenter.getTextOrFallback(locationHint);
+        String acquiredText = presenter.formatAcquiredAt(acquiredAtEpoch);
+
+        pagerAdapter = new PlantDetailPagerAdapter(this, plantId,
+            nameText, descriptionText, speciesText, locationText, acquiredText);
+        detailViewPager.setAdapter(pagerAdapter);
+        detailViewPager.setOffscreenPageLimit(pagerAdapter.getItemCount());
+        new TabLayoutMediator(detailTabLayout, detailViewPager, (tab, position) -> {
+            switch (position) {
+                case PlantDetailPagerAdapter.POSITION_GALLERY:
+                    tab.setText(R.string.plant_detail_tab_gallery);
+                    break;
+                case PlantDetailPagerAdapter.POSITION_ENVIRONMENT:
+                    tab.setText(R.string.plant_detail_tab_environment);
+                    break;
+                case PlantDetailPagerAdapter.POSITION_DETAILS:
+                default:
+                    tab.setText(R.string.plant_detail_tab_details);
+                    break;
+            }
+        }).attach();
 
         getSupportFragmentManager().setFragmentResultListener(
             PlantPhotoCaptureFragment.RESULT_KEY,
@@ -228,9 +208,6 @@ public class PlantDetailActivity extends AppCompatActivity
             }
         );
 
-        getSupportFragmentManager().addOnBackStackChangedListener(this::updateEnvironmentOverlayVisibility);
-        updateEnvironmentOverlayVisibility();
-
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -240,22 +217,78 @@ public class PlantDetailActivity extends AppCompatActivity
         });
     }
 
-    private void setupPhotoGallery(@NonNull ExecutorService executor) {
-        if (photoGrid == null) {
+    @Override
+    public void onDetailInfoViewsReady(@NonNull PlantDetailInfoFragment.DetailViews views) {
+        ambientValueView = views.ambientValueView;
+        ambientBandView = views.ambientBandView;
+        cameraValueView = views.cameraValueView;
+        cameraBandView = views.cameraBandView;
+        ambientColumn = views.ambientColumnView;
+        lightMeterSpacer = views.lightMeterSpacerView;
+
+        if (ambientValueView != null) {
+            ambientValueView.setText(R.string.light_meter_lux_placeholder);
+        }
+        if (ambientBandView != null) {
+            ambientBandView.setText(R.string.light_meter_band_placeholder);
+        }
+        if (cameraValueView != null) {
+            cameraValueView.setText(R.string.light_meter_camera_placeholder);
+        }
+        if (cameraBandView != null) {
+            cameraBandView.setText(R.string.light_meter_band_placeholder);
+        }
+        if (!hasAmbientSensor) {
+            if (ambientColumn != null) {
+                ambientColumn.setVisibility(View.GONE);
+            }
+            if (lightMeterSpacer != null) {
+                lightMeterSpacer.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    @Override
+    public void onDiaryButtonClicked() {
+        presenter.onDiaryClicked();
+    }
+
+    @Override
+    public void onEnvironmentLogButtonClicked() {
+        presenter.onEnvironmentLogClicked();
+    }
+
+    @Override
+    public void onGalleryViewsReady(@NonNull RecyclerView photoGrid,
+                                    @NonNull View emptyView,
+                                    @NonNull MaterialButton addPhotoButton) {
+        this.photoGrid = photoGrid;
+        this.photoEmptyView = emptyView;
+        addPhotoButton.setOnClickListener(v -> launchCamera());
+        setupPhotoGallery();
+        refreshPlantPhotos(null);
+    }
+
+    private void setupPhotoGallery() {
+        if (photoGrid == null || ioExecutor == null) {
             return;
         }
-        plantPhotoLoader = new PlantPhotoLoader(this, executor);
-        plantPhotoAdapter = new PlantPhotoAdapter(plantPhotoLoader, new PlantPhotoAdapter.Callbacks() {
-            @Override
-            public void onPhotoClicked(@NonNull PlantPhoto photo) {
-                showPhotoViewer(photo);
-            }
+        if (plantPhotoLoader == null) {
+            plantPhotoLoader = new PlantPhotoLoader(this, ioExecutor);
+        }
+        if (plantPhotoAdapter == null) {
+            plantPhotoAdapter = new PlantPhotoAdapter(plantPhotoLoader, new PlantPhotoAdapter.Callbacks() {
+                @Override
+                public void onPhotoClicked(@NonNull PlantPhoto photo) {
+                    showPhotoViewer(photo);
+                }
 
-            @Override
-            public void onPhotoLongClicked(@NonNull PlantPhoto photo) {
-                confirmDeletePhoto(photo);
-            }
-        });
+                @Override
+                public void onPhotoLongClicked(@NonNull PlantPhoto photo) {
+                    confirmDeletePhoto(photo);
+                }
+            });
+        }
         photoGrid.setLayoutManager(new GridLayoutManager(this, calculatePhotoSpanCount()));
         photoGrid.setAdapter(plantPhotoAdapter);
         photoGrid.setHasFixedSize(true);
@@ -589,24 +622,9 @@ public class PlantDetailActivity extends AppCompatActivity
 
     @Override
     public void navigateToEnvironmentLog(long plantId) {
-        if (environmentOverlayContainer != null) {
-            environmentOverlayContainer.setVisibility(View.VISIBLE);
+        if (detailViewPager != null) {
+            detailViewPager.setCurrentItem(PlantDetailPagerAdapter.POSITION_ENVIRONMENT, true);
         }
-        Fragment existing = getSupportFragmentManager().findFragmentByTag(EnvironmentLogFragment.TAG);
-        if (existing instanceof EnvironmentLogFragment) {
-            updateEnvironmentOverlayVisibility();
-            return;
-        }
-        EnvironmentLogFragment.show(getSupportFragmentManager(), R.id.detail_fragment_container, plantId);
-    }
-
-    private void updateEnvironmentOverlayVisibility() {
-        if (environmentOverlayContainer == null) {
-            return;
-        }
-        Fragment fragment = getSupportFragmentManager().findFragmentByTag(EnvironmentLogFragment.TAG);
-        boolean visible = fragment != null && fragment.isAdded() && fragment.getView() != null;
-        environmentOverlayContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     @Override
