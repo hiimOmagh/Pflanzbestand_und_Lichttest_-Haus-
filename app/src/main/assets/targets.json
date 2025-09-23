@@ -1,34 +1,1970 @@
 [
     {
-        "speciesKey": "basil",
-        "tolerance": "moderate",
-        "source": "Default dataset",
-        "seedling": { "ppfdMin": 100, "ppfdMax": 180, "dliMin": 4.3, "dliMax": 7.8 },
-        "vegetative": { "ppfdMin": 150, "ppfdMax": 300, "dliMin": 6.5, "dliMax": 13.0 },
-        "flower": { "ppfdMin": 180, "ppfdMax": 320, "dliMin": 7.8, "dliMax": 13.8 }
+        "speciesKey": "pothos-golden",
+        "commonName": "Golden Pothos",
+        "scientificName": "Epipremnum aureum",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Trailing vine",
+        "tolerance": "High tolerance for low light and irregular watering",
+        "seedling": {
+            "ppfdMin": 40,
+            "ppfdMax": 120,
+            "dliMin": 2.0,
+            "dliMax": 5.5
+        },
+        "vegetative": {
+            "ppfdMin": 60,
+            "ppfdMax": 180,
+            "dliMin": 3.0,
+            "dliMax": 7.5
+        },
+        "flower": {
+            "ppfdMin": 80,
+            "ppfdMax": 200,
+            "dliMin": 4.0,
+            "dliMax": 8.5
+        },
+        "watering": {
+            "schedule": "Allow top 2-3 cm of soil to dry between waterings",
+            "soil": "Well-draining potting mix with perlite",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 29
+        },
+        "humidity": {
+            "min": 40,
+            "max": 70
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Rotate the pot monthly to promote even growth.",
+            "Trim long vines to encourage bushier growth."
+        ],
+        "sources": [
+            "https://extension.psu.edu/growing-pothos-indoors",
+            "https://www.houseplant411.com/houseplant/golden-pothos-plant"
+        ]
     },
     {
-        "speciesKey": "lettuce",
-        "tolerance": "high",
-        "source": "Default dataset",
-        "seedling": { "ppfdMin": 80, "ppfdMax": 140, "dliMin": 3.5, "dliMax": 6.0 },
-        "vegetative": { "ppfdMin": 100, "ppfdMax": 220, "dliMin": 4.3, "dliMax": 9.5 },
-        "flower": { "ppfdMin": 120, "ppfdMax": 240, "dliMin": 5.2, "dliMax": 10.4 }
+        "speciesKey": "sansevieria-trifasciata",
+        "commonName": "Snake Plant",
+        "scientificName": "Dracaena trifasciata",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Upright rosette",
+        "tolerance": "Extremely drought tolerant, thrives in low light",
+        "seedling": {
+            "ppfdMin": 40,
+            "ppfdMax": 120,
+            "dliMin": 1.5,
+            "dliMax": 4.5
+        },
+        "vegetative": {
+            "ppfdMin": 70,
+            "ppfdMax": 160,
+            "dliMin": 2.5,
+            "dliMax": 6.0
+        },
+        "flower": {
+            "ppfdMin": 90,
+            "ppfdMax": 200,
+            "dliMin": 3.5,
+            "dliMax": 7.0
+        },
+        "watering": {
+            "schedule": "Water every 3-4 weeks in bright rooms, less in winter",
+            "soil": "Cactus or succulent mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 30
+        },
+        "humidity": {
+            "min": 30,
+            "max": 60
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Use a terracotta pot to prevent soggy soil.",
+            "Remove dust from leaves to maximise light absorption."
+        ],
+        "sources": [
+            "https://hgic.clemson.edu/factsheet/snake-plant/",
+            "https://www.rhs.org.uk/plants/60212/dracaena-trifasciata/details"
+        ]
     },
     {
-        "speciesKey": "tomato",
-        "tolerance": "low",
-        "source": "Default dataset",
-        "seedling": { "ppfdMin": 150, "ppfdMax": 250, "dliMin": 6.5, "dliMax": 10.8 },
-        "vegetative": { "ppfdMin": 250, "ppfdMax": 400, "dliMin": 10.8, "dliMax": 17.3 },
-        "flower": { "ppfdMin": 300, "ppfdMax": 450, "dliMin": 13.0, "dliMax": 19.4 }
+        "speciesKey": "spathiphyllum-wallisii",
+        "commonName": "Peace Lily",
+        "scientificName": "Spathiphyllum wallisii",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Clumping herbaceous",
+        "tolerance": "Prefers evenly moist soil, wilts when dry",
+        "seedling": {
+            "ppfdMin": 60,
+            "ppfdMax": 140,
+            "dliMin": 3.0,
+            "dliMax": 6.0
+        },
+        "vegetative": {
+            "ppfdMin": 90,
+            "ppfdMax": 180,
+            "dliMin": 4.0,
+            "dliMax": 7.5
+        },
+        "flower": {
+            "ppfdMin": 120,
+            "ppfdMax": 220,
+            "dliMin": 5.0,
+            "dliMax": 9.5
+        },
+        "watering": {
+            "schedule": "Keep soil lightly moist, water when top 2 cm dry",
+            "soil": "Peat-based mix with perlite",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 28
+        },
+        "humidity": {
+            "min": 50,
+            "max": 80
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Mist leaves weekly to raise humidity.",
+            "Remove spent blooms to encourage new flowers."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/17540/spathiphyllum-wallisii/details",
+            "https://extension.umn.edu/houseplants/peace-lily"
+        ]
     },
     {
-        "speciesKey": "cucumber",
-        "tolerance": "moderate",
-        "source": "Default dataset",
-        "seedling": { "ppfdMin": 150, "ppfdMax": 250, "dliMin": 6.5, "dliMax": 10.8 },
-        "vegetative": { "ppfdMin": 200, "ppfdMax": 350, "dliMin": 8.6, "dliMax": 15.1 },
-        "flower": { "ppfdMin": 220, "ppfdMax": 380, "dliMin": 9.5, "dliMax": 16.4 }
-    }
+        "speciesKey": "chlorophytum-comosum",
+        "commonName": "Spider Plant",
+        "scientificName": "Chlorophytum comosum",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Arching rosette with stolons",
+        "tolerance": "Handles occasional drought and lower light",
+        "seedling": {
+            "ppfdMin": 50,
+            "ppfdMax": 140,
+            "dliMin": 2.5,
+            "dliMax": 6.0
+        },
+        "vegetative": {
+            "ppfdMin": 80,
+            "ppfdMax": 200,
+            "dliMin": 4.0,
+            "dliMax": 8.5
+        },
+        "flower": {
+            "ppfdMin": 100,
+            "ppfdMax": 220,
+            "dliMin": 4.5,
+            "dliMax": 9.0
+        },
+        "watering": {
+            "schedule": "Water weekly during active growth",
+            "soil": "All-purpose potting mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 15,
+            "max": 27
+        },
+        "humidity": {
+            "min": 40,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Trim brown tips caused by fluoride or dry air.",
+            "Repot offsets every spring to refresh soil."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/3792/chlorophytum-comosum/details",
+            "https://hort.extension.wisc.edu/articles/spider-plant-chlorophytum-comosum/"
+        ]
+    },
+    {
+        "speciesKey": "monstera-deliciosa",
+        "commonName": "Swiss Cheese Plant",
+        "scientificName": "Monstera deliciosa",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Climbing aroid",
+        "tolerance": "Prefers bright indirect light and consistent moisture",
+        "seedling": {
+            "ppfdMin": 70,
+            "ppfdMax": 160,
+            "dliMin": 3.5,
+            "dliMax": 7.0
+        },
+        "vegetative": {
+            "ppfdMin": 110,
+            "ppfdMax": 220,
+            "dliMin": 5.0,
+            "dliMax": 9.5
+        },
+        "flower": {
+            "ppfdMin": 150,
+            "ppfdMax": 260,
+            "dliMin": 6.5,
+            "dliMax": 11.0
+        },
+        "watering": {
+            "schedule": "Water when top 4 cm of soil are dry",
+            "soil": "Chunky aroid mix with bark and perlite",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 30
+        },
+        "humidity": {
+            "min": 50,
+            "max": 80
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide a moss pole for aerial root attachment.",
+            "Wipe leaves monthly to remove dust."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/114607/monstera-deliciosa/details",
+            "https://extension.unh.edu/blog/2022/03/how-care-swiss-cheese-plant"
+        ]
+    },
+    {
+        "speciesKey": "ficus-lyrata",
+        "commonName": "Fiddle Leaf Fig",
+        "scientificName": "Ficus lyrata",
+        "category": "TREE",
+        "growthHabit": "Tree-form with single trunk",
+        "tolerance": "Sensitive to drafts and overwatering",
+        "seedling": {
+            "ppfdMin": 100,
+            "ppfdMax": 200,
+            "dliMin": 4.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 150,
+            "ppfdMax": 280,
+            "dliMin": 6.5,
+            "dliMax": 12.0
+        },
+        "flower": {
+            "ppfdMin": 180,
+            "ppfdMax": 320,
+            "dliMin": 7.5,
+            "dliMax": 13.5
+        },
+        "watering": {
+            "schedule": "Water deeply when top 5 cm of soil are dry",
+            "soil": "Well-draining peat and bark mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 17,
+            "max": 29
+        },
+        "humidity": {
+            "min": 45,
+            "max": 65
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Keep in bright filtered light to prevent leaf drop.",
+            "Rotate quarter-turn weekly for straight growth."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/68654/ficus-lyrata/details",
+            "https://extension.umn.edu/houseplants/ficus"
+        ]
+    },
+    {
+        "speciesKey": "aloe-vera",
+        "commonName": "Aloe Vera",
+        "scientificName": "Aloe vera",
+        "category": "SUCCULENT",
+        "growthHabit": "Rosette succulent",
+        "tolerance": "High tolerance for drought and heat",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 160,
+            "ppfdMax": 260,
+            "dliMin": 7.5,
+            "dliMax": 12.0
+        },
+        "flower": {
+            "ppfdMin": 200,
+            "ppfdMax": 320,
+            "dliMin": 9.0,
+            "dliMax": 14.5
+        },
+        "watering": {
+            "schedule": "Water thoroughly, then allow soil to dry completely",
+            "soil": "Sandy succulent mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 12,
+            "max": 32
+        },
+        "humidity": {
+            "min": 20,
+            "max": 50
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide at least 6 hours of bright light daily.",
+            "Use pots with drainage holes to prevent root rot."
+        ],
+        "sources": [
+            "https://hgic.clemson.edu/factsheet/aloe-vera/",
+            "https://www.rhs.org.uk/plants/742/aloe-vera/details"
+        ]
+    },
+    {
+        "speciesKey": "crassula-ovata",
+        "commonName": "Jade Plant",
+        "scientificName": "Crassula ovata",
+        "category": "SUCCULENT",
+        "growthHabit": "Shrubby succulent",
+        "tolerance": "Withstands neglect but dislikes overwatering",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 280,
+            "dliMin": 8.0,
+            "dliMax": 12.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 320,
+            "dliMin": 9.5,
+            "dliMax": 14.5
+        },
+        "watering": {
+            "schedule": "Water every 2-3 weeks in summer, monthly in winter",
+            "soil": "Gritty cactus mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 29
+        },
+        "humidity": {
+            "min": 25,
+            "max": 55
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Pinch new growth to encourage branching.",
+            "Provide cool nights in winter to promote flowering."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/4367/crassula-ovata/details",
+            "https://ucanr.edu/sites/UrbanHort/files/136706.pdf"
+        ]
+    },
+    {
+        "speciesKey": "senecio-rowleyanus",
+        "commonName": "String of Pearls",
+        "scientificName": "Curio rowleyanus",
+        "category": "SUCCULENT",
+        "growthHabit": "Trailing succulent",
+        "tolerance": "Requires porous soil and careful watering",
+        "seedling": {
+            "ppfdMin": 130,
+            "ppfdMax": 220,
+            "dliMin": 6.5,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 260,
+            "dliMin": 8.0,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 300,
+            "dliMin": 9.5,
+            "dliMax": 13.0
+        },
+        "watering": {
+            "schedule": "Water lightly every 2 weeks, less in winter",
+            "soil": "Fast-draining succulent mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 12,
+            "max": 28
+        },
+        "humidity": {
+            "min": 30,
+            "max": 50
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Protect from intense midday sun to avoid scorching.",
+            "Fertilise lightly in spring with diluted succulent feed."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/236084/curio-rowleyanus/details",
+            "https://extension.illinois.edu/blogs/good-growing/2021-01-29-houseplant-profile-string-pearls"
+        ]
+    },
+    {
+        "speciesKey": "saintpaulia-ionantha",
+        "commonName": "African Violet",
+        "scientificName": "Saintpaulia ionantha",
+        "category": "FLOWER",
+        "growthHabit": "Compact rosette",
+        "tolerance": "Needs evenly moist soil and high humidity",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 150,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "vegetative": {
+            "ppfdMin": 110,
+            "ppfdMax": 180,
+            "dliMin": 5.0,
+            "dliMax": 7.5
+        },
+        "flower": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 9.0
+        },
+        "watering": {
+            "schedule": "Bottom-water when top soil feels dry",
+            "soil": "Light, airy African violet mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 26
+        },
+        "humidity": {
+            "min": 50,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Avoid water on leaves to prevent spotting.",
+            "Provide 12-14 hours of bright indirect light daily."
+        ],
+        "sources": [
+            "https://www.avsa.org/african-violet-care",
+            "https://www.rhs.org.uk/plants/16182/saintpaulia-ionantha/details"
+        ]
+    },
+    {
+        "speciesKey": "phalaenopsis-hybrids",
+        "commonName": "Moth Orchid",
+        "scientificName": "Phalaenopsis spp.",
+        "category": "FLOWER",
+        "growthHabit": "Epiphytic monopodial",
+        "tolerance": "Likes bright filtered light and high humidity",
+        "seedling": {
+            "ppfdMin": 70,
+            "ppfdMax": 140,
+            "dliMin": 3.0,
+            "dliMax": 6.0
+        },
+        "vegetative": {
+            "ppfdMin": 110,
+            "ppfdMax": 180,
+            "dliMin": 4.5,
+            "dliMax": 7.5
+        },
+        "flower": {
+            "ppfdMin": 150,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 8.5
+        },
+        "watering": {
+            "schedule": "Water weekly, allowing bark to dry slightly",
+            "soil": "Orchid bark mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 29
+        },
+        "humidity": {
+            "min": 55,
+            "max": 80
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Provide a 10°C night temperature drop to trigger blooms.",
+            "Use tepid water and drain thoroughly to prevent rot."
+        ],
+        "sources": [
+            "https://www.aos.org/orchids/culture-sheets/phalaenopsis.aspx",
+            "https://www.rhs.org.uk/plants/phalaenopsis/growing-guide"
+        ]
+    },
+    {
+        "speciesKey": "nephrolepis-exaltata",
+        "commonName": "Boston Fern",
+        "scientificName": "Nephrolepis exaltata",
+        "category": "FERN",
+        "growthHabit": "Arching fern",
+        "tolerance": "Sensitive to dry air and drought",
+        "seedling": {
+            "ppfdMin": 60,
+            "ppfdMax": 140,
+            "dliMin": 3.0,
+            "dliMax": 5.5
+        },
+        "vegetative": {
+            "ppfdMin": 90,
+            "ppfdMax": 180,
+            "dliMin": 4.0,
+            "dliMax": 7.5
+        },
+        "flower": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.0,
+            "dliMax": 8.5
+        },
+        "watering": {
+            "schedule": "Keep soil evenly moist, never soggy",
+            "soil": "Peat-based fern mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 26
+        },
+        "humidity": {
+            "min": 55,
+            "max": 85
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Mist daily or use a pebble tray for humidity.",
+            "Trim dead fronds to encourage new growth."
+        ],
+        "sources": [
+            "https://hgic.clemson.edu/factsheet/boston-fern/",
+            "https://www.rhs.org.uk/plants/114507/nephrolepis-exaltata/details"
+        ]
+    },
+    {
+        "speciesKey": "adiantum-raddianum",
+        "commonName": "Maidenhair Fern",
+        "scientificName": "Adiantum raddianum",
+        "category": "FERN",
+        "growthHabit": "Delicate arching fern",
+        "tolerance": "Requires consistently moist soil and high humidity",
+        "seedling": {
+            "ppfdMin": 50,
+            "ppfdMax": 120,
+            "dliMin": 2.5,
+            "dliMax": 5.0
+        },
+        "vegetative": {
+            "ppfdMin": 80,
+            "ppfdMax": 160,
+            "dliMin": 3.5,
+            "dliMax": 6.5
+        },
+        "flower": {
+            "ppfdMin": 110,
+            "ppfdMax": 180,
+            "dliMin": 4.5,
+            "dliMax": 7.5
+        },
+        "watering": {
+            "schedule": "Never allow soil to dry; water lightly every few days",
+            "soil": "Moisture-retentive fern mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 24
+        },
+        "humidity": {
+            "min": 60,
+            "max": 85
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Avoid direct airflow to prevent frond desiccation.",
+            "Use distilled water if tap water is hard."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/1189/adiantum-raddianum/details",
+            "https://extension.umn.edu/houseplants/maidenhair-fern"
+        ]
+    },
+    {
+        "speciesKey": "zamioculcas-zamiifolia",
+        "commonName": "ZZ Plant",
+        "scientificName": "Zamioculcas zamiifolia",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Rhizomatous clumping",
+        "tolerance": "Excellent tolerance for low light and drought",
+        "seedling": {
+            "ppfdMin": 40,
+            "ppfdMax": 120,
+            "dliMin": 1.5,
+            "dliMax": 4.5
+        },
+        "vegetative": {
+            "ppfdMin": 70,
+            "ppfdMax": 160,
+            "dliMin": 2.5,
+            "dliMax": 6.0
+        },
+        "flower": {
+            "ppfdMin": 90,
+            "ppfdMax": 190,
+            "dliMin": 3.5,
+            "dliMax": 7.0
+        },
+        "watering": {
+            "schedule": "Water every 3-4 weeks, allowing soil to dry",
+            "soil": "Free-draining potting mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 30
+        },
+        "humidity": {
+            "min": 30,
+            "max": 60
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Fertilise sparingly, once per quarter.",
+            "Clean leaves with a damp cloth to keep them glossy."
+        ],
+        "sources": [
+            "https://extension.umn.edu/houseplants/zz-plant",
+            "https://www.rhs.org.uk/plants/21594/zamioculcas-zamiifolia/details"
+        ]
+    },
+    {
+        "speciesKey": "ficus-elastica",
+        "commonName": "Rubber Plant",
+        "scientificName": "Ficus elastica",
+        "category": "TREE",
+        "growthHabit": "Tree-form with woody stems",
+        "tolerance": "Prefers bright light and moderate moisture",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 180,
+            "dliMin": 4.0,
+            "dliMax": 7.5
+        },
+        "vegetative": {
+            "ppfdMin": 130,
+            "ppfdMax": 240,
+            "dliMin": 5.5,
+            "dliMax": 10.5
+        },
+        "flower": {
+            "ppfdMin": 170,
+            "ppfdMax": 280,
+            "dliMin": 7.0,
+            "dliMax": 12.5
+        },
+        "watering": {
+            "schedule": "Water when top 4 cm of soil dry",
+            "soil": "Peat and bark-based mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 17,
+            "max": 29
+        },
+        "humidity": {
+            "min": 40,
+            "max": 65
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide bright filtered light to maintain variegation.",
+            "Prune in spring to control height."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/71474/ficus-elastica/details",
+            "https://hgic.clemson.edu/factsheet/rubber-plant/"
+        ]
+    },
+    {
+        "speciesKey": "dracaena-marginata",
+        "commonName": "Dragon Tree",
+        "scientificName": "Dracaena marginata",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Woody cane with tufts",
+        "tolerance": "Tolerates lower light and moderate drought",
+        "seedling": {
+            "ppfdMin": 70,
+            "ppfdMax": 150,
+            "dliMin": 3.0,
+            "dliMax": 6.0
+        },
+        "vegetative": {
+            "ppfdMin": 110,
+            "ppfdMax": 200,
+            "dliMin": 4.5,
+            "dliMax": 8.5
+        },
+        "flower": {
+            "ppfdMin": 140,
+            "ppfdMax": 230,
+            "dliMin": 6.0,
+            "dliMax": 9.5
+        },
+        "watering": {
+            "schedule": "Water when top 5 cm of soil are dry",
+            "soil": "Well-draining peat mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 17,
+            "max": 28
+        },
+        "humidity": {
+            "min": 40,
+            "max": 65
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Remove lower leaves as they yellow to tidy the cane.",
+            "Leach soil quarterly to remove fluoride build-up."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/5741/dracaena-marginata/details",
+            "https://extension.unh.edu/blog/2019/03/houseplant-month-dracaena"
+        ]
+    },
+    {
+        "speciesKey": "philodendron-hederaceum-brasil",
+        "commonName": "Philodendron Brasil",
+        "scientificName": "Philodendron hederaceum 'Brasil'",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Trailing vine",
+        "tolerance": "Handles low light but colours fade",
+        "seedling": {
+            "ppfdMin": 60,
+            "ppfdMax": 140,
+            "dliMin": 3.0,
+            "dliMax": 6.0
+        },
+        "vegetative": {
+            "ppfdMin": 90,
+            "ppfdMax": 200,
+            "dliMin": 4.0,
+            "dliMax": 8.5
+        },
+        "flower": {
+            "ppfdMin": 120,
+            "ppfdMax": 220,
+            "dliMin": 5.0,
+            "dliMax": 9.0
+        },
+        "watering": {
+            "schedule": "Water when top 3 cm of soil are dry",
+            "soil": "Chunky, well-aerated potting mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 29
+        },
+        "humidity": {
+            "min": 45,
+            "max": 75
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide support pole if training upward.",
+            "Fertilise monthly in spring and summer."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/131861/philodendron-hederaceum-brasil/details",
+            "https://www.gardeningknowhow.com/houseplants/philodendron/caring-for-philodendron-brasil.htm"
+        ]
+    },
+    {
+        "speciesKey": "ocimum-basilicum-genovese",
+        "commonName": "Genovese Basil",
+        "scientificName": "Ocimum basilicum",
+        "category": "HERB",
+        "growthHabit": "Bushy annual herb",
+        "tolerance": "Prefers consistent moisture and warmth",
+        "seedling": {
+            "ppfdMin": 110,
+            "ppfdMax": 200,
+            "dliMin": 5.0,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 150,
+            "ppfdMax": 260,
+            "dliMin": 7.0,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 170,
+            "ppfdMax": 280,
+            "dliMin": 8.0,
+            "dliMax": 12.5
+        },
+        "watering": {
+            "schedule": "Keep soil evenly moist but not waterlogged",
+            "soil": "Rich, well-drained potting soil",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 30
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Pinch stems regularly to prevent flowering.",
+            "Harvest from the top to encourage branching."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-basil",
+            "https://www.rhs.org.uk/herbs/basil/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "rosmarinus-officinalis",
+        "commonName": "Rosemary",
+        "scientificName": "Salvia rosmarinus",
+        "category": "HERB",
+        "growthHabit": "Woody perennial shrub",
+        "tolerance": "Drought tolerant once established",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 220,
+            "dliMin": 5.5,
+            "dliMax": 9.5
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 280,
+            "dliMin": 8.0,
+            "dliMax": 12.5
+        },
+        "flower": {
+            "ppfdMin": 200,
+            "ppfdMax": 320,
+            "dliMin": 9.0,
+            "dliMax": 14.0
+        },
+        "watering": {
+            "schedule": "Allow soil to dry nearly completely between waterings",
+            "soil": "Sandy, well-drained mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 27
+        },
+        "humidity": {
+            "min": 35,
+            "max": 60
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Provide at least 6 hours of direct light daily.",
+            "Prune lightly to maintain shape and airflow."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/16113/salvia-rosmarinus/details",
+            "https://extension.umn.edu/vegetables/growing-rosemary"
+        ]
+    },
+    {
+        "speciesKey": "thymus-vulgaris",
+        "commonName": "Common Thyme",
+        "scientificName": "Thymus vulgaris",
+        "category": "HERB",
+        "growthHabit": "Low-growing shrub",
+        "tolerance": "Prefers drier soils and good airflow",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 170,
+            "ppfdMax": 260,
+            "dliMin": 7.5,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 190,
+            "ppfdMax": 300,
+            "dliMin": 8.5,
+            "dliMax": 13.0
+        },
+        "watering": {
+            "schedule": "Water when soil is mostly dry",
+            "soil": "Well-drained sandy loam",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 12,
+            "max": 27
+        },
+        "humidity": {
+            "min": 35,
+            "max": 55
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Provide strong light to maintain compact growth.",
+            "Trim after flowering to encourage new shoots."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/17297/thymus-vulgaris/details",
+            "https://extension.uga.edu/publications/detail.html?number=C943"
+        ]
+    },
+    {
+        "speciesKey": "mentha-x-piperita",
+        "commonName": "Peppermint",
+        "scientificName": "Mentha × piperita",
+        "category": "HERB",
+        "growthHabit": "Spreading perennial",
+        "tolerance": "Moisture-loving herb that tolerates partial shade",
+        "seedling": {
+            "ppfdMin": 100,
+            "ppfdMax": 180,
+            "dliMin": 4.5,
+            "dliMax": 7.5
+        },
+        "vegetative": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 9.5
+        },
+        "flower": {
+            "ppfdMin": 160,
+            "ppfdMax": 240,
+            "dliMin": 7.0,
+            "dliMax": 10.5
+        },
+        "watering": {
+            "schedule": "Keep soil consistently moist",
+            "soil": "Rich loam or potting mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 13,
+            "max": 27
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Harvest frequently to prevent flowering.",
+            "Grow in containers to restrain spreading roots."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/11355/mentha-x-piperita/details",
+            "https://extension.umn.edu/vegetables/growing-mint"
+        ]
+    },
+    {
+        "speciesKey": "petroselinum-crispum",
+        "commonName": "Flat-Leaf Parsley",
+        "scientificName": "Petroselinum crispum var. neapolitanum",
+        "category": "HERB",
+        "growthHabit": "Basal rosette",
+        "tolerance": "Requires steady moisture for best growth",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 170,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "vegetative": {
+            "ppfdMin": 130,
+            "ppfdMax": 210,
+            "dliMin": 5.5,
+            "dliMax": 9.0
+        },
+        "flower": {
+            "ppfdMin": 150,
+            "ppfdMax": 240,
+            "dliMin": 6.5,
+            "dliMax": 10.5
+        },
+        "watering": {
+            "schedule": "Water when the top 2 cm of soil dry",
+            "soil": "Moisture-retentive loam",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 24
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Soak seeds overnight to speed germination.",
+            "Harvest outer leaves first to extend production."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-parsley",
+            "https://www.rhs.org.uk/plants/12331/petroselinum-crispum/details"
+        ]
+    },
+    {
+        "speciesKey": "coriandrum-sativum",
+        "commonName": "Cilantro",
+        "scientificName": "Coriandrum sativum",
+        "category": "HERB",
+        "growthHabit": "Fast-growing annual",
+        "tolerance": "Bolts quickly in heat; prefers cool conditions",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 170,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "vegetative": {
+            "ppfdMin": 130,
+            "ppfdMax": 210,
+            "dliMin": 5.5,
+            "dliMax": 9.0
+        },
+        "flower": {
+            "ppfdMin": 160,
+            "ppfdMax": 240,
+            "dliMin": 7.0,
+            "dliMax": 10.5
+        },
+        "watering": {
+            "schedule": "Water regularly to keep soil evenly moist",
+            "soil": "Well-drained sandy loam",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 24
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Succession sow every 2 weeks for continuous harvest.",
+            "Harvest leaves early in the morning for best flavour."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-cilantro",
+            "https://www.rhs.org.uk/plants/17831/coriandrum-sativum/details"
+        ]
+    },
+    {
+        "speciesKey": "allium-schoenoprasum",
+        "commonName": "Chives",
+        "scientificName": "Allium schoenoprasum",
+        "category": "HERB",
+        "growthHabit": "Clumping perennial",
+        "tolerance": "Prefers consistent moisture and full sun",
+        "seedling": {
+            "ppfdMin": 110,
+            "ppfdMax": 200,
+            "dliMin": 5.0,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 150,
+            "ppfdMax": 240,
+            "dliMin": 6.5,
+            "dliMax": 10.5
+        },
+        "flower": {
+            "ppfdMin": 170,
+            "ppfdMax": 260,
+            "dliMin": 7.5,
+            "dliMax": 11.5
+        },
+        "watering": {
+            "schedule": "Keep soil evenly moist, do not allow to dry out",
+            "soil": "Rich loamy soil",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 26
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Harvest by snipping leaves 2 cm above soil level.",
+            "Divide clumps every 2-3 years to maintain vigour."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/718/allium-schoenoprasum/details",
+            "https://extension.umn.edu/vegetables/growing-onions-and-related-crops"
+        ]
+    },
+    {
+        "speciesKey": "lactuca-sativa-butterhead",
+        "commonName": "Butterhead Lettuce",
+        "scientificName": "Lactuca sativa var. capitata",
+        "category": "VEGETABLE",
+        "growthHabit": "Loose head-forming annual",
+        "tolerance": "Prefers cool, moist conditions",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 160,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "vegetative": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 9.5
+        },
+        "flower": {
+            "ppfdMin": 160,
+            "ppfdMax": 240,
+            "dliMin": 7.0,
+            "dliMax": 10.5
+        },
+        "watering": {
+            "schedule": "Keep soil consistently moist but not waterlogged",
+            "soil": "Rich, well-drained garden loam",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 22
+        },
+        "humidity": {
+            "min": 50,
+            "max": 80
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Provide shade cloth in warm climates.",
+            "Harvest outer leaves to extend production."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-lettuce",
+            "https://www.rhs.org.uk/vegetables/lettuce/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "spinacia-oleracea",
+        "commonName": "Spinach",
+        "scientificName": "Spinacia oleracea",
+        "category": "VEGETABLE",
+        "growthHabit": "Basal rosette annual",
+        "tolerance": "Bolts in heat; prefers cool temperatures",
+        "seedling": {
+            "ppfdMin": 100,
+            "ppfdMax": 180,
+            "dliMin": 4.5,
+            "dliMax": 7.5
+        },
+        "vegetative": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 9.5
+        },
+        "flower": {
+            "ppfdMin": 170,
+            "ppfdMax": 240,
+            "dliMin": 7.5,
+            "dliMax": 10.5
+        },
+        "watering": {
+            "schedule": "Maintain evenly moist soil",
+            "soil": "Loamy soil rich in organic matter",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 7,
+            "max": 20
+        },
+        "humidity": {
+            "min": 45,
+            "max": 75
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Use shade cloth during warm spells to delay bolting.",
+            "Harvest outer leaves frequently to encourage new growth."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-spinach",
+            "https://www.rhs.org.uk/vegetables/spinach/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "solanum-lycopersicum-cherry",
+        "commonName": "Cherry Tomato",
+        "scientificName": "Solanum lycopersicum var. cerasiforme",
+        "category": "VEGETABLE",
+        "growthHabit": "Indeterminate vine",
+        "tolerance": "Requires regular watering and support",
+        "seedling": {
+            "ppfdMin": 130,
+            "ppfdMax": 220,
+            "dliMin": 6.0,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 200,
+            "ppfdMax": 320,
+            "dliMin": 9.0,
+            "dliMax": 14.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 360,
+            "dliMin": 10.0,
+            "dliMax": 16.0
+        },
+        "watering": {
+            "schedule": "Water deeply 2-3 times per week",
+            "soil": "Rich, well-drained loam",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 30
+        },
+        "humidity": {
+            "min": 50,
+            "max": 75
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Prune suckers to improve airflow.",
+            "Provide trellis or cage for support."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-tomatoes",
+            "https://www.rhs.org.uk/vegetables/tomatoes/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "capsicum-annuum-bell",
+        "commonName": "Bell Pepper",
+        "scientificName": "Capsicum annuum",
+        "category": "VEGETABLE",
+        "growthHabit": "Bushy annual",
+        "tolerance": "Prefers consistent moisture and warmth",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 190,
+            "ppfdMax": 300,
+            "dliMin": 8.5,
+            "dliMax": 13.0
+        },
+        "flower": {
+            "ppfdMin": 210,
+            "ppfdMax": 330,
+            "dliMin": 9.5,
+            "dliMax": 14.5
+        },
+        "watering": {
+            "schedule": "Water deeply when top 5 cm of soil are dry",
+            "soil": "Fertile, well-drained loam",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 30
+        },
+        "humidity": {
+            "min": 50,
+            "max": 75
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Mulch plants to conserve moisture.",
+            "Provide stakes or cages to support heavy fruit."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-peppers",
+            "https://www.rhs.org.uk/vegetables/peppers-chillies/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "cucumis-sativus-english",
+        "commonName": "English Cucumber",
+        "scientificName": "Cucumis sativus",
+        "category": "VEGETABLE",
+        "growthHabit": "Climbing vine",
+        "tolerance": "Needs consistent moisture and support",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 190,
+            "ppfdMax": 300,
+            "dliMin": 8.5,
+            "dliMax": 13.0
+        },
+        "flower": {
+            "ppfdMin": 210,
+            "ppfdMax": 320,
+            "dliMin": 9.5,
+            "dliMax": 14.0
+        },
+        "watering": {
+            "schedule": "Water 2-3 times weekly, keeping soil evenly moist",
+            "soil": "Rich loam with compost",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 30
+        },
+        "humidity": {
+            "min": 55,
+            "max": 80
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Train vines onto trellis for straighter fruit.",
+            "Harvest regularly to encourage continued production."
+        ],
+        "sources": [
+            "https://extension.umn.edu/vegetables/growing-cucumbers",
+            "https://www.rhs.org.uk/vegetables/cucumbers/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "fragaria-x-ananassa-everbearing",
+        "commonName": "Everbearing Strawberry",
+        "scientificName": "Fragaria × ananassa",
+        "category": "FRUIT",
+        "growthHabit": "Low-growing runner-forming perennial",
+        "tolerance": "Requires consistent moisture and full sun",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 190,
+            "ppfdMax": 300,
+            "dliMin": 8.5,
+            "dliMax": 13.0
+        },
+        "flower": {
+            "ppfdMin": 210,
+            "ppfdMax": 320,
+            "dliMin": 9.5,
+            "dliMax": 14.0
+        },
+        "watering": {
+            "schedule": "Water 2-3 times per week, keeping soil moist",
+            "soil": "Rich loam with organic matter",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 26
+        },
+        "humidity": {
+            "min": 50,
+            "max": 75
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Mulch to keep fruit clean and suppress weeds.",
+            "Remove runners to focus energy on fruit production."
+        ],
+        "sources": [
+            "https://extension.umn.edu/fruit/growing-strawberries-home-garden",
+            "https://www.rhs.org.uk/fruit/strawberries/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "vaccinium-corymbosum-patio",
+        "commonName": "Dwarf Blueberry",
+        "scientificName": "Vaccinium corymbosum",
+        "category": "SHRUB",
+        "growthHabit": "Compact deciduous shrub",
+        "tolerance": "Requires acidic soil and consistent moisture",
+        "seedling": {
+            "ppfdMin": 110,
+            "ppfdMax": 190,
+            "dliMin": 5.0,
+            "dliMax": 8.0
+        },
+        "vegetative": {
+            "ppfdMin": 170,
+            "ppfdMax": 260,
+            "dliMin": 7.0,
+            "dliMax": 11.0
+        },
+        "flower": {
+            "ppfdMin": 200,
+            "ppfdMax": 300,
+            "dliMin": 8.5,
+            "dliMax": 12.5
+        },
+        "watering": {
+            "schedule": "Keep soil consistently moist but not waterlogged",
+            "soil": "Acidic peat-based mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 4,
+            "max": 26
+        },
+        "humidity": {
+            "min": 45,
+            "max": 75
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Use rainwater to maintain soil acidity.",
+            "Prune in late winter to remove weak wood."
+        ],
+        "sources": [
+            "https://extension.umn.edu/fruit/growing-blueberries-home-garden",
+            "https://www.rhs.org.uk/fruit/blueberries/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "citrus-limon-meyer",
+        "commonName": "Meyer Lemon",
+        "scientificName": "Citrus × meyeri",
+        "category": "TREE",
+        "growthHabit": "Compact evergreen tree",
+        "tolerance": "Requires bright light and regular feeding",
+        "seedling": {
+            "ppfdMin": 150,
+            "ppfdMax": 240,
+            "dliMin": 7.0,
+            "dliMax": 10.5
+        },
+        "vegetative": {
+            "ppfdMin": 200,
+            "ppfdMax": 320,
+            "dliMin": 9.0,
+            "dliMax": 14.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 360,
+            "dliMin": 10.0,
+            "dliMax": 16.0
+        },
+        "watering": {
+            "schedule": "Water when top 5 cm of soil are dry",
+            "soil": "Slightly acidic citrus mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 29
+        },
+        "humidity": {
+            "min": 45,
+            "max": 65
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide supplemental grow lights in winter.",
+            "Feed with citrus fertiliser every 4-6 weeks."
+        ],
+        "sources": [
+            "https://extension.umn.edu/fruit/growing-citrus-containers",
+            "https://www.rhs.org.uk/plants/18379/citrus-x-meyeri/details"
+        ]
+    },
+    {
+        "speciesKey": "lavandula-angustifolia",
+        "commonName": "English Lavender",
+        "scientificName": "Lavandula angustifolia",
+        "category": "FLOWER",
+        "growthHabit": "Woody subshrub",
+        "tolerance": "Highly drought tolerant once established",
+        "seedling": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.5,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 200,
+            "ppfdMax": 300,
+            "dliMin": 9.0,
+            "dliMax": 13.0
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 320,
+            "dliMin": 10.0,
+            "dliMax": 14.0
+        },
+        "watering": {
+            "schedule": "Water deeply, then allow soil to dry",
+            "soil": "Gravelly, well-drained soil",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 7,
+            "max": 28
+        },
+        "humidity": {
+            "min": 30,
+            "max": 55
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide full sun for best fragrance.",
+            "Prune lightly after flowering to maintain shape."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/lavandula/grow-your-own",
+            "https://extension.umn.edu/landscape-design/growing-lavender-minnesota"
+        ]
+    },
+    {
+        "speciesKey": "tagetes-patula-french",
+        "commonName": "French Marigold",
+        "scientificName": "Tagetes patula",
+        "category": "FLOWER",
+        "growthHabit": "Mounded annual",
+        "tolerance": "Tolerant of heat once established",
+        "seedling": {
+            "ppfdMin": 130,
+            "ppfdMax": 200,
+            "dliMin": 6.0,
+            "dliMax": 9.0
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 260,
+            "dliMin": 8.0,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 200,
+            "ppfdMax": 300,
+            "dliMin": 9.0,
+            "dliMax": 13.0
+        },
+        "watering": {
+            "schedule": "Water when top 3 cm of soil dry",
+            "soil": "Well-drained garden soil",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 15,
+            "max": 30
+        },
+        "humidity": {
+            "min": 40,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Deadhead spent blooms to prolong flowering.",
+            "Provide full sun for compact plants."
+        ],
+        "sources": [
+            "https://extension.umn.edu/flowers/marigolds",
+            "https://www.rhs.org.uk/plants/tagetes/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "helianthus-annuus-dwarf",
+        "commonName": "Dwarf Sunflower",
+        "scientificName": "Helianthus annuus",
+        "category": "FLOWER",
+        "growthHabit": "Compact annual",
+        "tolerance": "Heat tolerant but needs regular moisture",
+        "seedling": {
+            "ppfdMin": 140,
+            "ppfdMax": 220,
+            "dliMin": 6.5,
+            "dliMax": 10.0
+        },
+        "vegetative": {
+            "ppfdMin": 200,
+            "ppfdMax": 320,
+            "dliMin": 9.0,
+            "dliMax": 14.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 340,
+            "dliMin": 10.0,
+            "dliMax": 15.5
+        },
+        "watering": {
+            "schedule": "Water deeply once or twice weekly",
+            "soil": "Loamy soil rich in organic matter",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 32
+        },
+        "humidity": {
+            "min": 40,
+            "max": 70
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Provide full sun to prevent stretching.",
+            "Support stems if flower heads become heavy."
+        ],
+        "sources": [
+            "https://extension.umn.edu/flowers/growing-annual-sunflowers",
+            "https://www.rhs.org.uk/plants/helianthus/grow-your-own"
+        ]
+    },
+    {
+        "speciesKey": "echinocactus-grusonii",
+        "commonName": "Golden Barrel Cactus",
+        "scientificName": "Echinocactus grusonii",
+        "category": "CACTUS",
+        "growthHabit": "Globular cactus",
+        "tolerance": "High heat and drought tolerance",
+        "seedling": {
+            "ppfdMin": 160,
+            "ppfdMax": 260,
+            "dliMin": 7.5,
+            "dliMax": 12.0
+        },
+        "vegetative": {
+            "ppfdMin": 220,
+            "ppfdMax": 340,
+            "dliMin": 10.0,
+            "dliMax": 15.5
+        },
+        "flower": {
+            "ppfdMin": 260,
+            "ppfdMax": 380,
+            "dliMin": 12.0,
+            "dliMax": 17.0
+        },
+        "watering": {
+            "schedule": "Water sparingly every 4-6 weeks",
+            "soil": "Mineral-based cactus mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 10,
+            "max": 35
+        },
+        "humidity": {
+            "min": 20,
+            "max": 50
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide maximum sunlight for compact growth.",
+            "Ensure excellent drainage to prevent rot."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/6420/echinocactus-grusonii/details",
+            "https://extension.arizona.edu/pubs/golden-barrel-cactus"
+        ]
+    },
+    {
+        "speciesKey": "haworthia-fasciata",
+        "commonName": "Zebra Haworthia",
+        "scientificName": "Haworthiopsis fasciata",
+        "category": "SUCCULENT",
+        "growthHabit": "Rosette succulent",
+        "tolerance": "Handles low water and moderate light",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 160,
+            "ppfdMax": 240,
+            "dliMin": 7.0,
+            "dliMax": 10.5
+        },
+        "flower": {
+            "ppfdMin": 200,
+            "ppfdMax": 280,
+            "dliMin": 8.5,
+            "dliMax": 12.0
+        },
+        "watering": {
+            "schedule": "Water lightly every 3 weeks",
+            "soil": "Gritty succulent mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 12,
+            "max": 28
+        },
+        "humidity": {
+            "min": 30,
+            "max": 55
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Protect from intense afternoon sun to avoid bleaching.",
+            "Remove offsets to propagate new plants."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/7120/haworthiopsis-fasciata/details",
+            "https://extension.psu.edu/growing-succulents-indoors"
+        ]
+    },
+    {
+        "speciesKey": "sedum-morganianum",
+        "commonName": "Burro's Tail",
+        "scientificName": "Sedum morganianum",
+        "category": "SUCCULENT",
+        "growthHabit": "Trailing succulent",
+        "tolerance": "Drought tolerant but sensitive to touch",
+        "seedling": {
+            "ppfdMin": 130,
+            "ppfdMax": 210,
+            "dliMin": 6.0,
+            "dliMax": 9.0
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 260,
+            "dliMin": 8.0,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 300,
+            "dliMin": 9.5,
+            "dliMax": 13.0
+        },
+        "watering": {
+            "schedule": "Water thoroughly, allowing soil to dry between",
+            "soil": "Well-drained cactus mix",
+            "tolerance": "High"
+        },
+        "temperature": {
+            "min": 15,
+            "max": 30
+        },
+        "humidity": {
+            "min": 30,
+            "max": 55
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Handle gently to avoid leaf drop.",
+            "Provide bright light for compact growth."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/67858/sedum-morganianum/details",
+            "https://extension.umn.edu/houseplants/growing-succulents-indoors"
+        ]
+    },
+    {
+        "speciesKey": "asplenium-nidus",
+        "commonName": "Bird's Nest Fern",
+        "scientificName": "Asplenium nidus",
+        "category": "FERN",
+        "growthHabit": "Rosette fern",
+        "tolerance": "Requires high humidity and even moisture",
+        "seedling": {
+            "ppfdMin": 60,
+            "ppfdMax": 130,
+            "dliMin": 3.0,
+            "dliMax": 5.0
+        },
+        "vegetative": {
+            "ppfdMin": 90,
+            "ppfdMax": 170,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "flower": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.0,
+            "dliMax": 8.0
+        },
+        "watering": {
+            "schedule": "Keep soil lightly moist, avoid water in the crown",
+            "soil": "Loose, moisture-retentive fern mix",
+            "tolerance": "Low"
+        },
+        "temperature": {
+            "min": 18,
+            "max": 28
+        },
+        "humidity": {
+            "min": 60,
+            "max": 85
+        },
+        "toxicToPets": false,
+        "careTips": [
+            "Place in bathrooms or kitchens for higher humidity.",
+            "Remove old fronds by cutting at the base."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/1933/asplenium-nidus/details",
+            "https://extension.umn.edu/houseplants/birds-nest-fern"
+        ]
+    },
+    {
+        "speciesKey": "chloranthus-elatior",
+        "commonName": "Flaming Katy",
+        "scientificName": "Kalanchoe blossfeldiana",
+        "category": "SUCCULENT",
+        "growthHabit": "Compact succulent",
+        "tolerance": "Requires bright light and light watering",
+        "seedling": {
+            "ppfdMin": 120,
+            "ppfdMax": 200,
+            "dliMin": 5.5,
+            "dliMax": 8.5
+        },
+        "vegetative": {
+            "ppfdMin": 180,
+            "ppfdMax": 260,
+            "dliMin": 8.0,
+            "dliMax": 11.5
+        },
+        "flower": {
+            "ppfdMin": 220,
+            "ppfdMax": 300,
+            "dliMin": 9.5,
+            "dliMax": 13.0
+        },
+        "watering": {
+            "schedule": "Water when top half of soil is dry",
+            "soil": "Well-drained succulent mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 27
+        },
+        "humidity": {
+            "min": 35,
+            "max": 60
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Provide bright light to encourage flowering.",
+            "Pinch spent blooms to extend the display."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/98845/kalanchoe-blossfeldiana/details",
+            "https://extension.umn.edu/houseplants/kalanchoe-care"
+        ]
+    },
+    {
+        "speciesKey": "schefflera-arboricola-dwarf",
+        "commonName": "Dwarf Umbrella Tree",
+        "scientificName": "Schefflera arboricola",
+        "category": "HOUSEPLANT",
+        "growthHabit": "Shrubby tree",
+        "tolerance": "Prefers bright indirect light and moderate watering",
+        "seedling": {
+            "ppfdMin": 90,
+            "ppfdMax": 170,
+            "dliMin": 4.0,
+            "dliMax": 6.5
+        },
+        "vegetative": {
+            "ppfdMin": 130,
+            "ppfdMax": 220,
+            "dliMin": 5.5,
+            "dliMax": 9.0
+        },
+        "flower": {
+            "ppfdMin": 160,
+            "ppfdMax": 250,
+            "dliMin": 7.0,
+            "dliMax": 10.0
+        },
+        "watering": {
+            "schedule": "Water when top 4 cm of soil are dry",
+            "soil": "Well-draining peat-based mix",
+            "tolerance": "Moderate"
+        },
+        "temperature": {
+            "min": 16,
+            "max": 29
+        },
+        "humidity": {
+            "min": 45,
+            "max": 70
+        },
+        "toxicToPets": true,
+        "careTips": [
+            "Rotate plant to maintain even growth.",
+            "Prune back leggy stems in spring."
+        ],
+        "sources": [
+            "https://www.rhs.org.uk/plants/16680/schefflera-arboricola/details",
+            "https://extension.umn.edu/houseplants/schefflera-care"
+        ]
+}
 ]
