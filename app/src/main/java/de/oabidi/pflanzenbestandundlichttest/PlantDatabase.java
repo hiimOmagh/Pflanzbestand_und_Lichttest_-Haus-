@@ -1,11 +1,14 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Database;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
@@ -48,7 +51,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         PlantPhoto.class,
         PlantCalibration.class
     },
-    version = 13,
+    version = 14,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -188,6 +191,112 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_13_14 = new Migration(13, 14) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS SpeciesTarget_new (" +
+                    "speciesKey TEXT NOT NULL PRIMARY KEY, " +
+                    "commonName TEXT, " +
+                    "scientificName TEXT, " +
+                    "category TEXT NOT NULL DEFAULT 'OTHER', " +
+                    "seedling_ppfd_min REAL, " +
+                    "seedling_ppfd_max REAL, " +
+                    "seedling_dli_min REAL, " +
+                    "seedling_dli_max REAL, " +
+                    "vegetative_ppfd_min REAL, " +
+                    "vegetative_ppfd_max REAL, " +
+                    "vegetative_dli_min REAL, " +
+                    "vegetative_dli_max REAL, " +
+                    "flower_ppfd_min REAL, " +
+                    "flower_ppfd_max REAL, " +
+                    "flower_dli_min REAL, " +
+                    "flower_dli_max REAL, " +
+                    "watering_schedule TEXT, " +
+                    "watering_soil TEXT, " +
+                    "watering_tolerance TEXT, " +
+                    "temperature_min REAL, " +
+                    "temperature_max REAL, " +
+                    "humidity_min REAL, " +
+                    "humidity_max REAL, " +
+                    "growthHabit TEXT, " +
+                    "toxicToPets INTEGER, " +
+                    "careTips TEXT, " +
+                    "sources TEXT)"
+            );
+
+            Cursor cursor = database.query(
+                "SELECT speciesKey, " +
+                    "seedling_ppfdMin, seedling_ppfdMax, seedling_dliMin, seedling_dliMax, " +
+                    "vegetative_ppfdMin, vegetative_ppfdMax, vegetative_dliMin, vegetative_dliMax, " +
+                    "flower_ppfdMin, flower_ppfdMax, flower_dliMin, flower_dliMax, " +
+                    "tolerance, source FROM SpeciesTarget"
+            );
+            try {
+                int speciesKeyIndex = cursor.getColumnIndexOrThrow("speciesKey");
+                int seedlingPpfdMinIndex = cursor.getColumnIndex("seedling_ppfdMin");
+                int seedlingPpfdMaxIndex = cursor.getColumnIndex("seedling_ppfdMax");
+                int seedlingDliMinIndex = cursor.getColumnIndex("seedling_dliMin");
+                int seedlingDliMaxIndex = cursor.getColumnIndex("seedling_dliMax");
+                int vegetativePpfdMinIndex = cursor.getColumnIndex("vegetative_ppfdMin");
+                int vegetativePpfdMaxIndex = cursor.getColumnIndex("vegetative_ppfdMax");
+                int vegetativeDliMinIndex = cursor.getColumnIndex("vegetative_dliMin");
+                int vegetativeDliMaxIndex = cursor.getColumnIndex("vegetative_dliMax");
+                int flowerPpfdMinIndex = cursor.getColumnIndex("flower_ppfdMin");
+                int flowerPpfdMaxIndex = cursor.getColumnIndex("flower_ppfdMax");
+                int flowerDliMinIndex = cursor.getColumnIndex("flower_dliMin");
+                int flowerDliMaxIndex = cursor.getColumnIndex("flower_dliMax");
+                int toleranceIndex = cursor.getColumnIndex("tolerance");
+                int sourceIndex = cursor.getColumnIndex("source");
+
+                while (cursor.moveToNext()) {
+                    ContentValues values = new ContentValues();
+                    values.put("speciesKey", cursor.getString(speciesKeyIndex));
+                    values.put("category", SpeciesTarget.Category.OTHER.name());
+
+                    copyFloat(cursor, values, seedlingPpfdMinIndex, "seedling_ppfd_min");
+                    copyFloat(cursor, values, seedlingPpfdMaxIndex, "seedling_ppfd_max");
+                    copyFloat(cursor, values, seedlingDliMinIndex, "seedling_dli_min");
+                    copyFloat(cursor, values, seedlingDliMaxIndex, "seedling_dli_max");
+                    copyFloat(cursor, values, vegetativePpfdMinIndex, "vegetative_ppfd_min");
+                    copyFloat(cursor, values, vegetativePpfdMaxIndex, "vegetative_ppfd_max");
+                    copyFloat(cursor, values, vegetativeDliMinIndex, "vegetative_dli_min");
+                    copyFloat(cursor, values, vegetativeDliMaxIndex, "vegetative_dli_max");
+                    copyFloat(cursor, values, flowerPpfdMinIndex, "flower_ppfd_min");
+                    copyFloat(cursor, values, flowerPpfdMaxIndex, "flower_ppfd_max");
+                    copyFloat(cursor, values, flowerDliMinIndex, "flower_dli_min");
+                    copyFloat(cursor, values, flowerDliMaxIndex, "flower_dli_max");
+
+                    if (toleranceIndex >= 0 && !cursor.isNull(toleranceIndex)) {
+                        values.put("watering_tolerance", cursor.getString(toleranceIndex));
+                    }
+
+                    if (sourceIndex >= 0 && !cursor.isNull(sourceIndex)) {
+                        String source = cursor.getString(sourceIndex);
+                        if (source != null && !source.trim().isEmpty()) {
+                            JSONArray array = new JSONArray();
+                            array.put(source);
+                            values.put("sources", array.toString());
+                        }
+                    }
+
+                    database.insert("SpeciesTarget_new", OnConflictStrategy.REPLACE, values);
+                }
+            } finally {
+                cursor.close();
+            }
+
+            database.execSQL("DROP TABLE IF EXISTS SpeciesTarget");
+            database.execSQL("ALTER TABLE SpeciesTarget_new RENAME TO SpeciesTarget");
+        }
+
+        private void copyFloat(Cursor cursor, ContentValues values, int columnIndex, String columnName) {
+            if (columnIndex >= 0 && !cursor.isNull(columnIndex)) {
+                values.put(columnName, cursor.getFloat(columnIndex));
+            }
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     /** Provides access to stored light measurements. */
@@ -215,7 +324,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
                         .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
-                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {

@@ -44,7 +44,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate4To9_keepsPlants() {
+    public void migrate4To14_keepsPlants() {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Create database in version 4 and insert a sample plant.
@@ -67,7 +67,9 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_8_9,
                 PlantDatabase.MIGRATION_9_10,
                 PlantDatabase.MIGRATION_10_11,
-                PlantDatabase.MIGRATION_11_12)
+                PlantDatabase.MIGRATION_11_12,
+                PlantDatabase.MIGRATION_12_13,
+                PlantDatabase.MIGRATION_13_14)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();
@@ -78,7 +80,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate12To13_transformsSpeciesTargets() {
+    public void migrate12To14_transformsSpeciesTargets() {
         Context context = ApplicationProvider.getApplicationContext();
 
         PlantDatabaseV12 v12 = Room.databaseBuilder(context, PlantDatabaseV12.class, DB_NAME)
@@ -105,7 +107,8 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_9_10,
                 PlantDatabase.MIGRATION_10_11,
                 PlantDatabase.MIGRATION_11_12,
-                PlantDatabase.MIGRATION_12_13)
+                PlantDatabase.MIGRATION_12_13,
+                PlantDatabase.MIGRATION_13_14)
             .allowMainThreadQueries()
             .build();
 
@@ -123,6 +126,7 @@ public class PlantDatabaseMigrationTest {
         assertEquals(LightMath.dliFromPpfd(240f, 12f), migratedTarget.getSeedlingStage().getDliMax(), 0.001f);
         assertEquals("high", migratedTarget.getTolerance());
         assertEquals("manual", migratedTarget.getSource());
+        assertEquals(SpeciesTarget.Category.OTHER, migratedTarget.getCategory());
     }
 
     /**
