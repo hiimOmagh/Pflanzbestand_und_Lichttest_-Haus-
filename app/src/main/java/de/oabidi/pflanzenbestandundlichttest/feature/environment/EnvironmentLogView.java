@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
 /**
@@ -37,4 +39,7 @@ public interface EnvironmentLogView {
 
     /** Toggles the editing state, updating affordances such as button labels. */
     void showEditingState(boolean editing);
+
+    /** Notifies the host that the log changed. */
+    void notifyLogEvent(@NonNull String event, long entryId);
 }

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/care_card_item_padding">
+
+    <View
+        android:id="@+id/care_recommendation_strip"
+        android:layout_width="@dimen/care_recommendation_strip_width"
+        android:layout_height="0dp"
+        android:layout_marginEnd="@dimen/care_card_content_spacing"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/care_recommendation_icon"
+        android:layout_width="@dimen/care_recommendation_icon_size"
+        android:layout_height="@dimen/care_recommendation_icon_size"
+        android:contentDescription="@null"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/care_recommendation_strip"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginEnd="@dimen/care_card_content_spacing"
+        tools:src="@drawable/ic_care_temperature" />
+
+    <TextView
+        android:id="@+id/care_recommendation_severity"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/care_recommendation_dismiss"
+        app:layout_constraintStart_toEndOf="@id/care_recommendation_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Warning" />
+
+    <TextView
+        android:id="@+id/care_recommendation_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toStartOf="@id/care_recommendation_dismiss"
+        app:layout_constraintStart_toStartOf="@id/care_recommendation_severity"
+        app:layout_constraintTop_toBottomOf="@id/care_recommendation_severity"
+        tools:text="Soil moisture is very low at 12%. Consider watering soon." />
+
+    <ImageButton
+        android:id="@+id/care_recommendation_dismiss"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/care_recommendation_dismiss_content_description"
+        android:padding="8dp"
+        android:src="@drawable/ic_close_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="?attr/colorOnSurface" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

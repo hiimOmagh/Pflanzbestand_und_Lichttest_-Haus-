@@ -33,6 +33,9 @@ import java.util.List;
  */
 public class EnvironmentLogFragment extends Fragment implements EnvironmentLogView {
     public static final String TAG = "EnvironmentLogFragment";
+    public static final String RESULT_KEY_CHANGES = "environment_log_changes";
+    public static final String EXTRA_EVENT = "event";
+    public static final String EXTRA_ENTRY_ID = "entry_id";
     private static final String ARG_PLANT_ID = "plantId";
 
     private long plantId;
@@ -399,5 +402,13 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             saveButton.setText(editing ? R.string.environment_log_update_entry
                 : R.string.environment_log_add_entry);
         }
+    }
+
+    @Override
+    public void notifyLogEvent(@NonNull String event, long entryId) {
+        Bundle result = new Bundle();
+        result.putString(EXTRA_EVENT, event);
+        result.putLong(EXTRA_ENTRY_ID, entryId);
+        getParentFragmentManager().setFragmentResult(RESULT_KEY_CHANGES, result);
     }
 }

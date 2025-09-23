@@ -18,6 +18,10 @@ import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
  * Presenter coordinating the environment log between the repository and the view.
  */
 public class EnvironmentLogPresenter {
+    public static final String EVENT_SAVED = "saved";
+    public static final String EVENT_UPDATED = "updated";
+    public static final String EVENT_DELETED = "deleted";
+
     private final EnvironmentLogView view;
     private final PlantRepository repository;
     private final long plantId;
@@ -79,6 +83,7 @@ public class EnvironmentLogPresenter {
                 view.showMessage(context.getString(R.string.environment_log_saved));
                 view.clearForm();
                 view.showEditingState(false);
+                view.notifyLogEvent(EVENT_SAVED, entry.getId());
                 loadEntries();
             }, e -> {
                 view.showLoading(false);
@@ -91,6 +96,7 @@ public class EnvironmentLogPresenter {
                 view.showMessage(context.getString(R.string.environment_log_updated));
                 view.clearForm();
                 view.showEditingState(false);
+                view.notifyLogEvent(EVENT_UPDATED, editingEntry.getId());
                 editingEntry = null;
                 loadEntries();
             }, e -> {
@@ -129,6 +135,7 @@ public class EnvironmentLogPresenter {
                 onCancelEdit();
             }
             view.showMessage(context.getString(R.string.environment_log_deleted));
+            view.notifyLogEvent(EVENT_DELETED, entry.getId());
             loadEntries();
         }, e -> {
             view.showLoading(false);

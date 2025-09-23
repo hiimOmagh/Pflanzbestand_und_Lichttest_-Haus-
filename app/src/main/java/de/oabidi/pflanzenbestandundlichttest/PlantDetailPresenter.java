@@ -1,24 +1,67 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+
+import androidx.annotation.VisibleForTesting;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+
+import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 
 /**
  * Presenter for {@link PlantDetailView} handling non-UI logic such as export,
- * text formatting and diary navigation.
+ * text formatting, diary navigation and care recommendations.
  */
 public class PlantDetailPresenter {
     private final PlantDetailView view;
     private final ExportManager exportManager;
     private final long plantId;
     private final DateFormat dateFormat = DateFormat.getDateInstance();
+    private final PlantRepository repository;
+    private final Handler mainHandler;
+    private final List<CareRecommendation> currentRecommendations = new ArrayList<>();
+    private boolean careListenerRegistered;
 
-    public PlantDetailPresenter(PlantDetailView view, long plantId, ExportManager exportManager) {
-        this.view = view;
+    private final PlantRepository.CareRecommendationListener careRecommendationListener =
+        new PlantRepository.CareRecommendationListener() {
+            @Override
+            public void onCareRecommendationsUpdated(long id, List<CareRecommendation> recommendations) {
+                if (id != plantId) {
+                    return;
+                }
+                runOnViewThread(() -> deliverRecommendations(recommendations));
+            }
+
+            @Override
+            public void onCareRecommendationsError(long id, Exception exception) {
+                if (id != plantId) {
+                    return;
+                }
+                runOnViewThread(PlantDetailPresenter.this::handleCareRecommendationError);
+            }
+        };
+
+    public PlantDetailPresenter(PlantDetailView view, long plantId, ExportManager exportManager,
+                                PlantRepository repository) {
+        this(view, plantId, exportManager, repository, new Handler(Looper.getMainLooper()));
+    }
+
+    @VisibleForTesting
+    PlantDetailPresenter(PlantDetailView view, long plantId, ExportManager exportManager,
+                         PlantRepository repository, Handler handler) {
+        this.view = Objects.requireNonNull(view, "view");
         this.plantId = plantId;
-        this.exportManager = exportManager;
+        this.exportManager = Objects.requireNonNull(exportManager, "exportManager");
+        this.repository = Objects.requireNonNull(repository, "repository");
+        this.mainHandler = Objects.requireNonNull(handler, "handler");
     }
 
     /**
@@ -45,6 +88,33 @@ public class PlantDetailPresenter {
         view.navigateToEnvironmentLog(plantId);
     }
 
+    /** Loads the current care recommendations. */
+    public void loadCareRecommendations() {
+        if (plantId <= 0) {
+            runOnViewThread(() -> {
+                view.setCareRecommendationsLoading(false);
+                view.showCareRecommendationsEmpty();
+            });
+            return;
+        }
+        ensureCareListenerRegistered();
+        runOnViewThread(() -> view.setCareRecommendationsLoading(true));
+        repository.getCareRecommendations(plantId,
+            recommendations -> runOnViewThread(() -> deliverRecommendations(recommendations)),
+            error -> runOnViewThread(this::handleCareRecommendationError));
+    }
+
+    /** Dismisses a recommendation so it will no longer be shown. */
+    public void dismissRecommendation(String recommendationId) {
+        if (recommendationId == null || recommendationId.isEmpty()) {
+            runOnViewThread(this::handleCareRecommendationError);
+            return;
+        }
+        repository.dismissCareRecommendation(plantId, recommendationId,
+            () -> runOnViewThread(() -> handleDismissSuccess(recommendationId)),
+            error -> runOnViewThread(this::handleCareRecommendationError));
+    }
+
     /** Initiates the export flow. */
     public void onExportRequested() {
         view.launchExport();
@@ -67,5 +137,68 @@ public class PlantDetailPresenter {
                 view.showExportFailure();
             }
         });
+    }
+
+    /** Cleans up resources when the presenter is destroyed. */
+    public void onDestroy() {
+        if (careListenerRegistered) {
+            repository.unregisterCareRecommendationListener(plantId, careRecommendationListener);
+            careListenerRegistered = false;
+        }
+    }
+
+    private void ensureCareListenerRegistered() {
+        if (careListenerRegistered) {
+            return;
+        }
+        repository.registerCareRecommendationListener(plantId, careRecommendationListener);
+        careListenerRegistered = true;
+    }
+
+    private void deliverRecommendations(List<CareRecommendation> recommendations) {
+        List<CareRecommendation> copy = recommendations == null
+            ? Collections.emptyList()
+            : new ArrayList<>(recommendations);
+        currentRecommendations.clear();
+        currentRecommendations.addAll(copy);
+        view.setCareRecommendationsLoading(false);
+        if (copy.isEmpty()) {
+            view.showCareRecommendationsEmpty();
+        } else {
+            view.showCareRecommendations(copy);
+        }
+    }
+
+    private void handleCareRecommendationError() {
+        view.setCareRecommendationsLoading(false);
+        view.showCareRecommendationError();
+    }
+
+    private void handleDismissSuccess(String recommendationId) {
+        boolean removed = removeFromCurrent(recommendationId);
+        view.onCareRecommendationDismissed(recommendationId);
+        if (removed && currentRecommendations.isEmpty()) {
+            view.showCareRecommendationsEmpty();
+        }
+    }
+
+    private boolean removeFromCurrent(String recommendationId) {
+        Iterator<CareRecommendation> iterator = currentRecommendations.iterator();
+        while (iterator.hasNext()) {
+            CareRecommendation recommendation = iterator.next();
+            if (recommendation.getId().equals(recommendationId)) {
+                iterator.remove();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void runOnViewThread(Runnable runnable) {
+        if (Looper.myLooper() == mainHandler.getLooper()) {
+            runnable.run();
+        } else {
+            mainHandler.post(runnable);
+        }
     }
 }

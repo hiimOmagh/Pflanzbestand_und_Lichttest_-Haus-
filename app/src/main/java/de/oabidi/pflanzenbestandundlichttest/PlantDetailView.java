@@ -1,5 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import java.util.List;
+
+import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+
 /**
  * View interface for displaying plant details.
  */
@@ -16,10 +20,23 @@ public interface PlantDetailView {
     /** Navigates to the diary for the given plant. */
     void navigateToDiary(long plantId);
 
-    /** Handles environment log button clicks. */
-    public void onEnvironmentLogClicked() {
-        view.navigateToEnvironmentLog(plantId);
-    }
+    /** Navigates to the environment log for the given plant. */
+    void navigateToEnvironmentLog(long plantId);
+
+    /** Displays the supplied care recommendations. */
+    void showCareRecommendations(List<CareRecommendation> items);
+
+    /** Shows an empty state for the care recommendation list. */
+    void showCareRecommendationsEmpty();
+
+    /** Indicates that loading care recommendations failed. */
+    void showCareRecommendationError();
+
+    /** Toggles the loading indicator for care recommendations. */
+    void setCareRecommendationsLoading(boolean loading);
+
+    /** Notifies that the supplied recommendation was dismissed. */
+    void onCareRecommendationDismissed(String recommendationId);
 
     /** Provides a placeholder for empty text fields. */
     String getPlaceholderDash();

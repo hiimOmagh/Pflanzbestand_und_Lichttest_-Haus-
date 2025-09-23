@@ -11,7 +11,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.card.MaterialCardView;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 
 /**
@@ -48,18 +50,35 @@ public class PlantDetailInfoFragment extends Fragment {
         @Nullable
         public final View lightMeterSpacerView;
 
+        @Nullable
+        public final MaterialCardView careTipsCardView;
+        @Nullable
+        public final RecyclerView careRecommendationsListView;
+        @Nullable
+        public final View careRecommendationsLoadingView;
+        @Nullable
+        public final TextView careRecommendationsEmptyView;
+
         DetailViews(@Nullable TextView ambientValueView,
                     @Nullable TextView ambientBandView,
                     @Nullable TextView cameraValueView,
                     @Nullable TextView cameraBandView,
                     @Nullable View ambientColumnView,
-                    @Nullable View lightMeterSpacerView) {
+                    @Nullable View lightMeterSpacerView,
+                    @Nullable MaterialCardView careTipsCardView,
+                    @Nullable RecyclerView careRecommendationsListView,
+                    @Nullable View careRecommendationsLoadingView,
+                    @Nullable TextView careRecommendationsEmptyView) {
             this.ambientValueView = ambientValueView;
             this.ambientBandView = ambientBandView;
             this.cameraValueView = cameraValueView;
             this.cameraBandView = cameraBandView;
             this.ambientColumnView = ambientColumnView;
             this.lightMeterSpacerView = lightMeterSpacerView;
+            this.careTipsCardView = careTipsCardView;
+            this.careRecommendationsListView = careRecommendationsListView;
+            this.careRecommendationsLoadingView = careRecommendationsLoadingView;
+            this.careRecommendationsEmptyView = careRecommendationsEmptyView;
         }
     }
 
@@ -151,7 +170,11 @@ public class PlantDetailInfoFragment extends Fragment {
                 view.findViewById(R.id.detail_camera_value),
                 view.findViewById(R.id.detail_camera_band),
                 view.findViewById(R.id.detail_ambient_column),
-                view.findViewById(R.id.detail_light_meter_spacer)
+                view.findViewById(R.id.detail_light_meter_spacer),
+                view.findViewById(R.id.detail_care_card),
+                view.findViewById(R.id.detail_care_list),
+                view.findViewById(R.id.detail_care_loading),
+                view.findViewById(R.id.detail_care_empty)
             ));
         }
     }

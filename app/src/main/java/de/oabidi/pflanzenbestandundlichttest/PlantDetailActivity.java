@@ -28,11 +28,13 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -44,9 +46,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.CareRecommendationAdapter;
+import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.PlantEditFragment;
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoLoader;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
@@ -109,6 +115,16 @@ public class PlantDetailActivity extends AppCompatActivity
     private ImageAnalysis imageAnalysis;
     private CameraLumaMonitor cameraLumaMonitor;
     private boolean cameraPermissionDenied;
+    @Nullable
+    private MaterialCardView careTipsCard;
+    @Nullable
+    private RecyclerView careTipsList;
+    @Nullable
+    private View careTipsLoadingView;
+    @Nullable
+    private TextView careTipsEmptyView;
+    @Nullable
+    private CareRecommendationAdapter careRecommendationAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,7 +173,7 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         ioExecutor = ((ExecutorProvider) getApplicationContext()).getIoExecutor();
         presenter = new PlantDetailPresenter(this, plantId,
-            new ExportManager(this, repository, ioExecutor));
+            new ExportManager(this, repository, ioExecutor), repository);
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
 
         String nameText = presenter.getTextOrFallback(name);
@@ -208,6 +224,17 @@ public class PlantDetailActivity extends AppCompatActivity
             }
         );
 
+        getSupportFragmentManager().setFragmentResultListener(
+            EnvironmentLogFragment.RESULT_KEY_CHANGES,
+            this,
+            (requestKey, bundle) -> presenter.loadCareRecommendations()
+        );
+        getSupportFragmentManager().setFragmentResultListener(
+            PlantEditFragment.RESULT_KEY,
+            this,
+            (requestKey, bundle) -> presenter.loadCareRecommendations()
+        );
+
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -225,6 +252,10 @@ public class PlantDetailActivity extends AppCompatActivity
         cameraBandView = views.cameraBandView;
         ambientColumn = views.ambientColumnView;
         lightMeterSpacer = views.lightMeterSpacerView;
+        careTipsCard = views.careTipsCardView;
+        careTipsList = views.careRecommendationsListView;
+        careTipsLoadingView = views.careRecommendationsLoadingView;
+        careTipsEmptyView = views.careRecommendationsEmptyView;
 
         if (ambientValueView != null) {
             ambientValueView.setText(R.string.light_meter_lux_placeholder);
@@ -246,6 +277,20 @@ public class PlantDetailActivity extends AppCompatActivity
                 lightMeterSpacer.setVisibility(View.GONE);
             }
         }
+
+        if (careTipsList != null) {
+            careTipsList.setLayoutManager(new LinearLayoutManager(this));
+            careTipsList.setHasFixedSize(true);
+            careRecommendationAdapter = new CareRecommendationAdapter(new CareRecommendationAdapter.Callbacks() {
+                @Override
+                public void onDismiss(CareRecommendation recommendation) {
+                    presenter.dismissRecommendation(recommendation.getId());
+                }
+            });
+            careTipsList.setAdapter(careRecommendationAdapter);
+        }
+
+        presenter.loadCareRecommendations();
     }
 
     @Override
@@ -397,6 +442,7 @@ public class PlantDetailActivity extends AppCompatActivity
             lightSensorHelper.start();
         }
         startCameraUpdatesIfPossible();
+        presenter.loadCareRecommendations();
     }
 
     @Override
@@ -417,6 +463,9 @@ public class PlantDetailActivity extends AppCompatActivity
         if (cameraExecutor != null) {
             cameraExecutor.shutdownNow();
             cameraExecutor = null;
+        }
+        if (presenter != null) {
+            presenter.onDestroy();
         }
         super.onDestroy();
     }
@@ -624,6 +673,103 @@ public class PlantDetailActivity extends AppCompatActivity
     public void navigateToEnvironmentLog(long plantId) {
         if (detailViewPager != null) {
             detailViewPager.setCurrentItem(PlantDetailPagerAdapter.POSITION_ENVIRONMENT, true);
+        }
+    }
+
+    @Override
+    public void showCareRecommendations(List<CareRecommendation> items) {
+        if (careTipsCard != null) {
+            careTipsCard.setVisibility(View.VISIBLE);
+        }
+        if (careTipsLoadingView != null) {
+            careTipsLoadingView.setVisibility(View.GONE);
+        }
+        if (careTipsEmptyView != null) {
+            careTipsEmptyView.setVisibility(View.GONE);
+        }
+        if (careTipsList != null) {
+            careTipsList.setVisibility(View.VISIBLE);
+        }
+        if (careRecommendationAdapter != null) {
+            careRecommendationAdapter.submitList(new ArrayList<>(items));
+        }
+    }
+
+    @Override
+    public void showCareRecommendationsEmpty() {
+        if (careRecommendationAdapter != null) {
+            careRecommendationAdapter.submitList(Collections.emptyList());
+        }
+        if (careTipsCard != null) {
+            careTipsCard.setVisibility(View.VISIBLE);
+        }
+        if (careTipsLoadingView != null) {
+            careTipsLoadingView.setVisibility(View.GONE);
+        }
+        if (careTipsList != null) {
+            careTipsList.setVisibility(View.GONE);
+        }
+        if (careTipsEmptyView != null) {
+            careTipsEmptyView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void showCareRecommendationError() {
+        Toast.makeText(this, R.string.care_recommendation_error, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void setCareRecommendationsLoading(boolean loading) {
+        if (careTipsCard != null) {
+            careTipsCard.setVisibility(View.VISIBLE);
+        }
+        if (careTipsLoadingView != null) {
+            careTipsLoadingView.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        if (loading) {
+            if (careTipsList != null) {
+                careTipsList.setVisibility(View.GONE);
+            }
+            if (careTipsEmptyView != null) {
+                careTipsEmptyView.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    @Override
+    public void onCareRecommendationDismissed(String recommendationId) {
+        if (careRecommendationAdapter == null) {
+            return;
+        }
+        List<CareRecommendation> current = new ArrayList<>(careRecommendationAdapter.getCurrentList());
+        boolean removed = false;
+        for (int i = 0; i < current.size(); i++) {
+            CareRecommendation item = current.get(i);
+            if (item.getId().equals(recommendationId)) {
+                current.remove(i);
+                removed = true;
+                break;
+            }
+        }
+        if (removed) {
+            careRecommendationAdapter.submitList(current);
+            if (current.isEmpty()) {
+                showCareRecommendationsEmpty();
+            } else {
+                if (careTipsCard != null) {
+                    careTipsCard.setVisibility(View.VISIBLE);
+                }
+                if (careTipsLoadingView != null) {
+                    careTipsLoadingView.setVisibility(View.GONE);
+                }
+                if (careTipsEmptyView != null) {
+                    careTipsEmptyView.setVisibility(View.GONE);
+                }
+                if (careTipsList != null) {
+                    careTipsList.setVisibility(View.VISIBLE);
+                }
+            }
         }
     }
 
