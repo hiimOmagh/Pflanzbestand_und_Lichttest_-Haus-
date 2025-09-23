@@ -18,6 +18,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
 import java.util.Collections;
@@ -599,6 +600,48 @@ public class PlantRepository {
         });
     }
 
+    public void getPlantProfileByCommonName(String commonName, Consumer<PlantProfile> callback) {
+        getPlantProfileByCommonName(commonName, callback, null);
+    }
+
+    public void getPlantProfileByCommonName(String commonName, Consumer<PlantProfile> callback,
+                                            Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                SpeciesTarget result = speciesTargetDao.findByCommonName(commonName);
+                PlantProfile profile = PlantProfile.fromTarget(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profile));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void getPlantProfileByScientificName(String scientificName, Consumer<PlantProfile> callback) {
+        getPlantProfileByScientificName(scientificName, callback, null);
+    }
+
+    public void getPlantProfileByScientificName(String scientificName, Consumer<PlantProfile> callback,
+                                                Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                SpeciesTarget result = speciesTargetDao.findByScientificName(scientificName);
+                PlantProfile profile = PlantProfile.fromTarget(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profile));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
     public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback) {
         getAllSpeciesTargets(callback, null);
     }
@@ -609,6 +652,92 @@ public class PlantRepository {
                 List<SpeciesTarget> result = speciesTargetDao.getAll();
                 if (callback != null) {
                     mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void getPlantProfilesByCategory(SpeciesTarget.Category category,
+                                           Consumer<List<PlantProfile>> callback) {
+        getPlantProfilesByCategory(category, callback, null);
+    }
+
+    public void getPlantProfilesByCategory(SpeciesTarget.Category category,
+                                           Consumer<List<PlantProfile>> callback,
+                                           Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<SpeciesTarget> result = speciesTargetDao.getByCategory(category);
+                List<PlantProfile> profiles = hydrateProfiles(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profiles));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void getPlantProfilesByGrowthHabit(String growthHabit, Consumer<List<PlantProfile>> callback) {
+        getPlantProfilesByGrowthHabit(growthHabit, callback, null);
+    }
+
+    public void getPlantProfilesByGrowthHabit(String growthHabit, Consumer<List<PlantProfile>> callback,
+                                              Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<SpeciesTarget> result = speciesTargetDao.getByGrowthHabit(growthHabit);
+                List<PlantProfile> profiles = hydrateProfiles(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profiles));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void getPlantProfilesByToxicity(boolean isToxic, Consumer<List<PlantProfile>> callback) {
+        getPlantProfilesByToxicity(isToxic, callback, null);
+    }
+
+    public void getPlantProfilesByToxicity(boolean isToxic, Consumer<List<PlantProfile>> callback,
+                                           Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<SpeciesTarget> result = speciesTargetDao.getByToxicity(isToxic);
+                List<PlantProfile> profiles = hydrateProfiles(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profiles));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void getPlantProfilesWithUnknownToxicity(Consumer<List<PlantProfile>> callback) {
+        getPlantProfilesWithUnknownToxicity(callback, null);
+    }
+
+    public void getPlantProfilesWithUnknownToxicity(Consumer<List<PlantProfile>> callback,
+                                                    Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<SpeciesTarget> result = speciesTargetDao.getWithUnknownToxicity();
+                List<PlantProfile> profiles = hydrateProfiles(result);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(profiles));
                 }
             } catch (Exception e) {
                 if (errorCallback != null) {
@@ -632,6 +761,20 @@ public class PlantRepository {
 
     public void deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
         runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
+    }
+
+    private List<PlantProfile> hydrateProfiles(@Nullable List<SpeciesTarget> targets) {
+        if (targets == null || targets.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<PlantProfile> profiles = new ArrayList<>(targets.size());
+        for (SpeciesTarget target : targets) {
+            PlantProfile profile = PlantProfile.fromTarget(target);
+            if (profile != null) {
+                profiles.add(profile);
+            }
+        }
+        return profiles;
     }
 
     public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback) {
