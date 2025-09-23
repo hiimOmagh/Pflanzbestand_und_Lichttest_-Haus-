@@ -11,6 +11,9 @@ public interface EnvironmentLogView {
     /** Displays the list of environment log items. */
     void showEntries(List<EnvironmentLogPresenter.EnvironmentLogItem> items);
 
+    /** Toggles a loading indicator while background work is running. */
+    void showLoading(boolean loading);
+
     /** Shows or hides the empty state for the list. */
     void showEmptyState(boolean isEmpty);
 

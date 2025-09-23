@@ -67,6 +67,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     private TextView chartPlaceholderView;
     @Nullable
     private RecyclerView listView;
+    @Nullable
+    private View loadingView;
 
     /** Displays the fragment inside the provided container. */
     public static void show(@NonNull FragmentManager fragmentManager, int containerId, long plantId) {
@@ -131,6 +133,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         emptyView = view.findViewById(R.id.environment_log_empty);
         chartPlaceholderView = view.findViewById(R.id.environment_chart_placeholder);
         listView = view.findViewById(R.id.environment_log_list);
+        loadingView = view.findViewById(R.id.environment_log_loading);
 
         if (listView != null) {
             listView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -306,6 +309,19 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             return;
         }
         Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void showLoading(boolean loading) {
+        if (loadingView != null) {
+            loadingView.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        if (saveButton != null) {
+            saveButton.setEnabled(!loading);
+        }
+        if (cancelButton != null) {
+            cancelButton.setEnabled(!loading);
+        }
     }
 
     @Override

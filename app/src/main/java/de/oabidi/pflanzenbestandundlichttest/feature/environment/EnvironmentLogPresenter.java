@@ -40,8 +40,10 @@ public class EnvironmentLogPresenter {
             view.showEmptyState(true);
             view.updateChartPlaceholder(0);
             view.showError(context.getString(R.string.error_select_plant));
+            view.showLoading(false);
             return;
         }
+        view.showLoading(true);
         repository.environmentEntriesForPlant(plantId, entries -> {
             List<EnvironmentLogItem> items = new ArrayList<>(entries.size());
             for (EnvironmentEntry entry : entries) {
@@ -50,7 +52,11 @@ public class EnvironmentLogPresenter {
             view.showEntries(items);
             view.showEmptyState(items.isEmpty());
             view.updateChartPlaceholder(items.size());
-        }, e -> view.showError(context.getString(R.string.error_database)));
+            view.showLoading(false);
+        }, e -> {
+            view.showLoading(false);
+            view.showError(context.getString(R.string.error_database));
+        });
     }
 
     /** Handles form submission either inserting a new entry or updating the current one. */
@@ -68,21 +74,29 @@ public class EnvironmentLogPresenter {
             entry.setPlantId(plantId);
             entry.setTimestamp(System.currentTimeMillis());
             applyFormData(entry, data);
+            view.showLoading(true);
             repository.insertEnvironmentEntry(entry, () -> {
                 view.showMessage(context.getString(R.string.environment_log_saved));
                 view.clearForm();
                 view.showEditingState(false);
                 loadEntries();
-            }, e -> view.showError(context.getString(R.string.error_database)));
+            }, e -> {
+                view.showLoading(false);
+                view.showError(context.getString(R.string.error_database));
+            });
         } else {
             applyFormData(editingEntry, data);
+            view.showLoading(true);
             repository.updateEnvironmentEntry(editingEntry, () -> {
                 view.showMessage(context.getString(R.string.environment_log_updated));
                 view.clearForm();
                 view.showEditingState(false);
                 editingEntry = null;
                 loadEntries();
-            }, e -> view.showError(context.getString(R.string.error_database)));
+            }, e -> {
+                view.showLoading(false);
+                view.showError(context.getString(R.string.error_database));
+            });
         }
     }
 
@@ -109,13 +123,17 @@ public class EnvironmentLogPresenter {
             return;
         }
         EnvironmentEntry entry = item.getEntry();
+        view.showLoading(true);
         repository.deleteEnvironmentEntry(entry, () -> {
             if (editingEntry != null && editingEntry.getId() == entry.getId()) {
                 onCancelEdit();
             }
             view.showMessage(context.getString(R.string.environment_log_deleted));
             loadEntries();
-        }, e -> view.showError(context.getString(R.string.error_database)));
+        }, e -> {
+            view.showLoading(false);
+            view.showError(context.getString(R.string.error_database));
+        });
     }
 
     private void applyFormData(EnvironmentEntry entry, EnvironmentLogFormData data) {
