@@ -55,6 +55,7 @@ import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
@@ -1382,17 +1383,36 @@ public class ImportManager {
         int index = 1;
         while (reader.hasNext()) {
             String speciesKey = null;
+            String commonName = null;
+            String scientificName = null;
+            String categoryRaw = null;
             SpeciesTarget.StageTarget seedling = null;
             SpeciesTarget.StageTarget vegetative = null;
             SpeciesTarget.StageTarget flower = null;
+            SpeciesTarget.WateringInfo watering = null;
             String tolerance = null;
-            String source = null;
+            SpeciesTarget.FloatRange temperature = null;
+            SpeciesTarget.FloatRange humidity = null;
+            String growthHabit = null;
+            Boolean toxicToPets = null;
+            List<String> careTips = null;
+            List<String> sources = null;
+            String legacySource = null;
             reader.beginObject();
             while (reader.hasNext()) {
                 String field = reader.nextName();
                 switch (field) {
                     case "speciesKey":
                         speciesKey = readOptionalString(reader);
+                        break;
+                    case "commonName":
+                        commonName = readOptionalString(reader);
+                        break;
+                    case "scientificName":
+                        scientificName = readOptionalString(reader);
+                        break;
+                    case "category":
+                        categoryRaw = readOptionalString(reader);
                         break;
                     case "seedling":
                         seedling = readStage(reader);
@@ -1403,11 +1423,32 @@ public class ImportManager {
                     case "flower":
                         flower = readStage(reader);
                         break;
+                    case "watering":
+                        watering = readWatering(reader);
+                        break;
                     case "tolerance":
                         tolerance = readOptionalString(reader);
                         break;
+                    case "temperature":
+                        temperature = readRange(reader);
+                        break;
+                    case "humidity":
+                        humidity = readRange(reader);
+                        break;
+                    case "growthHabit":
+                        growthHabit = readOptionalString(reader);
+                        break;
+                    case "toxicToPets":
+                        toxicToPets = readNullableBoolean(reader);
+                        break;
+                    case "careTips":
+                        careTips = readStringArray(reader);
+                        break;
+                    case "sources":
+                        sources = readStringArray(reader);
+                        break;
                     case "source":
-                        source = readOptionalString(reader);
+                        legacySource = readOptionalString(reader);
                         break;
                     default:
                         reader.skipValue();
@@ -1415,14 +1456,29 @@ public class ImportManager {
                 }
             }
             reader.endObject();
-            if (speciesKey == null || speciesKey.trim().isEmpty()) {
+            String normalizedKey = speciesKey != null ? speciesKey.trim() : null;
+            if (normalizedKey == null || normalizedKey.isEmpty()) {
                 warnings.add(new ImportWarning("species targets", index, "malformed row"));
             } else {
-                String toleranceValue = tolerance != null && !tolerance.isEmpty() ? tolerance : null;
-                String sourceValue = source != null && !source.isEmpty() ? source : null;
-                SpeciesTarget target = new SpeciesTarget(speciesKey,
-                    seedling, vegetative, flower, toleranceValue, sourceValue);
-                db.speciesTargetDao().insert(target);
+                SpeciesTarget.Category category = parseCategory(categoryRaw);
+                SpeciesTarget.WateringInfo wateringInfo = mergeWateringTolerance(watering, tolerance);
+                List<String> mergedSources = mergeSources(sources, legacySource);
+                SpeciesTarget target = new SpeciesTarget(normalizedKey,
+                    commonName,
+                    scientificName,
+                    category,
+                    seedling,
+                    vegetative,
+                    flower,
+                    wateringInfo,
+                    temperature,
+                    humidity,
+                    growthHabit,
+                    toxicToPets,
+                    careTips,
+                    mergedSources);
+                SpeciesTarget entity = PlantProfile.fromTarget(target);
+                db.speciesTargetDao().insert(entity != null ? entity : target);
                 imported = true;
             }
             index++;
@@ -1476,6 +1532,90 @@ public class ImportManager {
         return reader.nextString();
     }
 
+    private SpeciesTarget.WateringInfo readWatering(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        String schedule = null;
+        String soil = null;
+        String tolerance = null;
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case "schedule":
+                    schedule = readOptionalString(reader);
+                    break;
+                case "soil":
+                    soil = readOptionalString(reader);
+                    break;
+                case "tolerance":
+                    tolerance = readOptionalString(reader);
+                    break;
+                default:
+                    reader.skipValue();
+                    break;
+            }
+        }
+        reader.endObject();
+        if ((schedule == null || schedule.isEmpty())
+            && (soil == null || soil.isEmpty())
+            && (tolerance == null || tolerance.isEmpty())) {
+            return null;
+        }
+        return new SpeciesTarget.WateringInfo(schedule, soil, tolerance);
+    }
+
+    private SpeciesTarget.FloatRange readRange(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return null;
+        }
+        Float min = null;
+        Float max = null;
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String field = reader.nextName();
+            switch (field) {
+                case "min":
+                    min = readNullableFloat(reader);
+                    break;
+                case "max":
+                    max = readNullableFloat(reader);
+                    break;
+                default:
+                    reader.skipValue();
+                    break;
+            }
+        }
+        reader.endObject();
+        if (min == null && max == null) {
+            return null;
+        }
+        return new SpeciesTarget.FloatRange(min, max);
+    }
+
+    private List<String> readStringArray(JsonReader reader) throws IOException {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull();
+            return Collections.emptyList();
+        }
+        List<String> values = new ArrayList<>();
+        reader.beginArray();
+        while (reader.hasNext()) {
+            String value = readOptionalString(reader);
+            if (value != null) {
+                String trimmed = value.trim();
+                if (!trimmed.isEmpty()) {
+                    values.add(trimmed);
+                }
+            }
+        }
+        reader.endArray();
+        return values;
+    }
+
     private Long readNullableLong(JsonReader reader) throws IOException {
         if (reader.peek() == JsonToken.NULL) {
             reader.nextNull();
@@ -1490,6 +1630,80 @@ public class ImportManager {
             return null;
         }
         return (float) reader.nextDouble();
+    }
+
+    private Boolean readNullableBoolean(JsonReader reader) throws IOException {
+        JsonToken token = reader.peek();
+        switch (token) {
+            case NULL:
+                reader.nextNull();
+                return null;
+            case BOOLEAN:
+                return reader.nextBoolean();
+            case STRING: {
+                String value = reader.nextString();
+                if (value == null) {
+                    return null;
+                }
+                String trimmed = value.trim();
+                if (trimmed.isEmpty()) {
+                    return null;
+                }
+                if ("1".equals(trimmed) || "true".equalsIgnoreCase(trimmed) || "yes".equalsIgnoreCase(trimmed)) {
+                    return Boolean.TRUE;
+                }
+                if ("0".equals(trimmed) || "false".equalsIgnoreCase(trimmed) || "no".equalsIgnoreCase(trimmed)) {
+                    return Boolean.FALSE;
+                }
+                return Boolean.parseBoolean(trimmed);
+            }
+            case NUMBER:
+                return reader.nextDouble() != 0d;
+            default:
+                reader.skipValue();
+                return null;
+        }
+    }
+
+    private SpeciesTarget.Category parseCategory(@Nullable String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return SpeciesTarget.Category.OTHER;
+        }
+        String normalized = value.trim().toUpperCase(Locale.US);
+        try {
+            return SpeciesTarget.Category.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            return SpeciesTarget.Category.OTHER;
+        }
+    }
+
+    private SpeciesTarget.WateringInfo mergeWateringTolerance(@Nullable SpeciesTarget.WateringInfo info,
+                                                              @Nullable String tolerance) {
+        String trimmedTolerance = tolerance != null ? tolerance.trim() : null;
+        if (trimmedTolerance == null || trimmedTolerance.isEmpty()) {
+            return info;
+        }
+        if (info == null) {
+            return new SpeciesTarget.WateringInfo(null, null, trimmedTolerance);
+        }
+        if (info.getTolerance() == null || info.getTolerance().isEmpty()) {
+            info.setTolerance(trimmedTolerance);
+        }
+        return info;
+    }
+
+    private List<String> mergeSources(@Nullable List<String> sources, @Nullable String legacySource) {
+        List<String> merged = new ArrayList<>();
+        if (sources != null && !sources.isEmpty()) {
+            merged.addAll(sources);
+        }
+        if (legacySource != null) {
+            String trimmed = legacySource.trim();
+            if (!trimmed.isEmpty()) {
+                merged.add(trimmed);
+            }
+        }
+        return merged.isEmpty() ? null : merged;
     }
 
     private void cleanupUris(List<Uri> uris) {

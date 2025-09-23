@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -352,12 +355,50 @@ public abstract class PlantDatabase extends RoomDatabase {
             for (int i = 0; i < array.length(); i++) {
                 JSONObject obj = array.getJSONObject(i);
                 String key = obj.getString("speciesKey");
+                String commonName = optString(obj, "commonName");
+                String scientificName = optString(obj, "scientificName");
+                SpeciesTarget.Category category = parseCategory(optString(obj, "category"));
                 SpeciesTarget.StageTarget seedling = parseStage(obj.optJSONObject("seedling"));
                 SpeciesTarget.StageTarget vegetative = parseStage(obj.optJSONObject("vegetative"));
                 SpeciesTarget.StageTarget flower = parseStage(obj.optJSONObject("flower"));
+                SpeciesTarget.WateringInfo watering = parseWatering(obj.optJSONObject("watering"));
                 String tolerance = optString(obj, "tolerance");
-                String source = optString(obj, "source");
-                dao.insert(new SpeciesTarget(key, seedling, vegetative, flower, tolerance, source));
+                if (tolerance != null && !tolerance.isEmpty()) {
+                    if (watering == null) {
+                        watering = new SpeciesTarget.WateringInfo(null, null, tolerance);
+                    } else if (watering.getTolerance() == null || watering.getTolerance().isEmpty()) {
+                        watering.setTolerance(tolerance);
+                    }
+                }
+                SpeciesTarget.FloatRange temperature = parseRange(obj.optJSONObject("temperature"));
+                SpeciesTarget.FloatRange humidity = parseRange(obj.optJSONObject("humidity"));
+                String growthHabit = optString(obj, "growthHabit");
+                Boolean toxicToPets = optBoolean(obj, "toxicToPets");
+                List<String> careTips = parseStringArray(obj.optJSONArray("careTips"));
+                List<String> sources = parseStringArray(obj.optJSONArray("sources"));
+                String legacySource = optString(obj, "source");
+                if (legacySource != null && !legacySource.isEmpty()) {
+                    if (sources == null) {
+                        sources = new ArrayList<>();
+                    }
+                    sources.add(legacySource);
+                }
+                SpeciesTarget target = new SpeciesTarget(key,
+                    commonName,
+                    scientificName,
+                    category,
+                    seedling,
+                    vegetative,
+                    flower,
+                    watering,
+                    temperature,
+                    humidity,
+                    growthHabit,
+                    toxicToPets,
+                    careTips,
+                    sources);
+                SpeciesTarget entity = PlantProfile.fromTarget(target);
+                dao.insert(entity != null ? entity : target);
             }
         } catch (IOException | JSONException e) {
             Log.e("PlantDatabase", "Failed to seed species targets", e);
@@ -375,8 +416,57 @@ public abstract class PlantDatabase extends RoomDatabase {
         return new SpeciesTarget.StageTarget(ppfdMin, ppfdMax, dliMin, dliMax);
     }
 
+    @Nullable
+    private static SpeciesTarget.FloatRange parseRange(@Nullable JSONObject object) throws JSONException {
+        if (object == null) {
+            return null;
+        }
+        Float min = optFloat(object, "min");
+        Float max = optFloat(object, "max");
+        if (min == null && max == null) {
+            return null;
+        }
+        return new SpeciesTarget.FloatRange(min, max);
+    }
+
+    @Nullable
+    private static SpeciesTarget.WateringInfo parseWatering(@Nullable JSONObject object) throws JSONException {
+        if (object == null) {
+            return null;
+        }
+        String schedule = optString(object, "schedule");
+        String soil = optString(object, "soil");
+        String tolerance = optString(object, "tolerance");
+        if ((schedule == null || schedule.isEmpty())
+            && (soil == null || soil.isEmpty())
+            && (tolerance == null || tolerance.isEmpty())) {
+            return null;
+        }
+        return new SpeciesTarget.WateringInfo(schedule, soil, tolerance);
+    }
+
+    @Nullable
+    private static List<String> parseStringArray(@Nullable JSONArray array) throws JSONException {
+        if (array == null) {
+            return null;
+        }
+        List<String> values = new ArrayList<>(array.length());
+        for (int i = 0; i < array.length(); i++) {
+            if (!array.isNull(i)) {
+                String value = array.optString(i, null);
+                if (value != null) {
+                    String trimmed = value.trim();
+                    if (!trimmed.isEmpty()) {
+                        values.add(trimmed);
+                    }
+                }
+            }
+        }
+        return values.isEmpty() ? null : values;
+    }
+
     private static Float optFloat(JSONObject object, String key) throws JSONException {
-        if (!object.has(key)) {
+        if (object == null || !object.has(key)) {
             return null;
         }
         double value = object.optDouble(key, Double.NaN);
@@ -384,12 +474,53 @@ public abstract class PlantDatabase extends RoomDatabase {
     }
 
     private static String optString(JSONObject object, String key) {
-        if (object.has(key)) {
+        if (object != null && object.has(key)) {
             String value = object.optString(key, null);
             if (value != null && !value.trim().isEmpty()) {
                 return value;
             }
         }
         return null;
+    }
+
+    private static Boolean optBoolean(@Nullable JSONObject object, String key) {
+        if (object == null || !object.has(key)) {
+            return null;
+        }
+        Object raw = object.opt(key);
+        if (raw == null || raw == JSONObject.NULL) {
+            return null;
+        }
+        if (raw instanceof Boolean) {
+            return (Boolean) raw;
+        }
+        if (raw instanceof Number) {
+            return ((Number) raw).intValue() != 0;
+        }
+        if (raw instanceof String) {
+            String value = ((String) raw).trim();
+            if (value.isEmpty()) {
+                return null;
+            }
+            if ("1".equals(value) || "true".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value)) {
+                return Boolean.TRUE;
+            }
+            if ("0".equals(value) || "false".equalsIgnoreCase(value) || "no".equalsIgnoreCase(value)) {
+                return Boolean.FALSE;
+            }
+        }
+        return null;
+    }
+
+    private static SpeciesTarget.Category parseCategory(@Nullable String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return SpeciesTarget.Category.OTHER;
+        }
+        String normalized = value.trim().toUpperCase(Locale.US);
+        try {
+            return SpeciesTarget.Category.valueOf(normalized);
+        } catch (IllegalArgumentException e) {
+            return SpeciesTarget.Category.OTHER;
+        }
     }
 }
