@@ -160,6 +160,20 @@
     <string name="environment_log_metric_width">Width: %1$.1f cm</string>
     <string name="environment_log_metrics_empty">No measurements recorded</string>
     <string name="environment_log_metrics_separator" translatable="false"> • </string>
+    <!-- Care recommendation messages -->
+    <string name="care_temperature_low_range">Temperature %1$.1f°C is below the recommended range of %2$.1f–%3$.1f°C.</string>
+    <string name="care_temperature_low_min">Temperature %1$.1f°C is below the recommended minimum of %2$.1f°C.</string>
+    <string name="care_temperature_high_range">Temperature %1$.1f°C is above the recommended range of %2$.1f–%3$.1f°C.</string>
+    <string name="care_temperature_high_max">Temperature %1$.1f°C is above the recommended maximum of %2$.1f°C.</string>
+    <string name="care_humidity_low_range">Humidity %1$.1f%% is below the preferred range of %2$.1f–%3$.1f%%.</string>
+    <string name="care_humidity_low_min">Humidity %1$.1f%% is below the preferred minimum of %2$.1f%%.</string>
+    <string name="care_humidity_high_range">Humidity %1$.1f%% is above the preferred range of %2$.1f–%3$.1f%%.</string>
+    <string name="care_humidity_high_max">Humidity %1$.1f%% is above the preferred maximum of %2$.1f%%.</string>
+    <string name="care_soil_dry">Soil moisture is very low at %1$.0f%%. Consider watering soon.</string>
+    <string name="care_soil_wet">Soil moisture is very high at %1$.0f%%. Allow the soil to dry slightly.</string>
+    <string name="care_growth_stalled_height_width">Growth has stalled over the last %1$d logs (height change %2$.1f cm, width change %3$.1f cm).</string>
+    <string name="care_growth_stalled_height">Height has barely changed across the last %1$d logs (change %2$.1f cm).</string>
+    <string name="care_growth_stalled_width">Width has barely changed across the last %1$d logs (change %2$.1f cm).</string>
     <string name="plant_photo_delete_title">Delete photo?</string>
     <string name="plant_photo_delete_message">This will remove the photo from the gallery.</string>
     <string name="plant_photo_delete_success">Photo deleted</string>

@@ -10,6 +10,7 @@ import android.os.Looper;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
@@ -21,14 +22,18 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -51,8 +56,12 @@ public class PlantRepository {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
     private final ExecutorService ioExecutor;
+    private final SharedPreferences sharedPreferences;
+    private final CareRecommendationEngine careRecommendationEngine = new CareRecommendationEngine();
+    private final ConcurrentHashMap<Long, CopyOnWriteArrayList<CareRecommendationListener>> careRecommendationListeners = new ConcurrentHashMap<>();
     private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
     private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
+    private static final int CARE_RECOMMENDATION_ENTRY_LIMIT = 30;
 
     // Helper method to get ExecutorService and perform checks
     private static ExecutorService getExecutorFromProvider(Context originalContext) {
@@ -79,6 +88,7 @@ public class PlantRepository {
     PlantRepository(Context appContext, ExecutorService ioExecutor) {
         this.context = appContext; // appContext is already the application context
         this.ioExecutor = Objects.requireNonNull(ioExecutor, "ioExecutor");
+        this.sharedPreferences = this.context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
         PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
         measurementDao = db.measurementDao();
@@ -174,6 +184,139 @@ public class PlantRepository {
                 }
             }
         });
+    }
+
+    private Supplier<Runnable> careRecommendationRefreshSupplier(long plantId) {
+        return () -> refreshCareRecommendationsAsync(plantId);
+    }
+
+    private Runnable refreshCareRecommendationsAsync(long plantId) {
+        return () -> {
+            try {
+                List<CareRecommendation> recommendations = computeCareRecommendations(plantId);
+                notifyCareRecommendationListeners(plantId, recommendations);
+            } catch (Exception e) {
+                notifyCareRecommendationError(plantId, e);
+            }
+        };
+    }
+
+    private List<CareRecommendation> computeCareRecommendations(long plantId) {
+        Plant plant = plantDao.findById(plantId);
+        if (plant == null) {
+            clearDismissedCareRecommendations(plantId);
+            return Collections.emptyList();
+        }
+        PlantProfile profile = null;
+        String speciesKey = plant.getSpecies();
+        if (speciesKey != null && !speciesKey.isEmpty()) {
+            SpeciesTarget target = speciesTargetDao.findBySpeciesKey(speciesKey);
+            profile = PlantProfile.fromTarget(target);
+        }
+        List<EnvironmentEntry> entries = environmentEntryDao.getRecentForPlant(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
+        if (entries == null) {
+            entries = Collections.emptyList();
+        }
+        List<CareRecommendation> evaluated = careRecommendationEngine.evaluate(profile, entries, context.getResources());
+        return applyDismissals(plantId, evaluated);
+    }
+
+    private List<CareRecommendation> applyDismissals(long plantId, List<CareRecommendation> recommendations) {
+        if (recommendations == null || recommendations.isEmpty()) {
+            clearDismissedCareRecommendations(plantId);
+            return Collections.emptyList();
+        }
+        Set<String> dismissed = loadDismissedIds(plantId);
+        List<CareRecommendation> filtered = new ArrayList<>();
+        for (CareRecommendation recommendation : recommendations) {
+            if (!dismissed.contains(recommendation.getId())) {
+                filtered.add(recommendation);
+            }
+        }
+        pruneDismissedCareRecommendations(plantId, dismissed, recommendations);
+        if (filtered.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(filtered);
+    }
+
+    private void notifyCareRecommendationListeners(long plantId, List<CareRecommendation> recommendations) {
+        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
+        if (listeners == null || listeners.isEmpty()) {
+            return;
+        }
+        List<CareRecommendation> payload = recommendations.isEmpty()
+            ? Collections.emptyList()
+            : Collections.unmodifiableList(new ArrayList<>(recommendations));
+        mainHandler.post(() -> {
+            for (CareRecommendationListener listener : listeners) {
+                listener.onCareRecommendationsUpdated(plantId, payload);
+            }
+        });
+    }
+
+    private void notifyCareRecommendationError(long plantId, Exception exception) {
+        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
+        if (listeners == null || listeners.isEmpty()) {
+            return;
+        }
+        mainHandler.post(() -> {
+            for (CareRecommendationListener listener : listeners) {
+                listener.onCareRecommendationsError(plantId, exception);
+            }
+        });
+    }
+
+    private Set<String> loadDismissedIds(long plantId) {
+        Set<String> stored = sharedPreferences.getStringSet(getDismissedPrefKey(plantId), Collections.emptySet());
+        return new HashSet<>(stored);
+    }
+
+    private void saveDismissedCareRecommendations(long plantId, Set<String> ids) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String key = getDismissedPrefKey(plantId);
+        if (ids == null || ids.isEmpty()) {
+            editor.remove(key);
+        } else {
+            editor.putStringSet(key, new HashSet<>(ids));
+        }
+        editor.apply();
+    }
+
+    private void clearDismissedCareRecommendations(long plantId) {
+        sharedPreferences.edit().remove(getDismissedPrefKey(plantId)).apply();
+    }
+
+    private void pruneDismissedCareRecommendations(long plantId, Set<String> dismissed,
+                                                   List<CareRecommendation> active) {
+        if (dismissed.isEmpty()) {
+            return;
+        }
+        Set<String> activeIds = new HashSet<>();
+        for (CareRecommendation recommendation : active) {
+            activeIds.add(recommendation.getId());
+        }
+        if (dismissed.retainAll(activeIds)) {
+            saveDismissedCareRecommendations(plantId, dismissed);
+        }
+    }
+
+    private void addDismissedId(long plantId, String recommendationId) {
+        Set<String> dismissed = loadDismissedIds(plantId);
+        if (dismissed.add(recommendationId)) {
+            saveDismissedCareRecommendations(plantId, dismissed);
+        }
+    }
+
+    private void removeDismissedId(long plantId, String recommendationId) {
+        Set<String> dismissed = loadDismissedIds(plantId);
+        if (dismissed.remove(recommendationId)) {
+            saveDismissedCareRecommendations(plantId, dismissed);
+        }
+    }
+
+    private String getDismissedPrefKey(long plantId) {
+        return SettingsKeys.KEY_DISMISSED_CARE_RECOMMENDATIONS + "_" + plantId;
     }
 
     // ... (rest of the class remains the same) ...
@@ -394,7 +537,7 @@ public class PlantRepository {
         runAsync(() -> {
             long id = environmentEntryDao.insert(entry);
             entry.setId(id);
-        }, callback, errorCallback);
+        }, careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
     }
 
     public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
@@ -403,7 +546,8 @@ public class PlantRepository {
 
     public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        runAsync(() -> environmentEntryDao.update(entry), callback, errorCallback);
+        runAsync(() -> environmentEntryDao.update(entry),
+            careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
     }
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
@@ -412,7 +556,93 @@ public class PlantRepository {
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        runAsync(() -> environmentEntryDao.delete(entry), callback, errorCallback);
+        runAsync(() -> environmentEntryDao.delete(entry),
+            careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
+    }
+
+    /**
+     * Retrieves the current care recommendations for the supplied plant.
+     */
+    public void getCareRecommendations(long plantId,
+                                       Consumer<List<CareRecommendation>> callback,
+                                       Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<CareRecommendation> recommendations = computeCareRecommendations(plantId);
+                if (callback != null) {
+                    List<CareRecommendation> payload = recommendations.isEmpty()
+                        ? Collections.emptyList()
+                        : Collections.unmodifiableList(new ArrayList<>(recommendations));
+                    mainHandler.post(() -> callback.accept(payload));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    /** Registers a listener that will receive recommendation updates for the given plant. */
+    public void registerCareRecommendationListener(long plantId, CareRecommendationListener listener) {
+        if (listener == null) {
+            return;
+        }
+        careRecommendationListeners
+            .computeIfAbsent(plantId, id -> new CopyOnWriteArrayList<>())
+            .addIfAbsent(listener);
+    }
+
+    /** Unregisters a previously registered care recommendation listener. */
+    public void unregisterCareRecommendationListener(long plantId, CareRecommendationListener listener) {
+        if (listener == null) {
+            return;
+        }
+        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
+        if (listeners != null) {
+            listeners.remove(listener);
+            if (listeners.isEmpty()) {
+                careRecommendationListeners.remove(plantId, listeners);
+            }
+        }
+    }
+
+    /** Marks a recommendation as dismissed for the supplied plant. */
+    public void dismissCareRecommendation(long plantId, String recommendationId) {
+        dismissCareRecommendation(plantId, recommendationId, null, null);
+    }
+
+    /** Marks a recommendation as dismissed for the supplied plant. */
+    public void dismissCareRecommendation(long plantId, String recommendationId,
+                                          @Nullable Runnable callback,
+                                          @Nullable Consumer<Exception> errorCallback) {
+        if (recommendationId == null || recommendationId.isEmpty()) {
+            if (errorCallback != null) {
+                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("recommendationId")));
+            }
+            return;
+        }
+        runAsync(() -> addDismissedId(plantId, recommendationId),
+            careRecommendationRefreshSupplier(plantId), callback, errorCallback);
+    }
+
+    /** Removes a dismissal marker for the supplied recommendation. */
+    public void restoreCareRecommendation(long plantId, String recommendationId) {
+        restoreCareRecommendation(plantId, recommendationId, null, null);
+    }
+
+    /** Removes a dismissal marker for the supplied recommendation. */
+    public void restoreCareRecommendation(long plantId, String recommendationId,
+                                          @Nullable Runnable callback,
+                                          @Nullable Consumer<Exception> errorCallback) {
+        if (recommendationId == null || recommendationId.isEmpty()) {
+            if (errorCallback != null) {
+                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("recommendationId")));
+            }
+            return;
+        }
+        runAsync(() -> removeDismissedId(plantId, recommendationId),
+            careRecommendationRefreshSupplier(plantId), callback, errorCallback);
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {
@@ -1014,5 +1244,14 @@ public class PlantRepository {
                 }
             }
         });
+    }
+
+    /** Listener receiving automatic care recommendation updates. */
+    public interface CareRecommendationListener {
+        /** Invoked when a new list of care recommendations is available. */
+        void onCareRecommendationsUpdated(long plantId, List<CareRecommendation> recommendations);
+
+        /** Invoked when the recommendation engine encounters an error. */
+        void onCareRecommendationsError(long plantId, Exception exception);
     }
 }

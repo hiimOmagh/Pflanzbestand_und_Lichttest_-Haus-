@@ -17,6 +17,10 @@ public interface EnvironmentEntryDao {
     @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId ORDER BY timestamp DESC, id DESC")
     List<EnvironmentEntry> getForPlantOrdered(long plantId);
 
+    /** Returns the most recent environment entries for the plant limited to {@code limit}. */
+    @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId ORDER BY timestamp DESC, id DESC LIMIT :limit")
+    List<EnvironmentEntry> getRecentForPlant(long plantId, int limit);
+
     /** Inserts the provided entry and returns its generated identifier. */
     @Insert
     long insert(EnvironmentEntry entry);

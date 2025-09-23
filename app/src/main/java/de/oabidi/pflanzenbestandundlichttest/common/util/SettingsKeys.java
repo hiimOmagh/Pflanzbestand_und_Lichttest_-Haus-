@@ -67,4 +67,9 @@ public final class SettingsKeys {
      * Selected application theme (light, dark, or system default).
      */
     public static final String KEY_THEME = "theme";
+
+    /**
+     * Base key for storing dismissed care recommendation identifiers per plant.
+     */
+    public static final String KEY_DISMISSED_CARE_RECOMMENDATIONS = "dismissed_care_recommendations";
 }
