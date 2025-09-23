@@ -30,6 +30,8 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -52,9 +54,10 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         PlantFts.class,
         DiaryEntryFts.class,
         PlantPhoto.class,
-        PlantCalibration.class
+        PlantCalibration.class,
+        EnvironmentEntry.class
     },
-    version = 14,
+    version = 15,
     exportSchema = true
 )
 @TypeConverters({Converters.class})
@@ -300,6 +303,28 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    static final Migration MIGRATION_14_15 = new Migration(14, 15) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS EnvironmentEntry (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "plantId INTEGER NOT NULL, " +
+                    "timestamp INTEGER NOT NULL, " +
+                    "temperature REAL, " +
+                    "humidity REAL, " +
+                    "soilMoisture REAL, " +
+                    "height REAL, " +
+                    "width REAL, " +
+                    "notes TEXT, " +
+                    "photoUri TEXT, " +
+                    "FOREIGN KEY(plantId) REFERENCES Plant(id) ON DELETE CASCADE)"
+            );
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_EnvironmentEntry_plantId ON EnvironmentEntry(plantId)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_EnvironmentEntry_timestamp ON EnvironmentEntry(timestamp)");
+        }
+    };
+
     public abstract PlantDao plantDao();
 
     /** Provides access to stored light measurements. */
@@ -318,6 +343,8 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract PlantCalibrationDao plantCalibrationDao();
 
+    public abstract EnvironmentEntryDao environmentEntryDao();
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -327,7 +354,8 @@ public abstract class PlantDatabase extends RoomDatabase {
                             PlantDatabase.class, "plant_database")
                         // Migrations must be supplied for all future schema changes
                         .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
-                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14,
+                            MIGRATION_14_15)
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {
