@@ -12,6 +12,8 @@ import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -43,6 +45,7 @@ public class PlantRepository {
     private final SpeciesTargetDao speciesTargetDao;
     private final ReminderDao reminderDao;
     private final PlantPhotoDao plantPhotoDao;
+    private final EnvironmentEntryDao environmentEntryDao;
     private final PlantCalibrationDao plantCalibrationDao;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -83,6 +86,7 @@ public class PlantRepository {
         speciesTargetDao = db.speciesTargetDao();
         reminderDao = db.reminderDao();
         plantPhotoDao = db.plantPhotoDao();
+        environmentEntryDao = db.environmentEntryDao();
         plantCalibrationDao = db.plantCalibrationDao();
         bulkDao = db.bulkDao();
     }
@@ -359,6 +363,56 @@ public class PlantRepository {
                 }
             }
         });
+    }
+
+    public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback) {
+        environmentEntriesForPlant(plantId, callback, null);
+    }
+
+    public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback,
+                                           Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                List<EnvironmentEntry> result = environmentEntryDao.getForPlantOrdered(plantId);
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
+        insertEnvironmentEntry(entry, callback, null);
+    }
+
+    public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
+                                       Consumer<Exception> errorCallback) {
+        runAsync(() -> {
+            long id = environmentEntryDao.insert(entry);
+            entry.setId(id);
+        }, callback, errorCallback);
+    }
+
+    public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
+        updateEnvironmentEntry(entry, callback, null);
+    }
+
+    public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
+                                       Consumer<Exception> errorCallback) {
+        runAsync(() -> environmentEntryDao.update(entry), callback, errorCallback);
+    }
+
+    public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
+        deleteEnvironmentEntry(entry, callback, null);
+    }
+
+    public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
+                                       Consumer<Exception> errorCallback) {
+        runAsync(() -> environmentEntryDao.delete(entry), callback, errorCallback);
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {

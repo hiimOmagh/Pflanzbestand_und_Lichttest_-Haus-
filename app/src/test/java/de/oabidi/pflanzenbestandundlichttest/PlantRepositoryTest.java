@@ -28,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 
 /**
@@ -181,6 +182,67 @@ public class PlantRepositoryTest {
             queryLatch2.countDown();
         });
         awaitLatch(queryLatch2);
+    }
+
+    @Test
+    public void environmentEntryOperations() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Fern");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        EnvironmentEntry entry = new EnvironmentEntry(plant.getId(), 5L, 21.5f, 40f, 0.5f,
+            10f, 5f, "initial", null);
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insertEnvironmentEntry(entry, () -> {
+            assertTrue(entry.getId() > 0);
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            insertLatch.countDown();
+        });
+        awaitLatch(insertLatch);
+
+        CountDownLatch queryLatch = new CountDownLatch(1);
+        final List<EnvironmentEntry>[] holder = new List[1];
+        repository.environmentEntriesForPlant(plant.getId(), entries -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            holder[0] = entries;
+            queryLatch.countDown();
+        });
+        awaitLatch(queryLatch);
+        assertEquals(1, holder[0].size());
+
+        entry.setNotes("updated");
+        CountDownLatch updateLatch = new CountDownLatch(1);
+        repository.updateEnvironmentEntry(entry, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            updateLatch.countDown();
+        });
+        awaitLatch(updateLatch);
+
+        CountDownLatch queryLatch2 = new CountDownLatch(1);
+        repository.environmentEntriesForPlant(plant.getId(), entries -> {
+            assertEquals("updated", entries.get(0).getNotes());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch2.countDown();
+        });
+        awaitLatch(queryLatch2);
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.deleteEnvironmentEntry(entry, () -> {
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            deleteLatch.countDown();
+        });
+        awaitLatch(deleteLatch);
+
+        CountDownLatch queryLatch3 = new CountDownLatch(1);
+        repository.environmentEntriesForPlant(plant.getId(), entries -> {
+            assertTrue(entries.isEmpty());
+            assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
+            queryLatch3.countDown();
+        });
+        awaitLatch(queryLatch3);
     }
 
     @Test
