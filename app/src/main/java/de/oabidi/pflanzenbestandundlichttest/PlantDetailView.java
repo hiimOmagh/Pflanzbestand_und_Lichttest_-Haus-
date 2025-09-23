@@ -16,6 +16,11 @@ public interface PlantDetailView {
     /** Navigates to the diary for the given plant. */
     void navigateToDiary(long plantId);
 
+    /** Handles environment log button clicks. */
+    public void onEnvironmentLogClicked() {
+        view.navigateToEnvironmentLog(plantId);
+    }
+
     /** Provides a placeholder for empty text fields. */
     String getPlaceholderDash();
 

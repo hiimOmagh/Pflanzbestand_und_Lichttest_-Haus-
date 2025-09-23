@@ -40,6 +40,11 @@ public class PlantDetailPresenter {
         view.navigateToDiary(plantId);
     }
 
+    /** Handles environment log button clicks. */
+    public void onEnvironmentLogClicked() {
+        view.navigateToEnvironmentLog(plantId);
+    }
+
     /** Initiates the export flow. */
     public void onExportRequested() {
         view.launchExport();

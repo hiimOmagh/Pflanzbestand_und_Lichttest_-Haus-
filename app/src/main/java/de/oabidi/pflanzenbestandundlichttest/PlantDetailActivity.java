@@ -31,6 +31,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.fragment.app.Fragment;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -47,6 +48,7 @@ import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFra
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoLoader;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogFragment;
 
 /**
  * Activity responsible for showing detailed information about a plant.
@@ -99,6 +101,8 @@ public class PlantDetailActivity extends AppCompatActivity
     private ImageAnalysis imageAnalysis;
     private CameraLumaMonitor cameraLumaMonitor;
     private boolean cameraPermissionDenied;
+    @Nullable
+    private View environmentOverlayContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,9 +126,11 @@ public class PlantDetailActivity extends AppCompatActivity
         TextView locationHintView = findViewById(R.id.detail_location_hint);
         TextView acquiredAtView = findViewById(R.id.detail_acquired_at);
         View diaryButton = findViewById(R.id.detail_diary);
+        View environmentLogButton = findViewById(R.id.detail_environment_log);
         Button addPhotoButton = findViewById(R.id.detail_add_photo);
         photoGrid = findViewById(R.id.detail_photo_grid);
         photoEmptyView = findViewById(R.id.detail_photo_empty);
+        environmentOverlayContainer = findViewById(R.id.detail_fragment_container);
 
         ambientValueView = findViewById(R.id.detail_ambient_value);
         ambientBandView = findViewById(R.id.detail_ambient_band);
@@ -194,6 +200,9 @@ public class PlantDetailActivity extends AppCompatActivity
         refreshPlantPhotos(null);
 
         diaryButton.setOnClickListener(v -> presenter.onDiaryClicked());
+        if (environmentLogButton != null) {
+            environmentLogButton.setOnClickListener(v -> presenter.onEnvironmentLogClicked());
+        }
         addPhotoButton.setOnClickListener(v -> launchCamera());
 
         getSupportFragmentManager().setFragmentResultListener(
@@ -218,6 +227,9 @@ public class PlantDetailActivity extends AppCompatActivity
                 }
             }
         );
+
+        getSupportFragmentManager().addOnBackStackChangedListener(this::updateEnvironmentOverlayVisibility);
+        updateEnvironmentOverlayVisibility();
 
         // After drawing edge-to-edge, pad the root view so content isn't
         // obscured by system bars like the status and navigation bars.
@@ -573,6 +585,28 @@ public class PlantDetailActivity extends AppCompatActivity
             .replace(android.R.id.content, fragment)
             .addToBackStack(null)
             .commit();
+    }
+
+    @Override
+    public void navigateToEnvironmentLog(long plantId) {
+        if (environmentOverlayContainer != null) {
+            environmentOverlayContainer.setVisibility(View.VISIBLE);
+        }
+        Fragment existing = getSupportFragmentManager().findFragmentByTag(EnvironmentLogFragment.TAG);
+        if (existing instanceof EnvironmentLogFragment) {
+            updateEnvironmentOverlayVisibility();
+            return;
+        }
+        EnvironmentLogFragment.show(getSupportFragmentManager(), R.id.detail_fragment_container, plantId);
+    }
+
+    private void updateEnvironmentOverlayVisibility() {
+        if (environmentOverlayContainer == null) {
+            return;
+        }
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(EnvironmentLogFragment.TAG);
+        boolean visible = fragment != null && fragment.isAdded() && fragment.getView() != null;
+        environmentOverlayContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     @Override

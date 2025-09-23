@@ -206,6 +206,17 @@
                 app:layout_constraintTop_toBottomOf="@id/detail_gallery_section" />
 
             <Button
+                android:id="@+id/detail_environment_log"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:paddingTop="8dp"
+                android:text="@string/action_view_environment_log"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/detail_add_photo"
+                tools:text="Environment Log" />
+
+            <Button
                 android:id="@+id/detail_diary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -213,8 +224,17 @@
                 android:paddingTop="8dp"
                 android:text="@string/action_view_diary"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/detail_add_photo"
+                app:layout_constraintTop_toBottomOf="@id/detail_environment_log"
                 app:layout_constraintBottom_toBottomOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <FrameLayout
+        android:id="@+id/detail_fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp"
+        android:clickable="true"
+        android:visibility="gone" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
