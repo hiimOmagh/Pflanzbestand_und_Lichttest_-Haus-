@@ -141,6 +141,10 @@
     <string name="environment_log_editing_label">Editing environment entry</string>
     <string name="environment_log_chart_placeholder">Charts will appear here once available.</string>
     <string name="environment_log_chart_placeholder_with_data">Charts coming soon (%1$d entries)</string>
+    <string name="environment_log_charts_title">Environment charts</string>
+    <string name="environment_log_chart_overview_title">Overview</string>
+    <string name="environment_log_chart_trends_title">Recent trends</string>
+    <string name="environment_log_chart_trends_placeholder">Detailed charts will appear here as more data is collected.</string>
     <string name="environment_log_empty">No environment entries yet</string>
     <string name="environment_log_saved">Environment entry saved</string>
     <string name="environment_log_updated">Environment entry updated</string>

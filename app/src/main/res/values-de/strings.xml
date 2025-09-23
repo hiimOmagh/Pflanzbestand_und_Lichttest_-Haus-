@@ -248,4 +248,8 @@
     <string name="format_stage_range">%1$s: PPFD %2$s – %3$s µmol/m²/s, DLI %4$s – %5$s mol/m²/Tag</string>
     <string name="format_stage_range_ppfd_only">%1$s: PPFD %2$s – %3$s µmol/m²/s</string>
     <string name="format_stage_range_dli_only">%1$s: DLI %2$s – %3$s mol/m²/Tag</string>
+    <string name="environment_log_charts_title">Umgebungsdiagramme</string>
+    <string name="environment_log_chart_overview_title">Übersicht</string>
+    <string name="environment_log_chart_trends_title">Aktuelle Trends</string>
+    <string name="environment_log_chart_trends_placeholder">Weitere Diagramme werden hier angezeigt, sobald Daten verfügbar sind.</string>
 </resources>

@@ -56,7 +56,7 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.list_item_environment_log, parent, false);
+            .inflate(R.layout.item_environment_entry, parent, false);
         return new ViewHolder(view);
     }
 
