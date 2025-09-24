@@ -1733,6 +1733,10 @@ public class ImportManager {
         return reader.nextString();
     }
 
+    private boolean isNullOrEmpty(@Nullable String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
     private SpeciesTarget.WateringInfo readWatering(JsonReader reader) throws IOException {
         if (reader.peek() == JsonToken.NULL) {
             reader.nextNull();

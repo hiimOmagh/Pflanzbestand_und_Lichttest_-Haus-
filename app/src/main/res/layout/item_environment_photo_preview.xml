@@ -13,7 +13,6 @@
         android:layout_height="96dp"
         android:contentDescription="@string/plant_photo_desc"
         android:scaleType="centerCrop"
-        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Material3.SmallComponent"
         tools:src="@android:drawable/ic_menu_camera" />
 
     <TextView
