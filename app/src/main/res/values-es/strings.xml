@@ -250,11 +250,17 @@
     <string name="format_stage_range">%1$s: PPFD %2$s – %3$s µmol/m²/s, DLI %4$s – %5$s mol/m²/día</string>
     <string name="format_stage_range_ppfd_only">%1$s: PPFD %2$s – %3$s µmol/m²/s</string>
     <string name="format_stage_range_dli_only">%1$s: DLI %2$s – %3$s mol/m²/día</string>
-    <string name="environment_log_chart_placeholder_with_data">Gráficos próximamente (%1$d entradas)</string>
     <string name="environment_log_charts_title">Gráficos del entorno</string>
     <string name="environment_log_chart_overview_title">Resumen</string>
     <string name="environment_log_chart_trends_title">Tendencias recientes</string>
-    <string name="environment_log_chart_trends_placeholder">Más gráficos aparecerán aquí cuando haya datos disponibles.</string>
+    <string name="environment_log_growth_chart_empty">Añade al menos dos mediciones de altura o anchura para ver las tendencias de crecimiento.</string>
+    <string name="environment_log_climate_chart_empty">Añade al menos dos mediciones de temperatura o humedad para ver las tendencias del clima.</string>
+    <string name="environment_log_chart_label_height">Altura</string>
+    <string name="environment_log_chart_label_width">Anchura</string>
+    <string name="environment_log_chart_label_temperature">Temperatura</string>
+    <string name="environment_log_chart_label_humidity">Humedad</string>
+    <string name="environment_chart_default_content_description">Gráfico de líneas del entorno</string>
+    <string name="environment_chart_content_description">Gráfico de líneas del entorno con %1$d mediciones</string>
     <string name="plant_detail_tab_details">Detalles</string>
     <string name="plant_detail_tab_gallery">Galería</string>
     <string name="plant_detail_tab_environment">Entorno</string>
@@ -268,7 +274,6 @@
     <string name="environment_log_update_entry">Actualizar entrada</string>
     <string name="environment_log_cancel_edit">Cancelar</string>
     <string name="environment_log_editing_label">Editando entrada ambiental</string>
-    <string name="environment_log_chart_placeholder">Los gráficos aparecerán aquí cuando estén disponibles.</string>
     <string name="environment_log_empty">Aún no hay entradas ambientales</string>
     <string name="environment_log_saved">Entrada ambiental guardada</string>
     <string name="environment_log_updated">Entrada ambiental actualizada</string>

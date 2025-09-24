@@ -24,8 +24,10 @@ import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -67,7 +69,13 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     @Nullable
     private TextView emptyView;
     @Nullable
-    private TextView chartPlaceholderView;
+    private LineChartView overviewChartView;
+    @Nullable
+    private TextView overviewChartEmptyView;
+    @Nullable
+    private LineChartView trendsChartView;
+    @Nullable
+    private TextView trendsChartEmptyView;
     @Nullable
     private RecyclerView listView;
     @Nullable
@@ -134,7 +142,10 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         cancelButton = view.findViewById(R.id.environment_cancel_button);
         editingLabel = view.findViewById(R.id.environment_editing_label);
         emptyView = view.findViewById(R.id.environment_log_empty);
-        chartPlaceholderView = view.findViewById(R.id.environment_chart_placeholder);
+        overviewChartView = view.findViewById(R.id.environment_chart_overview);
+        overviewChartEmptyView = view.findViewById(R.id.environment_chart_overview_empty);
+        trendsChartView = view.findViewById(R.id.environment_chart_trends);
+        trendsChartEmptyView = view.findViewById(R.id.environment_chart_trends_empty);
         listView = view.findViewById(R.id.environment_log_list);
         loadingView = view.findViewById(R.id.environment_log_loading);
 
@@ -288,14 +299,13 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     }
 
     @Override
-    public void updateChartPlaceholder(int entryCount) {
-        if (chartPlaceholderView != null) {
-            if (entryCount > 0) {
-                chartPlaceholderView.setText(getString(R.string.environment_log_chart_placeholder_with_data, entryCount));
-            } else {
-                chartPlaceholderView.setText(R.string.environment_log_chart_placeholder);
-            }
-        }
+    public void showGrowthChart(@Nullable EnvironmentLogPresenter.ChartData data) {
+        renderChart(overviewChartView, overviewChartEmptyView, data);
+    }
+
+    @Override
+    public void showClimateChart(@Nullable EnvironmentLogPresenter.ChartData data) {
+        renderChart(trendsChartView, trendsChartEmptyView, data);
     }
 
     @Override
@@ -388,6 +398,30 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         if (editText != null) {
             editText.setText(value);
         }
+    }
+
+    private void renderChart(@Nullable LineChartView chartView, @Nullable TextView emptyChartView,
+                             @Nullable EnvironmentLogPresenter.ChartData data) {
+        if (chartView == null || emptyChartView == null) {
+            return;
+        }
+        if (data == null || data.getSeries().isEmpty()) {
+            chartView.setSeries(null);
+            chartView.setVisibility(View.GONE);
+            emptyChartView.setVisibility(View.VISIBLE);
+            return;
+        }
+        List<LineChartView.LineSeries> series = new ArrayList<>();
+        for (EnvironmentLogPresenter.ChartSeries chartSeries : data.getSeries()) {
+            List<LineChartView.Point> points = new ArrayList<>();
+            for (EnvironmentLogPresenter.ChartPoint point : chartSeries.getPoints()) {
+                points.add(new LineChartView.Point(point.getTimestamp(), point.getValue()));
+            }
+            series.add(new LineChartView.LineSeries(chartSeries.getLabel(), points));
+        }
+        chartView.setSeries(series);
+        chartView.setVisibility(View.VISIBLE);
+        emptyChartView.setVisibility(View.GONE);
     }
 
     @Override

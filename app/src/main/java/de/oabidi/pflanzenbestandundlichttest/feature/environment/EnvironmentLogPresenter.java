@@ -7,6 +7,8 @@ import androidx.annotation.Nullable;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -42,7 +44,8 @@ public class EnvironmentLogPresenter {
     public void loadEntries() {
         if (plantId <= 0) {
             view.showEmptyState(true);
-            view.updateChartPlaceholder(0);
+            view.showGrowthChart(null);
+            view.showClimateChart(null);
             view.showError(context.getString(R.string.error_select_plant));
             view.showLoading(false);
             return;
@@ -55,7 +58,7 @@ public class EnvironmentLogPresenter {
             }
             view.showEntries(items);
             view.showEmptyState(items.isEmpty());
-            view.updateChartPlaceholder(items.size());
+            refreshCharts(entries);
             view.showLoading(false);
         }, e -> {
             view.showLoading(false);
@@ -159,6 +162,48 @@ public class EnvironmentLogPresenter {
         return new EnvironmentLogItem(copyEntry(entry), timestamp, metrics, notes);
     }
 
+    private void refreshCharts(List<EnvironmentEntry> entries) {
+        if (entries == null || entries.isEmpty()) {
+            view.showGrowthChart(null);
+            view.showClimateChart(null);
+            return;
+        }
+        List<EnvironmentEntry> sorted = new ArrayList<>(entries);
+        sorted.sort(Comparator.comparingLong(EnvironmentEntry::getTimestamp));
+        ChartData growth = buildChartData(sorted,
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_height), EnvironmentEntry::getHeight),
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_width), EnvironmentEntry::getWidth));
+        ChartData climate = buildChartData(sorted,
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_temperature), EnvironmentEntry::getTemperature),
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_humidity), EnvironmentEntry::getHumidity));
+        view.showGrowthChart(growth);
+        view.showClimateChart(climate);
+    }
+
+    @Nullable
+    private ChartData buildChartData(List<EnvironmentEntry> entries, MetricSpec... specs) {
+        List<ChartSeries> series = new ArrayList<>();
+        for (MetricSpec spec : specs) {
+            if (spec == null) {
+                continue;
+            }
+            List<ChartPoint> points = new ArrayList<>();
+            for (EnvironmentEntry entry : entries) {
+                Float value = spec.extractor.extract(entry);
+                if (value != null) {
+                    points.add(new ChartPoint(entry.getTimestamp(), value));
+                }
+            }
+            if (points.size() >= 2) {
+                series.add(new ChartSeries(spec.label, points));
+            }
+        }
+        if (series.isEmpty()) {
+            return null;
+        }
+        return new ChartData(series);
+    }
+
     private String buildMetricsSummary(EnvironmentEntry entry) {
         List<String> parts = new ArrayList<>();
         if (entry.getTemperature() != null) {
@@ -202,6 +247,72 @@ public class EnvironmentLogPresenter {
         copy.setNotes(entry.getNotes());
         copy.setPhotoUri(entry.getPhotoUri());
         return copy;
+    }
+
+    private static class MetricSpec {
+        final String label;
+        final ValueExtractor extractor;
+
+        MetricSpec(String label, ValueExtractor extractor) {
+            this.label = label;
+            this.extractor = extractor;
+        }
+    }
+
+    private interface ValueExtractor {
+        @Nullable
+        Float extract(EnvironmentEntry entry);
+    }
+
+    /** Representation of chart data to be consumed by the view layer. */
+    public static class ChartData {
+        private final List<ChartSeries> series;
+
+        ChartData(List<ChartSeries> series) {
+            this.series = Collections.unmodifiableList(new ArrayList<>(series));
+        }
+
+        public List<ChartSeries> getSeries() {
+            return series;
+        }
+    }
+
+    /** Single series of chart data points. */
+    public static class ChartSeries {
+        private final String label;
+        private final List<ChartPoint> points;
+
+        ChartSeries(String label, List<ChartPoint> points) {
+            this.label = label;
+            this.points = Collections.unmodifiableList(new ArrayList<>(points));
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public List<ChartPoint> getPoints() {
+            return points;
+        }
+    }
+
+    /** Individual point within a chart series. */
+    public static class ChartPoint {
+        private final long timestamp;
+        private final float value;
+
+        ChartPoint(long timestamp, float value) {
+            this.timestamp = timestamp;
+            this.value = value;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public float getValue() {
+            return value;
+        }
     }
 
     /** Representation of an entry adapted for the RecyclerView. */

@@ -250,11 +250,17 @@
     <string name="format_stage_range">%1$s: PPFD %2$s – %3$s µmol/m²/s, DLI %4$s – %5$s mol/m²/Tag</string>
     <string name="format_stage_range_ppfd_only">%1$s: PPFD %2$s – %3$s µmol/m²/s</string>
     <string name="format_stage_range_dli_only">%1$s: DLI %2$s – %3$s mol/m²/Tag</string>
-    <string name="environment_log_chart_placeholder_with_data">Diagramme bald verfügbar (%1$d Einträge)</string>
     <string name="environment_log_charts_title">Umgebungsdiagramme</string>
     <string name="environment_log_chart_overview_title">Übersicht</string>
     <string name="environment_log_chart_trends_title">Aktuelle Trends</string>
-    <string name="environment_log_chart_trends_placeholder">Weitere Diagramme werden hier angezeigt, sobald Daten verfügbar sind.</string>
+    <string name="environment_log_growth_chart_empty">Füge mindestens zwei Höhen- oder Breitenmessungen hinzu, um Wachstumstrends zu sehen.</string>
+    <string name="environment_log_climate_chart_empty">Füge mindestens zwei Temperatur- oder Feuchtigkeitsmessungen hinzu, um Klimatrends zu sehen.</string>
+    <string name="environment_log_chart_label_height">Höhe</string>
+    <string name="environment_log_chart_label_width">Breite</string>
+    <string name="environment_log_chart_label_temperature">Temperatur</string>
+    <string name="environment_log_chart_label_humidity">Luftfeuchtigkeit</string>
+    <string name="environment_chart_default_content_description">Umgebungs-Liniendiagramm</string>
+    <string name="environment_chart_content_description">Umgebungs-Liniendiagramm mit %1$d Messungen</string>
     <string name="plant_detail_tab_details">Details</string>
     <string name="plant_detail_tab_gallery">Galerie</string>
     <string name="plant_detail_tab_environment">Umgebung</string>
@@ -268,7 +274,6 @@
     <string name="environment_log_update_entry">Eintrag aktualisieren</string>
     <string name="environment_log_cancel_edit">Abbrechen</string>
     <string name="environment_log_editing_label">Umgebungs­eintrag bearbeiten</string>
-    <string name="environment_log_chart_placeholder">Diagramme erscheinen hier, sobald verfügbar.</string>
     <string name="environment_log_empty">Noch keine Umgebungs­einträge</string>
     <string name="environment_log_saved">Umgebungs­eintrag gespeichert</string>
     <string name="environment_log_updated">Umgebungs­eintrag aktualisiert</string>

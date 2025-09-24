@@ -250,11 +250,17 @@
     <string name="format_stage_range">%1$s : PPFD %2$s – %3$s µmol/m²/s, DLI %4$s – %5$s mol/m²/jour</string>
     <string name="format_stage_range_ppfd_only">%1$s : PPFD %2$s – %3$s µmol/m²/s</string>
     <string name="format_stage_range_dli_only">%1$s : DLI %2$s – %3$s mol/m²/jour</string>
-    <string name="environment_log_chart_placeholder_with_data">Graphiques à venir (%1$d entrées)</string>
     <string name="environment_log_charts_title">Graphiques de l\'environnement</string>
     <string name="environment_log_chart_overview_title">Aperçu</string>
     <string name="environment_log_chart_trends_title">Tendances récentes</string>
-    <string name="environment_log_chart_trends_placeholder">D\'autres graphiques apparaîtront ici dès que des données seront disponibles.</string>
+    <string name="environment_log_growth_chart_empty">Ajoutez au moins deux mesures de hauteur ou de largeur pour voir les tendances de croissance.</string>
+    <string name="environment_log_climate_chart_empty">Ajoutez au moins deux mesures de température ou d’humidité pour voir les tendances du climat.</string>
+    <string name="environment_log_chart_label_height">Hauteur</string>
+    <string name="environment_log_chart_label_width">Largeur</string>
+    <string name="environment_log_chart_label_temperature">Température</string>
+    <string name="environment_log_chart_label_humidity">Humidité</string>
+    <string name="environment_chart_default_content_description">Graphique linéaire de l’environnement</string>
+    <string name="environment_chart_content_description">Graphique linéaire de l’environnement avec %1$d mesures</string>
     <string name="plant_detail_tab_details">Détails</string>
     <string name="plant_detail_tab_gallery">Galerie</string>
     <string name="plant_detail_tab_environment">Environnement</string>
@@ -268,7 +274,6 @@
     <string name="environment_log_update_entry">Mettre à jour l’entrée</string>
     <string name="environment_log_cancel_edit">Annuler</string>
     <string name="environment_log_editing_label">Modification de l’entrée environnementale</string>
-    <string name="environment_log_chart_placeholder">Les graphiques apparaîtront ici dès qu’ils seront disponibles.</string>
     <string name="environment_log_empty">Aucune entrée environnementale pour l’instant</string>
     <string name="environment_log_saved">Entrée environnementale enregistrée</string>
     <string name="environment_log_updated">Entrée environnementale mise à jour</string>

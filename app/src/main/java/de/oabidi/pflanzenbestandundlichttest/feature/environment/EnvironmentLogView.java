@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
@@ -19,8 +20,11 @@ public interface EnvironmentLogView {
     /** Shows or hides the empty state for the list. */
     void showEmptyState(boolean isEmpty);
 
-    /** Updates the placeholder messaging for the upcoming charts. */
-    void updateChartPlaceholder(int entryCount);
+    /** Updates the growth chart with the provided data, hiding it when {@code null}. */
+    void showGrowthChart(@Nullable EnvironmentLogPresenter.ChartData data);
+
+    /** Updates the climate chart with the provided data, hiding it when {@code null}. */
+    void showClimateChart(@Nullable EnvironmentLogPresenter.ChartData data);
 
     /** Presents a transient message to the user. */
     void showMessage(String message);
