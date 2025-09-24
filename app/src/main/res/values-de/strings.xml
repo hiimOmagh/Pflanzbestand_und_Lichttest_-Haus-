@@ -255,6 +255,10 @@
     <string name="environment_log_chart_trends_title">Aktuelle Trends</string>
     <string name="environment_log_growth_chart_empty">Füge mindestens zwei Höhen- oder Breitenmessungen hinzu, um Wachstumstrends zu sehen.</string>
     <string name="environment_log_climate_chart_empty">Füge mindestens zwei Temperatur- oder Feuchtigkeitsmessungen hinzu, um Klimatrends zu sehen.</string>
+    <string name="environment_log_photo_section_title">Foto-Highlights</string>
+    <string name="environment_log_photo_empty">Füge Fotos zu Umgebungsprotokollen hinzu, um hier Fortschritts-Schnappschüsse zu sehen.</string>
+    <string name="environment_log_remove_photo">Foto entfernen</string>
+    <string name="environment_log_photo_viewer_title">Foto des Umgebungs-Eintrags</string>
     <string name="environment_log_chart_label_height">Höhe</string>
     <string name="environment_log_chart_label_width">Breite</string>
     <string name="environment_log_chart_label_temperature">Temperatur</string>

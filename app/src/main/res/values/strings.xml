@@ -144,6 +144,10 @@
     <string name="environment_log_chart_trends_title">Recent trends</string>
     <string name="environment_log_growth_chart_empty">Add at least two height or width measurements to see growth trends.</string>
     <string name="environment_log_climate_chart_empty">Add at least two temperature or humidity measurements to see climate trends.</string>
+    <string name="environment_log_photo_section_title">Photo Highlights</string>
+    <string name="environment_log_photo_empty">Attach photos to environment entries to review progress snapshots here.</string>
+    <string name="environment_log_remove_photo">Remove Photo</string>
+    <string name="environment_log_photo_viewer_title">Environment entry photo</string>
     <string name="environment_log_chart_label_height">Height</string>
     <string name="environment_log_chart_label_width">Width</string>
     <string name="environment_log_chart_label_temperature">Temperature</string>

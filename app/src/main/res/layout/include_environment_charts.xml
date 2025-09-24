@@ -86,4 +86,34 @@
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/environment_photo_section_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/environment_log_photo_section_title"
+        android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+
+    <TextView
+        android:id="@+id/environment_photo_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/environment_log_photo_empty"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        tools:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/environment_photo_carousel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:overScrollMode="never"
+        android:paddingBottom="8dp"
+        android:visibility="gone"
+        tools:listitem="@layout/item_environment_photo_preview"
+        tools:visibility="visible" />
 </LinearLayout>

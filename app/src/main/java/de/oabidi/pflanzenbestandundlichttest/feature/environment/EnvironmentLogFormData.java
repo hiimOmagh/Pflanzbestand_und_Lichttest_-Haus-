@@ -19,16 +19,20 @@ public class EnvironmentLogFormData {
     private final Float width;
     @Nullable
     private final String notes;
+    @Nullable
+    private final String photoUri;
 
     public EnvironmentLogFormData(@Nullable Float temperature, @Nullable Float humidity,
                                   @Nullable Float soilMoisture, @Nullable Float height,
-                                  @Nullable Float width, @Nullable String notes) {
+                                  @Nullable Float width, @Nullable String notes,
+                                  @Nullable String photoUri) {
         this.temperature = temperature;
         this.humidity = humidity;
         this.soilMoisture = soilMoisture;
         this.height = height;
         this.width = width;
         this.notes = notes;
+        this.photoUri = photoUri;
     }
 
     /** Returns the temperature value or {@code null} if not provided. */
@@ -67,6 +71,12 @@ public class EnvironmentLogFormData {
         return notes;
     }
 
+    /** Returns the selected photo URI or {@code null} if none is selected. */
+    @Nullable
+    public String getPhotoUri() {
+        return photoUri;
+    }
+
     /**
      * Returns {@code true} when at least one field contains user provided data.
      */
@@ -76,6 +86,7 @@ public class EnvironmentLogFormData {
             || soilMoisture != null
             || height != null
             || width != null
-            || (notes != null && !notes.isEmpty());
+            || (notes != null && !notes.isEmpty())
+            || (photoUri != null && !photoUri.isEmpty());
     }
 }

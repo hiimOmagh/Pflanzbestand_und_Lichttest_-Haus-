@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest.feature.gallery;
 
 import android.app.Application;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,6 +42,8 @@ public class PlantPhotoViewerFragment extends Fragment {
     private static final String ARG_PLANT_ID = "arg_plant_id";
     private static final String ARG_PHOTO_ID = "arg_photo_id";
     private static final String ARG_PLANT_NAME = "arg_plant_name";
+    private static final String ARG_CUSTOM_URIS = "arg_custom_uris";
+    private static final String ARG_CUSTOM_TITLE = "arg_custom_title";
 
     public static void show(@NonNull FragmentManager manager, long plantId, long initialPhotoId,
                             @Nullable String plantName) {
@@ -56,6 +59,22 @@ public class PlantPhotoViewerFragment extends Fragment {
             .commit();
     }
 
+    public static void showForUris(@NonNull FragmentManager manager,
+                                   @NonNull ArrayList<String> uris,
+                                   @Nullable String title) {
+        PlantPhotoViewerFragment fragment = new PlantPhotoViewerFragment();
+        Bundle args = new Bundle();
+        args.putStringArrayList(ARG_CUSTOM_URIS, uris);
+        if (!TextUtils.isEmpty(title)) {
+            args.putString(ARG_CUSTOM_TITLE, title);
+        }
+        fragment.setArguments(args);
+        manager.beginTransaction()
+            .add(android.R.id.content, fragment, TAG)
+            .addToBackStack(TAG)
+            .commit();
+    }
+
     private PlantRepository repository;
     private PlantPhotoLoader photoLoader;
     private ViewPager2 pager;
@@ -64,6 +83,11 @@ public class PlantPhotoViewerFragment extends Fragment {
     private long initialPhotoId;
     @Nullable
     private String plantName;
+    private boolean useCustomUris;
+    @Nullable
+    private ArrayList<String> customUris;
+    @Nullable
+    private String customTitle;
     private boolean initialPositionApplied;
     private boolean refreshRequested;
     private int currentIndex;
@@ -77,18 +101,32 @@ public class PlantPhotoViewerFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = requireArguments();
-        plantId = args.getLong(ARG_PLANT_ID, -1L);
-        initialPhotoId = args.getLong(ARG_PHOTO_ID, -1L);
-        plantName = args.getString(ARG_PLANT_NAME);
+        if (args.containsKey(ARG_CUSTOM_URIS)) {
+            useCustomUris = true;
+            customUris = args.getStringArrayList(ARG_CUSTOM_URIS);
+            customTitle = args.getString(ARG_CUSTOM_TITLE);
+            plantId = -1L;
+            initialPhotoId = -1L;
+            plantName = customTitle;
+        } else {
+            plantId = args.getLong(ARG_PLANT_ID, -1L);
+            initialPhotoId = args.getLong(ARG_PHOTO_ID, -1L);
+            plantName = args.getString(ARG_PLANT_NAME);
+        }
 
         Application application = requireActivity().getApplication();
-        if (!(application instanceof RepositoryProvider) || !(application instanceof ExecutorProvider)) {
-            throw new IllegalStateException("Application must provide repository and executor");
+        if (!(application instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application must provide executor");
         }
-        repository = ((RepositoryProvider) application).getRepository();
         ExecutorService executor = ((ExecutorProvider) application).getIoExecutor();
         photoLoader = new PlantPhotoLoader(requireContext(), executor);
         pagerAdapter = new PhotoPagerAdapter(photoLoader);
+        if (!useCustomUris) {
+            if (!(application instanceof RepositoryProvider)) {
+                throw new IllegalStateException("Application must provide repository");
+            }
+            repository = ((RepositoryProvider) application).getRepository();
+        }
     }
 
     @Nullable
@@ -104,23 +142,25 @@ public class PlantPhotoViewerFragment extends Fragment {
         pager = view.findViewById(R.id.photo_pager);
         pager.setAdapter(pagerAdapter);
         pagerAdapter.setHasStableIds(true);
-        RecyclerView pagerRecycler = (RecyclerView) pager.getChildAt(0);
-        if (pagerRecycler != null) {
-            swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.UP | ItemTouchHelper.DOWN) {
-                @Override
-                public boolean onMove(@NonNull RecyclerView recyclerView,
-                                      @NonNull RecyclerView.ViewHolder viewHolder,
-                                      @NonNull RecyclerView.ViewHolder target) {
-                    return false;
-                }
+        if (!useCustomUris) {
+            RecyclerView pagerRecycler = (RecyclerView) pager.getChildAt(0);
+            if (pagerRecycler != null) {
+                swipeCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.UP | ItemTouchHelper.DOWN) {
+                    @Override
+                    public boolean onMove(@NonNull RecyclerView recyclerView,
+                                          @NonNull RecyclerView.ViewHolder viewHolder,
+                                          @NonNull RecyclerView.ViewHolder target) {
+                        return false;
+                    }
 
-                @Override
-                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                    handlePhotoSwiped(viewHolder.getBindingAdapterPosition());
-                }
-            };
-            swipeToDeleteHelper = new ItemTouchHelper(swipeCallback);
-            swipeToDeleteHelper.attachToRecyclerView(pagerRecycler);
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                        handlePhotoSwiped(viewHolder.getBindingAdapterPosition());
+                    }
+                };
+                swipeToDeleteHelper = new ItemTouchHelper(swipeCallback);
+                swipeToDeleteHelper.attachToRecyclerView(pagerRecycler);
+            }
         }
         pageChangeCallback = new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -137,6 +177,12 @@ public class PlantPhotoViewerFragment extends Fragment {
         toolbar.inflateMenu(R.menu.plant_photo_viewer_menu);
         toolbar.setNavigationOnClickListener(v -> closeSelf());
         toolbar.setOnMenuItemClickListener(this::onMenuItemSelected);
+        if (useCustomUris) {
+            MenuItem deleteItem = toolbar.getMenu().findItem(R.id.action_delete_photo);
+            if (deleteItem != null) {
+                deleteItem.setVisible(false);
+            }
+        }
         updateTitle();
 
         loadPhotos();
@@ -162,6 +208,9 @@ public class PlantPhotoViewerFragment extends Fragment {
     }
 
     private boolean onMenuItemSelected(@NonNull MenuItem item) {
+        if (useCustomUris) {
+            return false;
+        }
         if (item.getItemId() == R.id.action_delete_photo) {
             confirmDeleteCurrent();
             return true;
@@ -170,10 +219,14 @@ public class PlantPhotoViewerFragment extends Fragment {
     }
 
     private void loadPhotos() {
+        if (useCustomUris) {
+            loadCustomPhotos();
+            return;
+        }
         if (plantId <= 0) {
-            if (null != null) {
-                ((Runnable) null).run();
-            }
+            updateTitle();
+            updateSubtitle(0);
+            closeSelf();
             return;
         }
         repository.plantPhotosForPlant(plantId, photos -> {
@@ -191,18 +244,41 @@ public class PlantPhotoViewerFragment extends Fragment {
             }
             updateSubtitle(currentIndex);
             updateTitle();
-            if (null != null) {
-                ((Runnable) null).run();
-            }
             if (pagerAdapter.getItemCount() == 0) {
                 closeSelf();
             }
         }, e -> {
             Toast.makeText(requireContext(), R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show();
-            if (null != null) {
-                ((Runnable) null).run();
-            }
         });
+    }
+
+    private void loadCustomPhotos() {
+        List<PlantPhoto> photos = new ArrayList<>();
+        if (customUris != null) {
+            long idSeed = -1;
+            for (String uri : customUris) {
+                if (TextUtils.isEmpty(uri)) {
+                    continue;
+                }
+                PlantPhoto photo = new PlantPhoto();
+                photo.setId(idSeed--);
+                photo.setUri(uri);
+                photo.setPlantId(-1);
+                photo.setCreatedAt(System.currentTimeMillis());
+                photos.add(photo);
+            }
+        }
+        pagerAdapter.submit(photos);
+        if (photos.isEmpty()) {
+            updateSubtitle(0);
+            updateTitle();
+            closeSelf();
+            return;
+        }
+        currentIndex = Math.max(0, Math.min(currentIndex, photos.size() - 1));
+        pager.setCurrentItem(currentIndex, false);
+        updateSubtitle(currentIndex);
+        updateTitle();
     }
 
     private void updateTitle() {
@@ -210,9 +286,17 @@ public class PlantPhotoViewerFragment extends Fragment {
         if (toolbar == null) {
             return;
         }
-        toolbar.setTitle(plantName != null && !plantName.isEmpty()
-            ? plantName
-            : getString(R.string.plant_photo_viewer_title));
+        if (useCustomUris) {
+            if (!TextUtils.isEmpty(customTitle)) {
+                toolbar.setTitle(customTitle);
+            } else {
+                toolbar.setTitle(getString(R.string.environment_log_photo_viewer_title));
+            }
+        } else {
+            toolbar.setTitle(plantName != null && !plantName.isEmpty()
+                ? plantName
+                : getString(R.string.plant_photo_viewer_title));
+        }
     }
 
     private void updateSubtitle(int position) {
@@ -238,6 +322,9 @@ public class PlantPhotoViewerFragment extends Fragment {
     }
 
     private void confirmDeleteCurrent() {
+        if (useCustomUris) {
+            return;
+        }
         PlantPhoto photo = pagerAdapter.getItem(currentIndex);
         if (photo == null) {
             return;
@@ -251,6 +338,9 @@ public class PlantPhotoViewerFragment extends Fragment {
     }
 
     private void deletePhoto(@NonNull PlantPhoto photo) {
+        if (useCustomUris) {
+            return;
+        }
         repository.deletePlantPhoto(photo, () -> {
             Toast.makeText(requireContext(), R.string.plant_photo_delete_success, Toast.LENGTH_SHORT).show();
             refreshRequested = true;
@@ -259,6 +349,10 @@ public class PlantPhotoViewerFragment extends Fragment {
     }
 
     private void handlePhotoSwiped(int position) {
+        if (useCustomUris) {
+            pagerAdapter.notifyItemChanged(position);
+            return;
+        }
         if (position == RecyclerView.NO_POSITION) {
             pagerAdapter.notifyDataSetChanged();
             return;

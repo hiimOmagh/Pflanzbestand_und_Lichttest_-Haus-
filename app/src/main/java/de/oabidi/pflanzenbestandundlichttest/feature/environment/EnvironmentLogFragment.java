@@ -1,12 +1,18 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -15,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -26,6 +33,9 @@ import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentPhotoAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +49,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     public static final String EXTRA_EVENT = "event";
     public static final String EXTRA_ENTRY_ID = "entry_id";
     private static final String ARG_PLANT_ID = "plantId";
+    private static final String STATE_PHOTO_URI = "state_photo_uri";
 
     private long plantId;
     @Nullable
@@ -80,6 +91,28 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     private RecyclerView listView;
     @Nullable
     private View loadingView;
+    @Nullable
+    private ShapeableImageView photoPreview;
+    @Nullable
+    private MaterialButton photoPickButton;
+    @Nullable
+    private MaterialButton photoCaptureButton;
+    @Nullable
+    private MaterialButton photoRemoveButton;
+    @Nullable
+    private RecyclerView photoHighlightsView;
+    @Nullable
+    private TextView photoHighlightsEmptyView;
+    @Nullable
+    private TextView photoHighlightsTitleView;
+    @Nullable
+    private EnvironmentPhotoAdapter photoHighlightsAdapter;
+    @Nullable
+    private ActivityResultLauncher<String> photoPickerLauncher;
+    @Nullable
+    private Uri currentPhotoUri;
+    private boolean awaitingCaptureResult;
+    private boolean captureResultDelivered;
 
     /** Displays the fragment inside the provided container. */
     public static void show(@NonNull FragmentManager fragmentManager, int containerId, long plantId) {
@@ -108,6 +141,12 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            String photo = savedInstanceState.getString(STATE_PHOTO_URI);
+            if (!TextUtils.isEmpty(photo)) {
+                currentPhotoUri = Uri.parse(photo);
+            }
+        }
         Bundle args = getArguments();
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
@@ -118,6 +157,52 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             repository = repo;
         }
         presenter = new EnvironmentLogPresenter(this, repo, plantId, requireContext());
+        photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+            if (uri == null) {
+                return;
+            }
+            Context context = requireContext();
+            try {
+                context.getContentResolver().takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (SecurityException ignored) {
+            }
+            currentPhotoUri = uri;
+            updatePhotoPreview();
+        });
+        getParentFragmentManager().setFragmentResultListener(
+            PlantPhotoCaptureFragment.RESULT_KEY,
+            this,
+            (requestKey, bundle) -> {
+                if (!awaitingCaptureResult || bundle == null) {
+                    return;
+                }
+                awaitingCaptureResult = false;
+                String uriString = bundle.getString(PlantPhotoCaptureFragment.EXTRA_PHOTO_URI);
+                if (!TextUtils.isEmpty(uriString)) {
+                    currentPhotoUri = Uri.parse(uriString);
+                    updatePhotoPreview();
+                    captureResultDelivered = true;
+                }
+            }
+        );
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (currentPhotoUri != null) {
+            outState.putString(STATE_PHOTO_URI, currentPhotoUri.toString());
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (awaitingCaptureResult && !captureResultDelivered) {
+            awaitingCaptureResult = false;
+        }
+        captureResultDelivered = false;
     }
 
     @Nullable
@@ -148,6 +233,13 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         trendsChartEmptyView = view.findViewById(R.id.environment_chart_trends_empty);
         listView = view.findViewById(R.id.environment_log_list);
         loadingView = view.findViewById(R.id.environment_log_loading);
+        photoPreview = view.findViewById(R.id.environment_photo_preview);
+        photoPickButton = view.findViewById(R.id.environment_photo_button);
+        photoCaptureButton = view.findViewById(R.id.environment_capture_button);
+        photoRemoveButton = view.findViewById(R.id.environment_remove_photo_button);
+        photoHighlightsView = view.findViewById(R.id.environment_photo_carousel);
+        photoHighlightsEmptyView = view.findViewById(R.id.environment_photo_empty);
+        photoHighlightsTitleView = view.findViewById(R.id.environment_photo_section_title);
 
         if (listView != null) {
             listView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -165,6 +257,11 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
                 public void onDelete(EnvironmentLogPresenter.EnvironmentLogItem item) {
                     confirmDelete(item);
                 }
+
+                @Override
+                public void onPhotoClicked(EnvironmentLogPresenter.EnvironmentLogItem item) {
+                    openPhotoUri(item.getPhotoUri());
+                }
             });
             listView.setAdapter(adapter);
         }
@@ -180,6 +277,36 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
                 }
             });
         }
+
+        if (photoPickButton != null) {
+            photoPickButton.setOnClickListener(v -> {
+                if (photoPickerLauncher != null) {
+                    photoPickerLauncher.launch("image/*");
+                }
+            });
+        }
+        if (photoCaptureButton != null) {
+            photoCaptureButton.setOnClickListener(v -> launchCameraCapture());
+        }
+        if (photoRemoveButton != null) {
+            photoRemoveButton.setOnClickListener(v -> {
+                currentPhotoUri = null;
+                updatePhotoPreview();
+            });
+        }
+        if (photoPreview != null) {
+            photoPreview.setOnClickListener(v -> {
+                if (currentPhotoUri != null) {
+                    openPhotoUri(currentPhotoUri.toString());
+                }
+            });
+        }
+        if (photoHighlightsView != null) {
+            photoHighlightsView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
+            photoHighlightsAdapter = new EnvironmentPhotoAdapter(uriString -> openPhotoUri(uriString));
+            photoHighlightsView.setAdapter(photoHighlightsAdapter);
+        }
+        updatePhotoPreview();
 
         EnvironmentLogPresenter p = presenter;
         if (p != null) {
@@ -216,7 +343,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         }
         EnvironmentLogPresenter p = presenter;
         if (p != null) {
-            p.onSubmit(new EnvironmentLogFormData(temperature, humidity, soil, height, width, notes));
+            String photo = currentPhotoUri != null ? currentPhotoUri.toString() : null;
+            p.onSubmit(new EnvironmentLogFormData(temperature, humidity, soil, height, width, notes, photo));
         }
     }
 
@@ -309,6 +437,20 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     }
 
     @Override
+    public void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights) {
+        if (photoHighlightsAdapter != null) {
+            photoHighlightsAdapter.submit(highlights);
+        }
+        boolean empty = highlights == null || highlights.isEmpty();
+        if (photoHighlightsView != null) {
+            photoHighlightsView.setVisibility(empty ? View.GONE : View.VISIBLE);
+        }
+        if (photoHighlightsEmptyView != null) {
+            photoHighlightsEmptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    @Override
     public void showMessage(String message) {
         if (!isAdded()) {
             return;
@@ -354,6 +496,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         clearText(heightLayout);
         clearText(widthLayout);
         clearText(notesLayout);
+        currentPhotoUri = null;
+        updatePhotoPreview();
     }
 
     private void clearText(@Nullable TextInputLayout layout) {
@@ -374,6 +518,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         setText(heightLayout, entry.getHeight());
         setText(widthLayout, entry.getWidth());
         setText(notesLayout, entry.getNotes());
+        setPhotoFromString(entry.getPhotoUri());
     }
 
     private void setText(@Nullable TextInputLayout layout, @Nullable Float value) {
@@ -398,6 +543,51 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         if (editText != null) {
             editText.setText(value);
         }
+    }
+
+    private void setPhotoFromString(@Nullable String value) {
+        if (TextUtils.isEmpty(value)) {
+            currentPhotoUri = null;
+        } else {
+            currentPhotoUri = Uri.parse(value);
+        }
+        updatePhotoPreview();
+    }
+
+    private void updatePhotoPreview() {
+        if (photoPreview == null) {
+            return;
+        }
+        if (currentPhotoUri == null) {
+            photoPreview.setImageResource(android.R.drawable.ic_menu_gallery);
+            photoPreview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            if (photoRemoveButton != null) {
+                photoRemoveButton.setVisibility(View.GONE);
+            }
+        } else {
+            photoPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            photoPreview.setImageURI(currentPhotoUri);
+            if (photoRemoveButton != null) {
+                photoRemoveButton.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void launchCameraCapture() {
+        captureResultDelivered = false;
+        awaitingCaptureResult = true;
+        PlantPhotoCaptureFragment.show(getParentFragmentManager(), android.R.id.content);
+    }
+
+    private void openPhotoUri(@Nullable String uriString) {
+        if (TextUtils.isEmpty(uriString) || !isAdded()) {
+            return;
+        }
+        ArrayList<String> uris = new ArrayList<>();
+        uris.add(uriString);
+        PlantPhotoViewerFragment.showForUris(
+            getParentFragmentManager(), uris,
+            getString(R.string.environment_log_photo_viewer_title));
     }
 
     private void renderChart(@Nullable LineChartView chartView, @Nullable TextView emptyChartView,

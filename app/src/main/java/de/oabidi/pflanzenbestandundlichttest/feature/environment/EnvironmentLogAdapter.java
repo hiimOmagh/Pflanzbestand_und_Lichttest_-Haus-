@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+import com.google.android.material.imageview.ShapeableImageView;
 
 /**
  * RecyclerView adapter for displaying environment log entries.
@@ -25,6 +27,9 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
 
         /** Invoked when the user requests to delete an item. */
         void onDelete(EnvironmentLogPresenter.EnvironmentLogItem item);
+
+        /** Invoked when the user taps the photo preview. */
+        void onPhotoClicked(EnvironmentLogPresenter.EnvironmentLogItem item);
     }
 
     private final Callbacks callbacks;
@@ -45,10 +50,15 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
             @Override
             public boolean areContentsTheSame(@NonNull EnvironmentLogPresenter.EnvironmentLogItem oldItem,
                                               @NonNull EnvironmentLogPresenter.EnvironmentLogItem newItem) {
+                boolean notesEqual = (oldItem.getNotes() == null && newItem.getNotes() == null)
+                    || (oldItem.getNotes() != null && oldItem.getNotes().equals(newItem.getNotes()));
+                boolean photosEqual = (oldItem.getPhotoUri() == null && newItem.getPhotoUri() == null)
+                    || (oldItem.getPhotoUri() != null
+                    && oldItem.getPhotoUri().equals(newItem.getPhotoUri()));
                 return oldItem.getTimestampText().equals(newItem.getTimestampText())
                     && oldItem.getMetricsText().equals(newItem.getMetricsText())
-                    && ((oldItem.getNotes() == null && newItem.getNotes() == null)
-                    || (oldItem.getNotes() != null && oldItem.getNotes().equals(newItem.getNotes())));
+                    && notesEqual
+                    && photosEqual;
             }
         };
 
@@ -70,12 +80,14 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
         private final TextView timestampView;
         private final TextView metricsView;
         private final TextView notesView;
+        private final ShapeableImageView photoView;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             timestampView = itemView.findViewById(R.id.environment_log_item_timestamp);
             metricsView = itemView.findViewById(R.id.environment_log_item_metrics);
             notesView = itemView.findViewById(R.id.environment_log_item_notes);
+            photoView = itemView.findViewById(R.id.environment_log_item_photo);
         }
 
         void bind(EnvironmentLogPresenter.EnvironmentLogItem item, Callbacks callbacks) {
@@ -88,6 +100,20 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
             } else {
                 notesView.setVisibility(View.VISIBLE);
                 notesView.setText(notes);
+            }
+            String photoUri = item.getPhotoUri();
+            if (photoUri == null || photoUri.isEmpty()) {
+                photoView.setVisibility(View.GONE);
+                photoView.setImageDrawable(null);
+                photoView.setOnClickListener(null);
+            } else {
+                photoView.setVisibility(View.VISIBLE);
+                try {
+                    photoView.setImageURI(Uri.parse(photoUri));
+                } catch (Exception e) {
+                    photoView.setImageResource(android.R.drawable.ic_menu_gallery);
+                }
+                photoView.setOnClickListener(v -> callbacks.onPhotoClicked(item));
             }
             itemView.setOnClickListener(v -> callbacks.onEdit(item));
             itemView.setOnLongClickListener(v -> {

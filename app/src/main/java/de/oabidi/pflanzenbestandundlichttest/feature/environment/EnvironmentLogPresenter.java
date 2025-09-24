@@ -58,6 +58,7 @@ public class EnvironmentLogPresenter {
             }
             view.showEntries(items);
             view.showEmptyState(items.isEmpty());
+            view.showPhotoHighlights(buildPhotoHighlights(entries));
             refreshCharts(entries);
             view.showLoading(false);
         }, e -> {
@@ -153,13 +154,14 @@ public class EnvironmentLogPresenter {
         entry.setHeight(data.getHeight());
         entry.setWidth(data.getWidth());
         entry.setNotes(data.getNotes());
+        entry.setPhotoUri(data.getPhotoUri());
     }
 
     private EnvironmentLogItem toItem(EnvironmentEntry entry) {
         String timestamp = dateFormat.format(new Date(entry.getTimestamp()));
         String metrics = buildMetricsSummary(entry);
         String notes = entry.getNotes();
-        return new EnvironmentLogItem(copyEntry(entry), timestamp, metrics, notes);
+        return new EnvironmentLogItem(copyEntry(entry), timestamp, metrics, notes, entry.getPhotoUri());
     }
 
     private void refreshCharts(List<EnvironmentEntry> entries) {
@@ -249,6 +251,29 @@ public class EnvironmentLogPresenter {
         return copy;
     }
 
+    private List<PhotoHighlight> buildPhotoHighlights(List<EnvironmentEntry> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<PhotoHighlight> highlights = new ArrayList<>();
+        for (EnvironmentEntry entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+            String uri = entry.getPhotoUri();
+            if (uri == null || uri.isEmpty()) {
+                continue;
+            }
+            highlights.add(new PhotoHighlight(entry.getId(), entry.getTimestamp(),
+                dateFormat.format(new Date(entry.getTimestamp())), uri));
+        }
+        if (highlights.size() <= 1) {
+            return highlights;
+        }
+        highlights.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        return highlights;
+    }
+
     private static class MetricSpec {
         final String label;
         final ValueExtractor extractor;
@@ -322,13 +347,16 @@ public class EnvironmentLogPresenter {
         private final String metricsText;
         @Nullable
         private final String notes;
+        @Nullable
+        private final String photoUri;
 
         EnvironmentLogItem(EnvironmentEntry entry, String timestampText, String metricsText,
-                           @Nullable String notes) {
+                           @Nullable String notes, @Nullable String photoUri) {
             this.entry = entry;
             this.timestampText = timestampText;
             this.metricsText = metricsText;
             this.notes = notes;
+            this.photoUri = photoUri;
         }
 
         public EnvironmentEntry getEntry() {
@@ -346,6 +374,42 @@ public class EnvironmentLogPresenter {
         @Nullable
         public String getNotes() {
             return notes;
+        }
+
+        @Nullable
+        public String getPhotoUri() {
+            return photoUri;
+        }
+    }
+
+    /** Highlight representing a logged photo for quick browsing. */
+    public static class PhotoHighlight {
+        private final long entryId;
+        private final long timestamp;
+        private final String label;
+        private final String photoUri;
+
+        PhotoHighlight(long entryId, long timestamp, String label, String photoUri) {
+            this.entryId = entryId;
+            this.timestamp = timestamp;
+            this.label = label;
+            this.photoUri = photoUri;
+        }
+
+        public long getEntryId() {
+            return entryId;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getPhotoUri() {
+            return photoUri;
         }
     }
 }

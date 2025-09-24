@@ -26,6 +26,9 @@ public interface EnvironmentLogView {
     /** Updates the climate chart with the provided data, hiding it when {@code null}. */
     void showClimateChart(@Nullable EnvironmentLogPresenter.ChartData data);
 
+    /** Displays photo highlights aligned with the chart timeline. */
+    void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights);
+
     /** Presents a transient message to the user. */
     void showMessage(String message);
 

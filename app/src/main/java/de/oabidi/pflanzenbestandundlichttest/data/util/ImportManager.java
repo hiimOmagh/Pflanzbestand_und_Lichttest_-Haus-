@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.JsonReader;
 import android.util.JsonToken;
