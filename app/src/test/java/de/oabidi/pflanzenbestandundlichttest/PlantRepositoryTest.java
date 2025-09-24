@@ -246,6 +246,44 @@ public class PlantRepositoryTest {
     }
 
     @Test
+    public void environmentEntriesAreSortedByTimestampAndId() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Order");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        EnvironmentEntry oldest = new EnvironmentEntry(plant.getId(), 1_000L, null, null,
+            null, null, null, "oldest", null);
+        EnvironmentEntry newer = new EnvironmentEntry(plant.getId(), 5_000L, null, null,
+            null, null, null, "newer", null);
+        EnvironmentEntry latest = new EnvironmentEntry(plant.getId(), 5_000L, null, null,
+            null, null, null, "latest", null);
+
+        CountDownLatch insertLatch = new CountDownLatch(3);
+        repository.insertEnvironmentEntry(oldest, insertLatch::countDown);
+        repository.insertEnvironmentEntry(newer, insertLatch::countDown);
+        repository.insertEnvironmentEntry(latest, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        CountDownLatch queryLatch = new CountDownLatch(1);
+        final List<EnvironmentEntry>[] holder = new List[1];
+        repository.environmentEntriesForPlant(plant.getId(), entries -> {
+            holder[0] = entries;
+            queryLatch.countDown();
+        });
+        awaitLatch(queryLatch);
+
+        assertEquals(3, holder[0].size());
+        assertEquals("latest", holder[0].get(0).getNotes());
+        assertEquals("newer", holder[0].get(1).getNotes());
+        assertEquals("oldest", holder[0].get(2).getNotes());
+        assertTrue(holder[0].get(0).getId() > holder[0].get(1).getId());
+        assertTrue(holder[0].get(1).getTimestamp() >= holder[0].get(2).getTimestamp());
+    }
+
+    @Test
     public void insertErrorPropagatesToCallback() throws Exception {
         Plant plant = new Plant();
         plant.setAcquiredAtEpoch(0L);

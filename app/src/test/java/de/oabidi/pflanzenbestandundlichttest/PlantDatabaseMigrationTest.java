@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import android.content.Context;
 
@@ -44,7 +45,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate4To14_keepsPlants() {
+    public void migrate4To15_keepsPlants() {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Create database in version 4 and insert a sample plant.
@@ -69,7 +70,8 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_10_11,
                 PlantDatabase.MIGRATION_11_12,
                 PlantDatabase.MIGRATION_12_13,
-                PlantDatabase.MIGRATION_13_14)
+                PlantDatabase.MIGRATION_13_14,
+                PlantDatabase.MIGRATION_14_15)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();
@@ -80,7 +82,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate12To14_transformsSpeciesTargets() {
+    public void migrate12To15_transformsSpeciesTargets() {
         Context context = ApplicationProvider.getApplicationContext();
 
         PlantDatabaseV12 v12 = Room.databaseBuilder(context, PlantDatabaseV12.class, DB_NAME)
@@ -108,7 +110,8 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_10_11,
                 PlantDatabase.MIGRATION_11_12,
                 PlantDatabase.MIGRATION_12_13,
-                PlantDatabase.MIGRATION_13_14)
+                PlantDatabase.MIGRATION_13_14,
+                PlantDatabase.MIGRATION_14_15)
             .allowMainThreadQueries()
             .build();
 
@@ -127,6 +130,22 @@ public class PlantDatabaseMigrationTest {
         assertEquals("high", migratedTarget.getTolerance());
         assertEquals("manual", migratedTarget.getSource());
         assertEquals(SpeciesTarget.Category.OTHER, migratedTarget.getCategory());
+        assertEquals("legacy", migratedTarget.getSpeciesKey());
+        assertNull(migratedTarget.getCommonName());
+        assertNull(migratedTarget.getScientificName());
+        assertNotNull(migratedTarget.getWateringInfo());
+        assertEquals("high", migratedTarget.getWateringInfo().getTolerance());
+        assertNull(migratedTarget.getWateringInfo().getSchedule());
+        assertNull(migratedTarget.getWateringInfo().getSoil());
+        assertNotNull(migratedTarget.getTemperatureRange());
+        assertNull(migratedTarget.getTemperatureRange().getMin());
+        assertNull(migratedTarget.getTemperatureRange().getMax());
+        assertNotNull(migratedTarget.getHumidityRange());
+        assertNull(migratedTarget.getHumidityRange().getMin());
+        assertNull(migratedTarget.getHumidityRange().getMax());
+        assertNotNull(migratedTarget.getSources());
+        assertEquals(1, migratedTarget.getSources().size());
+        assertEquals("manual", migratedTarget.getSources().get(0));
     }
 
     /**
