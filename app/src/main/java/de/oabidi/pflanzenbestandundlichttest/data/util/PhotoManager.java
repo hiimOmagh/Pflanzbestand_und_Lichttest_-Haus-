@@ -81,7 +81,7 @@ public final class PhotoManager {
         }
 
         String extension = extractExtension(context, sourceUri);
-        if (extension == null || extension.isEmpty()) {
+        if (extension.isEmpty()) {
             extension = ".jpg";
         }
 

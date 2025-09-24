@@ -132,8 +132,6 @@ public class BarChartView extends View {
         float bottomPadding = textHeight * 4f;
         float chartWidth = width - leftPadding;
         float chartHeight = height - bottomPadding;
-        float originX = leftPadding;
-        float originY = chartHeight;
 
         int entryCount = timestamps.size();
         int seriesCount = seriesValues.size();
@@ -144,16 +142,16 @@ public class BarChartView extends View {
                 List<Float> vals = seriesValues.get(s);
                 float v = i < vals.size() ? vals.get(i) : 0f;
                 float barHeight = (v / maxValue) * chartHeight;
-                float left = originX + i * groupWidth + s * barWidth;
+                float left = leftPadding + i * groupWidth + s * barWidth;
                 float right = left + barWidth * 0.8f; // small gap between bars
-                float top = originY - barHeight;
-                canvas.drawRect(left, top, right, originY, seriesPaints.get(s));
+                float top = chartHeight - barHeight;
+                canvas.drawRect(left, top, right, chartHeight, seriesPaints.get(s));
             }
         }
 
         // Draw axes
-        canvas.drawLine(originX, 0, originX, originY, axisPaint);
-        canvas.drawLine(originX, originY, width, originY, axisPaint);
+        canvas.drawLine(leftPadding, 0, leftPadding, chartHeight, axisPaint);
+        canvas.drawLine(leftPadding, chartHeight, width, chartHeight, axisPaint);
 
         float tick = 4 * getResources().getDisplayMetrics().density;
 
@@ -162,10 +160,10 @@ public class BarChartView extends View {
         int steps = 4;
         for (int i = 0; i <= steps; i++) {
             float value = (maxValue / steps) * i;
-            float y = originY - (value / maxValue) * chartHeight;
-            canvas.drawLine(originX - tick, y, originX, y, axisPaint);
+            float y = chartHeight - (value / maxValue) * chartHeight;
+            canvas.drawLine(leftPadding - tick, y, leftPadding, y, axisPaint);
             canvas.drawText(String.format(Locale.getDefault(), "%.0f", value),
-                originX - tick * 1.5f, y + textHeight / 3f, textPaint);
+                leftPadding - tick * 1.5f, y + textHeight / 3f, textPaint);
         }
 
         // X-axis ticks and labels
@@ -173,25 +171,24 @@ public class BarChartView extends View {
         SimpleDateFormat dateFormat = new SimpleDateFormat(getResources().getString(R.string.chart_date_pattern),
             Locale.getDefault());
         for (int i = 0; i < entryCount; i++) {
-            float x = originX + i * groupWidth + (groupWidth * 0.5f);
-            canvas.drawLine(x, originY, x, originY + tick, axisPaint);
+            float x = leftPadding + i * groupWidth + (groupWidth * 0.5f);
+            canvas.drawLine(x, chartHeight, x, chartHeight + tick, axisPaint);
             String label;
             label = dateFormat.format(new Date(timestamps.get(i)));
             canvas.drawText(label, x, height - tick, textPaint);
         }
 
         // Legend
-        float legendY = originY + textHeight * 1.5f;
-        float legendX = originX;
-        float box = textHeight;
+        float legendY = chartHeight + textHeight * 1.5f;
+        float legendX = leftPadding;
         textPaint.setTextAlign(Paint.Align.LEFT);
         for (int s = 0; s < seriesCount; s++) {
             Paint p = seriesPaints.get(s);
-            canvas.drawRect(legendX, legendY, legendX + box, legendY + box, p);
-            float textX = legendX + box + tick;
-            float textY = legendY + box * 0.8f;
+            canvas.drawRect(legendX, legendY, legendX + textHeight, legendY + textHeight, p);
+            float textX = legendX + textHeight + tick;
+            float textY = legendY + textHeight * 0.8f;
             canvas.drawText(seriesLabels.get(s), textX, textY, textPaint);
-            legendX += box + textPaint.measureText(seriesLabels.get(s)) + tick * 4;
+            legendX += textHeight + textPaint.measureText(seriesLabels.get(s)) + tick * 4;
         }
     }
 }

@@ -33,16 +33,16 @@ The CSV manifest is organised into sections separated by single-line headers. Ea
 with the section name followed by a header row listing the column names. Rows are comma-separated
 and quoted where needed. The supported sections match `ImportManager.Section`:
 
-| Section | Columns |
-| --- | --- |
-| `Plants` | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri` |
-| `PlantPhotos` | `id,plantId,uri,createdAt` |
-| `PlantCalibrations` | `plantId,ambientFactor,cameraFactor` |
-| `SpeciesTargets` | `speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,wateringSchedule,wateringSoil,wateringTolerance,temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources` |
-| `Measurements` | `id,plantId,timeEpoch,luxAvg,ppfd` |
-| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo` |
-| `DiaryEntries` | `id,plantId,timeEpoch,type,note,photoUri` |
-| `Reminders` | `id,plantId,triggerAt,message` |
+| Section              | Columns                                                                                                                                                                                                                                                                                                                                                                                       |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `Plants`             | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri`                                                                                                                                                                                                                                                                                                                           |
+| `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                                                                                                                                                                                                                                                                                    |
+| `PlantCalibrations`  | `plantId,ambientFactor,cameraFactor`                                                                                                                                                                                                                                                                                                                                                          |
+| `SpeciesTargets`     | `speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,wateringFrequency,wateringSoilType,wateringTolerance,temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources` |
+| `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                                                                                                                                                                                                                                                                                            |
+| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo`                                                                                                                                                                                                                                                                                                             |
+| `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                                                                                                                                                                                                                                                                                     |
+| `Reminders`          | `id,plantId,triggerAt,message`                                                                                                                                                                                                                                                                                                                                                                |
 
 The importer is tolerant of missing trailing columns and blank numeric values; empty strings map to
 `NULL` in Room. Plant calibrations expect positive floating-point factors and are silently skipped
@@ -56,14 +56,30 @@ JSON exports write a single prettified file `data.json` with the following top-l
 ```json
 {
     "version": 3,
-    "plants": [ ... ],
-    "plantPhotos": [ ... ],
-    "plantCalibrations": [ ... ],
-    "speciesTargets": [ ... ],
-    "measurements": [ ... ],
-    "environmentEntries": [ ... ],
-    "diaryEntries": [ ... ],
-    "reminders": [ ... ]
+    "plants": [
+        ...
+    ],
+    "plantPhotos": [
+        ...
+    ],
+    "plantCalibrations": [
+        ...
+    ],
+    "speciesTargets": [
+        ...
+    ],
+    "measurements": [
+        ...
+    ],
+    "environmentEntries": [
+        ...
+    ],
+    "diaryEntries": [
+        ...
+    ],
+    "reminders": [
+        "..."
+    ]
 }
 ```
 
@@ -79,6 +95,9 @@ schemas are:
   "watering": WateringInfo?, "temperature": Range?, "humidity": Range?, "growthHabit": string?,
   "toxicToPets": boolean?, "careTips": string[]?, "sources": string[]? }`
     - `Stage` objects contain optional `ppfdMin`, `ppfdMax`, `dliMin`, and `dliMax` floats.
+    - `WateringInfo` contains optional `frequency`, `soilType`, and `tolerance` strings. For
+      backwards
+      compatibility the importer also accepts legacy `schedule` and `soil` properties.
 - **measurements** – `{ "id": long, "plantId": long, "timeEpoch": long,
   "luxAvg": float, "ppfd": float?, "dli": float?, "note": string? }`
 - **environmentEntries** – `{ "id": long, "plantId": long, "timestamp": long,
@@ -107,27 +126,28 @@ The matching JSON export uses compact objects:
 
 ```json
 {
-  "environmentEntries": [
-    {
-      "id": 42,
-        "plantId": 11,
-        "timestamp": 1707410400,
-        "temperature": null,
-        "humidity": 58.2,
-        "soilMoisture": null,
-        "height": 12.5,
-        "width": 8.0,
-        "notes": "Bluetooth sensor",
-        "photo": null
-    }
-  ]
+    "environmentEntries": [
+        {
+            "id": 42,
+            "plantId": 11,
+            "timestamp": 1707410400,
+            "temperature": null,
+            "humidity": 58.2,
+            "soilMoisture": null,
+            "height": 12.5,
+            "width": 8.0,
+            "notes": "Bluetooth sensor",
+            "photo": null
+        }
+    ]
 }
 ```
 
 ## Import process
 
 `ImportManager` detects JSON archives via MIME type, file extension, or the presence of `data.json`.
-JSON archives are streamed directly to the parser to minimise memory pressure, while CSV archives are
+JSON archives are streamed directly to the parser to minimise memory pressure, while CSV archives
+are
 fully extracted before section parsing. All inserts and updates execute inside a Room transaction so
 a failure rolls back the partial import. Media files are copied before data insertion to ensure the
 manifest never references missing assets.

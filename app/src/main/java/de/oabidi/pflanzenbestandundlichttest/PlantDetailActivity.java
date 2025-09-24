@@ -46,9 +46,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
-import de.oabidi.pflanzenbestandundlichttest.CareRecommendationAdapter;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
-import de.oabidi.pflanzenbestandundlichttest.PlantEditFragment;
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
@@ -219,7 +217,7 @@ public class PlantDetailActivity extends AppCompatActivity
             (requestKey, bundle) -> {
                 boolean refresh = bundle.getBoolean(PlantPhotoViewerFragment.EXTRA_REFRESH_GALLERY, false);
                 if (refresh) {
-                    refreshPlantPhotos(null);
+                    refreshPlantPhotos();
                 }
             }
         );
@@ -283,7 +281,7 @@ public class PlantDetailActivity extends AppCompatActivity
             careTipsList.setHasFixedSize(true);
             careRecommendationAdapter = new CareRecommendationAdapter(new CareRecommendationAdapter.Callbacks() {
                 @Override
-                public void onDismiss(CareRecommendation recommendation) {
+                public void onDismiss(@NonNull @NonNull CareRecommendation recommendation) {
                     presenter.dismissRecommendation(recommendation.getId());
                 }
             });
@@ -311,7 +309,7 @@ public class PlantDetailActivity extends AppCompatActivity
         this.photoEmptyView = emptyView;
         addPhotoButton.setOnClickListener(v -> launchCamera());
         setupPhotoGallery();
-        refreshPlantPhotos(null);
+        refreshPlantPhotos();
     }
 
     private void setupPhotoGallery() {
@@ -355,18 +353,18 @@ public class PlantDetailActivity extends AppCompatActivity
         return 3;
     }
 
-    private void refreshPlantPhotos(@Nullable Runnable completion) {
+    private void refreshPlantPhotos() {
         if (plantPhotoAdapter == null) {
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
             return;
         }
         if (plantId <= 0) {
             plantPhotoAdapter.submitList(Collections.emptyList());
             updateGalleryVisibility();
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
             return;
         }
@@ -380,13 +378,13 @@ public class PlantDetailActivity extends AppCompatActivity
                     photoGrid.post(() -> photoGrid.smoothScrollToPosition(0));
                 }
             }
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
         }, e -> {
             Toast.makeText(this, R.string.plant_photo_load_failed, Toast.LENGTH_SHORT).show();
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
         });
     }
@@ -407,7 +405,7 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         repository.addPlantPhoto(plantId, uri, photo -> {
             scrollToNewestOnNextUpdate = true;
-            refreshPlantPhotos(null);
+            refreshPlantPhotos();
         }, e -> Toast.makeText(this, R.string.photo_capture_failed, Toast.LENGTH_SHORT).show());
     }
 
@@ -423,7 +421,7 @@ public class PlantDetailActivity extends AppCompatActivity
     private void deletePhoto(@NonNull PlantPhoto photo) {
         repository.deletePlantPhoto(photo, () -> {
             Toast.makeText(this, R.string.plant_photo_delete_success, Toast.LENGTH_SHORT).show();
-            refreshPlantPhotos(null);
+            refreshPlantPhotos();
         }, e -> Toast.makeText(this, R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show());
     }
 
@@ -437,7 +435,7 @@ public class PlantDetailActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        refreshPlantPhotos(null);
+        refreshPlantPhotos();
         if (hasAmbientSensor && lightSensorHelper != null) {
             lightSensorHelper.start();
         }

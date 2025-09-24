@@ -652,9 +652,6 @@ public class ImportManager {
     @VisibleForTesting
     int computeArchiveSteps(long totalBytes) {
         long maxSteps = (long) Integer.MAX_VALUE / 2;
-        if (maxSteps <= 0) {
-            return 1;
-        }
         if (totalBytes > 0) {
             long clamped = Math.min(totalBytes, maxSteps);
             return (int) Math.max(1L, clamped);
@@ -1681,7 +1678,7 @@ public class ImportManager {
                     careTips,
                     mergedSources);
                 SpeciesTarget entity = PlantProfile.fromTarget(target);
-                db.speciesTargetDao().insert(entity != null ? entity : target);
+                db.speciesTargetDao().insert(entity);
                 imported = true;
             }
             index++;
@@ -1742,6 +1739,8 @@ public class ImportManager {
         }
         String schedule = null;
         String soil = null;
+        String frequency = null;
+        String soilType = null;
         String tolerance = null;
         reader.beginObject();
         while (reader.hasNext()) {
@@ -1750,8 +1749,14 @@ public class ImportManager {
                 case "schedule":
                     schedule = readOptionalString(reader);
                     break;
+                case "frequency":
+                    frequency = readOptionalString(reader);
+                    break;
                 case "soil":
                     soil = readOptionalString(reader);
+                    break;
+                case "soilType":
+                    soilType = readOptionalString(reader);
                     break;
                 case "tolerance":
                     tolerance = readOptionalString(reader);
@@ -1762,12 +1767,14 @@ public class ImportManager {
             }
         }
         reader.endObject();
-        if ((schedule == null || schedule.isEmpty())
-            && (soil == null || soil.isEmpty())
+        String resolvedFrequency = !isNullOrEmpty(frequency) ? frequency : schedule;
+        String resolvedSoil = !isNullOrEmpty(soilType) ? soilType : soil;
+        if ((resolvedFrequency == null || resolvedFrequency.isEmpty())
+            && (resolvedSoil == null || resolvedSoil.isEmpty())
             && (tolerance == null || tolerance.isEmpty())) {
             return null;
         }
-        return new SpeciesTarget.WateringInfo(schedule, soil, tolerance);
+        return new SpeciesTarget.WateringInfo(resolvedFrequency, resolvedSoil, tolerance);
     }
 
     private SpeciesTarget.FloatRange readRange(JsonReader reader) throws IOException {
@@ -1940,7 +1947,7 @@ public class ImportManager {
                 }
                 for (PlantPhoto photo : bulk.getAllPlantPhotos()) {
                     final String galleryPhoto = photo.getUri();
-                    if (galleryPhoto != null && !galleryPhoto.isEmpty()) {
+                    if (!galleryPhoto.isEmpty()) {
                         cleanupTasks.add(() -> PhotoManager.deletePhoto(context, galleryPhoto));
                     }
                 }
@@ -1955,9 +1962,6 @@ public class ImportManager {
         }
         if (errorHolder[0] == null) {
             try {
-                File finalDataFile = dataFile;
-                File finalBaseDir = baseDir;
-                boolean finalIsJson = isJson;
                 db.runInTransaction(() -> {
                     if (mode == Mode.REPLACE) {
                         try {
@@ -1970,10 +1974,10 @@ public class ImportManager {
                     }
                     if (errorHolder[0] == null) {
                         try {
-                            if (finalIsJson) {
+                            if (isJson) {
                                 try (JsonReader reader = new JsonReader(new InputStreamReader(
-                                    new FileInputStream(finalDataFile), StandardCharsets.UTF_8))) {
-                                    ImportError parseResult = parseAndInsertJson(reader, finalBaseDir,
+                                    new FileInputStream(dataFile), StandardCharsets.UTF_8))) {
+                                    ImportError parseResult = parseAndInsertJson(reader, baseDir,
                                         mode, warnings, progressCallback, progress, totalSteps);
                                     if (parseResult != null) {
                                         errorHolder[0] = parseResult;
@@ -1983,8 +1987,8 @@ public class ImportManager {
                                 }
                             } else {
                                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                                    new FileInputStream(finalDataFile), StandardCharsets.UTF_8))) {
-                                    ImportError parseResult = parseAndInsert(reader, finalBaseDir, mode,
+                                    new FileInputStream(dataFile), StandardCharsets.UTF_8))) {
+                                    ImportError parseResult = parseAndInsert(reader, baseDir, mode,
                                         warnings, progressCallback, progress, totalSteps);
                                     if (parseResult != null) {
                                         errorHolder[0] = parseResult;
@@ -2388,7 +2392,7 @@ public class ImportManager {
                 }
                 target = (int) Math.floor(ratio * archiveSteps);
             } else {
-                long capped = Math.min(countedBytes, (long) archiveSteps);
+                long capped = Math.min(countedBytes, archiveSteps);
                 if (capped < 0L) {
                     capped = 0L;
                 }

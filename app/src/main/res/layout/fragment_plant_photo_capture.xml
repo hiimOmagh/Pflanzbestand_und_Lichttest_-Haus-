@@ -25,7 +25,8 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/action_capture_photo" />
+            android:text="@string/action_capture_photo"
+            android:textColor="#1976D2" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -35,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="16dp"
-        android:text="@string/action_close_camera" />
+        android:text="@string/action_close_camera"
+        android:textColor="#1976D2" />
 
 </FrameLayout>

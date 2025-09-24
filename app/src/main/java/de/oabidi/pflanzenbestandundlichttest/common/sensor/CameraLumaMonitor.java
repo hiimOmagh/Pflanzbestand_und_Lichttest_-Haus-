@@ -51,9 +51,6 @@ public final class CameraLumaMonitor implements ImageAnalysis.Analyzer {
                 return;
             }
             ByteBuffer buffer = planes[0].getBuffer();
-            if (buffer == null) {
-                return;
-            }
             ByteBuffer data = buffer.duplicate();
             data.rewind();
             int remaining = data.remaining();

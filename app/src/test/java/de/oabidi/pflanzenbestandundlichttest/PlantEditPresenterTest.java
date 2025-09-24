@@ -61,10 +61,10 @@ public class PlantEditPresenterTest {
 
     private static class FakeView implements PlantEditView {
         String name = "";
-        String species = null;
-        String location = null;
-        String notes = null;
-        long acquired = 123L;
+        final String species = null;
+        final String location = null;
+        final String notes = null;
+        final long acquired = 123L;
         Uri photo;
         long id;
         boolean nameErrorShown;

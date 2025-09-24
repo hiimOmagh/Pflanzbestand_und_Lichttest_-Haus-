@@ -48,10 +48,8 @@ class SpeciesTargetsSectionParser implements SectionParser {
                 } else {
                     throw new ParseException("Not enough columns", parts.size());
                 }
-                if (target != null) {
-                    context.db.speciesTargetDao().insert(target);
-                    imported = true;
-                }
+                context.db.speciesTargetDao().insert(target);
+                imported = true;
             } catch (Exception e) {
                 Log.e(TAG, "Malformed species target row: " + row.line, e);
                 context.warnings.add(new ImportWarning("species targets", row.lineNumber, "malformed row"));
@@ -81,7 +79,7 @@ class SpeciesTargetsSectionParser implements SectionParser {
         String source = emptyToNull(parts.size() > 14 ? parts.get(14) : null);
         SpeciesTarget target = new SpeciesTarget(speciesKey, seedling, vegetative, flower, tolerance, source);
         SpeciesTarget profile = PlantProfile.fromTarget(target);
-        return profile != null ? profile : target;
+        return profile;
     }
 
     private SpeciesTarget parseLegacyRow(List<String> parts, SectionContext context) throws Exception {
@@ -93,7 +91,7 @@ class SpeciesTargetsSectionParser implements SectionParser {
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(ppfdMin, ppfdMax, dliMin, dliMax);
         SpeciesTarget target = new SpeciesTarget(speciesKey, stage, stage, stage, null, null);
         SpeciesTarget profile = PlantProfile.fromTarget(target);
-        return profile != null ? profile : target;
+        return profile;
     }
 
     private SpeciesTarget parseProfileRow(List<String> parts, SectionContext context) throws ParseException {
@@ -118,13 +116,13 @@ class SpeciesTargetsSectionParser implements SectionParser {
             parseFloat(parts.get(index++), context),
             parseFloat(parts.get(index++), context));
 
-        String wateringSchedule = emptyToNull(parts.get(index++));
-        String wateringSoil = emptyToNull(parts.get(index++));
+        String wateringFrequency = emptyToNull(parts.get(index++));
+        String wateringSoilType = emptyToNull(parts.get(index++));
         String wateringTolerance = emptyToNull(parts.get(index++));
         SpeciesTarget.WateringInfo wateringInfo = null;
-        if (!isNullOrEmpty(wateringSchedule) || !isNullOrEmpty(wateringSoil)
-            || !isNullOrEmpty(wateringTolerance)) {
-            wateringInfo = new SpeciesTarget.WateringInfo(wateringSchedule, wateringSoil, wateringTolerance);
+        if (!isNullOrEmpty(wateringFrequency) || !isNullOrEmpty(wateringSoilType)
+            || isNullOrEmpty(wateringTolerance)) {
+            wateringInfo = new SpeciesTarget.WateringInfo(wateringFrequency, wateringSoilType, wateringTolerance);
         }
 
         Float temperatureMin = parseFloat(parts.get(index++), context);
@@ -161,7 +159,7 @@ class SpeciesTargetsSectionParser implements SectionParser {
             careTips,
             sources);
         SpeciesTarget profile = PlantProfile.fromTarget(target);
-        return profile != null ? profile : target;
+        return profile;
     }
 
     private Float parseFloat(String token, SectionContext context) throws ParseException {
@@ -210,13 +208,13 @@ class SpeciesTargetsSectionParser implements SectionParser {
         }
         try {
             List<String> parsed = Converters.fromJsonToStringList(normalized);
-            return parsed != null ? parsed : Collections.emptyList();
+            return parsed;
         } catch (IllegalArgumentException e) {
             throw new ParseException("Invalid list value", 0);
         }
     }
 
     private boolean isNullOrEmpty(String value) {
-        return value == null || value.trim().isEmpty();
+        return value != null && !value.trim().isEmpty();
     }
 }

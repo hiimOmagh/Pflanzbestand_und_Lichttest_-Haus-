@@ -40,7 +40,7 @@ public class CareRecommendationEngineTest {
 
     @Test
     public void evaluateReturnsEmptyWhenMetricsWithinRange() {
-        PlantProfile profile = createProfile(18f, 26f, 40f, 60f);
+        PlantProfile profile = createProfile(18f, 26f);
         List<EnvironmentEntry> entries = new ArrayList<>();
         entries.add(new EnvironmentEntry(1L, 2_000L, 22f, 50f, 50f, 15f, 12f, "healthy", null));
         entries.add(new EnvironmentEntry(1L, 1_000L, 21f, 55f, 45f, 14f, 11f, "previous", null));
@@ -52,7 +52,7 @@ public class CareRecommendationEngineTest {
 
     @Test
     public void evaluateReturnsWarningsForOutOfRangeMetrics() {
-        PlantProfile profile = createProfile(20f, 24f, 40f, 60f);
+        PlantProfile profile = createProfile(20f, 24f);
         EnvironmentEntry entry = new EnvironmentEntry(1L, 5_000L, 16f, 70f, 10f,
             null, null, "dry", null);
 
@@ -87,7 +87,7 @@ public class CareRecommendationEngineTest {
 
     @Test
     public void evaluateHandlesMissingDataGracefully() {
-        PlantProfile profile = createProfile(18f, 24f, 40f, 60f);
+        PlantProfile profile = createProfile(18f, 24f);
         EnvironmentEntry empty = new EnvironmentEntry(1L, 3_000L, null, null, null,
             null, null, null, null);
 
@@ -113,8 +113,7 @@ public class CareRecommendationEngineTest {
         return null;
     }
 
-    private PlantProfile createProfile(Float temperatureMin, Float temperatureMax,
-                                       Float humidityMin, Float humidityMax) {
+    private PlantProfile createProfile(Float temperatureMin, Float temperatureMax) {
         SpeciesTarget.StageTarget emptyStage = new SpeciesTarget.StageTarget();
         SpeciesTarget target = new SpeciesTarget("profile",
             null,
@@ -125,7 +124,7 @@ public class CareRecommendationEngineTest {
             emptyStage,
             new SpeciesTarget.WateringInfo(null, null, null),
             new SpeciesTarget.FloatRange(temperatureMin, temperatureMax),
-            new SpeciesTarget.FloatRange(humidityMin, humidityMax),
+            new SpeciesTarget.FloatRange((Float) 40.0, (Float) 60.0),
             null,
             null,
             null,

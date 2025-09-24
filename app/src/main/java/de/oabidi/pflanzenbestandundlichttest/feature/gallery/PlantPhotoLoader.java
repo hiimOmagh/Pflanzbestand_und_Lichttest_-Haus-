@@ -119,7 +119,7 @@ public class PlantPhotoLoader {
 
         BitmapFactory.Options decode = new BitmapFactory.Options();
         decode.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        decode.inSampleSize = calculateSampleSize(bounds, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
+        decode.inSampleSize = calculateSampleSize(bounds);
         try (InputStream in = resolver.openInputStream(uri)) {
             if (in == null) {
                 return null;
@@ -130,17 +130,15 @@ public class PlantPhotoLoader {
         }
     }
 
-    private static int calculateSampleSize(@NonNull BitmapFactory.Options options,
-                                           int reqWidth,
-                                           int reqHeight) {
+    private static int calculateSampleSize(@NonNull BitmapFactory.Options options) {
         int height = options.outHeight;
         int width = options.outWidth;
         int inSampleSize = 1;
-        if (height > reqHeight || width > reqWidth) {
+        if (height > PlantPhotoLoader.MAX_TEXTURE_SIZE || width > PlantPhotoLoader.MAX_TEXTURE_SIZE) {
             int halfHeight = height / 2;
             int halfWidth = width / 2;
-            while ((halfHeight / inSampleSize) >= reqHeight
-                && (halfWidth / inSampleSize) >= reqWidth) {
+            while ((halfHeight / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE
+                && (halfWidth / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE) {
                 inSampleSize *= 2;
             }
         }

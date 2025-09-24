@@ -477,7 +477,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             return;
         }
         fragmentView.post(() -> {
-            if (!isAdded() || fragmentView == null || fragmentView.getContext() == null || context == null) {
+            if (!isAdded() || fragmentView.getContext() == null) {
                 return;
             }
             if (ambient != null) {

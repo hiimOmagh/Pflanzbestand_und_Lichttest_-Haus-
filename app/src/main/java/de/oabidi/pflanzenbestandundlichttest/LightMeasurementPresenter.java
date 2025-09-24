@@ -279,8 +279,11 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         if (stored != null) {
             try {
                 float parsed = Float.parseFloat(stored);
-                if (parsed > 0f && !Float.isNaN(parsed) && !Float.isInfinite(parsed)) {
-                    defaultValue = parsed;
+                if (parsed > 0f) {
+                    Float.isNaN(parsed);
+                    if (!Float.isInfinite(parsed)) {
+                        defaultValue = parsed;
+                    }
                 }
             } catch (NumberFormatException ignored) {
                 // Keep default

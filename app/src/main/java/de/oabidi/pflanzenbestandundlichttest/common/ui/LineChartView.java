@@ -175,7 +175,6 @@ public class LineChartView extends View {
             return;
         }
 
-        float originX = leftPadding;
         float originY = height - bottomPadding;
         float stepX = chartWidth / (timestamps.size() - 1);
         float range = maxValue - minValue;
@@ -197,9 +196,9 @@ public class LineChartView extends View {
                     lastY = null;
                     continue;
                 }
-                float x = originX + (stepX * i);
+                float x = leftPadding + (stepX * i);
                 float y = originY - ((value - minValue) / range) * chartHeight;
-                if (lastX != null && lastY != null) {
+                if (lastX != null) {
                     canvas.drawLine(lastX, lastY, x, y, linePaint);
                 }
                 canvas.drawCircle(x, y, 3f * density, pointPaint);
@@ -209,8 +208,8 @@ public class LineChartView extends View {
         }
 
         // Draw axes
-        canvas.drawLine(originX, originY - chartHeight, originX, originY, axisPaint);
-        canvas.drawLine(originX, originY, originX + chartWidth, originY, axisPaint);
+        canvas.drawLine(leftPadding, originY - chartHeight, leftPadding, originY, axisPaint);
+        canvas.drawLine(leftPadding, originY, leftPadding + chartWidth, originY, axisPaint);
         float tick = 4f * density;
 
         // Y-axis labels
@@ -219,9 +218,9 @@ public class LineChartView extends View {
         for (int i = 0; i <= steps; i++) {
             float value = minValue + ((range / steps) * i);
             float y = originY - ((value - minValue) / range) * chartHeight;
-            canvas.drawLine(originX - tick, y, originX, y, axisPaint);
+            canvas.drawLine(leftPadding - tick, y, leftPadding, y, axisPaint);
             canvas.drawText(String.format(Locale.getDefault(), "%.1f", value),
-                originX - tick * 1.5f, y + textHeight / 3f, textPaint);
+                leftPadding - tick * 1.5f, y + textHeight / 3f, textPaint);
         }
 
         // X-axis labels
@@ -229,7 +228,7 @@ public class LineChartView extends View {
         SimpleDateFormat dateFormat = new SimpleDateFormat(
             getResources().getString(R.string.chart_date_pattern), Locale.getDefault());
         for (int i = 0; i < timestamps.size(); i++) {
-            float x = originX + (stepX * i);
+            float x = leftPadding + (stepX * i);
             canvas.drawLine(x, originY, x, originY + tick, axisPaint);
             String label = dateFormat.format(new Date(timestamps.get(i)));
             canvas.drawText(label, x, height - tick, textPaint);
@@ -238,15 +237,14 @@ public class LineChartView extends View {
         // Legend
         textPaint.setTextAlign(Paint.Align.LEFT);
         float legendY = originY + textHeight * 1.5f;
-        float legendX = originX;
-        float box = textHeight;
+        float legendX = leftPadding;
         for (int s = 0; s < seriesLabels.size(); s++) {
             Paint markerPaint = pointPaints.get(s);
-            canvas.drawRect(legendX, legendY, legendX + box, legendY + box, markerPaint);
-            float textX = legendX + box + tick;
-            float textY = legendY + box * 0.8f;
+            canvas.drawRect(legendX, legendY, legendX + textHeight, legendY + textHeight, markerPaint);
+            float textX = legendX + textHeight + tick;
+            float textY = legendY + textHeight * 0.8f;
             canvas.drawText(seriesLabels.get(s), textX, textY, textPaint);
-            legendX += box + textPaint.measureText(seriesLabels.get(s)) + tick * 4f;
+            legendX += textHeight + textPaint.measureText(seriesLabels.get(s)) + tick * 4f;
         }
     }
 

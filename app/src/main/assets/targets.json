@@ -25,9 +25,9 @@
             "dliMax": 8.5
         },
         "watering": {
-            "schedule": "Allow top 2-3 cm of soil to dry between waterings",
-            "soil": "Well-draining potting mix with perlite",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Allow top 2-3 cm of soil to dry between waterings",
+            "soilType": "Well-draining potting mix with perlite"
         },
         "temperature": {
             "min": 18,
@@ -73,9 +73,9 @@
             "dliMax": 7.0
         },
         "watering": {
-            "schedule": "Water every 3-4 weeks in bright rooms, less in winter",
-            "soil": "Cactus or succulent mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water every 3-4 weeks in bright rooms, less in winter",
+            "soilType": "Cactus or succulent mix"
         },
         "temperature": {
             "min": 16,

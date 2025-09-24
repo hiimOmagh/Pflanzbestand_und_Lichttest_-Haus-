@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey;
 /**
  * Full-text search entity indexing plant names, species, locations and notes.
  * <p>
- * The {@code rowid} of this table mirrors the {@link Plant#id} allowing fast
+ * The {@code rowid} of this table mirrors the  allowing fast
  * joins between the FTS index and the content table.
  */
 @Fts4
@@ -16,11 +16,11 @@ import androidx.room.PrimaryKey;
 public class PlantFts {
     @PrimaryKey
     @ColumnInfo(name = "rowid")
-    public long rowId;
-    public String name;
-    public String species;
-    public String locationHint;
-    public String description;
+    public final long rowId;
+    public final String name;
+    public final String species;
+    public final String locationHint;
+    public final String description;
 
     public PlantFts(long rowId, String name, String species, String locationHint, String description) {
         this.rowId = rowId;

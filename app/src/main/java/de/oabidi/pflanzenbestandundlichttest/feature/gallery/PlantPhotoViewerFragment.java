@@ -139,7 +139,7 @@ public class PlantPhotoViewerFragment extends Fragment {
         toolbar.setOnMenuItemClickListener(this::onMenuItemSelected);
         updateTitle();
 
-        loadPhotos(null);
+        loadPhotos();
     }
 
     @Override
@@ -152,7 +152,7 @@ public class PlantPhotoViewerFragment extends Fragment {
             swipeToDeleteHelper = null;
         }
         swipeCallback = null;
-        if (pendingDeletion != null && pendingDeletion.snackbar != null) {
+        if (pendingDeletion != null) {
             pendingDeletion.snackbar.dismiss();
             pendingDeletion = null;
         }
@@ -169,10 +169,10 @@ public class PlantPhotoViewerFragment extends Fragment {
         return false;
     }
 
-    private void loadPhotos(@Nullable Runnable completion) {
+    private void loadPhotos() {
         if (plantId <= 0) {
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
             return;
         }
@@ -191,16 +191,16 @@ public class PlantPhotoViewerFragment extends Fragment {
             }
             updateSubtitle(currentIndex);
             updateTitle();
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
             if (pagerAdapter.getItemCount() == 0) {
                 closeSelf();
             }
         }, e -> {
             Toast.makeText(requireContext(), R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show();
-            if (completion != null) {
-                completion.run();
+            if (null != null) {
+                ((Runnable) null).run();
             }
         });
     }
@@ -254,7 +254,7 @@ public class PlantPhotoViewerFragment extends Fragment {
         repository.deletePlantPhoto(photo, () -> {
             Toast.makeText(requireContext(), R.string.plant_photo_delete_success, Toast.LENGTH_SHORT).show();
             refreshRequested = true;
-            loadPhotos(null);
+            loadPhotos();
         }, e -> Toast.makeText(requireContext(), R.string.plant_photo_delete_failed, Toast.LENGTH_SHORT).show());
     }
 
@@ -269,7 +269,7 @@ public class PlantPhotoViewerFragment extends Fragment {
             return;
         }
         pagerAdapter.removeAt(position);
-        if (pendingDeletion != null && pendingDeletion.snackbar != null) {
+        if (pendingDeletion != null) {
             pendingDeletion.snackbar.dismiss();
         }
         int itemCount = pagerAdapter.getItemCount();
@@ -292,8 +292,7 @@ public class PlantPhotoViewerFragment extends Fragment {
             return;
         }
         Snackbar snackbar = Snackbar.make(root, R.string.plant_photo_pending_delete, Snackbar.LENGTH_LONG);
-        PendingDeletion deletion = new PendingDeletion(photo, position, snackbar);
-        pendingDeletion = deletion;
+        pendingDeletion = new PendingDeletion(photo, position, snackbar);
         snackbar.setAction(R.string.action_undo, v -> {
             if (pendingDeletion != null && pendingDeletion.photo.getId() == photo.getId()) {
                 pendingDeletion.undone = true;

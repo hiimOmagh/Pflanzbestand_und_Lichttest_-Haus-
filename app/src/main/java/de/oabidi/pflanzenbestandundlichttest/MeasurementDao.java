@@ -20,10 +20,9 @@ public interface MeasurementDao {
      * PPFD value which will be stored for later retrieval.</p>
      *
      * @param measurement the entity to insert
-     * @return the generated row ID
      */
     @Insert
-    long insert(Measurement measurement);
+    void insert(Measurement measurement);
 
     /**
      * Removes a measurement from the database.

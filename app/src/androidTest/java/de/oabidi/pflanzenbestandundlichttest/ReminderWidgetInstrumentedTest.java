@@ -33,15 +33,14 @@ public class ReminderWidgetInstrumentedTest {
     @Test
     public void widgetButtonsLaunchExpectedActivities() throws Exception {
         Application application = ApplicationProvider.getApplicationContext();
-        Context context = application;
 
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(application);
         ShadowAppWidgetManager shadowAppWidgetManager = Shadows.shadowOf(appWidgetManager);
         int widgetId = shadowAppWidgetManager.createWidget(ReminderWidgetProvider.class, R.layout.widget_reminder);
 
         long triggerAt = System.currentTimeMillis() + 60000;
         Reminder reminder = new Reminder(triggerAt, "Water widget", 1);
-        PlantDatabase db = PlantDatabase.getDatabase(context);
+        PlantDatabase db = PlantDatabase.getDatabase(application);
         final long[] reminderIdHolder = new long[1];
         CountDownLatch insertLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(() -> {
@@ -50,16 +49,16 @@ public class ReminderWidgetInstrumentedTest {
         });
         assertTrue(insertLatch.await(2, TimeUnit.SECONDS));
         long reminderId = reminderIdHolder[0];
-        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
+        ReminderScheduler.scheduleReminderAt(application, triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
 
         CountDownLatch latch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(latch::countDown);
         assertTrue(latch.await(2, TimeUnit.SECONDS));
 
-        Intent update = new Intent(context, ReminderWidgetProvider.class);
+        Intent update = new Intent(application, ReminderWidgetProvider.class);
         update.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         update.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{widgetId});
-        new ReminderWidgetProvider().onReceive(context, update);
+        new ReminderWidgetProvider().onReceive(application, update);
 
         CountDownLatch updateLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(updateLatch::countDown);
@@ -98,16 +97,14 @@ public class ReminderWidgetInstrumentedTest {
 
     @Test
     public void markDoneBroadcastUpdatesWidgetState() throws Exception {
-        Application application = ApplicationProvider.getApplicationContext();
-        Context context = application;
 
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
         ShadowAppWidgetManager shadowAppWidgetManager = Shadows.shadowOf(appWidgetManager);
         int widgetId = shadowAppWidgetManager.createWidget(ReminderWidgetProvider.class, R.layout.widget_reminder);
 
         long triggerAt = System.currentTimeMillis() + 60000;
         Reminder reminder = new Reminder(triggerAt, "Mist plants", 2);
-        PlantDatabase db = PlantDatabase.getDatabase(context);
+        PlantDatabase db = PlantDatabase.getDatabase(ApplicationProvider.<Application>getApplicationContext());
         final long[] reminderIdHolder = new long[1];
         CountDownLatch insertLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(() -> {
@@ -116,16 +113,16 @@ public class ReminderWidgetInstrumentedTest {
         });
         assertTrue(insertLatch.await(2, TimeUnit.SECONDS));
         long reminderId = reminderIdHolder[0];
-        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
+        ReminderScheduler.scheduleReminderAt(ApplicationProvider.<Application>getApplicationContext(), triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
 
         CountDownLatch readyLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(readyLatch::countDown);
         assertTrue(readyLatch.await(2, TimeUnit.SECONDS));
 
-        Intent update = new Intent(context, ReminderWidgetProvider.class);
+        Intent update = new Intent(ApplicationProvider.<Application>getApplicationContext(), ReminderWidgetProvider.class);
         update.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         update.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{widgetId});
-        new ReminderWidgetProvider().onReceive(context, update);
+        new ReminderWidgetProvider().onReceive(ApplicationProvider.<Application>getApplicationContext(), update);
 
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         CountDownLatch initialUpdateLatch = new CountDownLatch(1);
@@ -149,7 +146,7 @@ public class ReminderWidgetInstrumentedTest {
         assertNotNull(updatedView);
         TextView reminderText = updatedView.findViewById(R.id.widget_reminder_text);
         assertNotNull(reminderText);
-        assertEquals(context.getString(R.string.widget_reminder_marked_done), reminderText.getText().toString());
+        assertEquals(ApplicationProvider.<Application>getApplicationContext().getString(R.string.widget_reminder_marked_done), reminderText.getText().toString());
 
         CountDownLatch queryLatch = new CountDownLatch(1);
         final boolean[] hasReminder = new boolean[1];
@@ -160,10 +157,10 @@ public class ReminderWidgetInstrumentedTest {
         assertTrue(queryLatch.await(2, TimeUnit.SECONDS));
         assertFalse(hasReminder[0]);
 
-        Intent refreshIntent = new Intent(context, ReminderWidgetProvider.class);
+        Intent refreshIntent = new Intent(ApplicationProvider.<Application>getApplicationContext(), ReminderWidgetProvider.class);
         refreshIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         refreshIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{widgetId});
-        new ReminderWidgetProvider().onReceive(context, refreshIntent);
+        new ReminderWidgetProvider().onReceive(ApplicationProvider.<Application>getApplicationContext(), refreshIntent);
 
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         CountDownLatch refreshLatch = new CountDownLatch(1);
@@ -174,21 +171,19 @@ public class ReminderWidgetInstrumentedTest {
         assertNotNull(refreshedView);
         TextView refreshedText = refreshedView.findViewById(R.id.widget_reminder_text);
         assertNotNull(refreshedText);
-        assertEquals(context.getString(R.string.widget_no_reminders), refreshedText.getText().toString());
+        assertEquals(ApplicationProvider.<Application>getApplicationContext().getString(R.string.widget_no_reminders), refreshedText.getText().toString());
     }
 
     @Test
     public void statusMessageHidesMarkDoneButtonAfterQuickAction() throws Exception {
-        Application application = ApplicationProvider.getApplicationContext();
-        Context context = application;
 
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ApplicationProvider.<Application>getApplicationContext());
         ShadowAppWidgetManager shadowAppWidgetManager = Shadows.shadowOf(appWidgetManager);
         int widgetId = shadowAppWidgetManager.createWidget(ReminderWidgetProvider.class, R.layout.widget_reminder);
 
         long triggerAt = System.currentTimeMillis() + 60000;
         Reminder reminder = new Reminder(triggerAt, "Fertilize", 3);
-        PlantDatabase db = PlantDatabase.getDatabase(context);
+        PlantDatabase db = PlantDatabase.getDatabase(ApplicationProvider.<Application>getApplicationContext());
         CountDownLatch insertLatch = new CountDownLatch(1);
         final long[] reminderIdHolder = new long[1];
         PlantDatabase.databaseWriteExecutor.execute(() -> {
@@ -197,16 +192,16 @@ public class ReminderWidgetInstrumentedTest {
         });
         assertTrue(insertLatch.await(2, TimeUnit.SECONDS));
         long reminderId = reminderIdHolder[0];
-        ReminderScheduler.scheduleReminderAt(context, triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
+        ReminderScheduler.scheduleReminderAt(ApplicationProvider.<Application>getApplicationContext(), triggerAt, reminder.getMessage(), reminderId, reminder.getPlantId());
 
         CountDownLatch readyLatch = new CountDownLatch(1);
         PlantDatabase.databaseWriteExecutor.execute(readyLatch::countDown);
         assertTrue(readyLatch.await(2, TimeUnit.SECONDS));
 
-        Intent update = new Intent(context, ReminderWidgetProvider.class);
+        Intent update = new Intent(ApplicationProvider.<Application>getApplicationContext(), ReminderWidgetProvider.class);
         update.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
         update.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{widgetId});
-        new ReminderWidgetProvider().onReceive(context, update);
+        new ReminderWidgetProvider().onReceive(ApplicationProvider.<Application>getApplicationContext(), update);
 
         Shadows.shadowOf(Looper.getMainLooper()).idle();
         CountDownLatch initialLatch = new CountDownLatch(1);
@@ -228,7 +223,7 @@ public class ReminderWidgetInstrumentedTest {
         assertNotNull(updatedView);
         TextView reminderText = updatedView.findViewById(R.id.widget_reminder_text);
         assertNotNull(reminderText);
-        assertEquals(context.getString(R.string.widget_reminder_marked_done), reminderText.getText().toString());
+        assertEquals(ApplicationProvider.<Application>getApplicationContext().getString(R.string.widget_reminder_marked_done), reminderText.getText().toString());
 
         Button markDoneUpdated = updatedView.findViewById(R.id.widget_mark_done_button);
         assertNotNull(markDoneUpdated);

@@ -89,11 +89,11 @@ public interface SpeciesTargetDao {
     /**
      * Insert or replace a species target in the database.
      * *
+     *
      * @param target entity to persist
-     * @return row ID of the inserted entity
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    long insert(SpeciesTarget target);
+    void insert(SpeciesTarget target);
 
     /**
      * Remove the species target for the given key.

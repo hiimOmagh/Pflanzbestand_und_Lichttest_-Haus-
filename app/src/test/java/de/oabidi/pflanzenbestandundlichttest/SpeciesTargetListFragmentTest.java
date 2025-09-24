@@ -22,23 +22,23 @@ public class SpeciesTargetListFragmentTest {
 
     @Test
     public void isInputValid_returnsTrueForValidInput() throws Exception {
-        Object stage = newStage("10", "20", "", "");
+        Object stage = newStage("10", "20");
         assertTrue(invokeIsInputValid("species", stage));
     }
 
     @Test
     public void isInputValid_returnsFalseForEmptyKey() throws Exception {
-        Object stage = newStage("10", "20", "", "");
+        Object stage = newStage("10", "20");
         assertFalse(invokeIsInputValid("", stage));
     }
 
     @Test
     public void isInputValid_returnsFalseForInvalidRange() throws Exception {
-        Object stage = newStage("20", "10", "", "");
+        Object stage = newStage("20", "10");
         assertFalse(invokeIsInputValid("species", stage));
     }
 
-    private Object newStage(String ppfdMin, String ppfdMax, String dliMin, String dliMax)
+    private Object newStage(String ppfdMin, String ppfdMax)
         throws Exception {
         Class<?> stageClass = Class.forName(
             "de.oabidi.pflanzenbestandundlichttest.SpeciesTargetListFragment$StageFields");
@@ -46,7 +46,7 @@ public class SpeciesTargetListFragmentTest {
             EditText.class, EditText.class, EditText.class, EditText.class);
         ctor.setAccessible(true);
         return ctor.newInstance(editText(ppfdMin), editText(ppfdMax),
-            editText(dliMin), editText(dliMax));
+            editText(""), editText(""));
     }
 
     private EditText editText(String value) {

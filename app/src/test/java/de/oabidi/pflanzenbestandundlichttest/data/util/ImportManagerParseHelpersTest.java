@@ -59,14 +59,13 @@ public class ImportManagerParseHelpersTest {
         return nf;
     }
 
-    private ImportManager.SectionContext newContext(ImportManager.Mode mode,
-                                                    Map<Long, Long> plantIdMap,
+    private ImportManager.SectionContext newContext(Map<Long, Long> plantIdMap,
                                                     List<ImportManager.ImportWarning> warnings,
                                                     List<Uri> restoredUris,
                                                     NumberFormat nf) {
         return new ImportManager.SectionContext(
             importer,
-            mode,
+            ImportManager.Mode.REPLACE,
             baseDir,
             plantIdMap,
             warnings,
@@ -221,7 +220,7 @@ public class ImportManagerParseHelpersTest {
         Map<Long, Long> plantIdMap = new HashMap<>();
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         List<Uri> uris = new ArrayList<>();
-        ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
+        ImportManager.SectionContext context = newContext(
             plantIdMap, warnings, uris, newNumberFormat());
         AtomicInteger progress = new AtomicInteger();
         AtomicInteger totalSteps = new AtomicInteger(7);

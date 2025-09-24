@@ -14,7 +14,7 @@ import org.junit.rules.TemporaryFolder;
 public class BackupSchedulerTest {
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void cleanupOldBackups_retainsNewestFiveFiles() throws Exception {

@@ -20,7 +20,7 @@ import org.robolectric.RobolectricTestRunner;
 @RunWith(RobolectricTestRunner.class)
 public class PlantDetailPresenterTest {
     private FakeView view;
-    private Uri dummyUri = Uri.parse("file://test");
+    private final Uri dummyUri = Uri.parse("file://test");
 
     @Before
     public void setUp() {
@@ -93,7 +93,7 @@ public class PlantDetailPresenterTest {
     }
 
     private static class FakeExportManager extends ExportManager {
-        boolean result;
+        final boolean result;
         Uri uri;
         long plantId;
 

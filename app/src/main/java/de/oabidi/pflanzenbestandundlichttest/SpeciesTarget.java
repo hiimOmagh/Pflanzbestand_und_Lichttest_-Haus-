@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
 import androidx.room.Ignore;
@@ -190,11 +191,13 @@ public class SpeciesTarget {
     }
 
     public static class WateringInfo {
+        @ColumnInfo(name = "watering_schedule")
         @Nullable
-        private String schedule;
+        private String frequency;
 
+        @ColumnInfo(name = "watering_soil")
         @Nullable
-        private String soil;
+        private String soilType;
 
         @Nullable
         private String tolerance;
@@ -206,27 +209,45 @@ public class SpeciesTarget {
         public WateringInfo(@Nullable String schedule,
                             @Nullable String soil,
                             @Nullable String tolerance) {
-            this.schedule = schedule;
-            this.soil = soil;
+            this.frequency = schedule;
+            this.soilType = soil;
             this.tolerance = tolerance;
         }
 
         @Nullable
         public String getSchedule() {
-            return schedule;
+            return frequency;
         }
 
         public void setSchedule(@Nullable String schedule) {
-            this.schedule = schedule;
+            this.frequency = schedule;
         }
 
         @Nullable
         public String getSoil() {
-            return soil;
+            return soilType;
         }
 
         public void setSoil(@Nullable String soil) {
-            this.soil = soil;
+            this.soilType = soil;
+        }
+
+        @Nullable
+        public String getFrequency() {
+            return frequency;
+        }
+
+        public void setFrequency(@Nullable String frequency) {
+            this.frequency = frequency;
+        }
+
+        @Nullable
+        public String getSoilType() {
+            return soilType;
+        }
+
+        public void setSoilType(@Nullable String soilType) {
+            this.soilType = soilType;
         }
 
         @Nullable
@@ -247,14 +268,14 @@ public class SpeciesTarget {
                 return false;
             }
             WateringInfo other = (WateringInfo) obj;
-            return Objects.equals(schedule, other.schedule)
-                && Objects.equals(soil, other.soil)
+            return Objects.equals(frequency, other.frequency)
+                && Objects.equals(soilType, other.soilType)
                 && Objects.equals(tolerance, other.tolerance);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(schedule, soil, tolerance);
+            return Objects.hash(frequency, soilType, tolerance);
         }
     }
 
@@ -336,7 +357,7 @@ public class SpeciesTarget {
         this.speciesKey = speciesKey;
         this.commonName = commonName;
         this.scientificName = scientificName;
-        this.category = category != null ? category : Category.OTHER;
+        this.category = category;
         this.seedlingStage = seedlingStage != null ? seedlingStage : new StageTarget();
         this.vegetativeStage = vegetativeStage != null ? vegetativeStage : new StageTarget();
         this.flowerStage = flowerStage != null ? flowerStage : new StageTarget();
@@ -429,7 +450,7 @@ public class SpeciesTarget {
     }
 
     public void setCategory(@NonNull Category category) {
-        this.category = category != null ? category : Category.OTHER;
+        this.category = category;
     }
 
     @Nullable

@@ -169,9 +169,7 @@ public class PlantListPresenterTest {
                 String name = plant.getName();
                 String species = plant.getSpecies();
                 String location = plant.getLocationHint();
-                if ((name != null && name.toLowerCase(Locale.ROOT).contains(lower))
-                    || (species != null && species.toLowerCase(Locale.ROOT).contains(lower))
-                    || (location != null && location.toLowerCase(Locale.ROOT).contains(lower))) {
+                if (name.toLowerCase(Locale.ROOT).contains(lower) || species != null && species.toLowerCase(Locale.ROOT).contains(lower) || location != null && location.toLowerCase(Locale.ROOT).contains(lower)) {
                     result.add(plant);
                 }
             }

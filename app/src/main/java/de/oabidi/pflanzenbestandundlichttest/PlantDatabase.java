@@ -57,8 +57,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         PlantCalibration.class,
         EnvironmentEntry.class
     },
-    version = 15,
-    exportSchema = true
+    version = 15
 )
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
@@ -401,7 +400,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                 SpeciesTarget.FloatRange temperature = parseRange(obj.optJSONObject("temperature"));
                 SpeciesTarget.FloatRange humidity = parseRange(obj.optJSONObject("humidity"));
                 String growthHabit = optString(obj, "growthHabit");
-                Boolean toxicToPets = optBoolean(obj, "toxicToPets");
+                Boolean toxicToPets = optBoolean(obj);
                 List<String> careTips = parseStringArray(obj.optJSONArray("careTips"));
                 List<String> sources = parseStringArray(obj.optJSONArray("sources"));
                 String legacySource = optString(obj, "source");
@@ -426,7 +425,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     careTips,
                     sources);
                 SpeciesTarget entity = PlantProfile.fromTarget(target);
-                dao.insert(entity != null ? entity : target);
+                dao.insert(entity);
             }
         } catch (IOException | JSONException e) {
             Log.e("PlantDatabase", "Failed to seed species targets", e);
@@ -464,13 +463,17 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
         String schedule = optString(object, "schedule");
         String soil = optString(object, "soil");
+        String frequency = optString(object, "frequency");
+        String soilType = optString(object, "soilType");
         String tolerance = optString(object, "tolerance");
-        if ((schedule == null || schedule.isEmpty())
-            && (soil == null || soil.isEmpty())
+        String resolvedFrequency = frequency != null ? frequency : schedule;
+        String resolvedSoil = soilType != null ? soilType : soil;
+        if ((resolvedFrequency == null || resolvedFrequency.isEmpty())
+            && (resolvedSoil == null || resolvedSoil.isEmpty())
             && (tolerance == null || tolerance.isEmpty())) {
             return null;
         }
-        return new SpeciesTarget.WateringInfo(schedule, soil, tolerance);
+        return new SpeciesTarget.WateringInfo(resolvedFrequency, resolvedSoil, tolerance);
     }
 
     @Nullable
@@ -504,18 +507,18 @@ public abstract class PlantDatabase extends RoomDatabase {
     private static String optString(JSONObject object, String key) {
         if (object != null && object.has(key)) {
             String value = object.optString(key, null);
-            if (value != null && !value.trim().isEmpty()) {
+            if (!value.trim().isEmpty()) {
                 return value;
             }
         }
         return null;
     }
 
-    private static Boolean optBoolean(@Nullable JSONObject object, String key) {
-        if (object == null || !object.has(key)) {
+    private static Boolean optBoolean(@Nullable JSONObject object) {
+        if (object == null || !object.has("toxicToPets")) {
             return null;
         }
-        Object raw = object.opt(key);
+        Object raw = object.opt("toxicToPets");
         if (raw == null || raw == JSONObject.NULL) {
             return null;
         }

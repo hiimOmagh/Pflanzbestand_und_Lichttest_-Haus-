@@ -25,13 +25,13 @@ public final class InsetsUtils {
         } else {
             view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
                 @Override
-                public void onViewAttachedToWindow(View v) {
+                public void onViewAttachedToWindow(@NonNull View v) {
                     v.removeOnAttachStateChangeListener(this);
                     ViewCompat.requestApplyInsets(v);
                 }
 
                 @Override
-                public void onViewDetachedFromWindow(View v) {
+                public void onViewDetachedFromWindow(@NonNull View v) {
                     // no-op
                 }
             });

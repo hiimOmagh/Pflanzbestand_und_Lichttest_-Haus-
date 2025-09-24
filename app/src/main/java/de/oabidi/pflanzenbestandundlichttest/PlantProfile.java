@@ -88,7 +88,7 @@ public class PlantProfile extends SpeciesTarget {
         if (info == null) {
             return new WateringInfo();
         }
-        return new WateringInfo(info.getSchedule(), info.getSoil(), info.getTolerance());
+        return new WateringInfo(info.getFrequency(), info.getSoilType(), info.getTolerance());
     }
 
     private static List<String> copyList(@Nullable List<String> values) {

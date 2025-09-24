@@ -179,10 +179,8 @@ public class ExportManager {
                 reminders = bulkDao.getRemindersForPlant(plantId);
                 List<PlantCalibration> calibrations = bulkDao.getPlantCalibrationsForPlant(plantId);
                 environmentEntries = bulkDao.getEnvironmentEntriesForPlant(plantId);
-                List<PlantPhoto> plantPhotos = photos != null ? photos : Collections.emptyList();
-                List<PlantPhoto> finalPlantPhotos = plantPhotos;
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos, calibrations,
+                    bulkDao.getAllSpeciesTargets(), photos != null ? photos : Collections.emptyList(), calibrations,
                     environmentEntries != null ? environmentEntries : Collections.emptyList());
             } else {
                 plants = bulkDao.getAllPlants();
@@ -225,7 +223,7 @@ public class ExportManager {
             for (PlantPhoto photo : data.plantPhotos) {
                 String photoName = "";
                 String uriString = photo.getUri();
-                if (uriString != null && !uriString.isEmpty()) {
+                if (!uriString.isEmpty()) {
                     Uri photoUri = Uri.parse(uriString);
                     photoName = copyPhotoIfPresent(tempDir, "plant_photo_", photo.getId(), photoUri);
                 }
@@ -249,7 +247,7 @@ public class ExportManager {
             writer.write("speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
                 + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"
                 + "flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,"
-                + "wateringSchedule,wateringSoil,wateringTolerance,"
+                + "wateringFrequency,wateringSoilType,wateringTolerance,"
                 + "temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources\n");
             for (SpeciesTarget t : data.targets) {
                 SpeciesTarget.StageTarget seedling = t.getSeedlingStage();
@@ -262,7 +260,7 @@ public class ExportManager {
                     escape(t.getSpeciesKey()),
                     escape(t.getCommonName()),
                     escape(t.getScientificName()),
-                    escape(t.getCategory() != null ? t.getCategory().name() : SpeciesTarget.Category.OTHER.name()),
+                    escape(t.getCategory().name()),
                     escape(formatFloat(seedling != null ? seedling.getPpfdMin() : null)),
                     escape(formatFloat(seedling != null ? seedling.getPpfdMax() : null)),
                     escape(formatFloat(seedling != null ? seedling.getDliMin() : null)),
@@ -275,8 +273,8 @@ public class ExportManager {
                     escape(formatFloat(flower != null ? flower.getPpfdMax() : null)),
                     escape(formatFloat(flower != null ? flower.getDliMin() : null)),
                     escape(formatFloat(flower != null ? flower.getDliMax() : null)),
-                    escape(watering != null ? watering.getSchedule() : null),
-                    escape(watering != null ? watering.getSoil() : null),
+                    escape(watering != null ? watering.getFrequency() : null),
+                    escape(watering != null ? watering.getSoilType() : null),
                     escape(watering != null ? watering.getTolerance() : null),
                     escape(formatFloat(temperature != null ? temperature.getMin() : null)),
                     escape(formatFloat(temperature != null ? temperature.getMax() : null)),
@@ -356,7 +354,7 @@ public class ExportManager {
         return csvFile;
     }
 
-    private File writeJson(File tempDir, ExportData data) throws IOException {
+    private void writeJson(File tempDir, ExportData data) throws IOException {
         File jsonFile = new File(tempDir, "data.json");
         try (OutputStream os = new FileOutputStream(jsonFile);
              OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
@@ -389,7 +387,7 @@ public class ExportManager {
                 writer.name("plantId").value(photo.getPlantId());
                 String fileName = "";
                 String uriString = photo.getUri();
-                if (uriString != null && !uriString.isEmpty()) {
+                if (!uriString.isEmpty()) {
                     fileName = copyPhotoIfPresent(tempDir, "plant_photo_", photo.getId(), Uri.parse(uriString));
                 }
                 writeOptionalString(writer, "fileName", fileName);
@@ -416,8 +414,7 @@ public class ExportManager {
                 writeString(writer, "speciesKey", target.getSpeciesKey());
                 writeString(writer, "commonName", target.getCommonName());
                 writeString(writer, "scientificName", target.getScientificName());
-                writer.name("category").value(target.getCategory() != null
-                    ? target.getCategory().name() : SpeciesTarget.Category.OTHER.name());
+                writer.name("category").value(target.getCategory().name());
                 writeStage(writer, "seedling", target.getSeedlingStage());
                 writeStage(writer, "vegetative", target.getVegetativeStage());
                 writeStage(writer, "flower", target.getFlowerStage());
@@ -425,7 +422,7 @@ public class ExportManager {
                 writeRange(writer, "temperature", target.getTemperatureRange());
                 writeRange(writer, "humidity", target.getHumidityRange());
                 writeString(writer, "growthHabit", target.getGrowthHabit());
-                writeOptionalBoolean(writer, "toxicToPets", target.getToxicToPets());
+                writeOptionalBoolean(writer, target.getToxicToPets());
                 writeStringArray(writer, "careTips", target.getCareTips());
                 writeStringArray(writer, "sources", target.getSources());
                 writer.endObject();
@@ -506,7 +503,6 @@ public class ExportManager {
             Log.e(TAG, "Error writing JSON", e);
             throw e;
         }
-        return jsonFile;
     }
 
     private void zipFiles(Uri uri, File tempDir) throws IOException {
@@ -574,16 +570,22 @@ public class ExportManager {
     private void writeWatering(JsonWriter writer, @Nullable SpeciesTarget.WateringInfo info)
         throws IOException {
         writer.name("watering");
-        if (info == null || (isNullOrEmpty(info.getSchedule())
-            && isNullOrEmpty(info.getSoil())
+        if (info == null || (isNullOrEmpty(info.getFrequency())
+            && isNullOrEmpty(info.getSoilType())
             && isNullOrEmpty(info.getTolerance()))) {
             writer.nullValue();
             return;
         }
         writer.beginObject();
-        writeString(writer, "schedule", isNullOrEmpty(info.getSchedule()) ? null : info.getSchedule());
-        writeString(writer, "soil", isNullOrEmpty(info.getSoil()) ? null : info.getSoil());
+        writeString(writer, "frequency", isNullOrEmpty(info.getFrequency()) ? null : info.getFrequency());
+        writeString(writer, "soilType", isNullOrEmpty(info.getSoilType()) ? null : info.getSoilType());
         writeString(writer, "tolerance", isNullOrEmpty(info.getTolerance()) ? null : info.getTolerance());
+        if (!isNullOrEmpty(info.getSchedule())) {
+            writeString(writer, "schedule", info.getSchedule());
+        }
+        if (!isNullOrEmpty(info.getSoil())) {
+            writeString(writer, "soil", info.getSoil());
+        }
         writer.endObject();
     }
 
@@ -618,9 +620,9 @@ public class ExportManager {
         writer.endArray();
     }
 
-    private void writeOptionalBoolean(JsonWriter writer, String name, @Nullable Boolean value)
+    private void writeOptionalBoolean(JsonWriter writer, @Nullable Boolean value)
         throws IOException {
-        writer.name(name);
+        writer.name("toxicToPets");
         if (value == null) {
             writer.nullValue();
         } else {

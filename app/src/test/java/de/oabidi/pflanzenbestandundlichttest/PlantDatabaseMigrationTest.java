@@ -27,7 +27,6 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 
-import de.oabidi.pflanzenbestandundlichttest.LightMath;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
@@ -135,8 +134,8 @@ public class PlantDatabaseMigrationTest {
         assertNull(migratedTarget.getScientificName());
         assertNotNull(migratedTarget.getWateringInfo());
         assertEquals("high", migratedTarget.getWateringInfo().getTolerance());
-        assertNull(migratedTarget.getWateringInfo().getSchedule());
-        assertNull(migratedTarget.getWateringInfo().getSoil());
+        assertNull(migratedTarget.getWateringInfo().getFrequency());
+        assertNull(migratedTarget.getWateringInfo().getSoilType());
         assertNotNull(migratedTarget.getTemperatureRange());
         assertNull(migratedTarget.getTemperatureRange().getMin());
         assertNull(migratedTarget.getTemperatureRange().getMax());
@@ -154,7 +153,7 @@ public class PlantDatabaseMigrationTest {
     @Dao
     interface PlantDaoV4 {
         @Insert
-        long insert(Plant plant);
+        void insert(Plant plant);
 
         @Query("SELECT * FROM Plant ORDER BY name ASC")
         List<Plant> getAll();

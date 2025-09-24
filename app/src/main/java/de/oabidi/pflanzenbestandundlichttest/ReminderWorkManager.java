@@ -43,7 +43,7 @@ final class ReminderWorkManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (canScheduleExactAlarms(context)) {
                 setScheduleRequestedAt(builder, triggerAt);
-            } else if (delay <= 0L) {
+            } else if (delay == 0L) {
                 builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST);
             }
         }
