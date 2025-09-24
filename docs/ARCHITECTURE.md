@@ -11,54 +11,17 @@ screens, and the data pipelines that feed Room and background work.
 
 Each screen is implemented as a Fragment (or the hosting `MainActivity`) paired with a presenter that
 owns the business logic. Presenters communicate exclusively with `PlantRepository`, which exposes
-asynchronous APIs backed by Room DAOs. The new Environment and Profile experiences follow the same
-pattern so that sensor ingestion, manual entry, and recommendation generation remain isolated from
-the UI widgets.
+asynchronous APIs backed by Room DAOs. Notable pairings include:
 
-```mermaid
-flowchart LR
-    subgraph UI
-        MainActivity
-        PlantListFragment
-        LightMeasurementFragment
-        EnvironmentFragment
-        DiaryFragment
-        StatsFragment
-        SpeciesTargetListFragment
-        PlantProfileFragment
-    end
-    subgraph Presenters
-        MainPresenterImpl
-        PlantListPresenter
-        LightMeasurementPresenter
-        EnvironmentPresenter
-        DiaryPresenter
-        StatsPresenter
-        PlantProfilePresenter
-    end
-    subgraph Data
-        PlantRepository
-        PlantDatabase[(Room DB)]
-    end
-    MainActivity -->|hosts| PlantListFragment
-    MainActivity --> LightMeasurementFragment
-    MainActivity --> DiaryFragment
-    MainActivity --> StatsFragment
-    MainActivity --> SpeciesTargetListFragment
-    PlantListFragment -->|delegates| PlantListPresenter
-    LightMeasurementFragment -->|delegates| LightMeasurementPresenter
-    DiaryFragment --> DiaryPresenter
-    EnvironmentFragment -->|delegates| EnvironmentPresenter
-    StatsFragment --> StatsPresenter
-    MainActivity --> MainPresenterImpl
-    PlantProfileFragment --> PlantProfilePresenter
-    MainPresenterImpl --> PlantRepository
-    PlantListPresenter --> PlantRepository
-    LightMeasurementPresenter --> PlantRepository
-    DiaryPresenter --> PlantRepository
-    StatsPresenter --> PlantRepository
-    PlantRepository --> PlantDatabase
-```
+- `MainActivity` orchestrated by `MainPresenterImpl` for navigation, import/export, and permissions.
+- `PlantListFragment` using `PlantListPresenter` to load plants, handle search, and react to actions.
+- `PlantDetailActivity` exposing plant insights through `PlantDetailPresenter`, which also listens for
+  care recommendation refreshes.
+- `LightMeasurementFragment` collaborating with `LightMeasurementPresenter` for sensor capture,
+  calibration, and measurement storage.
+- `DiaryFragment` and `StatsFragment` coordinating with `DiaryPresenter` and `StatsPresenter`
+  respectively.
+- `EnvironmentLogFragment` rendering manual environment entries via `EnvironmentLogPresenter`.
 
 Repository callbacks are marshalled to the main thread, allowing presenters to update their attached
 views synchronously without leaking executors into the UI layer.
@@ -89,66 +52,51 @@ entity and fed back into future measurements.
 
 ```mermaid
 flowchart LR
-    subgraph Sensors
-        Hygrometer
-        Thermometer
-        LuxBridge
-    end
-    EnvironmentFragment -->|requests sync| EnvironmentPresenter
-    EnvironmentPresenter -->|polls| Sensors
-    EnvironmentPresenter -->|saves batch| PlantRepository
+    EnvironmentLogFragment -->|loads history| EnvironmentLogPresenter
+    EnvironmentLogPresenter -->|queries| PlantRepository
     PlantRepository --> EnvironmentEntryDao
-    EnvironmentPresenter -->|binds history| EnvironmentFragment
-    EnvironmentFragment -->|manual entry| EnvironmentPresenter
-    EnvironmentPresenter -->|upserts| PlantRepository
-    PlantRepository --> PlantProfileDao
+    EnvironmentLogPresenter -->|renders charts & list| EnvironmentLogFragment
+    EnvironmentLogFragment -->|submits form| EnvironmentLogPresenter
+    EnvironmentLogPresenter -->|builds EnvironmentEntry| PlantRepository
+    PlantRepository -->|persists| EnvironmentEntryDao
+    PlantRepository -->|triggers refresh| CareRecommendationEngine
 ```
 
-Environment readings arrive either from Bluetooth/USB sensors or from manual controls inside the
-Environment tab. `EnvironmentPresenter` aggregates the data by plant profile, debounces rapid
-updates, and persists them as `EnvironmentEntry` rows. Whenever entries are saved the presenter also
-refreshes the `PlantProfile` summary, keeping average PPFD/DLI, humidity, and temperature visible in
-the UI without additional queries.
+`EnvironmentLogFragment` captures manual readings for temperature, humidity, soil moisture, height,
+width, and notes. `EnvironmentLogPresenter` validates the form, converts the values into an
+`EnvironmentEntry`, and delegates persistence to `PlantRepository`. Reads and writes hit
+`EnvironmentEntryDao`, the Room DAO backed by the `EnvironmentEntry` table. After each insert,
+update, or delete the repository schedules a recommendation refresh so the rest of the app receives
+new guidance.
 
-### Recommendation engine overview
+### Care recommendation evaluation
 
 ```mermaid
 flowchart TD
-    PlantRepository --> MeasurementDao
-    PlantRepository --> EnvironmentEntryDao
-    PlantRepository --> PlantProfileDao
-    MeasurementDao --> RecommendationEngine
-    EnvironmentEntryDao --> RecommendationEngine
-    PlantProfileDao --> RecommendationEngine
-    SpeciesTargetDao --> RecommendationEngine
-    RecommendationEngine --> RecommendationRepository
-    RecommendationRepository --> PlantProfilePresenter
-    RecommendationRepository --> EnvironmentPresenter
+    SpeciesTargetDao --> PlantRepository
+    EnvironmentEntryDao --> PlantRepository
+    PlantRepository --> CareRecommendationEngine
+    CareRecommendationEngine --> PlantRepository
+    PlantRepository -->|notifies| PlantRepository.CareRecommendationListener
+    PlantRepository.CareRecommendationListener --> PlantDetailPresenter
 ```
 
-The `RecommendationEngine` is a pure Kotlin component fed by DAOs exposed from `PlantRepository`.
-It correlates recent light measurements, averaged environment metrics, and the active `PlantProfile`
-configuration for each plant against `SpeciesTarget` ranges. The engine produces structured
-recommendations (e.g. "increase PPFD by 15%" or "raise humidity above 60%") that presenters inject
-into their view models. `RecommendationRepository` caches the latest results so the UI can render
-instantaneously after rotation or process recreation.
+`PlantRepository` is the only class that talks to `CareRecommendationEngine`. When environment log
+entries change it reads the associated `Plant` row, resolves the linked `SpeciesTarget` through
+`SpeciesTargetDao`, and hydrates a `PlantProfile` snapshot (a value object derived from the species
+record). The repository also fetches the most recent `EnvironmentEntry` rows via
+`EnvironmentEntryDao`. These inputs feed `CareRecommendationEngine.evaluate`, producing a list of
+`CareRecommendation` objects. Dismissed recommendation IDs are filtered using the shared preferences
+owned by `PlantRepository`, and final results are dispatched to
+`PlantRepository.CareRecommendationListener` observers such as `PlantDetailPresenter`.
 
-### Expanded plant profile storage
+### Plant profile hydration (no dedicated table)
 
-```mermaid
-erDiagram
-    PLANT ||--|{ PLANT_PROFILE : has
-    PLANT_PROFILE ||--|{ ENVIRONMENT_ENTRY : captures
-    PLANT_PROFILE }|--|| RECOMMENDATION_SNAPSHOT : summarizes
-    PLANT ||--|{ MEASUREMENT : records
-```
-
-Plant profiles extend the legacy `Plant` entity with growth phase tracking, environment baselines,
-and recommendation history. Each `PlantProfile` row stores the active growth stage, preferred
-environment ranges, and cumulative stats used to power the recommendation engine. Environment
-entries are keyed by profile so that multiple environments (e.g. veg tent vs. bloom room) can exist
-per plant. Recommendation snapshots are denormalized results saved after each engine run to provide
-an audit trail for the user.
+There is no Room table for plant profiles or recommendation snapshots. Instead, the repository maps
+`SpeciesTarget` entities to immutable `PlantProfile` instances on demand, ensuring all profile data
+remains in sync with the species catalog without duplicating records. Care recommendations are
+computed on the fly and dismissed IDs are persisted only in shared preferences; no
+`RecommendationSnapshot` or similar table exists in the database schema.
 
 ### Import / export pipeline
 
@@ -201,22 +149,24 @@ when a new humidity reading is captured.
 
 ```mermaid
 sequenceDiagram
-    participant UI as EnvironmentFragment
-    participant Presenter as EnvironmentPresenter
+    participant UI as EnvironmentLogFragment
+    participant Presenter as EnvironmentLogPresenter
     participant Repo as PlantRepository
     participant DAO as EnvironmentEntryDao
-    participant Engine as RecommendationEngine
-    UI->>Presenter: onHumidityChanged(plantId, 58.2)
-    Presenter->>Repo: saveEnvironmentEntry(plantId, HUMIDITY, 58.2)
-    Repo->>DAO: insertOrMerge(entry)
+    participant Engine as CareRecommendationEngine
+    participant Detail as PlantDetailPresenter
+    UI->>Presenter: onSubmit(formData)
+    Presenter->>Repo: insertEnvironmentEntry(EnvironmentEntry)
+    Repo->>DAO: insert(entry)
     DAO-->>Repo: entryId
-    Repo-->>Presenter: entryId
-    Presenter->>Engine: refresh(plantId)
-    Engine-->>Presenter: Recommendation(setPoint=60, delta=+1.8)
-    Presenter-->>UI: render(entry, recommendation)
+    Repo-->>Presenter: success callback
+    Presenter-->>UI: showEntries(...)
+    Repo->>Engine: evaluate(profile, recentEntries)
+    Engine-->>Repo: careRecommendations
+    Repo-->>Detail: onCareRecommendationsUpdated(...)
 ```
 
-Because the presenter persists entries through the repository before running the engine, the Room
-database remains the single source of truth. Recommendations are always derived from committed
-measurements, ensuring that exports/imports and background sync generate the same advice as the live
-UI.
+Because the presenter persists entries through the repository before any recommendation work runs,
+the Room database remains the single source of truth. `PlantDetailPresenter` receives the refreshed
+recommendations through its registered `CareRecommendationListener`, keeping the care card in sync
+with the latest committed environment readings.
