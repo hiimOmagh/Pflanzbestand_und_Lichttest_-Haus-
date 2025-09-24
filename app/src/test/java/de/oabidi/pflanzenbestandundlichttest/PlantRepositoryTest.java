@@ -203,6 +203,10 @@ public class PlantRepositoryTest {
         });
         awaitLatch(insertLatch);
 
+        List<EnvironmentEntry> bulkEntries = repository.bulkDao().getEnvironmentEntriesForPlant(plant.getId());
+        assertEquals(1, bulkEntries.size());
+        assertEquals("initial", bulkEntries.get(0).getNotes());
+
         CountDownLatch queryLatch = new CountDownLatch(1);
         final List<EnvironmentEntry>[] holder = new List[1];
         repository.environmentEntriesForPlant(plant.getId(), entries -> {
@@ -235,6 +239,8 @@ public class PlantRepositoryTest {
             deleteLatch.countDown();
         });
         awaitLatch(deleteLatch);
+
+        assertTrue(repository.bulkDao().getAllEnvironmentEntries().isEmpty());
 
         CountDownLatch queryLatch3 = new CountDownLatch(1);
         repository.environmentEntriesForPlant(plant.getId(), entries -> {

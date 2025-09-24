@@ -77,7 +77,7 @@ public class ImportExportEncodingTest {
                 exportFile.delete();
             }
             PlantRepository repository = new PlantRepository(context, executor);
-            ExportManager exporter = new ExportManager(context, (PlantRepository) executor);
+            ExportManager exporter = new ExportManager(context, repository, executor);
             CountDownLatch exportLatch = new CountDownLatch(1);
             final boolean[] exportSuccess = {false};
             exporter.export(Uri.fromFile(exportFile), success -> {

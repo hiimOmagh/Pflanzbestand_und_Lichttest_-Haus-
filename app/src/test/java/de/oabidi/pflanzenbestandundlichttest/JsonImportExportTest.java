@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
@@ -71,6 +72,10 @@ public class JsonImportExportTest {
 
         PlantCalibration calibration = new PlantCalibration(plantId, 1.2f, 2.3f);
         db.plantCalibrationDao().insertOrUpdate(calibration);
+
+        EnvironmentEntry environmentEntry = new EnvironmentEntry(plantId, 2468L, 19.5f, 55f, 0.45f,
+            12.5f, 8.1f, "env note", null);
+        db.environmentEntryDao().insert(environmentEntry);
 
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(80f, 120f, 3.2f, 4.6f);
         SpeciesTarget target = new SpeciesTarget("json-species", stage, stage, stage, "moderate", "unit");
@@ -132,6 +137,13 @@ public class JsonImportExportTest {
         List<SpeciesTarget> targets = db.speciesTargetDao().getAll();
         assertEquals(1, targets.size());
         assertEquals("json-species", targets.get(0).getSpeciesKey());
+
+        List<EnvironmentEntry> environmentEntries = db.environmentEntryDao().getForPlantOrdered(plants.get(0).getId());
+        assertEquals(1, environmentEntries.size());
+        EnvironmentEntry restoredEnv = environmentEntries.get(0);
+        assertEquals(19.5f, restoredEnv.getTemperature(), 0.0001f);
+        assertEquals(55f, restoredEnv.getHumidity(), 0.0001f);
+        assertEquals("env note", restoredEnv.getNotes());
     }
 
     @Test
@@ -150,6 +162,10 @@ public class JsonImportExportTest {
         reminderA.setId(reminderAId);
         PlantCalibration calibrationA = new PlantCalibration(plantAId, 1.5f, 2.6f);
         db.plantCalibrationDao().insertOrUpdate(calibrationA);
+
+        EnvironmentEntry environmentEntryA = new EnvironmentEntry(plantAId, 7777L, 23.2f, 60f, null,
+            14.0f, 9.5f, "A env", null);
+        db.environmentEntryDao().insert(environmentEntryA);
 
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(70f, 110f, 2.5f, 4.5f);
         SpeciesTarget target = new SpeciesTarget("json-species-single", stage, stage, stage, "wide", "unit");
@@ -212,5 +228,11 @@ public class JsonImportExportTest {
         List<SpeciesTarget> targets = db.speciesTargetDao().getAll();
         assertEquals(1, targets.size());
         assertEquals("json-species-single", targets.get(0).getSpeciesKey());
+
+        List<EnvironmentEntry> envEntries = db.environmentEntryDao().getForPlantOrdered(plants.get(0).getId());
+        assertEquals(1, envEntries.size());
+        EnvironmentEntry restored = envEntries.get(0);
+        assertEquals(23.2f, restored.getTemperature(), 0.0001f);
+        assertEquals("A env", restored.getNotes());
     }
 }

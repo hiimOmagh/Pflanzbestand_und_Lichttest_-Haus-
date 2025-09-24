@@ -201,6 +201,31 @@ public class SectionParserTest {
     }
 
     @Test
+    public void environmentEntriesParserMalformedRows() throws Exception {
+        String csv = "EnvironmentEntries\n" +
+            "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo\n" +
+            "0,1,0,21.5,40,0.5,10,5,note,\n" +
+            "1,missing,0,,,,,,note,\n" +
+            "bad,row\n" +
+            "Reminders\n" +
+            "id,plantId,triggerAt,message\n";
+        ImportManager.SectionReader sectionReader = newSectionReader(csv);
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.ENVIRONMENT_ENTRIES, chunk.getSection());
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Map<Long, Long> plantIdMap = new HashMap<>();
+        plantIdMap.put(1L, 1L);
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.EnvironmentEntriesSectionParser();
+        ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
+            plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
+        boolean imported = parser.parseSection(chunk, context);
+        assertTrue(imported);
+        assertEquals(2, warnings.size());
+        assertEquals("environment entries", warnings.get(0).category);
+    }
+
+    @Test
     public void diaryEntriesParserMalformedRows() throws Exception {
         String csv = "DiaryEntries\n" +
             "id,plantId,timestamp,type,note,photo\n" +
@@ -270,7 +295,7 @@ public class SectionParserTest {
             restoredUris,
             db,
             nf,
-            2,
+            3,
             new AtomicBoolean(false)
         );
     }

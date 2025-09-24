@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 
 @RunWith(RobolectricTestRunner.class)
@@ -148,6 +149,16 @@ public class ExportManagerCleanupTest {
 
                 @Override
                 public List<PlantCalibration> getPlantCalibrationsForPlant(long plantId) {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<EnvironmentEntry> getAllEnvironmentEntries() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public List<EnvironmentEntry> getEnvironmentEntriesForPlant(long plantId) {
                     return Collections.emptyList();
                 }
             };

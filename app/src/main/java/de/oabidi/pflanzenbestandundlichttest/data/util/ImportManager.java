@@ -62,6 +62,7 @@ import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
@@ -72,8 +73,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
  */
 public class ImportManager {
     static final String TAG = "ImportManager";
-    private static final int CURRENT_VERSION = 2;
-    private static final int[] SUPPORTED_VERSIONS = {1, 2};
+    private static final int CURRENT_VERSION = 3;
+    private static final int[] SUPPORTED_VERSIONS = {1, 2, 3};
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -383,6 +384,7 @@ public class ImportManager {
                             new PlantCalibrationsSectionParser(),
                             new SpeciesTargetsSectionParser(),
                             new MeasurementsSectionParser(),
+                            new EnvironmentEntriesSectionParser(),
                             new DiaryEntriesSectionParser(),
                             new RemindersSectionParser()
                         ),
@@ -507,6 +509,18 @@ public class ImportManager {
                                 } else {
                                     ParseResult result = parseJsonMeasurementsArray(reader, mode,
                                         plantIdMap, warnings, nf, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
+                                }
+                                break;
+                            case "environmentEntries":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else {
+                                    ParseResult result = parseJsonEnvironmentEntriesArray(reader, mode, baseDir,
+                                        plantIdMap, warnings, restoredUris, nf, db);
                                     if (result.imported) {
                                         importedAny[0] = true;
                                     }
@@ -1018,6 +1032,112 @@ public class ImportManager {
         }
     }
 
+    boolean insertEnvironmentEntryRow(List<String> parts, Mode mode, File baseDir,
+                                      Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                      int currentLine, List<Uri> restoredUris, NumberFormat nf,
+                                      PlantDatabase db) {
+        if (parts.size() < 10) {
+            Log.e(TAG, "Malformed environment entry row: " + parts);
+            warnings.add(new ImportWarning("environment entries", currentLine, "malformed row"));
+            return false;
+        }
+        try {
+            long plantId;
+            try {
+                plantId = Long.parseLong(parts.get(1));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("environment entries", currentLine, "invalid plant id"));
+                return false;
+            }
+            if (mode == Mode.MERGE) {
+                Long mappedId = plantIdMap.get(plantId);
+                if (mappedId == null) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "unknown plant"));
+                    return false;
+                }
+                plantId = mappedId;
+            }
+            long timestamp;
+            try {
+                timestamp = Long.parseLong(parts.get(2));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("environment entries", currentLine, "invalid timestamp"));
+                return false;
+            }
+            Float temperature = null;
+            if (!parts.get(3).isEmpty()) {
+                try {
+                    temperature = Objects.requireNonNull(nf.parse(parts.get(3))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid temperature"));
+                    return false;
+                }
+            }
+            Float humidity = null;
+            if (!parts.get(4).isEmpty()) {
+                try {
+                    humidity = Objects.requireNonNull(nf.parse(parts.get(4))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid humidity"));
+                    return false;
+                }
+            }
+            Float soilMoisture = null;
+            if (!parts.get(5).isEmpty()) {
+                try {
+                    soilMoisture = Objects.requireNonNull(nf.parse(parts.get(5))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid soil moisture"));
+                    return false;
+                }
+            }
+            Float height = null;
+            if (!parts.get(6).isEmpty()) {
+                try {
+                    height = Objects.requireNonNull(nf.parse(parts.get(6))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid height"));
+                    return false;
+                }
+            }
+            Float width = null;
+            if (!parts.get(7).isEmpty()) {
+                try {
+                    width = Objects.requireNonNull(nf.parse(parts.get(7))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid width"));
+                    return false;
+                }
+            }
+            String notes = parts.get(8);
+            String photoFile = parts.get(9);
+            EnvironmentEntry entry = new EnvironmentEntry();
+            entry.setPlantId(plantId);
+            entry.setTimestamp(timestamp);
+            entry.setTemperature(temperature);
+            entry.setHumidity(humidity);
+            entry.setSoilMoisture(soilMoisture);
+            entry.setHeight(height);
+            entry.setWidth(width);
+            entry.setNotes(notes.isEmpty() ? null : notes);
+            if (!photoFile.isEmpty()) {
+                Uri restored = restoreImage(new File(baseDir, photoFile));
+                if (restored != null) {
+                    entry.setPhotoUri(restored.toString());
+                    restoredUris.add(restored);
+                } else {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "photo missing"));
+                }
+            }
+            db.environmentEntryDao().insert(entry);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Malformed environment entry row: " + parts, e);
+            warnings.add(new ImportWarning("environment entries", currentLine, "malformed row"));
+            return false;
+        }
+    }
+
     private static final class ParseResult {
         final boolean imported;
         final int workUnits;
@@ -1256,6 +1376,89 @@ public class ImportManager {
             parts.add(dli != null ? Float.toString(dli) : "");
             parts.add(note != null ? note : "");
             if (insertMeasurementRow(parts, mode, plantIdMap, warnings, index, nf, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return new ParseResult(imported, index - 1);
+    }
+
+    private ParseResult parseJsonEnvironmentEntriesArray(JsonReader reader, Mode mode, File baseDir,
+                                                         Map<Long, Long> plantIdMap,
+                                                         List<ImportWarning> warnings,
+                                                         List<Uri> restoredUris, NumberFormat nf,
+                                                         PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long id = 0L;
+            long plantId = 0L;
+            long timestamp = 0L;
+            Float temperature = null;
+            Float humidity = null;
+            Float soilMoisture = null;
+            Float height = null;
+            Float width = null;
+            String notes = null;
+            String photo = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "id":
+                        Long idValue = readNullableLong(reader);
+                        id = idValue != null ? idValue : 0L;
+                        break;
+                    case "plantId":
+                        Long plantValue = readNullableLong(reader);
+                        plantId = plantValue != null ? plantValue : 0L;
+                        break;
+                    case "timestamp":
+                        Long tsValue = readNullableLong(reader);
+                        timestamp = tsValue != null ? tsValue : 0L;
+                        break;
+                    case "temperature":
+                        temperature = readNullableFloat(reader);
+                        break;
+                    case "humidity":
+                        humidity = readNullableFloat(reader);
+                        break;
+                    case "soilMoisture":
+                        soilMoisture = readNullableFloat(reader);
+                        break;
+                    case "height":
+                        height = readNullableFloat(reader);
+                        break;
+                    case "width":
+                        width = readNullableFloat(reader);
+                        break;
+                    case "notes":
+                        notes = readOptionalString(reader);
+                        break;
+                    case "photo":
+                        photo = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(10);
+            parts.add(Long.toString(id));
+            parts.add(Long.toString(plantId));
+            parts.add(Long.toString(timestamp));
+            parts.add(temperature != null ? Float.toString(temperature) : "");
+            parts.add(humidity != null ? Float.toString(humidity) : "");
+            parts.add(soilMoisture != null ? Float.toString(soilMoisture) : "");
+            parts.add(height != null ? Float.toString(height) : "");
+            parts.add(width != null ? Float.toString(width) : "");
+            parts.add(notes != null ? notes : "");
+            parts.add(photo != null ? photo : "");
+            if (insertEnvironmentEntryRow(parts, mode, baseDir, plantIdMap, warnings, index,
+                restoredUris, nf, db)) {
                 imported = true;
             }
             index++;
@@ -1894,6 +2097,7 @@ public class ImportManager {
         PLANT_CALIBRATIONS("PlantCalibrations"),
         SPECIES_TARGETS("SpeciesTargets"),
         MEASUREMENTS("Measurements"),
+        ENVIRONMENT_ENTRIES("EnvironmentEntries"),
         DIARY_ENTRIES("DiaryEntries"),
         REMINDERS("Reminders");
 

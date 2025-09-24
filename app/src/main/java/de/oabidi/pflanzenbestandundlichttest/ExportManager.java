@@ -27,6 +27,7 @@ import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
@@ -36,7 +37,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
  */
 public class ExportManager {
     private static final String TAG = "ExportManager";
-    private static final int EXPORT_VERSION = 2;
+    private static final int EXPORT_VERSION = 3;
     private final Context context;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -168,6 +169,7 @@ public class ExportManager {
             List<Measurement> measurements;
             List<DiaryEntry> diaryEntries;
             List<Reminder> reminders;
+            List<EnvironmentEntry> environmentEntries;
             if (plantId >= 0) {
                 Plant p = bulkDao.getPlant(plantId);
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
@@ -176,10 +178,12 @@ public class ExportManager {
                 List<PlantPhoto> photos = bulkDao.getPlantPhotosForPlant(plantId);
                 reminders = bulkDao.getRemindersForPlant(plantId);
                 List<PlantCalibration> calibrations = bulkDao.getPlantCalibrationsForPlant(plantId);
+                environmentEntries = bulkDao.getEnvironmentEntriesForPlant(plantId);
                 List<PlantPhoto> plantPhotos = photos != null ? photos : Collections.emptyList();
                 List<PlantPhoto> finalPlantPhotos = plantPhotos;
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos, calibrations);
+                    bulkDao.getAllSpeciesTargets(), finalPlantPhotos, calibrations,
+                    environmentEntries != null ? environmentEntries : Collections.emptyList());
             } else {
                 plants = bulkDao.getAllPlants();
                 measurements = bulkDao.getAllMeasurements();
@@ -187,7 +191,8 @@ public class ExportManager {
                 List<PlantPhoto> plantPhotos = bulkDao.getAllPlantPhotos();
                 reminders = bulkDao.getAllReminders();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), plantPhotos, bulkDao.getAllPlantCalibrations());
+                    bulkDao.getAllSpeciesTargets(), plantPhotos, bulkDao.getAllPlantCalibrations(),
+                    bulkDao.getAllEnvironmentEntries());
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);
@@ -295,6 +300,27 @@ public class ExportManager {
                     m.getTimeEpoch(),
                     m.getLuxAvg(),
                     m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""));
+            }
+
+            writer.write("\nEnvironmentEntries\n");
+            writer.write("id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo\n");
+            for (EnvironmentEntry entry : data.environmentEntries) {
+                String photoName = "";
+                String uri = entry.getPhotoUri();
+                if (uri != null && !uri.isEmpty()) {
+                    photoName = copyPhotoIfPresent(tempDir, "environment_", entry.getId(), Uri.parse(uri));
+                }
+                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s,%s,%s,%s,%s\n",
+                    entry.getId(),
+                    entry.getPlantId(),
+                    entry.getTimestamp(),
+                    formatFloat(entry.getTemperature()),
+                    formatFloat(entry.getHumidity()),
+                    formatFloat(entry.getSoilMoisture()),
+                    formatFloat(entry.getHeight()),
+                    formatFloat(entry.getWidth()),
+                    escape(entry.getNotes()),
+                    escape(photoName)));
             }
 
             writer.write("\nDiaryEntries\n");
@@ -417,6 +443,29 @@ public class ExportManager {
                 writeOptionalFloat(writer, "ppfd", measurement.getPpfd());
                 writeOptionalFloat(writer, "dli", measurement.getDli());
                 writeString(writer, "note", measurement.getNote());
+                writer.endObject();
+            }
+            writer.endArray();
+
+            writer.name("environmentEntries");
+            writer.beginArray();
+            for (EnvironmentEntry entry : data.environmentEntries) {
+                writer.beginObject();
+                writer.name("id").value(entry.getId());
+                writer.name("plantId").value(entry.getPlantId());
+                writer.name("timestamp").value(entry.getTimestamp());
+                writeOptionalFloat(writer, "temperature", entry.getTemperature());
+                writeOptionalFloat(writer, "humidity", entry.getHumidity());
+                writeOptionalFloat(writer, "soilMoisture", entry.getSoilMoisture());
+                writeOptionalFloat(writer, "height", entry.getHeight());
+                writeOptionalFloat(writer, "width", entry.getWidth());
+                writeString(writer, "notes", entry.getNotes());
+                String fileName = "";
+                String uriString = entry.getPhotoUri();
+                if (uriString != null && !uriString.isEmpty()) {
+                    fileName = copyPhotoIfPresent(tempDir, "environment_", entry.getId(), Uri.parse(uriString));
+                }
+                writeOptionalString(writer, "photo", fileName);
                 writer.endObject();
             }
             writer.endArray();
@@ -652,10 +701,11 @@ public class ExportManager {
         final List<SpeciesTarget> targets;
         final List<PlantPhoto> plantPhotos;
         final List<PlantCalibration> calibrations;
+        final List<EnvironmentEntry> environmentEntries;
 
         ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
                    List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos,
-                   List<PlantCalibration> calibrations) {
+                   List<PlantCalibration> calibrations, List<EnvironmentEntry> environmentEntries) {
             this.plants = plants;
             this.measurements = measurements;
             this.diaryEntries = diaryEntries;
@@ -663,6 +713,7 @@ public class ExportManager {
             this.targets = targets;
             this.plantPhotos = plantPhotos;
             this.calibrations = calibrations;
+            this.environmentEntries = environmentEntries;
         }
     }
 }
