@@ -213,7 +213,7 @@ public class PlantDatabaseMigrationTest {
     static class SpeciesTargetV12 {
         @PrimaryKey
         @NonNull
-        public String speciesKey;
+        public String speciesKey = "";
         public float ppfdMin;
         public float ppfdMax;
         @Nullable
