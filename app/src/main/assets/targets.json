@@ -121,9 +121,9 @@
             "dliMax": 9.5
         },
         "watering": {
-            "schedule": "Keep soil lightly moist, water when top 2 cm dry",
-            "soil": "Peat-based mix with perlite",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil lightly moist, water when top 2 cm dry",
+            "soilType": "Peat-based mix with perlite"
         },
         "temperature": {
             "min": 18,
@@ -169,9 +169,9 @@
             "dliMax": 9.0
         },
         "watering": {
-            "schedule": "Water weekly during active growth",
-            "soil": "All-purpose potting mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water weekly during active growth",
+            "soilType": "All-purpose potting mix"
         },
         "temperature": {
             "min": 15,
@@ -217,9 +217,9 @@
             "dliMax": 11.0
         },
         "watering": {
-            "schedule": "Water when top 4 cm of soil are dry",
-            "soil": "Chunky aroid mix with bark and perlite",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 4 cm of soil are dry",
+            "soilType": "Chunky aroid mix with bark and perlite"
         },
         "temperature": {
             "min": 18,
@@ -265,9 +265,9 @@
             "dliMax": 13.5
         },
         "watering": {
-            "schedule": "Water deeply when top 5 cm of soil are dry",
-            "soil": "Well-draining peat and bark mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Water deeply when top 5 cm of soil are dry",
+            "soilType": "Well-draining peat and bark mix"
         },
         "temperature": {
             "min": 17,
@@ -313,9 +313,9 @@
             "dliMax": 14.5
         },
         "watering": {
-            "schedule": "Water thoroughly, then allow soil to dry completely",
-            "soil": "Sandy succulent mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water thoroughly, then allow soil to dry completely",
+            "soilType": "Sandy succulent mix"
         },
         "temperature": {
             "min": 12,
@@ -361,9 +361,9 @@
             "dliMax": 14.5
         },
         "watering": {
-            "schedule": "Water every 2-3 weeks in summer, monthly in winter",
-            "soil": "Gritty cactus mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water every 2-3 weeks in summer, monthly in winter",
+            "soilType": "Gritty cactus mix"
         },
         "temperature": {
             "min": 10,
@@ -409,9 +409,9 @@
             "dliMax": 13.0
         },
         "watering": {
-            "schedule": "Water lightly every 2 weeks, less in winter",
-            "soil": "Fast-draining succulent mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Water lightly every 2 weeks, less in winter",
+            "soilType": "Fast-draining succulent mix"
         },
         "temperature": {
             "min": 12,
@@ -457,9 +457,9 @@
             "dliMax": 9.0
         },
         "watering": {
-            "schedule": "Bottom-water when top soil feels dry",
-            "soil": "Light, airy African violet mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Bottom-water when top soil feels dry",
+            "soilType": "Light, airy African violet mix"
         },
         "temperature": {
             "min": 18,
@@ -505,9 +505,9 @@
             "dliMax": 8.5
         },
         "watering": {
-            "schedule": "Water weekly, allowing bark to dry slightly",
-            "soil": "Orchid bark mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water weekly, allowing bark to dry slightly",
+            "soilType": "Orchid bark mix"
         },
         "temperature": {
             "min": 18,
@@ -553,9 +553,9 @@
             "dliMax": 8.5
         },
         "watering": {
-            "schedule": "Keep soil evenly moist, never soggy",
-            "soil": "Peat-based fern mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil evenly moist, never soggy",
+            "soilType": "Peat-based fern mix"
         },
         "temperature": {
             "min": 16,
@@ -601,9 +601,9 @@
             "dliMax": 7.5
         },
         "watering": {
-            "schedule": "Never allow soil to dry; water lightly every few days",
-            "soil": "Moisture-retentive fern mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Never allow soil to dry; water lightly every few days",
+            "soilType": "Moisture-retentive fern mix"
         },
         "temperature": {
             "min": 18,
@@ -649,9 +649,9 @@
             "dliMax": 7.0
         },
         "watering": {
-            "schedule": "Water every 3-4 weeks, allowing soil to dry",
-            "soil": "Free-draining potting mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water every 3-4 weeks, allowing soil to dry",
+            "soilType": "Free-draining potting mix"
         },
         "temperature": {
             "min": 16,
@@ -697,9 +697,9 @@
             "dliMax": 12.5
         },
         "watering": {
-            "schedule": "Water when top 4 cm of soil dry",
-            "soil": "Peat and bark-based mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 4 cm of soil dry",
+            "soilType": "Peat and bark-based mix"
         },
         "temperature": {
             "min": 17,
@@ -745,9 +745,9 @@
             "dliMax": 9.5
         },
         "watering": {
-            "schedule": "Water when top 5 cm of soil are dry",
-            "soil": "Well-draining peat mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 5 cm of soil are dry",
+            "soilType": "Well-draining peat mix"
         },
         "temperature": {
             "min": 17,
@@ -793,9 +793,9 @@
             "dliMax": 9.0
         },
         "watering": {
-            "schedule": "Water when top 3 cm of soil are dry",
-            "soil": "Chunky, well-aerated potting mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 3 cm of soil are dry",
+            "soilType": "Chunky, well-aerated potting mix"
         },
         "temperature": {
             "min": 18,
@@ -841,9 +841,9 @@
             "dliMax": 12.5
         },
         "watering": {
-            "schedule": "Keep soil evenly moist but not waterlogged",
-            "soil": "Rich, well-drained potting soil",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil evenly moist but not waterlogged",
+            "soilType": "Rich, well-drained potting soil"
         },
         "temperature": {
             "min": 18,
@@ -889,9 +889,9 @@
             "dliMax": 14.0
         },
         "watering": {
-            "schedule": "Allow soil to dry nearly completely between waterings",
-            "soil": "Sandy, well-drained mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Allow soil to dry nearly completely between waterings",
+            "soilType": "Sandy, well-drained mix"
         },
         "temperature": {
             "min": 10,
@@ -937,9 +937,9 @@
             "dliMax": 13.0
         },
         "watering": {
-            "schedule": "Water when soil is mostly dry",
-            "soil": "Well-drained sandy loam",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water when soil is mostly dry",
+            "soilType": "Well-drained sandy loam"
         },
         "temperature": {
             "min": 12,
@@ -985,9 +985,9 @@
             "dliMax": 10.5
         },
         "watering": {
-            "schedule": "Keep soil consistently moist",
-            "soil": "Rich loam or potting mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Keep soil consistently moist",
+            "soilType": "Rich loam or potting mix"
         },
         "temperature": {
             "min": 13,
@@ -1033,9 +1033,9 @@
             "dliMax": 10.5
         },
         "watering": {
-            "schedule": "Water when the top 2 cm of soil dry",
-            "soil": "Moisture-retentive loam",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when the top 2 cm of soil dry",
+            "soilType": "Moisture-retentive loam"
         },
         "temperature": {
             "min": 10,
@@ -1081,9 +1081,9 @@
             "dliMax": 10.5
         },
         "watering": {
-            "schedule": "Water regularly to keep soil evenly moist",
-            "soil": "Well-drained sandy loam",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Water regularly to keep soil evenly moist",
+            "soilType": "Well-drained sandy loam"
         },
         "temperature": {
             "min": 10,
@@ -1129,9 +1129,9 @@
             "dliMax": 11.5
         },
         "watering": {
-            "schedule": "Keep soil evenly moist, do not allow to dry out",
-            "soil": "Rich loamy soil",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Keep soil evenly moist, do not allow to dry out",
+            "soilType": "Rich loamy soil"
         },
         "temperature": {
             "min": 10,
@@ -1177,9 +1177,9 @@
             "dliMax": 10.5
         },
         "watering": {
-            "schedule": "Keep soil consistently moist but not waterlogged",
-            "soil": "Rich, well-drained garden loam",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil consistently moist but not waterlogged",
+            "soilType": "Rich, well-drained garden loam"
         },
         "temperature": {
             "min": 10,
@@ -1225,9 +1225,9 @@
             "dliMax": 10.5
         },
         "watering": {
-            "schedule": "Maintain evenly moist soil",
-            "soil": "Loamy soil rich in organic matter",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Maintain evenly moist soil",
+            "soilType": "Loamy soil rich in organic matter"
         },
         "temperature": {
             "min": 7,
@@ -1273,9 +1273,9 @@
             "dliMax": 16.0
         },
         "watering": {
-            "schedule": "Water deeply 2-3 times per week",
-            "soil": "Rich, well-drained loam",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water deeply 2-3 times per week",
+            "soilType": "Rich, well-drained loam"
         },
         "temperature": {
             "min": 18,
@@ -1321,9 +1321,9 @@
             "dliMax": 14.5
         },
         "watering": {
-            "schedule": "Water deeply when top 5 cm of soil are dry",
-            "soil": "Fertile, well-drained loam",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water deeply when top 5 cm of soil are dry",
+            "soilType": "Fertile, well-drained loam"
         },
         "temperature": {
             "min": 18,
@@ -1369,9 +1369,9 @@
             "dliMax": 14.0
         },
         "watering": {
-            "schedule": "Water 2-3 times weekly, keeping soil evenly moist",
-            "soil": "Rich loam with compost",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Water 2-3 times weekly, keeping soil evenly moist",
+            "soilType": "Rich loam with compost"
         },
         "temperature": {
             "min": 18,
@@ -1417,9 +1417,9 @@
             "dliMax": 14.0
         },
         "watering": {
-            "schedule": "Water 2-3 times per week, keeping soil moist",
-            "soil": "Rich loam with organic matter",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Water 2-3 times per week, keeping soil moist",
+            "soilType": "Rich loam with organic matter"
         },
         "temperature": {
             "min": 10,
@@ -1465,9 +1465,9 @@
             "dliMax": 12.5
         },
         "watering": {
-            "schedule": "Keep soil consistently moist but not waterlogged",
-            "soil": "Acidic peat-based mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil consistently moist but not waterlogged",
+            "soilType": "Acidic peat-based mix"
         },
         "temperature": {
             "min": 4,
@@ -1513,9 +1513,9 @@
             "dliMax": 16.0
         },
         "watering": {
-            "schedule": "Water when top 5 cm of soil are dry",
-            "soil": "Slightly acidic citrus mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 5 cm of soil are dry",
+            "soilType": "Slightly acidic citrus mix"
         },
         "temperature": {
             "min": 10,
@@ -1561,9 +1561,9 @@
             "dliMax": 14.0
         },
         "watering": {
-            "schedule": "Water deeply, then allow soil to dry",
-            "soil": "Gravelly, well-drained soil",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water deeply, then allow soil to dry",
+            "soilType": "Gravelly, well-drained soil"
         },
         "temperature": {
             "min": 7,
@@ -1609,9 +1609,9 @@
             "dliMax": 13.0
         },
         "watering": {
-            "schedule": "Water when top 3 cm of soil dry",
-            "soil": "Well-drained garden soil",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 3 cm of soil dry",
+            "soilType": "Well-drained garden soil"
         },
         "temperature": {
             "min": 15,
@@ -1657,9 +1657,9 @@
             "dliMax": 15.5
         },
         "watering": {
-            "schedule": "Water deeply once or twice weekly",
-            "soil": "Loamy soil rich in organic matter",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water deeply once or twice weekly",
+            "soilType": "Loamy soil rich in organic matter"
         },
         "temperature": {
             "min": 16,
@@ -1705,9 +1705,9 @@
             "dliMax": 17.0
         },
         "watering": {
-            "schedule": "Water sparingly every 4-6 weeks",
-            "soil": "Mineral-based cactus mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water sparingly every 4-6 weeks",
+            "soilType": "Mineral-based cactus mix"
         },
         "temperature": {
             "min": 10,
@@ -1753,9 +1753,9 @@
             "dliMax": 12.0
         },
         "watering": {
-            "schedule": "Water lightly every 3 weeks",
-            "soil": "Gritty succulent mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water lightly every 3 weeks",
+            "soilType": "Gritty succulent mix"
         },
         "temperature": {
             "min": 12,
@@ -1801,9 +1801,9 @@
             "dliMax": 13.0
         },
         "watering": {
-            "schedule": "Water thoroughly, allowing soil to dry between",
-            "soil": "Well-drained cactus mix",
-            "tolerance": "High"
+            "tolerance": "High",
+            "frequency": "Water thoroughly, allowing soil to dry between",
+            "soilType": "Well-drained cactus mix"
         },
         "temperature": {
             "min": 15,
@@ -1849,9 +1849,9 @@
             "dliMax": 8.0
         },
         "watering": {
-            "schedule": "Keep soil lightly moist, avoid water in the crown",
-            "soil": "Loose, moisture-retentive fern mix",
-            "tolerance": "Low"
+            "tolerance": "Low",
+            "frequency": "Keep soil lightly moist, avoid water in the crown",
+            "soilType": "Loose, moisture-retentive fern mix"
         },
         "temperature": {
             "min": 18,
@@ -1897,9 +1897,9 @@
             "dliMax": 13.0
         },
         "watering": {
-            "schedule": "Water when top half of soil is dry",
-            "soil": "Well-drained succulent mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top half of soil is dry",
+            "soilType": "Well-drained succulent mix"
         },
         "temperature": {
             "min": 16,
@@ -1945,9 +1945,9 @@
             "dliMax": 10.0
         },
         "watering": {
-            "schedule": "Water when top 4 cm of soil are dry",
-            "soil": "Well-draining peat-based mix",
-            "tolerance": "Moderate"
+            "tolerance": "Moderate",
+            "frequency": "Water when top 4 cm of soil are dry",
+            "soilType": "Well-draining peat-based mix"
         },
         "temperature": {
             "min": 16,
@@ -1966,5 +1966,5 @@
             "https://www.rhs.org.uk/plants/16680/schefflera-arboricola/details",
             "https://extension.umn.edu/houseplants/schefflera-care"
         ]
-}
+    }
 ]

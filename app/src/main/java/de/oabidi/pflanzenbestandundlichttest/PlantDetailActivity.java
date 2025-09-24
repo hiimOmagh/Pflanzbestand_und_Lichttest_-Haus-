@@ -281,7 +281,7 @@ public class PlantDetailActivity extends AppCompatActivity
             careTipsList.setHasFixedSize(true);
             careRecommendationAdapter = new CareRecommendationAdapter(new CareRecommendationAdapter.Callbacks() {
                 @Override
-                public void onDismiss(@NonNull @NonNull CareRecommendation recommendation) {
+                public void onDismiss(@NonNull CareRecommendation recommendation) {
                     presenter.dismissRecommendation(recommendation.getId());
                 }
             });
