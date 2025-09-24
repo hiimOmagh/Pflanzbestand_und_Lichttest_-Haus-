@@ -124,7 +124,7 @@ public class CareRecommendationEngineTest {
             emptyStage,
             new SpeciesTarget.WateringInfo(null, null, null),
             new SpeciesTarget.FloatRange(temperatureMin, temperatureMax),
-            new SpeciesTarget.FloatRange((Float) 40.0, (Float) 60.0),
+            new SpeciesTarget.FloatRange(40f, 60f),
             null,
             null,
             null,

@@ -157,6 +157,9 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             repository = repo;
         }
         presenter = new EnvironmentLogPresenter(this, repo, plantId, requireContext());
+        if (currentPhotoUri != null) {
+            presenter.restorePendingPhoto(currentPhotoUri.toString());
+        }
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri == null) {
                 return;
@@ -167,8 +170,10 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
                     uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
             } catch (SecurityException ignored) {
             }
-            currentPhotoUri = uri;
-            updatePhotoPreview();
+            EnvironmentLogPresenter p = presenter;
+            if (p != null) {
+                p.onPhotoSelected(uri.toString());
+            }
         });
         getParentFragmentManager().setFragmentResultListener(
             PlantPhotoCaptureFragment.RESULT_KEY,
@@ -180,9 +185,11 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
                 awaitingCaptureResult = false;
                 String uriString = bundle.getString(PlantPhotoCaptureFragment.EXTRA_PHOTO_URI);
                 if (!TextUtils.isEmpty(uriString)) {
-                    currentPhotoUri = Uri.parse(uriString);
-                    updatePhotoPreview();
-                    captureResultDelivered = true;
+                    EnvironmentLogPresenter p = presenter;
+                    if (p != null) {
+                        p.onPhotoSelected(uriString);
+                        captureResultDelivered = true;
+                    }
                 }
             }
         );
@@ -290,8 +297,10 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         }
         if (photoRemoveButton != null) {
             photoRemoveButton.setOnClickListener(v -> {
-                currentPhotoUri = null;
-                updatePhotoPreview();
+                EnvironmentLogPresenter p = presenter;
+                if (p != null) {
+                    p.onPhotoRemoved();
+                }
             });
         }
         if (photoPreview != null) {
@@ -343,8 +352,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         }
         EnvironmentLogPresenter p = presenter;
         if (p != null) {
-            String photo = currentPhotoUri != null ? currentPhotoUri.toString() : null;
-            p.onSubmit(new EnvironmentLogFormData(temperature, humidity, soil, height, width, notes, photo));
+            p.onSubmit(new EnvironmentLogFormData(temperature, humidity, soil, height, width, notes, null));
         }
     }
 
@@ -448,6 +456,19 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         if (photoHighlightsEmptyView != null) {
             photoHighlightsEmptyView.setVisibility(empty ? View.VISIBLE : View.GONE);
         }
+        if (photoHighlightsTitleView != null) {
+            photoHighlightsTitleView.setVisibility(empty ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void showPhotoPreview(@Nullable String photoUri) {
+        if (TextUtils.isEmpty(photoUri)) {
+            currentPhotoUri = null;
+        } else {
+            currentPhotoUri = Uri.parse(photoUri);
+        }
+        updatePhotoPreview();
     }
 
     @Override
@@ -518,7 +539,6 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         setText(heightLayout, entry.getHeight());
         setText(widthLayout, entry.getWidth());
         setText(notesLayout, entry.getNotes());
-        setPhotoFromString(entry.getPhotoUri());
     }
 
     private void setText(@Nullable TextInputLayout layout, @Nullable Float value) {
@@ -543,15 +563,6 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         if (editText != null) {
             editText.setText(value);
         }
-    }
-
-    private void setPhotoFromString(@Nullable String value) {
-        if (TextUtils.isEmpty(value)) {
-            currentPhotoUri = null;
-        } else {
-            currentPhotoUri = Uri.parse(value);
-        }
-        updatePhotoPreview();
     }
 
     private void updatePhotoPreview() {

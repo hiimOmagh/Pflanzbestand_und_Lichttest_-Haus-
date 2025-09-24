@@ -29,6 +29,9 @@ public interface EnvironmentLogView {
     /** Displays photo highlights aligned with the chart timeline. */
     void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights);
 
+    /** Updates the currently selected photo preview in the form. */
+    void showPhotoPreview(@Nullable String photoUri);
+
     /** Presents a transient message to the user. */
     void showMessage(String message);
 

@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -21,6 +22,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -190,6 +192,39 @@ public class PlantRepository {
         return () -> refreshCareRecommendationsAsync(plantId);
     }
 
+    @Nullable
+    private String persistEnvironmentPhoto(@Nullable String uriString) {
+        if (TextUtils.isEmpty(uriString)) {
+            return null;
+        }
+        String normalized = uriString;
+        if (!PhotoManager.isEnvironmentPhoto(context, uriString)) {
+            try {
+                Uri stored = PhotoManager.saveEnvironmentPhoto(context, Uri.parse(uriString));
+                normalized = stored.toString();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to persist environment photo", e);
+            }
+        }
+        return normalized;
+    }
+
+    @Nullable
+    private Runnable buildEnvironmentPhotoCleanup(@Nullable String previousPhotoUri, @Nullable String newPhotoUri) {
+        if (TextUtils.isEmpty(previousPhotoUri) || TextUtils.equals(previousPhotoUri, newPhotoUri)) {
+            return null;
+        }
+        final String photoToDelete = previousPhotoUri;
+        return () -> deleteEnvironmentPhoto(photoToDelete);
+    }
+
+    private void deleteEnvironmentPhoto(@Nullable String uriString) {
+        if (TextUtils.isEmpty(uriString)) {
+            return;
+        }
+        PhotoManager.deletePhoto(context, uriString);
+    }
+
     private Runnable refreshCareRecommendationsAsync(long plantId) {
         return () -> {
             try {
@@ -198,6 +233,16 @@ public class PlantRepository {
             } catch (Exception e) {
                 notifyCareRecommendationError(plantId, e);
             }
+        };
+    }
+
+    private Runnable combineEnvironmentPostActions(@Nullable Runnable cleanup, Runnable refresh) {
+        if (cleanup == null) {
+            return refresh;
+        }
+        return () -> {
+            cleanup.run();
+            refresh.run();
         };
     }
 
@@ -535,19 +580,24 @@ public class PlantRepository {
     public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
         runAsync(() -> {
+            entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
             long id = environmentEntryDao.insert(entry);
             entry.setId(id);
         }, careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
     }
 
-    public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
-        updateEnvironmentEntry(entry, callback, null);
+    public void updateEnvironmentEntry(EnvironmentEntry entry, @Nullable String previousPhotoUri, Runnable callback) {
+        updateEnvironmentEntry(entry, previousPhotoUri, callback, null);
     }
 
-    public void updateEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
+    public void updateEnvironmentEntry(EnvironmentEntry entry, @Nullable String previousPhotoUri, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        runAsync(() -> environmentEntryDao.update(entry),
-            careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
+        runAsync(() -> {
+            entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
+            environmentEntryDao.update(entry);
+        }, () -> combineEnvironmentPostActions(
+            buildEnvironmentPhotoCleanup(previousPhotoUri, entry.getPhotoUri()),
+            refreshCareRecommendationsAsync(entry.getPlantId())), callback, errorCallback);
     }
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
@@ -556,8 +606,11 @@ public class PlantRepository {
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
+        String photo = entry.getPhotoUri();
         runAsync(() -> environmentEntryDao.delete(entry),
-            careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
+            () -> combineEnvironmentPostActions(
+                buildEnvironmentPhotoCleanup(photo, null),
+                refreshCareRecommendationsAsync(entry.getPlantId())), callback, errorCallback);
     }
 
     /**

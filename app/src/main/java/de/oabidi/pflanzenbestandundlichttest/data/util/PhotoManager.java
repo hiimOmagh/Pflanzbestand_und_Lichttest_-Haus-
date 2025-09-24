@@ -21,6 +21,8 @@ import java.util.Objects;
  */
 public final class PhotoManager {
     private static final String TAG = "PhotoManager";
+    private static final String DIR_PLANT_PHOTOS = "plant_photos";
+    private static final String DIR_ENVIRONMENT_PHOTOS = "environment_photos";
 
     private PhotoManager() {
     }
@@ -75,9 +77,48 @@ public final class PhotoManager {
      */
     @NonNull
     public static Uri savePlantPhoto(@NonNull Context context, @NonNull Uri sourceUri) throws IOException {
-        File directory = new File(context.getFilesDir(), "plant_photos");
+        return savePhoto(context, sourceUri, DIR_PLANT_PHOTOS, "plant_");
+    }
+
+    @NonNull
+    public static Uri saveEnvironmentPhoto(@NonNull Context context, @NonNull Uri sourceUri) throws IOException {
+        return savePhoto(context, sourceUri, DIR_ENVIRONMENT_PHOTOS, "environment_");
+    }
+
+    public static boolean isEnvironmentPhoto(@NonNull Context context, @Nullable String uriString) {
+        return isPhotoInDirectory(context, uriString, DIR_ENVIRONMENT_PHOTOS);
+    }
+
+    private static boolean isPhotoInDirectory(@NonNull Context context, @Nullable String uriString,
+                                              @NonNull String directoryName) {
+        if (uriString == null || uriString.isEmpty()) {
+            return false;
+        }
+        Uri uri = Uri.parse(uriString);
+        if (!"file".equals(uri.getScheme())) {
+            return false;
+        }
+        String path = uri.getPath();
+        if (path == null) {
+            return false;
+        }
+        File directory = new File(context.getFilesDir(), directoryName);
+        File file = new File(path);
+        try {
+            String dirPath = directory.getCanonicalPath();
+            String filePath = file.getCanonicalPath();
+            return filePath.startsWith(dirPath);
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @NonNull
+    private static Uri savePhoto(@NonNull Context context, @NonNull Uri sourceUri,
+                                 @NonNull String directoryName, @NonNull String prefix) throws IOException {
+        File directory = new File(context.getFilesDir(), directoryName);
         if (!directory.exists() && !directory.mkdirs()) {
-            throw new IOException("Failed to create plant photo directory: " + directory);
+            throw new IOException("Failed to create photo directory: " + directory);
         }
 
         String extension = extractExtension(context, sourceUri);
@@ -85,7 +126,7 @@ public final class PhotoManager {
             extension = ".jpg";
         }
 
-        String baseName = "plant_" + System.currentTimeMillis();
+        String baseName = prefix + System.currentTimeMillis();
         File destination;
         int suffix = 0;
         do {

@@ -20,6 +20,7 @@ import org.robolectric.shadows.ShadowAlarmManager;
 
 import java.lang.reflect.Field;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CountDownLatch;
@@ -219,7 +220,7 @@ public class PlantRepositoryTest {
 
         entry.setNotes("updated");
         CountDownLatch updateLatch = new CountDownLatch(1);
-        repository.updateEnvironmentEntry(entry, () -> {
+        repository.updateEnvironmentEntry(entry, entry.getPhotoUri(), () -> {
             assertSame(Looper.getMainLooper().getThread(), Thread.currentThread());
             updateLatch.countDown();
         });
@@ -249,6 +250,58 @@ public class PlantRepositoryTest {
             queryLatch3.countDown();
         });
         awaitLatch(queryLatch3);
+    }
+
+    @Test
+    public void environmentEntryPhotoLifecycle() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
+        Plant plant = new Plant();
+        plant.setName("PhotoPlant");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        File source = File.createTempFile("env_source", ".jpg", context.getCacheDir());
+        try (FileOutputStream out = new FileOutputStream(source)) {
+            out.write(new byte[]{0, 1, 2});
+        }
+
+        EnvironmentEntry entry = new EnvironmentEntry(plant.getId(), 10L, null, null, null,
+            null, null, "with photo", Uri.fromFile(source).toString());
+        CountDownLatch insertLatch = new CountDownLatch(1);
+        repository.insertEnvironmentEntry(entry, insertLatch::countDown);
+        awaitLatch(insertLatch);
+
+        String storedPhoto = entry.getPhotoUri();
+        assertNotNull(storedPhoto);
+        assertNotEquals(Uri.fromFile(source).toString(), storedPhoto);
+        File storedFile = new File(Uri.parse(storedPhoto).getPath());
+        assertTrue(storedFile.exists());
+
+        File secondSource = File.createTempFile("env_second", ".jpg", context.getCacheDir());
+        try (FileOutputStream out = new FileOutputStream(secondSource)) {
+            out.write(new byte[]{3, 4, 5});
+        }
+
+        String previous = storedPhoto;
+        entry.setPhotoUri(Uri.fromFile(secondSource).toString());
+        entry.setNotes("updated photo");
+        CountDownLatch updateLatch = new CountDownLatch(1);
+        repository.updateEnvironmentEntry(entry, previous, updateLatch::countDown);
+        awaitLatch(updateLatch);
+
+        String updatedPhoto = entry.getPhotoUri();
+        assertNotNull(updatedPhoto);
+        assertNotEquals(previous, updatedPhoto);
+        File updatedFile = new File(Uri.parse(updatedPhoto).getPath());
+        assertTrue(updatedFile.exists());
+        assertFalse(new File(Uri.parse(previous).getPath()).exists());
+
+        CountDownLatch deleteLatch = new CountDownLatch(1);
+        repository.deleteEnvironmentEntry(entry, deleteLatch::countDown);
+        awaitLatch(deleteLatch);
+        assertFalse(updatedFile.exists());
     }
 
     @Test

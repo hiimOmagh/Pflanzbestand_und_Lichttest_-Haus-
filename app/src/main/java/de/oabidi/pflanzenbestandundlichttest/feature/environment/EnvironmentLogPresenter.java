@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +31,10 @@ public class EnvironmentLogPresenter {
     private final Context context;
     @Nullable
     private EnvironmentEntry editingEntry;
+    @Nullable
+    private String pendingPhotoUri;
+    @Nullable
+    private String editingOriginalPhotoUri;
     private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
     public EnvironmentLogPresenter(@NonNull EnvironmentLogView view, @NonNull PlantRepository repository,
@@ -69,7 +74,8 @@ public class EnvironmentLogPresenter {
 
     /** Handles form submission either inserting a new entry or updating the current one. */
     public void onSubmit(EnvironmentLogFormData data) {
-        if (data == null || !data.hasAnyValue()) {
+        boolean hasValues = data != null && data.hasAnyValue();
+        if (!hasValues && TextUtils.isEmpty(pendingPhotoUri)) {
             view.showEmptyFormError();
             return;
         }
@@ -88,20 +94,25 @@ public class EnvironmentLogPresenter {
                 view.clearForm();
                 view.showEditingState(false);
                 view.notifyLogEvent(EVENT_SAVED, entry.getId());
+                pendingPhotoUri = null;
+                editingOriginalPhotoUri = null;
                 loadEntries();
             }, e -> {
                 view.showLoading(false);
                 view.showError(context.getString(R.string.error_database));
             });
         } else {
+            String previousPhoto = editingOriginalPhotoUri;
             applyFormData(editingEntry, data);
             view.showLoading(true);
-            repository.updateEnvironmentEntry(editingEntry, () -> {
+            repository.updateEnvironmentEntry(editingEntry, previousPhoto, () -> {
                 view.showMessage(context.getString(R.string.environment_log_updated));
                 view.clearForm();
                 view.showEditingState(false);
                 view.notifyLogEvent(EVENT_UPDATED, editingEntry.getId());
                 editingEntry = null;
+                pendingPhotoUri = null;
+                editingOriginalPhotoUri = null;
                 loadEntries();
             }, e -> {
                 view.showLoading(false);
@@ -116,15 +127,42 @@ public class EnvironmentLogPresenter {
             return;
         }
         editingEntry = copyEntry(item.getEntry());
+        editingOriginalPhotoUri = editingEntry.getPhotoUri();
+        pendingPhotoUri = editingOriginalPhotoUri;
         view.populateForm(editingEntry);
+        view.showPhotoPreview(pendingPhotoUri);
         view.showEditingState(true);
     }
 
     /** Cancels the current edit flow. */
     public void onCancelEdit() {
         editingEntry = null;
+        pendingPhotoUri = null;
+        editingOriginalPhotoUri = null;
         view.clearForm();
+        view.showPhotoPreview(null);
         view.showEditingState(false);
+    }
+
+    /** Registers a newly selected photo for the current form. */
+    public void onPhotoSelected(@NonNull String uri) {
+        pendingPhotoUri = uri;
+        view.showPhotoPreview(uri);
+    }
+
+    /** Clears any pending photo from the form. */
+    public void onPhotoRemoved() {
+        pendingPhotoUri = null;
+        view.showPhotoPreview(null);
+    }
+
+    /** Restores the pending photo after configuration changes. */
+    public void restorePendingPhoto(@Nullable String uri) {
+        pendingPhotoUri = TextUtils.isEmpty(uri) ? null : uri;
+        if (editingEntry == null) {
+            editingOriginalPhotoUri = null;
+        }
+        view.showPhotoPreview(pendingPhotoUri);
     }
 
     /** Deletes the given entry. */
@@ -154,7 +192,7 @@ public class EnvironmentLogPresenter {
         entry.setHeight(data.getHeight());
         entry.setWidth(data.getWidth());
         entry.setNotes(data.getNotes());
-        entry.setPhotoUri(data.getPhotoUri());
+        entry.setPhotoUri(pendingPhotoUri);
     }
 
     private EnvironmentLogItem toItem(EnvironmentEntry entry) {

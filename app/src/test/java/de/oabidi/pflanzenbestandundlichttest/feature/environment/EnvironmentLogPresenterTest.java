@@ -3,6 +3,10 @@ package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 
@@ -20,6 +24,8 @@ import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 /**
  * Unit tests covering the EnvironmentLogPresenter chart aggregation logic.
@@ -94,6 +100,32 @@ public class EnvironmentLogPresenterTest {
         assertNull(view.climateData);
     }
 
+    @Test
+    public void onSubmit_withOnlyPhotoPersistsEntry() {
+        Context context = ApplicationProvider.getApplicationContext();
+        PlantRepository repository = Mockito.mock(PlantRepository.class);
+        EnvironmentLogView view = Mockito.mock(EnvironmentLogView.class);
+        EnvironmentLogPresenter presenter = new EnvironmentLogPresenter(view, repository, 5L, context);
+
+        doAnswer(invocation -> {
+            EnvironmentEntry entry = invocation.getArgument(0);
+            Runnable callback = invocation.getArgument(1);
+            entry.setId(42L);
+            callback.run();
+            return null;
+        }).when(repository).insertEnvironmentEntry(any(EnvironmentEntry.class), any(Runnable.class), any());
+
+        presenter.onPhotoSelected("file:///tmp/photo.jpg");
+        presenter.onSubmit(new EnvironmentLogFormData(null, null, null, null, null, null, null));
+
+        ArgumentCaptor<EnvironmentEntry> captor = ArgumentCaptor.forClass(EnvironmentEntry.class);
+        verify(repository).insertEnvironmentEntry(captor.capture(), any(Runnable.class), any());
+        EnvironmentEntry inserted = captor.getValue();
+        assertEquals("file:///tmp/photo.jpg", inserted.getPhotoUri());
+        verify(view, never()).showEmptyFormError();
+        verify(view).clearForm();
+    }
+
     private static EnvironmentEntry buildEntry(long plantId, long timestamp, Float temperature,
                                                Float humidity, Float height, Float width) {
         EnvironmentEntry entry = new EnvironmentEntry();
@@ -126,6 +158,7 @@ public class EnvironmentLogPresenterTest {
     private static class StubView implements EnvironmentLogView {
         EnvironmentLogPresenter.ChartData growthData;
         EnvironmentLogPresenter.ChartData climateData;
+        List<EnvironmentLogPresenter.PhotoHighlight> photoHighlights;
 
         @Override
         public void showEntries(List<EnvironmentLogPresenter.EnvironmentLogItem> items) {
@@ -150,6 +183,11 @@ public class EnvironmentLogPresenterTest {
         }
 
         @Override
+        public void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights) {
+            photoHighlights = highlights;
+        }
+
+        @Override
         public void showMessage(String message) {
         }
 
@@ -171,6 +209,10 @@ public class EnvironmentLogPresenterTest {
 
         @Override
         public void showEditingState(boolean editing) {
+        }
+
+        @Override
+        public void showPhotoPreview(@Nullable String photoUri) {
         }
 
         @Override

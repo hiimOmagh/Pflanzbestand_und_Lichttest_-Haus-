@@ -11,6 +11,8 @@ import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Database;
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.Index;
 import androidx.room.Insert;
 import androidx.room.PrimaryKey;
 import androidx.room.Query;
@@ -27,6 +29,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
@@ -44,7 +47,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate4To15_keepsPlants() {
+    public void migrate4To16_keepsPlants() {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Create database in version 4 and insert a sample plant.
@@ -70,7 +73,8 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_11_12,
                 PlantDatabase.MIGRATION_12_13,
                 PlantDatabase.MIGRATION_13_14,
-                PlantDatabase.MIGRATION_14_15)
+                PlantDatabase.MIGRATION_14_15,
+                PlantDatabase.MIGRATION_15_16)
             .allowMainThreadQueries()
             .build();
         List<Plant> plants = migrated.plantDao().getAll();
@@ -81,7 +85,7 @@ public class PlantDatabaseMigrationTest {
     }
 
     @Test
-    public void migrate12To15_transformsSpeciesTargets() {
+    public void migrate12To16_transformsSpeciesTargets() {
         Context context = ApplicationProvider.getApplicationContext();
 
         PlantDatabaseV12 v12 = Room.databaseBuilder(context, PlantDatabaseV12.class, DB_NAME)
@@ -110,7 +114,8 @@ public class PlantDatabaseMigrationTest {
                 PlantDatabase.MIGRATION_11_12,
                 PlantDatabase.MIGRATION_12_13,
                 PlantDatabase.MIGRATION_13_14,
-                PlantDatabase.MIGRATION_14_15)
+                PlantDatabase.MIGRATION_14_15,
+                PlantDatabase.MIGRATION_15_16)
             .allowMainThreadQueries()
             .build();
 
@@ -145,6 +150,35 @@ public class PlantDatabaseMigrationTest {
         assertNotNull(migratedTarget.getSources());
         assertEquals(1, migratedTarget.getSources().size());
         assertEquals("manual", migratedTarget.getSources().get(0));
+    }
+
+    @Test
+    public void migrate15To16_addsEnvironmentPhotoColumn() {
+        Context context = ApplicationProvider.getApplicationContext();
+
+        PlantDatabaseV15 v15 = Room.databaseBuilder(context, PlantDatabaseV15.class, DB_NAME)
+            .allowMainThreadQueries()
+            .build();
+        Plant plant = new Plant();
+        plant.setName("Env");
+        plant.setAcquiredAtEpoch(0L);
+        long plantId = v15.plantDao().insert(plant);
+        EnvironmentEntryV15 legacyEntry = new EnvironmentEntryV15();
+        legacyEntry.plantId = plantId;
+        legacyEntry.timestamp = 1234L;
+        legacyEntry.notes = "legacy";
+        v15.environmentEntryDao().insert(legacyEntry);
+        v15.close();
+
+        PlantDatabase migrated = Room.databaseBuilder(context, PlantDatabase.class, DB_NAME)
+            .addMigrations(PlantDatabase.MIGRATION_15_16)
+            .allowMainThreadQueries()
+            .build();
+        List<EnvironmentEntry> entries = migrated.environmentEntryDao().getForPlantOrdered(plantId);
+        migrated.close();
+
+        assertEquals(1, entries.size());
+        assertNull(entries.get(0).getPhotoUri());
     }
 
     /**
@@ -239,5 +273,63 @@ public class PlantDatabaseMigrationTest {
     @TypeConverters({Converters.class})
     abstract static class PlantDatabaseV12 extends RoomDatabase {
         public abstract SpeciesTargetDaoV12 speciesTargetDao();
+    }
+
+    @Dao
+    interface PlantDaoV15 {
+        @Insert
+        long insert(Plant plant);
+    }
+
+    @Dao
+    interface EnvironmentEntryDaoV15 {
+        @Insert
+        void insert(EnvironmentEntryV15 entry);
+    }
+
+    @Entity(tableName = "EnvironmentEntry",
+        foreignKeys = @ForeignKey(entity = Plant.class, parentColumns = "id", childColumns = "plantId",
+            onDelete = ForeignKey.CASCADE),
+        indices = {@Index("plantId"), @Index("timestamp")})
+    static class EnvironmentEntryV15 {
+        @PrimaryKey(autoGenerate = true)
+        public long id;
+        public long plantId;
+        public long timestamp;
+        @Nullable
+        public Float temperature;
+        @Nullable
+        public Float humidity;
+        @Nullable
+        public Float soilMoisture;
+        @Nullable
+        public Float height;
+        @Nullable
+        public Float width;
+        @Nullable
+        public String notes;
+    }
+
+    @Database(
+        entities = {
+            Plant.class,
+            Measurement.class,
+            DiaryEntry.class,
+            SpeciesTarget.class,
+            Reminder.class,
+            PlantFts.class,
+            DiaryEntryFts.class,
+            PlantPhoto.class,
+            PlantCalibration.class,
+            EnvironmentEntryV15.class
+        },
+        version = 15,
+        exportSchema = false
+    )
+    @TypeConverters({Converters.class})
+    abstract static class PlantDatabaseV15 extends RoomDatabase {
+        public abstract PlantDaoV15 plantDao();
+
+        public abstract EnvironmentEntryDaoV15 environmentEntryDao();
     }
 }
