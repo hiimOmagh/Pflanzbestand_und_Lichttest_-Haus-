@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.TooltipCompat;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -39,6 +41,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -123,6 +126,51 @@ public class PlantDetailActivity extends AppCompatActivity
     private TextView careTipsEmptyView;
     @Nullable
     private CareRecommendationAdapter careRecommendationAdapter;
+    @Nullable
+    private MaterialCardView speciesMetadataCard;
+    @Nullable
+    private View wateringSection;
+    @Nullable
+    private TextView wateringFrequencyView;
+    @Nullable
+    private TextView wateringSoilView;
+    @Nullable
+    private TextView wateringToleranceView;
+    @Nullable
+    private View temperatureSection;
+    @Nullable
+    private TextView temperatureRangeView;
+    @Nullable
+    private View humiditySection;
+    @Nullable
+    private TextView humidityRangeView;
+    @Nullable
+    private View toxicitySection;
+    @Nullable
+    private TextView toxicityTextView;
+    @Nullable
+    private View careTipsSection;
+    @Nullable
+    private TextView careTipsTextView;
+    @Nullable
+    private TextView metadataUnavailableView;
+    @Nullable
+    private ImageView wateringIconView;
+    @Nullable
+    private ImageView temperatureIconView;
+    @Nullable
+    private ImageView humidityIconView;
+    @Nullable
+    private ImageView toxicityIconView;
+    @Nullable
+    private ImageView careTipsIconView;
+    @Nullable
+    private PlantMetadataViewModel pendingMetadata;
+    @Nullable
+    private String pendingMetadataFallback;
+    @Nullable
+    private String speciesKey;
+    private boolean metadataViewsReady;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,6 +190,7 @@ public class PlantDetailActivity extends AppCompatActivity
         String locationHint = getIntent().getStringExtra("locationHint"); // Where the plant is located
         long acquiredAtEpoch = getIntent().getLongExtra("acquiredAtEpoch", 0L); // Acquisition time in milliseconds since the Unix epoch
         plantName = name;
+        speciesKey = species;
         lightSensorHelper = new LightSensorHelper(this, this, 6);
         hasAmbientSensor = lightSensorHelper.hasLightSensor();
 
@@ -173,6 +222,7 @@ public class PlantDetailActivity extends AppCompatActivity
         presenter = new PlantDetailPresenter(this, plantId,
             new ExportManager(this, repository, ioExecutor), repository);
         exportLauncher = registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), presenter::onExportUriSelected);
+        presenter.loadSpeciesMetadata(speciesKey);
 
         String nameText = presenter.getTextOrFallback(name);
         String descriptionText = presenter.getTextOrFallback(description);
@@ -254,6 +304,41 @@ public class PlantDetailActivity extends AppCompatActivity
         careTipsList = views.careRecommendationsListView;
         careTipsLoadingView = views.careRecommendationsLoadingView;
         careTipsEmptyView = views.careRecommendationsEmptyView;
+        speciesMetadataCard = views.speciesMetadataCardView;
+        wateringSection = views.wateringSectionView;
+        wateringFrequencyView = views.wateringFrequencyView;
+        wateringSoilView = views.wateringSoilView;
+        wateringToleranceView = views.wateringToleranceView;
+        temperatureSection = views.temperatureSectionView;
+        temperatureRangeView = views.temperatureRangeView;
+        humiditySection = views.humiditySectionView;
+        humidityRangeView = views.humidityRangeView;
+        toxicitySection = views.toxicitySectionView;
+        toxicityTextView = views.toxicityTextView;
+        careTipsSection = views.careTipsSectionView;
+        careTipsTextView = views.careTipsTextView;
+        metadataUnavailableView = views.metadataUnavailableView;
+        wateringIconView = views.wateringIconView;
+        temperatureIconView = views.temperatureIconView;
+        humidityIconView = views.humidityIconView;
+        toxicityIconView = views.toxicityIconView;
+        careTipsIconView = views.careTipsIconView;
+
+        if (wateringIconView != null) {
+            TooltipCompat.setTooltipText(wateringIconView, getString(R.string.metadata_tooltip_watering));
+        }
+        if (temperatureIconView != null) {
+            TooltipCompat.setTooltipText(temperatureIconView, getString(R.string.metadata_tooltip_temperature));
+        }
+        if (humidityIconView != null) {
+            TooltipCompat.setTooltipText(humidityIconView, getString(R.string.metadata_tooltip_humidity));
+        }
+        if (toxicityIconView != null) {
+            TooltipCompat.setTooltipText(toxicityIconView, getString(R.string.metadata_tooltip_toxicity));
+        }
+        if (careTipsIconView != null) {
+            TooltipCompat.setTooltipText(careTipsIconView, getString(R.string.metadata_tooltip_care_tips));
+        }
 
         if (ambientValueView != null) {
             ambientValueView.setText(R.string.light_meter_lux_placeholder);
@@ -288,7 +373,41 @@ public class PlantDetailActivity extends AppCompatActivity
             careTipsList.setAdapter(careRecommendationAdapter);
         }
 
+        metadataViewsReady = true;
+        if (pendingMetadataFallback != null) {
+            bindSpeciesMetadataUnavailable(pendingMetadataFallback);
+            pendingMetadataFallback = null;
+        } else if (pendingMetadata != null) {
+            bindSpeciesMetadata(pendingMetadata);
+            pendingMetadata = null;
+        }
+
         presenter.loadCareRecommendations();
+    }
+
+    @Override
+    public void showSpeciesMetadata(PlantMetadataViewModel metadata) {
+        if (!metadataViewsReady) {
+            pendingMetadata = metadata;
+            pendingMetadataFallback = null;
+            return;
+        }
+        bindSpeciesMetadata(metadata);
+    }
+
+    @Override
+    public void showSpeciesMetadataUnavailable(String message) {
+        if (!metadataViewsReady) {
+            pendingMetadata = null;
+            pendingMetadataFallback = message;
+            return;
+        }
+        bindSpeciesMetadataUnavailable(message);
+    }
+
+    @Override
+    public String getSpeciesMetadataUnavailableText() {
+        return getString(R.string.metadata_unavailable);
     }
 
     @Override
@@ -779,5 +898,152 @@ public class PlantDetailActivity extends AppCompatActivity
     @Override
     public String getUnknownDateText() {
         return getString(R.string.unknown_date);
+    }
+
+    private void bindSpeciesMetadata(PlantMetadataViewModel metadata) {
+        pendingMetadata = null;
+        pendingMetadataFallback = null;
+        if (speciesMetadataCard != null) {
+            speciesMetadataCard.setVisibility(View.VISIBLE);
+        }
+        if (metadataUnavailableView != null) {
+            metadataUnavailableView.setVisibility(View.GONE);
+        }
+        if (wateringSection != null) {
+            wateringSection.setVisibility(View.VISIBLE);
+        }
+        PlantMetadataViewModel.WateringInfo watering = metadata.getWateringInfo();
+        if (wateringFrequencyView != null) {
+            String frequency = watering != null ? watering.getFrequency() : null;
+            if (TextUtils.isEmpty(frequency)) {
+                wateringFrequencyView.setText(getString(R.string.metadata_watering_frequency_fallback));
+            } else {
+                wateringFrequencyView.setText(frequency);
+            }
+        }
+        if (wateringSoilView != null) {
+            String soil = watering != null ? watering.getSoilType() : null;
+            if (TextUtils.isEmpty(soil)) {
+                wateringSoilView.setVisibility(View.GONE);
+            } else {
+                wateringSoilView.setVisibility(View.VISIBLE);
+                wateringSoilView.setText(getString(R.string.metadata_watering_soil, soil));
+            }
+        }
+        if (wateringToleranceView != null) {
+            String tolerance = watering != null ? watering.getTolerance() : null;
+            if (TextUtils.isEmpty(tolerance)) {
+                wateringToleranceView.setVisibility(View.GONE);
+            } else {
+                wateringToleranceView.setVisibility(View.VISIBLE);
+                wateringToleranceView.setText(getString(R.string.metadata_watering_tolerance, tolerance));
+            }
+        }
+        if (temperatureSection != null) {
+            temperatureSection.setVisibility(View.VISIBLE);
+        }
+        if (temperatureRangeView != null) {
+            temperatureRangeView.setText(formatRangeText(metadata.getTemperatureRange(),
+                R.string.metadata_temperature_range_fallback,
+                getString(R.string.metadata_temperature_unit)));
+        }
+        if (humiditySection != null) {
+            humiditySection.setVisibility(View.VISIBLE);
+        }
+        if (humidityRangeView != null) {
+            humidityRangeView.setText(formatRangeText(metadata.getHumidityRange(),
+                R.string.metadata_humidity_range_fallback,
+                getString(R.string.metadata_humidity_unit)));
+        }
+        if (toxicitySection != null) {
+            toxicitySection.setVisibility(View.VISIBLE);
+        }
+        if (toxicityTextView != null) {
+            Boolean toxic = metadata.getToxicToPets();
+            if (toxic == null) {
+                toxicityTextView.setText(R.string.metadata_toxic_unknown);
+            } else if (toxic) {
+                toxicityTextView.setText(R.string.metadata_toxic_true);
+            } else {
+                toxicityTextView.setText(R.string.metadata_toxic_false);
+            }
+        }
+        if (careTipsSection != null) {
+            careTipsSection.setVisibility(View.VISIBLE);
+        }
+        if (careTipsTextView != null) {
+            List<String> tips = metadata.getCareTips();
+            if (tips == null || tips.isEmpty()) {
+                careTipsTextView.setText(getString(R.string.metadata_care_tips_fallback));
+            } else {
+                careTipsTextView.setText(buildBulletList(tips));
+            }
+        }
+    }
+
+    private void bindSpeciesMetadataUnavailable(String message) {
+        pendingMetadata = null;
+        pendingMetadataFallback = null;
+        if (speciesMetadataCard != null) {
+            speciesMetadataCard.setVisibility(View.VISIBLE);
+        }
+        if (wateringSection != null) {
+            wateringSection.setVisibility(View.GONE);
+        }
+        if (temperatureSection != null) {
+            temperatureSection.setVisibility(View.GONE);
+        }
+        if (humiditySection != null) {
+            humiditySection.setVisibility(View.GONE);
+        }
+        if (toxicitySection != null) {
+            toxicitySection.setVisibility(View.GONE);
+        }
+        if (careTipsSection != null) {
+            careTipsSection.setVisibility(View.GONE);
+        }
+        if (metadataUnavailableView != null) {
+            metadataUnavailableView.setVisibility(View.VISIBLE);
+            metadataUnavailableView.setText(message);
+        }
+    }
+
+    private String formatRangeText(@Nullable PlantMetadataViewModel.RangeInfo range,
+                                   int fallbackResId,
+                                   String unit) {
+        if (range == null || !range.hasValues()) {
+            return getString(fallbackResId);
+        }
+        NumberFormat format = NumberFormat.getNumberInstance();
+        format.setMaximumFractionDigits(1);
+        format.setMinimumFractionDigits(0);
+        Float min = range.getMin();
+        Float max = range.getMax();
+        if (min != null && max != null) {
+            if (Math.abs(min - max) < 0.01f) {
+                return getString(R.string.metadata_range_single_value, format.format(min), unit);
+            }
+            return getString(R.string.metadata_range_between, format.format(min), format.format(max), unit);
+        }
+        if (min != null) {
+            return getString(R.string.metadata_range_min_only, format.format(min), unit);
+        }
+        return getString(R.string.metadata_range_max_only, format.format(max), unit);
+    }
+
+    private String buildBulletList(List<String> tips) {
+        StringBuilder builder = new StringBuilder();
+        for (String tip : tips) {
+            if (tip != null && !tip.trim().isEmpty()) {
+                if (builder.length() > 0) {
+                    builder.append('\n');
+                }
+                builder.append('\u2022').append(' ').append(tip.trim());
+            }
+        }
+        if (builder.length() == 0) {
+            return getString(R.string.metadata_care_tips_fallback);
+        }
+        return builder.toString();
     }
 }

@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import java.text.DateFormat;
@@ -104,6 +105,24 @@ public class PlantDetailPresenter {
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
 
+    /** Loads metadata associated with the supplied species key. */
+    public void loadSpeciesMetadata(@Nullable String speciesKey) {
+        String normalized = speciesKey != null ? speciesKey.trim() : null;
+        if (normalized == null || normalized.isEmpty()) {
+            runOnViewThread(() -> view.showSpeciesMetadataUnavailable(view.getSpeciesMetadataUnavailableText()));
+            return;
+        }
+        repository.getSpeciesTarget(normalized,
+            target -> runOnViewThread(() -> {
+                if (target == null) {
+                    view.showSpeciesMetadataUnavailable(view.getSpeciesMetadataUnavailableText());
+                    return;
+                }
+                view.showSpeciesMetadata(createMetadataViewModel(target));
+            }),
+            error -> runOnViewThread(() -> view.showSpeciesMetadataUnavailable(view.getSpeciesMetadataUnavailableText())));
+    }
+
     /** Dismisses a recommendation so it will no longer be shown. */
     public void dismissRecommendation(String recommendationId) {
         if (recommendationId == null || recommendationId.isEmpty()) {
@@ -200,5 +219,73 @@ public class PlantDetailPresenter {
         } else {
             mainHandler.post(runnable);
         }
+    }
+
+    private PlantMetadataViewModel createMetadataViewModel(SpeciesTarget target) {
+        SpeciesTarget.WateringInfo wateringInfo = target.getWateringInfo();
+        String frequency = wateringInfo != null ? sanitize(wateringInfo.getFrequency()) : null;
+        if (frequency == null && wateringInfo != null) {
+            frequency = sanitize(wateringInfo.getSchedule());
+        }
+        String soil = wateringInfo != null ? sanitize(firstNonEmpty(wateringInfo.getSoilType(), wateringInfo.getSoil())) : null;
+        String tolerance = wateringInfo != null ? sanitize(wateringInfo.getTolerance()) : null;
+        PlantMetadataViewModel.WateringInfo watering = null;
+        if (frequency != null || soil != null || tolerance != null) {
+            watering = new PlantMetadataViewModel.WateringInfo(frequency, soil, tolerance);
+        }
+
+        SpeciesTarget.FloatRange temperatureRange = target.getTemperatureRange();
+        PlantMetadataViewModel.RangeInfo temperature = createRangeInfo(temperatureRange);
+
+        SpeciesTarget.FloatRange humidityRange = target.getHumidityRange();
+        PlantMetadataViewModel.RangeInfo humidity = createRangeInfo(humidityRange);
+
+        List<String> careTips = sanitizeList(target.getCareTips());
+
+        return new PlantMetadataViewModel(watering, temperature, humidity, target.getToxicToPets(), careTips);
+    }
+
+    private PlantMetadataViewModel.RangeInfo createRangeInfo(@Nullable SpeciesTarget.FloatRange range) {
+        if (range == null) {
+            return null;
+        }
+        Float min = range.getMin();
+        Float max = range.getMax();
+        if (min == null && max == null) {
+            return null;
+        }
+        return new PlantMetadataViewModel.RangeInfo(min, max);
+    }
+
+    private List<String> sanitizeList(@Nullable List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> sanitized = new ArrayList<>();
+        for (String value : values) {
+            String normalized = sanitize(value);
+            if (normalized != null) {
+                sanitized.add(normalized);
+            }
+        }
+        return sanitized;
+    }
+
+    @Nullable
+    private String sanitize(@Nullable String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    @Nullable
+    private String firstNonEmpty(@Nullable String primary, @Nullable String secondary) {
+        String primarySanitized = sanitize(primary);
+        if (primarySanitized != null) {
+            return primarySanitized;
+        }
+        return sanitize(secondary);
     }
 }

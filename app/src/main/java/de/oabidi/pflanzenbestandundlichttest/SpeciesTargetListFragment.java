@@ -6,9 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,6 +27,7 @@ import com.google.android.material.snackbar.Snackbar;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Fragment displaying the list of PPFD targets per species.
@@ -90,6 +94,19 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         EditText flowerDliMax = dialogView.findViewById(R.id.edit_flower_dli_max);
         EditText toleranceEdit = dialogView.findViewById(R.id.edit_tolerance);
         EditText sourceEdit = dialogView.findViewById(R.id.edit_source);
+        EditText wateringFrequencyEdit = dialogView.findViewById(R.id.edit_watering_frequency);
+        EditText wateringSoilEdit = dialogView.findViewById(R.id.edit_watering_soil);
+        Spinner toxicitySpinner = dialogView.findViewById(R.id.spinner_toxicity);
+        EditText temperatureMinEdit = dialogView.findViewById(R.id.edit_temperature_min);
+        EditText temperatureMaxEdit = dialogView.findViewById(R.id.edit_temperature_max);
+        EditText humidityMinEdit = dialogView.findViewById(R.id.edit_humidity_min);
+        EditText humidityMaxEdit = dialogView.findViewById(R.id.edit_humidity_max);
+        EditText careTipsEdit = dialogView.findViewById(R.id.edit_care_tips);
+
+        ArrayAdapter<CharSequence> toxicityAdapter = ArrayAdapter.createFromResource(requireContext(),
+            R.array.metadata_toxicity_options, android.R.layout.simple_spinner_item);
+        toxicityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        toxicitySpinner.setAdapter(toxicityAdapter);
 
         StageFields seedlingFields = new StageFields(seedlingPpfdMin, seedlingPpfdMax, seedlingDliMin, seedlingDliMax);
         StageFields vegetativeFields = new StageFields(vegetativePpfdMin, vegetativePpfdMax, vegetativeDliMin, vegetativeDliMax);
@@ -105,6 +122,38 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             }
             if (target.getSource() != null) {
                 sourceEdit.setText(target.getSource());
+            }
+            SpeciesTarget.WateringInfo wateringInfo = target.getWateringInfo();
+            if (wateringInfo != null) {
+                if (!TextUtils.isEmpty(wateringInfo.getFrequency())) {
+                    wateringFrequencyEdit.setText(wateringInfo.getFrequency());
+                }
+                if (!TextUtils.isEmpty(wateringInfo.getSoilType())) {
+                    wateringSoilEdit.setText(wateringInfo.getSoilType());
+                }
+            }
+            toxicitySpinner.setSelection(toxicitySelectionForValue(target.getToxicToPets()));
+            SpeciesTarget.FloatRange temperatureRange = target.getTemperatureRange();
+            if (temperatureRange != null) {
+                if (temperatureRange.getMin() != null) {
+                    temperatureMinEdit.setText(formatFloat(temperatureRange.getMin()));
+                }
+                if (temperatureRange.getMax() != null) {
+                    temperatureMaxEdit.setText(formatFloat(temperatureRange.getMax()));
+                }
+            }
+            SpeciesTarget.FloatRange humidityRange = target.getHumidityRange();
+            if (humidityRange != null) {
+                if (humidityRange.getMin() != null) {
+                    humidityMinEdit.setText(formatFloat(humidityRange.getMin()));
+                }
+                if (humidityRange.getMax() != null) {
+                    humidityMaxEdit.setText(formatFloat(humidityRange.getMax()));
+                }
+            }
+            List<String> careTips = target.getCareTips();
+            if (careTips != null && !careTips.isEmpty()) {
+                careTipsEdit.setText(TextUtils.join("\n", careTips));
             }
         }
 
@@ -137,6 +186,31 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     String tolerance = emptyToNull(toleranceEdit.getText().toString());
                     String source = emptyToNull(sourceEdit.getText().toString());
                     SpeciesTarget newTarget = new SpeciesTarget(key, seedling, vegetative, flower, tolerance, source);
+                    SpeciesTarget.WateringInfo wateringInfo = newTarget.getWateringInfo();
+                    if (wateringInfo == null) {
+                        wateringInfo = new SpeciesTarget.WateringInfo();
+                    }
+                    wateringInfo.setFrequency(emptyToNull(wateringFrequencyEdit.getText().toString()));
+                    wateringInfo.setSoilType(emptyToNull(wateringSoilEdit.getText().toString()));
+                    wateringInfo.setTolerance(tolerance);
+                    newTarget.setWateringInfo(wateringInfo);
+                    Float tempMin = parseNullable(temperatureMinEdit.getText().toString());
+                    Float tempMax = parseNullable(temperatureMaxEdit.getText().toString());
+                    if (tempMin != null || tempMax != null) {
+                        newTarget.setTemperatureRange(new SpeciesTarget.FloatRange(tempMin, tempMax));
+                    } else {
+                        newTarget.setTemperatureRange(null);
+                    }
+                    Float humidityMin = parseNullable(humidityMinEdit.getText().toString());
+                    Float humidityMax = parseNullable(humidityMaxEdit.getText().toString());
+                    if (humidityMin != null || humidityMax != null) {
+                        newTarget.setHumidityRange(new SpeciesTarget.FloatRange(humidityMin, humidityMax));
+                    } else {
+                        newTarget.setHumidityRange(null);
+                    }
+                    newTarget.setToxicToPets(parseToxicitySelection(toxicitySpinner.getSelectedItemPosition()));
+                    List<String> careTips = parseCareTipsInput(careTipsEdit.getText().toString());
+                    newTarget.setCareTips(careTips.isEmpty() ? null : careTips);
                     repository.insertSpeciesTarget(newTarget, this::loadTargets,
                         e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
                     dialog.dismiss();
@@ -189,6 +263,36 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             valid = false;
         }
         return valid;
+    }
+
+    private int toxicitySelectionForValue(@Nullable Boolean value) {
+        if (value == null) {
+            return 0;
+        }
+        return value ? 2 : 1;
+    }
+
+    @Nullable
+    private Boolean parseToxicitySelection(int position) {
+        if (position <= 0) {
+            return null;
+        }
+        return position == 2;
+    }
+
+    private List<String> parseCareTipsInput(@Nullable String value) {
+        List<String> tips = new ArrayList<>();
+        if (value == null) {
+            return tips;
+        }
+        String[] lines = value.split("\\r?\\n");
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                tips.add(trimmed);
+            }
+        }
+        return tips;
     }
 
     private void populateStage(StageFields fields, @Nullable SpeciesTarget.StageTarget stage) {

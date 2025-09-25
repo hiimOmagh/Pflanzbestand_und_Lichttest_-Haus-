@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="metadata_toxicity_options">
+        <item>@string/metadata_toxic_option_unknown</item>
+        <item>@string/metadata_toxic_option_safe</item>
+        <item>@string/metadata_toxic_option_toxic</item>
+    </string-array>
+</resources>

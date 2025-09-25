@@ -193,6 +193,95 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:hint="@string/hint_watering_frequency">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_watering_frequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="1" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_watering_soil">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_watering_soil"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/label_toxicity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/label_toxicity"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_toxicity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/metadata_toxicity_options" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/hint_temperature_min">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_temperature_min"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_temperature_max">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_temperature_max"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_humidity_min">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_humidity_min"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_humidity_max">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_humidity_max"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:hint="@string/hint_tolerance">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -200,6 +289,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_care_tips">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_care_tips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout

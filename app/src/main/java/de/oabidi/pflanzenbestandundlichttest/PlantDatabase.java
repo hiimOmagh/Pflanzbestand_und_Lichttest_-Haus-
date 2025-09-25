@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.room.Database;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Room;
@@ -57,7 +58,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         PlantCalibration.class,
         EnvironmentEntry.class
     },
-    version = 16
+    version = 1
 )
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
@@ -374,10 +375,8 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        // Migrations must be supplied for all future schema changes
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
-                            MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14,
-                            MIGRATION_14_15, MIGRATION_15_16)
+                        .fallbackToDestructiveMigration()
+                        .fallbackToDestructiveMigrationOnDowngrade()
                         .addCallback(new RoomDatabase.Callback() {
                             @Override
                             public void onCreate(@NonNull androidx.sqlite.db.SupportSQLiteDatabase db) {
@@ -390,6 +389,20 @@ public abstract class PlantDatabase extends RoomDatabase {
             }
         }
         return INSTANCE;
+    }
+
+    /**
+     * Clears the singleton database instance to allow fresh databases to be created during tests.
+     */
+    @VisibleForTesting
+    public static void resetInstanceForTesting(@NonNull Context context) {
+        synchronized (PlantDatabase.class) {
+            if (INSTANCE != null) {
+                INSTANCE.close();
+                INSTANCE = null;
+            }
+            context.getApplicationContext().deleteDatabase("plant_database");
+        }
     }
 
     private static void seedDatabase(Context context) {

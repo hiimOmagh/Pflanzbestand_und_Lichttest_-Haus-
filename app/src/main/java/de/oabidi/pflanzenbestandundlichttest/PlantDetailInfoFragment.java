@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -59,6 +60,45 @@ public class PlantDetailInfoFragment extends Fragment {
         @Nullable
         public final TextView careRecommendationsEmptyView;
 
+        @Nullable
+        public final MaterialCardView speciesMetadataCardView;
+        @Nullable
+        public final View wateringSectionView;
+        @Nullable
+        public final TextView wateringFrequencyView;
+        @Nullable
+        public final TextView wateringSoilView;
+        @Nullable
+        public final TextView wateringToleranceView;
+        @Nullable
+        public final View temperatureSectionView;
+        @Nullable
+        public final TextView temperatureRangeView;
+        @Nullable
+        public final View humiditySectionView;
+        @Nullable
+        public final TextView humidityRangeView;
+        @Nullable
+        public final View toxicitySectionView;
+        @Nullable
+        public final TextView toxicityTextView;
+        @Nullable
+        public final View careTipsSectionView;
+        @Nullable
+        public final TextView careTipsTextView;
+        @Nullable
+        public final TextView metadataUnavailableView;
+        @Nullable
+        public final ImageView wateringIconView;
+        @Nullable
+        public final ImageView temperatureIconView;
+        @Nullable
+        public final ImageView humidityIconView;
+        @Nullable
+        public final ImageView toxicityIconView;
+        @Nullable
+        public final ImageView careTipsIconView;
+
         DetailViews(@Nullable TextView ambientValueView,
                     @Nullable TextView ambientBandView,
                     @Nullable TextView cameraValueView,
@@ -68,7 +108,26 @@ public class PlantDetailInfoFragment extends Fragment {
                     @Nullable MaterialCardView careTipsCardView,
                     @Nullable RecyclerView careRecommendationsListView,
                     @Nullable View careRecommendationsLoadingView,
-                    @Nullable TextView careRecommendationsEmptyView) {
+                    @Nullable TextView careRecommendationsEmptyView,
+                    @Nullable MaterialCardView speciesMetadataCardView,
+                    @Nullable View wateringSectionView,
+                    @Nullable TextView wateringFrequencyView,
+                    @Nullable TextView wateringSoilView,
+                    @Nullable TextView wateringToleranceView,
+                    @Nullable View temperatureSectionView,
+                    @Nullable TextView temperatureRangeView,
+                    @Nullable View humiditySectionView,
+                    @Nullable TextView humidityRangeView,
+                    @Nullable View toxicitySectionView,
+                    @Nullable TextView toxicityTextView,
+                    @Nullable View careTipsSectionView,
+                    @Nullable TextView careTipsTextView,
+                    @Nullable TextView metadataUnavailableView,
+                    @Nullable ImageView wateringIconView,
+                    @Nullable ImageView temperatureIconView,
+                    @Nullable ImageView humidityIconView,
+                    @Nullable ImageView toxicityIconView,
+                    @Nullable ImageView careTipsIconView) {
             this.ambientValueView = ambientValueView;
             this.ambientBandView = ambientBandView;
             this.cameraValueView = cameraValueView;
@@ -79,6 +138,25 @@ public class PlantDetailInfoFragment extends Fragment {
             this.careRecommendationsListView = careRecommendationsListView;
             this.careRecommendationsLoadingView = careRecommendationsLoadingView;
             this.careRecommendationsEmptyView = careRecommendationsEmptyView;
+            this.speciesMetadataCardView = speciesMetadataCardView;
+            this.wateringSectionView = wateringSectionView;
+            this.wateringFrequencyView = wateringFrequencyView;
+            this.wateringSoilView = wateringSoilView;
+            this.wateringToleranceView = wateringToleranceView;
+            this.temperatureSectionView = temperatureSectionView;
+            this.temperatureRangeView = temperatureRangeView;
+            this.humiditySectionView = humiditySectionView;
+            this.humidityRangeView = humidityRangeView;
+            this.toxicitySectionView = toxicitySectionView;
+            this.toxicityTextView = toxicityTextView;
+            this.careTipsSectionView = careTipsSectionView;
+            this.careTipsTextView = careTipsTextView;
+            this.metadataUnavailableView = metadataUnavailableView;
+            this.wateringIconView = wateringIconView;
+            this.temperatureIconView = temperatureIconView;
+            this.humidityIconView = humidityIconView;
+            this.toxicityIconView = toxicityIconView;
+            this.careTipsIconView = careTipsIconView;
         }
     }
 
@@ -174,7 +252,26 @@ public class PlantDetailInfoFragment extends Fragment {
                 view.findViewById(R.id.detail_care_card),
                 view.findViewById(R.id.detail_care_list),
                 view.findViewById(R.id.detail_care_loading),
-                view.findViewById(R.id.detail_care_empty)
+                view.findViewById(R.id.detail_care_empty),
+                view.findViewById(R.id.detail_species_metadata_card),
+                view.findViewById(R.id.detail_watering_section),
+                view.findViewById(R.id.detail_watering_frequency),
+                view.findViewById(R.id.detail_watering_soil),
+                view.findViewById(R.id.detail_watering_tolerance),
+                view.findViewById(R.id.detail_temperature_section),
+                view.findViewById(R.id.detail_temperature_range),
+                view.findViewById(R.id.detail_humidity_section),
+                view.findViewById(R.id.detail_humidity_range),
+                view.findViewById(R.id.detail_toxicity_section),
+                view.findViewById(R.id.detail_toxicity_text),
+                view.findViewById(R.id.detail_care_tips_section),
+                view.findViewById(R.id.detail_care_tips_text),
+                view.findViewById(R.id.detail_metadata_unavailable),
+                view.findViewById(R.id.detail_watering_icon),
+                view.findViewById(R.id.detail_temperature_icon),
+                view.findViewById(R.id.detail_humidity_icon),
+                view.findViewById(R.id.detail_toxicity_icon),
+                view.findViewById(R.id.detail_care_tips_icon)
             ));
         }
     }

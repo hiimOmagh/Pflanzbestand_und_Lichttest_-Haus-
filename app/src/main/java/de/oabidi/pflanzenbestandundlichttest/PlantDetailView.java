@@ -43,4 +43,13 @@ public interface PlantDetailView {
 
     /** Provides the text for an unknown date. */
     String getUnknownDateText();
+
+    /** Displays species metadata such as watering guidance and care tips. */
+    void showSpeciesMetadata(PlantMetadataViewModel metadata);
+
+    /** Displays a fallback message when no species metadata is available. */
+    void showSpeciesMetadataUnavailable(String message);
+
+    /** Provides the localized fallback text when metadata cannot be resolved. */
+    String getSpeciesMetadataUnavailableText();
 }

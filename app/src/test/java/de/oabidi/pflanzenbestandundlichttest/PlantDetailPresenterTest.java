@@ -3,9 +3,13 @@ package de.oabidi.pflanzenbestandundlichttest;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -15,8 +19,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.Shadows;
 
 import java.util.List;
+import java.util.Arrays;
 
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
@@ -70,9 +76,69 @@ public class PlantDetailPresenterTest {
         assertEquals("abc", presenter.getTextOrFallback("abc"));
     }
 
+    @Test
+    public void loadSpeciesMetadata_withNullKey_showsFallback() {
+        FakeExportManager manager = new FakeExportManager(context, repository, true);
+        PlantDetailPresenter presenter = new PlantDetailPresenter(view, 1L, manager, repository);
+        presenter.loadSpeciesMetadata(null);
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+        assertEquals("no-metadata", view.metadataFallback);
+    }
+
+    @Test
+    public void loadSpeciesMetadata_withValidTarget_mapsMetadata() {
+        FakeExportManager manager = new FakeExportManager(context, repository, true);
+        PlantDetailPresenter presenter = new PlantDetailPresenter(view, 1L, manager, repository);
+        SpeciesTarget target = new SpeciesTarget("pothos",
+            new SpeciesTarget.StageTarget(),
+            new SpeciesTarget.StageTarget(),
+            new SpeciesTarget.StageTarget(),
+            null,
+            null);
+        target.setWateringInfo(new SpeciesTarget.WateringInfo("Weekly", "Loamy", "Moderate"));
+        target.setTemperatureRange(new SpeciesTarget.FloatRange(18f, 24f));
+        target.setHumidityRange(new SpeciesTarget.FloatRange(40f, 60f));
+        target.setToxicToPets(Boolean.TRUE);
+        target.setCareTips(Arrays.asList("Rotate plant", "Mist leaves"));
+
+        doAnswer(invocation -> {
+            java.util.function.Consumer<SpeciesTarget> callback = invocation.getArgument(1);
+            callback.accept(target);
+            return null;
+        }).when(repository).getSpeciesTarget(eq("pothos"), any(), any());
+
+        presenter.loadSpeciesMetadata("pothos");
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+        assertNotNull(view.lastMetadata);
+        assertEquals("Weekly", view.lastMetadata.getWateringInfo().getFrequency());
+        assertEquals(Float.valueOf(18f), view.lastMetadata.getTemperatureRange().getMin());
+        assertEquals(Boolean.TRUE, view.lastMetadata.getToxicToPets());
+        assertEquals(2, view.lastMetadata.getCareTips().size());
+        assertNull(view.metadataFallback);
+    }
+
+    @Test
+    public void loadSpeciesMetadata_missingTarget_showsFallback() {
+        FakeExportManager manager = new FakeExportManager(context, repository, true);
+        PlantDetailPresenter presenter = new PlantDetailPresenter(view, 1L, manager, repository);
+        doAnswer(invocation -> {
+            java.util.function.Consumer<SpeciesTarget> callback = invocation.getArgument(1);
+            callback.accept(null);
+            return null;
+        }).when(repository).getSpeciesTarget(eq("unknown"), any(), any());
+
+        presenter.loadSpeciesMetadata("unknown");
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+        assertEquals("no-metadata", view.metadataFallback);
+    }
+
     private static class FakeView implements PlantDetailView {
         boolean success;
         boolean failure;
+        PlantMetadataViewModel lastMetadata;
+        String metadataFallback;
 
         @Override
         public void showExportSuccess() {
@@ -124,6 +190,21 @@ public class PlantDetailPresenterTest {
         @Override
         public String getUnknownDateText() {
             return "unknown";
+        }
+
+        @Override
+        public void showSpeciesMetadata(PlantMetadataViewModel metadata) {
+            lastMetadata = metadata;
+        }
+
+        @Override
+        public void showSpeciesMetadataUnavailable(String message) {
+            metadataFallback = message;
+        }
+
+        @Override
+        public String getSpeciesMetadataUnavailableText() {
+            return "no-metadata";
         }
     }
 
