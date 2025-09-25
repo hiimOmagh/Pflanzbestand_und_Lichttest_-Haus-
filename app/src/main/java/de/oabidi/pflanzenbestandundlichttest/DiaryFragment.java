@@ -31,6 +31,7 @@ import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -49,6 +50,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private DiaryPresenter presenter;
     private DiaryEntryAdapter adapter;
     private PlantRepository repository;
+    private DiaryRepository diaryRepository;
     private ActivityResultLauncher<String> photoPickerLauncher;
     private Consumer<Uri> photoPickedCallback;
     private String searchQuery = "";
@@ -60,6 +62,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     public static DiaryFragment newInstance(PlantRepository repository, long plantId) {
         DiaryFragment fragment = new DiaryFragment();
         fragment.repository = repository;
+        fragment.diaryRepository = repository.diaryRepository();
         Bundle args = new Bundle();
         args.putLong(ARG_PLANT_ID, plantId);
         fragment.setArguments(args);
@@ -71,6 +74,9 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         super.onAttach(context);
         if (repository == null) {
             repository = RepositoryProvider.getRepository(context);
+            diaryRepository = RepositoryProvider.getDiaryRepository(context);
+        } else if (diaryRepository == null) {
+            diaryRepository = repository.diaryRepository();
         }
     }
 
@@ -87,8 +93,11 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             repo = RepositoryProvider.getRepository(requireContext());
             repository = repo;
         }
+        if (diaryRepository == null) {
+            diaryRepository = repo.diaryRepository();
+        }
         Context context = requireContext().getApplicationContext();
-        presenter = new DiaryPresenter(this, repo, plantId, context);
+        presenter = new DiaryPresenter(this, diaryRepository, plantId, context);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (photoPickedCallback != null && uri != null) {
                 requireContext().getContentResolver().takePersistableUriPermission(

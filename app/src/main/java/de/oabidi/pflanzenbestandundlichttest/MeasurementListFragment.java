@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 
 /**
  * Fragment displaying all measurements for a plant.
@@ -32,6 +33,7 @@ public class MeasurementListFragment extends Fragment {
 
     private long plantId = -1;
     private PlantRepository repository;
+    private MeasurementRepository measurementRepository;
     private MeasurementAdapter adapter;
     private Spinner filterSpinner;
 
@@ -41,6 +43,7 @@ public class MeasurementListFragment extends Fragment {
     public static MeasurementListFragment newInstance(long plantId, PlantRepository repository) {
         MeasurementListFragment fragment = new MeasurementListFragment();
         fragment.repository = repository;
+        fragment.measurementRepository = repository.measurementRepository();
         Bundle args = new Bundle();
         args.putLong(ARG_PLANT_ID, plantId);
         fragment.setArguments(args);
@@ -56,6 +59,9 @@ public class MeasurementListFragment extends Fragment {
         }
         if (repository == null) {
             repository = RepositoryProvider.getRepository(requireContext());
+            measurementRepository = RepositoryProvider.getMeasurementRepository(requireContext());
+        } else if (measurementRepository == null) {
+            measurementRepository = repository.measurementRepository();
         }
     }
 
@@ -101,7 +107,7 @@ public class MeasurementListFragment extends Fragment {
                 .setPositiveButton(android.R.string.ok, (d, w) -> {
                     String note = input.getText().toString().trim();
                     measurement.setNote(note.isEmpty() ? null : note);
-                    repository.updateMeasurement(measurement, this::loadMeasurements);
+                    measurementRepository.updateMeasurement(measurement, this::loadMeasurements);
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
@@ -111,10 +117,10 @@ public class MeasurementListFragment extends Fragment {
                 .setTitle(R.string.action_delete_measurement)
                 .setMessage(message)
                 .setPositiveButton(android.R.string.ok, (d, w) ->
-                    repository.deleteMeasurement(measurement, () -> {
+                    measurementRepository.deleteMeasurement(measurement, () -> {
                         loadMeasurements();
                         Snackbar.make(requireView(), R.string.measurement_deleted, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.action_undo, v -> repository.insertMeasurement(measurement, this::loadMeasurements))
+                            .setAction(R.string.action_undo, v -> measurementRepository.insertMeasurement(measurement, this::loadMeasurements))
                             .show();
                     }))
                 .setNegativeButton(android.R.string.cancel, null)
@@ -129,7 +135,7 @@ public class MeasurementListFragment extends Fragment {
             return;
         }
         if (filterSpinner == null) {
-            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
                 e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
             return;
         }
@@ -138,14 +144,14 @@ public class MeasurementListFragment extends Fragment {
         long now = System.currentTimeMillis();
         if (position == FILTER_LAST_7_DAYS) {
             long since = now - 7L * 24 * 60 * 60 * 1000;
-            repository.measurementsForPlantSince(plantId, since, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
                 e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         } else if (position == FILTER_LAST_30_DAYS) {
             long since = now - 30L * 24 * 60 * 60 * 1000;
-            repository.measurementsForPlantSince(plantId, since, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
                 e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         } else {
-            repository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
                 e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
         }
     }

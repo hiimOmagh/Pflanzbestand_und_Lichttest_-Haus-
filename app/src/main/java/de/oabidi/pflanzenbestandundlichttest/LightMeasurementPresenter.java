@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 
 /**
  * Presenter handling light sensor measurements and related calculations.
@@ -68,6 +70,8 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private final Context context;
     private LightSensorHelper lightSensorHelper;
     private final PlantRepository plantRepository;
+    private final MeasurementRepository measurementRepository;
+    private final SpeciesRepository speciesRepository;
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
     private SpeciesTarget.GrowthStage activeStage = SpeciesTarget.GrowthStage.VEGETATIVE;
@@ -84,8 +88,18 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
 
     public LightMeasurementPresenter(View view, PlantRepository plantRepository, Context context,
                                      float calibrationFactor, int sampleSize) {
+        this(view, plantRepository, plantRepository.measurementRepository(),
+            plantRepository.speciesRepository(), context, calibrationFactor, sampleSize);
+    }
+
+    public LightMeasurementPresenter(View view, PlantRepository plantRepository,
+                                     MeasurementRepository measurementRepository,
+                                     SpeciesRepository speciesRepository,
+                                     Context context, float calibrationFactor, int sampleSize) {
         this.view = view;
         this.plantRepository = plantRepository;
+        this.measurementRepository = measurementRepository;
+        this.speciesRepository = speciesRepository;
         this.context = context.getApplicationContext();
         this.calibrationFactor = calibrationFactor;
         this.cameraCalibrationFactor = calibrationFactor;
@@ -144,7 +158,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     }
 
     public void saveMeasurement(Measurement measurement, Runnable afterSave) {
-        plantRepository.insertMeasurement(measurement, afterSave,
+        measurementRepository.insertMeasurement(measurement, afterSave,
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
@@ -157,7 +171,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
         String speciesKey = plants.get(index).getSpecies();
         if (speciesKey != null && !speciesKey.isEmpty()) {
-            plantRepository.getSpeciesTarget(speciesKey, target -> {
+            speciesRepository.getSpeciesTarget(speciesKey, target -> {
                 speciesTarget = target;
                 if (speciesTarget != null && !speciesTarget.hasStage(activeStage)) {
                     activeStage = speciesTarget.getDefaultStage();

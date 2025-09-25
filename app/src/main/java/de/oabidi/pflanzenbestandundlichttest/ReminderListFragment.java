@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.snackbar.Snackbar;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,6 +37,7 @@ import java.util.Objects;
 public class ReminderListFragment extends Fragment {
     private ReminderAdapter adapter;
     private PlantRepository repository;
+    private ReminderRepository reminderRepository;
     private SimpleDateFormat df;
 
     public ReminderListFragment() {
@@ -43,6 +45,7 @@ public class ReminderListFragment extends Fragment {
 
     public ReminderListFragment(PlantRepository repository) {
         this.repository = repository;
+        this.reminderRepository = repository.reminderRepository();
     }
 
     public static ReminderListFragment newInstance(PlantRepository repository) {
@@ -68,6 +71,9 @@ public class ReminderListFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         if (repository == null) {
             repository = RepositoryProvider.getRepository(requireContext());
+            reminderRepository = RepositoryProvider.getReminderRepository(requireContext());
+        } else if (reminderRepository == null) {
+            reminderRepository = repository.reminderRepository();
         }
         df = new SimpleDateFormat(getString(R.string.date_time_pattern), Locale.getDefault());
 
@@ -85,11 +91,11 @@ public class ReminderListFragment extends Fragment {
                 int position = viewHolder.getAdapterPosition();
                 Reminder reminder = adapter.getCurrentList().get(position);
                 ReminderScheduler.cancelReminder(requireContext(), reminder.getId());
-                repository.deleteReminderById(reminder.getId(), ReminderListFragment.this::loadReminders,
+                reminderRepository.deleteReminderById(reminder.getId(), ReminderListFragment.this::loadReminders,
                     e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
                 Snackbar.make(requireView(), R.string.reminder_deleted, Snackbar.LENGTH_LONG)
                     .setAction(R.string.action_undo, v ->
-                        repository.insertReminder(reminder, () -> {
+                        reminderRepository.insertReminder(reminder, () -> {
                             ReminderScheduler.scheduleReminderAt(requireContext(),
                                 reminder.getTriggerAt(),
                                 reminder.getMessage(),
@@ -106,7 +112,7 @@ public class ReminderListFragment extends Fragment {
     }
 
     private void loadReminders() {
-        repository.getAllReminders(reminders -> {
+        reminderRepository.getAllReminders(reminders -> {
             if (isAdded()) {
                 adapter.submitList(reminders);
             }
@@ -154,7 +160,7 @@ public class ReminderListFragment extends Fragment {
                 reminder.setMessage(message);
                 reminder.setTriggerAt(triggerAt);
                 ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
-                repository.updateReminder(reminder, this::loadReminders,
+                reminderRepository.updateReminder(reminder, this::loadReminders,
                     e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
                 dialog.dismiss();
             } catch (ParseException e) {

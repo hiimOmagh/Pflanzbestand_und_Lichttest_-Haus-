@@ -36,6 +36,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentPhotoAdapter;
+import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     private long plantId;
     @Nullable
     private PlantRepository repository;
+    @Nullable
+    private EnvironmentRepository environmentRepository;
     @Nullable
     private EnvironmentLogPresenter presenter;
     @Nullable
@@ -136,6 +139,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         repository = RepositoryProvider.getRepository(context);
+        environmentRepository = RepositoryProvider.getEnvironmentRepository(context);
     }
 
     @Override
@@ -156,7 +160,10 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             repo = RepositoryProvider.getRepository(requireContext());
             repository = repo;
         }
-        presenter = new EnvironmentLogPresenter(this, repo, plantId, requireContext());
+        if (environmentRepository == null) {
+            environmentRepository = repo.environmentRepository();
+        }
+        presenter = new EnvironmentLogPresenter(this, environmentRepository, plantId, requireContext());
         if (currentPhotoUri != null) {
             presenter.restorePendingPhoto(currentPhotoUri.toString());
         }

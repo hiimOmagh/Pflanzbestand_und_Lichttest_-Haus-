@@ -15,16 +15,19 @@ import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecomm
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
+import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -45,16 +48,16 @@ import java.util.regex.Pattern;
  * and results or completion callbacks are delivered on the Android main thread,
  * allowing callers to update the UI directly from these callbacks.
  */
-public class PlantRepository {
+public class PlantRepository implements CareRecommendationDelegate {
     private final PlantDao plantDao;
-    private final MeasurementDao measurementDao;
-    private final DiaryDao diaryDao;
-    private final SpeciesTargetDao speciesTargetDao;
-    private final ReminderDao reminderDao;
-    private final PlantPhotoDao plantPhotoDao;
-    private final EnvironmentEntryDao environmentEntryDao;
     private final PlantCalibrationDao plantCalibrationDao;
     private final BulkReadDao bulkDao;
+    private final MeasurementRepository measurementRepository;
+    private final DiaryRepository diaryRepository;
+    private final EnvironmentRepository environmentRepository;
+    private final ReminderRepository reminderRepository;
+    private final SpeciesRepository speciesRepository;
+    private final GalleryRepository galleryRepository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
     private final ExecutorService ioExecutor;
@@ -93,14 +96,40 @@ public class PlantRepository {
         this.sharedPreferences = this.context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
         PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
-        measurementDao = db.measurementDao();
-        diaryDao = db.diaryDao();
-        speciesTargetDao = db.speciesTargetDao();
-        reminderDao = db.reminderDao();
-        plantPhotoDao = db.plantPhotoDao();
-        environmentEntryDao = db.environmentEntryDao();
         plantCalibrationDao = db.plantCalibrationDao();
         bulkDao = db.bulkDao();
+        speciesRepository = new SpeciesRepository(this.context, mainHandler, this.ioExecutor, db.speciesTargetDao());
+        reminderRepository = new ReminderRepository(this.context, mainHandler, this.ioExecutor, db.reminderDao());
+        measurementRepository = new MeasurementRepository(this.context, mainHandler, this.ioExecutor,
+            db.measurementDao(), plantDao, db.speciesTargetDao(), db.reminderDao());
+        diaryRepository = new DiaryRepository(this.context, mainHandler, this.ioExecutor, db.diaryDao());
+        galleryRepository = new GalleryRepository(this.context, mainHandler, this.ioExecutor, db.plantPhotoDao());
+        environmentRepository = new EnvironmentRepository(this.context, mainHandler, this.ioExecutor,
+            db.environmentEntryDao(), this);
+    }
+
+    public MeasurementRepository measurementRepository() {
+        return measurementRepository;
+    }
+
+    public DiaryRepository diaryRepository() {
+        return diaryRepository;
+    }
+
+    public EnvironmentRepository environmentRepository() {
+        return environmentRepository;
+    }
+
+    public ReminderRepository reminderRepository() {
+        return reminderRepository;
+    }
+
+    public SpeciesRepository speciesRepository() {
+        return speciesRepository;
+    }
+
+    public GalleryRepository galleryRepository() {
+        return galleryRepository;
     }
 
     /** Exposes bulk read operations for export and import managers. */
@@ -192,40 +221,8 @@ public class PlantRepository {
         return () -> refreshCareRecommendationsAsync(plantId);
     }
 
-    @Nullable
-    private String persistEnvironmentPhoto(@Nullable String uriString) {
-        if (TextUtils.isEmpty(uriString)) {
-            return null;
-        }
-        String normalized = uriString;
-        if (!PhotoManager.isEnvironmentPhoto(context, uriString)) {
-            try {
-                Uri stored = PhotoManager.saveEnvironmentPhoto(context, Uri.parse(uriString));
-                normalized = stored.toString();
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to persist environment photo", e);
-            }
-        }
-        return normalized;
-    }
-
-    @Nullable
-    private Runnable buildEnvironmentPhotoCleanup(@Nullable String previousPhotoUri, @Nullable String newPhotoUri) {
-        if (TextUtils.isEmpty(previousPhotoUri) || TextUtils.equals(previousPhotoUri, newPhotoUri)) {
-            return null;
-        }
-        final String photoToDelete = previousPhotoUri;
-        return () -> deleteEnvironmentPhoto(photoToDelete);
-    }
-
-    private void deleteEnvironmentPhoto(@Nullable String uriString) {
-        if (TextUtils.isEmpty(uriString)) {
-            return;
-        }
-        PhotoManager.deletePhoto(context, uriString);
-    }
-
-    private Runnable refreshCareRecommendationsAsync(long plantId) {
+    @Override
+    public Runnable refreshCareRecommendationsAsync(long plantId) {
         return () -> {
             try {
                 List<CareRecommendation> recommendations = computeCareRecommendations(plantId);
@@ -233,16 +230,6 @@ public class PlantRepository {
             } catch (Exception e) {
                 notifyCareRecommendationError(plantId, e);
             }
-        };
-    }
-
-    private Runnable combineEnvironmentPostActions(@Nullable Runnable cleanup, Runnable refresh) {
-        if (cleanup == null) {
-            return refresh;
-        }
-        return () -> {
-            cleanup.run();
-            refresh.run();
         };
     }
 
@@ -255,10 +242,10 @@ public class PlantRepository {
         PlantProfile profile = null;
         String speciesKey = plant.getSpecies();
         if (speciesKey != null && !speciesKey.isEmpty()) {
-            SpeciesTarget target = speciesTargetDao.findBySpeciesKey(speciesKey);
+            SpeciesTarget target = speciesRepository.getSpeciesTargetSync(speciesKey);
             profile = PlantProfile.fromTarget(target);
         }
-        List<EnvironmentEntry> entries = environmentEntryDao.getRecentForPlant(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
+        List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
         if (entries == null) {
             entries = Collections.emptyList();
         }
@@ -468,9 +455,9 @@ public class PlantRepository {
         AtomicReference<List<Reminder>> remindersRef = new AtomicReference<>(Collections.emptyList());
         AtomicReference<List<PlantPhoto>> plantPhotosRef = new AtomicReference<>(Collections.emptyList());
         runAsync(() -> {
-            List<Reminder> reminders = reminderDao.getForPlant(plant.getId());
+            List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
             remindersRef.set(reminders);
-            List<PlantPhoto> photos = plantPhotoDao.getForPlant(plant.getId());
+            List<PlantPhoto> photos = galleryRepository.getPlantPhotosForPlantSync(plant.getId());
             plantPhotosRef.set(photos);
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
@@ -489,128 +476,65 @@ public class PlantRepository {
     }
 
     public void addPlantPhoto(long plantId, Uri sourceUri, Consumer<PlantPhoto> callback) {
-        addPlantPhoto(plantId, sourceUri, callback, null);
+        galleryRepository.addPlantPhoto(plantId, sourceUri, callback);
     }
 
     public void addPlantPhoto(long plantId, Uri sourceUri, Consumer<PlantPhoto> callback,
                               Consumer<Exception> errorCallback) {
-        if (sourceUri == null) {
-            if (errorCallback != null) {
-                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("sourceUri")));
-            }
-            return;
-        }
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                Uri stored = PhotoManager.savePlantPhoto(context, sourceUri);
-                PlantPhoto photo = new PlantPhoto(plantId, stored.toString(), System.currentTimeMillis());
-                long id = plantPhotoDao.insert(photo);
-                photo.setId(id);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(photo));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        galleryRepository.addPlantPhoto(plantId, sourceUri, callback, errorCallback);
     }
 
     public void deletePlantPhoto(PlantPhoto photo, Runnable callback) {
-        deletePlantPhoto(photo, callback, null);
+        galleryRepository.deletePlantPhoto(photo, callback);
     }
 
     public void deletePlantPhoto(PlantPhoto photo, Runnable callback, Consumer<Exception> errorCallback) {
-        if (photo == null) {
-            if (errorCallback != null) {
-                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("photo")));
-            }
-            return;
-        }
-        final String uri = photo.getUri();
-        runAsync(() -> plantPhotoDao.deleteForPlant(photo.getPlantId(), photo.getId()),
-            () -> PhotoManager.deletePhoto(context, uri), callback, errorCallback);
+        galleryRepository.deletePlantPhoto(photo, callback, errorCallback);
     }
 
     public void plantPhotosForPlant(long plantId, Consumer<List<PlantPhoto>> callback) {
-        plantPhotosForPlant(plantId, callback, null);
+        galleryRepository.plantPhotosForPlant(plantId, callback);
     }
 
     public void plantPhotosForPlant(long plantId, Consumer<List<PlantPhoto>> callback,
                                     Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<PlantPhoto> result = plantPhotoDao.getForPlant(plantId);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        galleryRepository.plantPhotosForPlant(plantId, callback, errorCallback);
     }
 
     public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback) {
-        environmentEntriesForPlant(plantId, callback, null);
+        environmentRepository.environmentEntriesForPlant(plantId, callback);
     }
 
     public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback,
                                            Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<EnvironmentEntry> result = environmentEntryDao.getForPlantOrdered(plantId);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        environmentRepository.environmentEntriesForPlant(plantId, callback, errorCallback);
     }
 
     public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
-        insertEnvironmentEntry(entry, callback, null);
+        environmentRepository.environmentEntriesForPlant(plantId, callback, errorCallback);
     }
 
     public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        runAsync(() -> {
-            entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
-            long id = environmentEntryDao.insert(entry);
-            entry.setId(id);
-        }, careRecommendationRefreshSupplier(entry.getPlantId()), callback, errorCallback);
+        environmentRepository.insertEnvironmentEntry(entry, callback, errorCallback);
     }
 
     public void updateEnvironmentEntry(EnvironmentEntry entry, @Nullable String previousPhotoUri, Runnable callback) {
-        updateEnvironmentEntry(entry, previousPhotoUri, callback, null);
+        environmentRepository.updateEnvironmentEntry(entry, previousPhotoUri, callback);
     }
 
     public void updateEnvironmentEntry(EnvironmentEntry entry, @Nullable String previousPhotoUri, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        runAsync(() -> {
-            entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
-            environmentEntryDao.update(entry);
-        }, () -> combineEnvironmentPostActions(
-            buildEnvironmentPhotoCleanup(previousPhotoUri, entry.getPhotoUri()),
-            refreshCareRecommendationsAsync(entry.getPlantId())), callback, errorCallback);
+        environmentRepository.updateEnvironmentEntry(entry, previousPhotoUri, callback, errorCallback);
     }
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
-        deleteEnvironmentEntry(entry, callback, null);
+        environmentRepository.deleteEnvironmentEntry(entry, callback);
     }
 
     public void deleteEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
                                        Consumer<Exception> errorCallback) {
-        String photo = entry.getPhotoUri();
-        runAsync(() -> environmentEntryDao.delete(entry),
-            () -> combineEnvironmentPostActions(
-                buildEnvironmentPhotoCleanup(photo, null),
-                refreshCareRecommendationsAsync(entry.getPlantId())), callback, errorCallback);
+        environmentRepository.deleteEnvironmentEntry(entry, callback, errorCallback);
     }
 
     /**
@@ -699,604 +623,243 @@ public class PlantRepository {
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {
-        insertMeasurement(measurement, callback, null);
+        measurementRepository.insertMeasurement(measurement, callback);
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        AtomicReference<Runnable> postActionRef = new AtomicReference<>();
-        runAsync(() -> {
-            measurementDao.insert(measurement);
-            postActionRef.set(checkDliAlerts(measurement.getPlantId()));
-        }, postActionRef::get, callback, errorCallback);
+        measurementRepository.insertMeasurement(measurement, callback, errorCallback);
     }
 
     public void updateMeasurement(Measurement measurement, Runnable callback) {
-        updateMeasurement(measurement, callback, null);
+        measurementRepository.updateMeasurement(measurement, callback);
     }
 
     public void updateMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> measurementDao.update(measurement), callback, errorCallback);
+        measurementRepository.updateMeasurement(measurement, callback, errorCallback);
     }
 
     public void deleteMeasurement(Measurement measurement, Runnable callback) {
-        deleteMeasurement(measurement, callback, null);
+        measurementRepository.deleteMeasurement(measurement, callback);
     }
 
     public void deleteMeasurement(Measurement measurement, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> measurementDao.delete(measurement), callback, errorCallback);
-    }
-
-    private Runnable checkDliAlerts(long plantId) {
-        SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
-        if (!prefs.getBoolean(SettingsKeys.KEY_DLI_ALERTS_ENABLED, false)) {
-            return null;
-        }
-        String thresholdStr = prefs.getString(SettingsKeys.KEY_DLI_ALERT_THRESHOLD, "3");
-        int threshold;
-        try {
-            threshold = Integer.parseInt(thresholdStr);
-        } catch (NumberFormatException e) {
-            threshold = 3;
-        }
-        if (threshold <= 0) {
-            return null;
-        }
-        String hoursStr = prefs.getString(SettingsKeys.KEY_LIGHT_HOURS, "12");
-        float lightHours;
-        try {
-            lightHours = Float.parseFloat(hoursStr);
-        } catch (NumberFormatException e) {
-            lightHours = 12f;
-        }
-
-        Plant plant = plantDao.findById(plantId);
-        if (plant == null || plant.getSpecies() == null || plant.getSpecies().isEmpty()) {
-            return null;
-        }
-        SpeciesTarget target = speciesTargetDao.findBySpeciesKey(plant.getSpecies());
-        if (target == null) {
-            return null;
-        }
-
-        SpeciesTarget.GrowthStage stage = target.getDefaultStage();
-        SpeciesTarget.StageTarget stageTarget = target.getStage(stage);
-        Float minDli = resolveDli(stageTarget != null ? stageTarget.getDliMin() : null,
-            stageTarget != null ? stageTarget.getPpfdMin() : null, lightHours);
-        Float maxDli = resolveDli(stageTarget != null ? stageTarget.getDliMax() : null,
-            stageTarget != null ? stageTarget.getPpfdMax() : null, lightHours);
-        if (minDli == null || maxDli == null) {
-            return null;
-        }
-
-        long todayStart = startOfDay(System.currentTimeMillis());
-        int lowStreak = 0;
-        int highStreak = 0;
-        for (int i = 0; i < threshold; i++) {
-            long start = todayStart - i * 86400000L;
-            long end = start + 86400000L;
-            List<Measurement> list = measurementDao.getForPlantInRange(plantId, start, end);
-            if (list.isEmpty()) {
-                break;
-            }
-            Measurement m = list.get(0);
-            Float dli = m.getDli();
-            if (dli == null) {
-                Float ppfd = m.getPpfd();
-                if (ppfd != null) {
-                    dli = LightMath.dliFromPpfd(ppfd, lightHours);
-                }
-            }
-            if (dli == null) {
-                break;
-            }
-            if (dli < minDli) {
-                lowStreak++;
-                highStreak = 0;
-            } else if (dli > maxDli) {
-                highStreak++;
-                lowStreak = 0;
-            } else {
-                break;
-            }
-        }
-
-        if (lowStreak >= threshold || highStreak >= threshold) {
-            String message;
-            if (lowStreak >= threshold) {
-                message = context.getString(R.string.reminder_dli_low, plant.getName(), threshold);
-            } else {
-                message = context.getString(R.string.reminder_dli_high, plant.getName(), threshold);
-            }
-            List<Reminder> reminders = reminderDao.getForPlant(plantId);
-            for (Reminder r : reminders) {
-                if (message.equals(r.getMessage())) {
-                    return null;
-                }
-            }
-            long triggerAt = System.currentTimeMillis();
-            Reminder reminder = new Reminder(triggerAt, message, plantId);
-            long id = reminderDao.insert(reminder);
-            final long finalTriggerAt = triggerAt;
-            final String finalMessage = message;
-            final long finalId = id;
-            final long finalPlantId = plantId;
-            return () -> ReminderScheduler.scheduleReminderAt(context, finalTriggerAt, finalMessage, finalId, finalPlantId);
-        }
-        return null;
-    }
-
-    private long startOfDay(long time) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(time);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
-    }
-
-    @Nullable
-    private Float resolveDli(@Nullable Float dli, @Nullable Float ppfd, float lightHours) {
-        if (dli != null) {
-            return dli;
-        }
-        if (ppfd != null) {
-            return LightMath.dliFromPpfd(ppfd, lightHours);
-        }
-        return null;
+        measurementRepository.deleteMeasurement(measurement, callback, errorCallback);
     }
 
     public void insertDiaryEntry(DiaryEntry entry, Runnable callback) {
-        insertDiaryEntry(entry, callback, null);
+        diaryRepository.insertDiaryEntry(entry, callback);
     }
 
     public void insertDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> diaryDao.insert(entry), callback, errorCallback);
+        diaryRepository.insertDiaryEntry(entry, callback, errorCallback);
     }
 
     public void updateDiaryEntry(DiaryEntry entry, Runnable callback) {
-        updateDiaryEntry(entry, callback, null);
+        diaryRepository.updateDiaryEntry(entry, callback);
     }
 
     public void updateDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> diaryDao.update(entry), callback, errorCallback);
+        diaryRepository.updateDiaryEntry(entry, callback, errorCallback);
     }
 
     public void deleteDiaryEntry(DiaryEntry entry, Runnable callback) {
-        deleteDiaryEntry(entry, callback, null);
+        diaryRepository.deleteDiaryEntry(entry, callback);
     }
 
     public void deleteDiaryEntry(DiaryEntry entry, Runnable callback, Consumer<Exception> errorCallback) {
-        final String photoUri = entry.getPhotoUri();
-        runAsync(() -> diaryDao.delete(entry), () -> PhotoManager.deletePhoto(context, photoUri),
-            callback, errorCallback);
+        diaryRepository.deleteDiaryEntry(entry, callback, errorCallback);
     }
 
     public void getAllReminders(Consumer<List<Reminder>> callback) {
-        getAllReminders(callback, null);
+        reminderRepository.getAllReminders(callback);
     }
 
     public void getAllReminders(Consumer<List<Reminder>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<Reminder> result = reminderDao.getAll();
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        reminderRepository.getAllReminders(callback, errorCallback);
     }
 
     public void insertReminder(Reminder reminder, Runnable callback) {
-        insertReminder(reminder, callback, null);
+        reminderRepository.getAllReminders(callback, errorCallback);
     }
 
     public void insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> {
-            long id = reminderDao.insert(reminder);
-            reminder.setId(id);
-        }, callback, errorCallback);
+        reminderRepository.insertReminder(reminder, callback, errorCallback);
     }
 
     public void updateReminder(Reminder reminder, Runnable callback) {
-        updateReminder(reminder, callback, null);
+        reminderRepository.updateReminder(reminder, callback);
     }
 
     public void updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> reminderDao.update(reminder), callback, errorCallback);
+        reminderRepository.updateReminder(reminder, callback, errorCallback);
     }
 
     public void deleteReminderById(long id, Runnable callback) {
-        deleteReminderById(id, callback, null);
+        reminderRepository.deleteReminderById(id, callback);
     }
 
     public void deleteReminderById(long id, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> reminderDao.deleteById(id), callback, errorCallback);
+        reminderRepository.deleteReminderById(id, callback, errorCallback);
     }
 
     public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback) {
-        getSpeciesTarget(speciesKey, callback, null);
+        speciesRepository.getSpeciesTarget(speciesKey, callback);
     }
 
     public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                SpeciesTarget result = speciesTargetDao.findBySpeciesKey(speciesKey);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getSpeciesTarget(speciesKey, callback, errorCallback);
     }
 
     public void getPlantProfileByCommonName(String commonName, Consumer<PlantProfile> callback) {
-        getPlantProfileByCommonName(commonName, callback, null);
+        speciesRepository.getPlantProfileByCommonName(commonName, callback);
     }
 
     public void getPlantProfileByCommonName(String commonName, Consumer<PlantProfile> callback,
                                             Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                SpeciesTarget result = speciesTargetDao.findByCommonName(commonName);
-                PlantProfile profile = PlantProfile.fromTarget(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profile));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfileByCommonName(commonName, callback, errorCallback);
     }
 
     public void getPlantProfileByScientificName(String scientificName, Consumer<PlantProfile> callback) {
-        getPlantProfileByScientificName(scientificName, callback, null);
+        speciesRepository.getPlantProfileByScientificName(scientificName, callback);
     }
 
     public void getPlantProfileByScientificName(String scientificName, Consumer<PlantProfile> callback,
                                                 Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                SpeciesTarget result = speciesTargetDao.findByScientificName(scientificName);
-                PlantProfile profile = PlantProfile.fromTarget(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profile));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfileByScientificName(scientificName, callback, errorCallback);
     }
 
     public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback) {
-        getAllSpeciesTargets(callback, null);
+        speciesRepository.getAllSpeciesTargets(callback);
     }
 
     public void getAllSpeciesTargets(Consumer<List<SpeciesTarget>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<SpeciesTarget> result = speciesTargetDao.getAll();
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getAllSpeciesTargets(callback, errorCallback);
     }
 
     public void getPlantProfilesByCategory(SpeciesTarget.Category category,
                                            Consumer<List<PlantProfile>> callback) {
-        getPlantProfilesByCategory(category, callback, null);
+        speciesRepository.getPlantProfilesByCategory(category, callback);
     }
 
     public void getPlantProfilesByCategory(SpeciesTarget.Category category,
                                            Consumer<List<PlantProfile>> callback,
                                            Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<SpeciesTarget> result = speciesTargetDao.getByCategory(category);
-                List<PlantProfile> profiles = hydrateProfiles(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profiles));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfilesByCategory(category, callback, errorCallback);
     }
 
     public void getPlantProfilesByGrowthHabit(String growthHabit, Consumer<List<PlantProfile>> callback) {
-        getPlantProfilesByGrowthHabit(growthHabit, callback, null);
+        speciesRepository.getPlantProfilesByGrowthHabit(growthHabit, callback);
     }
 
     public void getPlantProfilesByGrowthHabit(String growthHabit, Consumer<List<PlantProfile>> callback,
                                               Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<SpeciesTarget> result = speciesTargetDao.getByGrowthHabit(growthHabit);
-                List<PlantProfile> profiles = hydrateProfiles(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profiles));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfilesByGrowthHabit(growthHabit, callback, errorCallback);
     }
 
     public void getPlantProfilesByToxicity(boolean isToxic, Consumer<List<PlantProfile>> callback) {
-        getPlantProfilesByToxicity(isToxic, callback, null);
+        speciesRepository.getPlantProfilesByToxicity(isToxic, callback);
     }
 
     public void getPlantProfilesByToxicity(boolean isToxic, Consumer<List<PlantProfile>> callback,
                                            Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<SpeciesTarget> result = speciesTargetDao.getByToxicity(isToxic);
-                List<PlantProfile> profiles = hydrateProfiles(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profiles));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfilesByToxicity(isToxic, callback, errorCallback);
     }
 
     public void getPlantProfilesWithUnknownToxicity(Consumer<List<PlantProfile>> callback) {
-        getPlantProfilesWithUnknownToxicity(callback, null);
+        speciesRepository.getPlantProfilesWithUnknownToxicity(callback);
     }
 
     public void getPlantProfilesWithUnknownToxicity(Consumer<List<PlantProfile>> callback,
                                                     Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<SpeciesTarget> result = speciesTargetDao.getWithUnknownToxicity();
-                List<PlantProfile> profiles = hydrateProfiles(result);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(profiles));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        speciesRepository.getPlantProfilesWithUnknownToxicity(callback, errorCallback);
     }
 
     public void insertSpeciesTarget(SpeciesTarget target, Runnable callback) {
-        insertSpeciesTarget(target, callback, null);
+        speciesRepository.insertSpeciesTarget(target, callback);
     }
 
     public void insertSpeciesTarget(SpeciesTarget target, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> speciesTargetDao.insert(target), callback, errorCallback);
+        speciesRepository.insertSpeciesTarget(target, callback, errorCallback);
     }
 
     public void deleteSpeciesTarget(String speciesKey, Runnable callback) {
-        deleteSpeciesTarget(speciesKey, callback, null);
+        speciesRepository.deleteSpeciesTarget(speciesKey, callback);
     }
 
     public void deleteSpeciesTarget(String speciesKey, Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> speciesTargetDao.deleteBySpeciesKey(speciesKey), callback, errorCallback);
-    }
-
-    private List<PlantProfile> hydrateProfiles(@Nullable List<SpeciesTarget> targets) {
-        if (targets == null || targets.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<PlantProfile> profiles = new ArrayList<>(targets.size());
-        for (SpeciesTarget target : targets) {
-            PlantProfile profile = PlantProfile.fromTarget(target);
-            if (profile != null) {
-                profiles.add(profile);
-            }
-        }
-        return profiles;
+        speciesRepository.deleteSpeciesTarget(speciesKey, callback, errorCallback);
     }
 
     public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback) {
-        getMeasurementsForPlant(plantId, callback, null);
+        measurementRepository.getMeasurementsForPlant(plantId, callback);
     }
 
     public void getMeasurementsForPlant(long plantId, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<Measurement> result = measurementDao.getAllForPlant(plantId);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.getMeasurementsForPlant(plantId, callback, errorCallback);
     }
 
     public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback) {
-        recentMeasurementsForPlant(plantId, limit, callback, null);
+        measurementRepository.recentMeasurementsForPlant(plantId, limit, callback);
     }
 
     public void recentMeasurementsForPlant(long plantId, int limit, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<Measurement> result = measurementDao.recentForPlant(plantId, limit);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.recentMeasurementsForPlant(plantId, limit, callback, errorCallback);
     }
 
     public void measurementsForPlantSince(long plantId, long since, Consumer<List<Measurement>> callback) {
-        measurementsForPlantSince(plantId, since, callback, null);
+        measurementRepository.measurementsForPlantSince(plantId, since, callback);
     }
 
     public void measurementsForPlantSince(long plantId, long since, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<Measurement> result = measurementDao.getForPlantSince(plantId, since);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.measurementsForPlantSince(plantId, since, callback, errorCallback);
     }
 
     public void measurementsForPlantInRange(long plantId, long start, long end, Consumer<List<Measurement>> callback) {
-        measurementsForPlantInRange(plantId, start, end, callback, null);
+        measurementRepository.measurementsForPlantInRange(plantId, start, end, callback);
     }
 
     public void measurementsForPlantInRange(long plantId, long start, long end, Consumer<List<Measurement>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<Measurement> result = measurementDao.getForPlantInRange(plantId, start, end);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.measurementsForPlantInRange(plantId, start, end, callback, errorCallback);
     }
 
     public void sumPpfdForRange(long plantId, long start, long end, Consumer<Float> callback) {
-        sumPpfdForRange(plantId, start, end, callback, null);
+        measurementRepository.sumPpfdForRange(plantId, start, end, callback);
     }
 
     public void sumPpfdForRange(long plantId, long start, long end, Consumer<Float> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                Float result = measurementDao.sumPpfdForRange(plantId, start, end);
-                float value = result != null ? result : 0f;
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(value));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.sumPpfdForRange(plantId, start, end, callback);
     }
 
     public void countDaysWithData(long plantId, long start, long end, Consumer<Integer> callback) {
-        countDaysWithData(plantId, start, end, callback, null);
+        measurementRepository.countDaysWithData(plantId, start, end, callback);
     }
 
     public void countDaysWithData(long plantId, long start, long end, Consumer<Integer> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                int result = measurementDao.countDaysWithData(plantId, start, end);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.countDaysWithData(plantId, start, end, callback, errorCallback);
     }
 
     public void sumPpfdAndCountDays(long plantId, long start, long end, Consumer<MeasurementDao.SumAndDays> callback) {
-        sumPpfdAndCountDays(plantId, start, end, callback, null);
+        measurementRepository.sumPpfdAndCountDays(plantId, start, end, callback);
     }
 
     public void sumPpfdAndCountDays(long plantId, long start, long end, Consumer<MeasurementDao.SumAndDays> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                MeasurementDao.SumAndDays result = measurementDao.sumPpfdAndCountDays(plantId, start, end);
-                if (result == null) {
-                    result = new MeasurementDao.SumAndDays();
-                }
-                if (result.sum == null) {
-                    result.sum = 0f;
-                }
-                MeasurementDao.SumAndDays finalResult = result;
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(finalResult));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        measurementRepository.sumPpfdAndCountDays(plantId, start, end, callback, errorCallback);
     }
 
     public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback) {
-        diaryEntriesForPlant(plantId, callback, null);
+        diaryRepository.diaryEntriesForPlant(plantId, callback);
     }
 
     public void diaryEntriesForPlant(long plantId, Consumer<List<DiaryEntry>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<DiaryEntry> result = diaryDao.entriesForPlant(plantId);
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        diaryRepository.diaryEntriesForPlant(plantId, callback, errorCallback);
     }
 
     public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback) {
-        searchDiaryEntries(plantId, query, callback, null);
+        diaryRepository.searchDiaryEntries(plantId, query, callback);
     }
 
     public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback, Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<DiaryEntry> result;
-                if (query == null || query.isEmpty()) {
-                    result = diaryDao.entriesForPlant(plantId);
-                } else {
-                    String q = query + "*";
-                    result = diaryDao.searchDiaryEntries(plantId, q);
-                }
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(result));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        diaryRepository.searchDiaryEntries(plantId, query, callback, errorCallback);
     }
 
     /** Listener receiving automatic care recommendation updates. */

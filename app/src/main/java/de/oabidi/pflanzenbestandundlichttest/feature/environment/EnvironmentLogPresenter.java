@@ -13,9 +13,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 
 /**
  * Presenter coordinating the environment log between the repository and the view.
@@ -26,7 +26,7 @@ public class EnvironmentLogPresenter {
     public static final String EVENT_DELETED = "deleted";
 
     private final EnvironmentLogView view;
-    private final PlantRepository repository;
+    private final EnvironmentRepository environmentRepository;
     private final long plantId;
     private final Context context;
     @Nullable
@@ -37,10 +37,10 @@ public class EnvironmentLogPresenter {
     private String editingOriginalPhotoUri;
     private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
-    public EnvironmentLogPresenter(@NonNull EnvironmentLogView view, @NonNull PlantRepository repository,
+    public EnvironmentLogPresenter(@NonNull EnvironmentLogView view, @NonNull EnvironmentRepository environmentRepository,
                                    long plantId, @NonNull Context context) {
         this.view = view;
-        this.repository = repository;
+        this.environmentRepository = environmentRepository;
         this.plantId = plantId;
         this.context = context.getApplicationContext();
     }
@@ -56,7 +56,7 @@ public class EnvironmentLogPresenter {
             return;
         }
         view.showLoading(true);
-        repository.environmentEntriesForPlant(plantId, entries -> {
+        environmentRepository.environmentEntriesForPlant(plantId, entries -> {
             List<EnvironmentLogItem> items = new ArrayList<>(entries.size());
             for (EnvironmentEntry entry : entries) {
                 items.add(toItem(entry));
@@ -89,7 +89,7 @@ public class EnvironmentLogPresenter {
             entry.setTimestamp(System.currentTimeMillis());
             applyFormData(entry, data);
             view.showLoading(true);
-            repository.insertEnvironmentEntry(entry, () -> {
+            environmentRepository.insertEnvironmentEntry(entry, () -> {
                 view.showMessage(context.getString(R.string.environment_log_saved));
                 view.clearForm();
                 view.showEditingState(false);
@@ -105,7 +105,7 @@ public class EnvironmentLogPresenter {
             String previousPhoto = editingOriginalPhotoUri;
             applyFormData(editingEntry, data);
             view.showLoading(true);
-            repository.updateEnvironmentEntry(editingEntry, previousPhoto, () -> {
+            environmentRepository.updateEnvironmentEntry(editingEntry, previousPhoto, () -> {
                 view.showMessage(context.getString(R.string.environment_log_updated));
                 view.clearForm();
                 view.showEditingState(false);
@@ -172,7 +172,7 @@ public class EnvironmentLogPresenter {
         }
         EnvironmentEntry entry = item.getEntry();
         view.showLoading(true);
-        repository.deleteEnvironmentEntry(entry, () -> {
+        environmentRepository.deleteEnvironmentEntry(entry, () -> {
             if (editingEntry != null && editingEntry.getId() == entry.getId()) {
                 onCancelEdit();
             }

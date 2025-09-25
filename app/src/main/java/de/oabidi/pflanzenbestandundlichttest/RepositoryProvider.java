@@ -2,6 +2,13 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.content.Context;
 
+import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
+
 /**
  * Interface providing access to a {@link PlantRepository} instance.
  */
@@ -10,6 +17,30 @@ public interface RepositoryProvider {
      * Returns the shared {@link PlantRepository} instance for the application.
      */
     PlantRepository getRepository();
+
+    default MeasurementRepository getMeasurementRepository() {
+        return getRepository().measurementRepository();
+    }
+
+    default DiaryRepository getDiaryRepository() {
+        return getRepository().diaryRepository();
+    }
+
+    default EnvironmentRepository getEnvironmentRepository() {
+        return getRepository().environmentRepository();
+    }
+
+    default ReminderRepository getReminderRepository() {
+        return getRepository().reminderRepository();
+    }
+
+    default SpeciesRepository getSpeciesRepository() {
+        return getRepository().speciesRepository();
+    }
+
+    default GalleryRepository getGalleryRepository() {
+        return getRepository().galleryRepository();
+    }
 
     /**
      * Convenience method returning the repository associated with the given context.
@@ -24,5 +55,29 @@ public interface RepositoryProvider {
             return ((RepositoryProvider) appContext).getRepository();
         }
         throw new IllegalStateException("Application context does not implement RepositoryProvider");
+    }
+
+    static MeasurementRepository getMeasurementRepository(Context context) {
+        return getRepository(context).measurementRepository();
+    }
+
+    static DiaryRepository getDiaryRepository(Context context) {
+        return getRepository(context).diaryRepository();
+    }
+
+    static EnvironmentRepository getEnvironmentRepository(Context context) {
+        return getRepository(context).environmentRepository();
+    }
+
+    static ReminderRepository getReminderRepository(Context context) {
+        return getRepository(context).reminderRepository();
+    }
+
+    static SpeciesRepository getSpeciesRepository(Context context) {
+        return getRepository(context).speciesRepository();
+    }
+
+    static GalleryRepository getGalleryRepository(Context context) {
+        return getRepository(context).galleryRepository();
     }
 }

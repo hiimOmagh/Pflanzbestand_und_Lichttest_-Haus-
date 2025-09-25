@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+
 /** Presenter for loading statistics data. */
 public class StatsPresenter {
     public interface View {
@@ -20,12 +23,16 @@ public class StatsPresenter {
 
     private final View view;
     private final PlantRepository repository;
+    private final MeasurementRepository measurementRepository;
+    private final DiaryRepository diaryRepository;
     private final Context context;
     private static final int DLI_DAYS = 7;
 
     public StatsPresenter(View view, PlantRepository repository, Context context) {
         this.view = view;
         this.repository = repository;
+        this.measurementRepository = repository.measurementRepository();
+        this.diaryRepository = repository.diaryRepository();
         this.context = context.getApplicationContext();
     }
 
@@ -47,7 +54,7 @@ public class StatsPresenter {
         Map<Long, List<Measurement>> data = new HashMap<>();
         Set<Long> remaining = new HashSet<>(plantIds);
         for (Long id : plantIds) {
-            repository.recentMeasurementsForPlant(id, 30, list -> {
+            measurementRepository.recentMeasurementsForPlant(id, 30, list -> {
                 synchronized (data) {
                     data.put(id, list);
                     remaining.remove(id);
@@ -60,7 +67,7 @@ public class StatsPresenter {
 
         if (plantIds.size() == 1) {
             long id = plantIds.get(0);
-            repository.diaryEntriesForPlant(id, entries ->
+            diaryRepository.diaryEntriesForPlant(id, entries ->
                     view.showDiaryCounts(formatDiaryCounts(entries)),
                 e -> view.showError(context.getString(R.string.error_database)));
             computeDli(id);
@@ -74,7 +81,7 @@ public class StatsPresenter {
         long now = System.currentTimeMillis();
         long end = startOfDay(now) + 86400000L;
         long start = end - DLI_DAYS * 86400000L;
-        repository.sumPpfdAndCountDays(plantId, start, end, result -> {
+        measurementRepository.sumPpfdAndCountDays(plantId, start, end, result -> {
             if (result.days > 0) {
                 float totalDli = result.sum * 0.0036f;
                 float avgDli = totalDli / result.days;

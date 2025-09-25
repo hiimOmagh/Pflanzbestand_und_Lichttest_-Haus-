@@ -398,7 +398,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/care_card_section_spacing"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Italic"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textStyle="italic"
                         android:visibility="gone"
                         tools:text="Metadata unavailable"
                         tools:visibility="visible" />

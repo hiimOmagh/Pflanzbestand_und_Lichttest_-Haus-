@@ -13,6 +13,8 @@ import android.widget.RemoteViews;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
+
 /**
  * Home screen widget provider showing the next pending reminder.
  */
@@ -23,12 +25,12 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
     private static final String PREFS_NAME = "ReminderWidgetProvider";
     private static final String PREF_STATUS_PREFIX = "status_";
 
-    private PlantRepository repository;
+    private ReminderRepository reminderRepository;
 
     public ReminderWidgetProvider() { }
 
-    public ReminderWidgetProvider(PlantRepository repository) {
-        this.repository = repository;
+    public ReminderWidgetProvider(ReminderRepository reminderRepository) {
+        this.reminderRepository = reminderRepository;
     }
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -73,9 +75,9 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.widget_log_button, logPending);
 
-        PlantRepository repo = repository != null
-            ? repository
-            : RepositoryProvider.getRepository(context);
+        ReminderRepository repo = reminderRepository != null
+            ? reminderRepository
+            : RepositoryProvider.getReminderRepository(context);
         final long now = System.currentTimeMillis();
         final String statusMessage = consumeStatus(context, appWidgetId);
         repo.getAllReminders(reminders -> {
@@ -135,9 +137,9 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
             return;
         }
 
-        PlantRepository repo = repository != null
-            ? repository
-            : RepositoryProvider.getRepository(context);
+        ReminderRepository repo = reminderRepository != null
+            ? reminderRepository
+            : RepositoryProvider.getReminderRepository(context);
         repo.deleteReminderById(reminderId, () -> {
             saveStatus(context, appWidgetId, context.getString(R.string.widget_reminder_marked_done));
             ReminderScheduler.cancelReminder(context, reminderId);
