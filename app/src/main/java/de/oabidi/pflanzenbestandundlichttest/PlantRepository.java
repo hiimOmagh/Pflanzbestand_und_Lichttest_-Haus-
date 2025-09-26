@@ -721,7 +721,7 @@ public class PlantRepository implements CareRecommendationDelegate {
     }
 
     public void insertReminder(Reminder reminder, Runnable callback) {
-        reminderRepository.getAllReminders(callback, errorCallback);
+        reminderRepository.insertReminder(reminder, callback, null);
     }
 
     public void insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
