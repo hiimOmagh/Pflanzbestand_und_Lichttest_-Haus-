@@ -127,7 +127,7 @@ public class ReminderInstrumentedTest {
         Context appContext = context.getApplicationContext();
         ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
         BootReceiver receiver = new BootReceiver(
-            new PlantRepository(appContext, executor));
+            new PlantRepository(appContext, executor).reminderRepository());
         receiver.onReceive(context, new Intent(Intent.ACTION_BOOT_COMPLETED));
 
         CountDownLatch latch = new CountDownLatch(1);

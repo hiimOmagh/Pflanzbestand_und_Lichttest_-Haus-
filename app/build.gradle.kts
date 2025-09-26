@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.work.runtime)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.androidx.work.testing)
     annotationProcessor(libs.room.compiler)
     testAnnotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
