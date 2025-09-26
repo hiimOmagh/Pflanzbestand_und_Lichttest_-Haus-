@@ -24,6 +24,7 @@ import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 
@@ -58,6 +59,7 @@ public class PlantRepository implements CareRecommendationDelegate {
     private final ReminderRepository reminderRepository;
     private final SpeciesRepository speciesRepository;
     private final GalleryRepository galleryRepository;
+    private final ProactiveAlertRepository alertRepository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
     private final ExecutorService ioExecutor;
@@ -106,6 +108,8 @@ public class PlantRepository implements CareRecommendationDelegate {
         galleryRepository = new GalleryRepository(this.context, mainHandler, this.ioExecutor, db.plantPhotoDao());
         environmentRepository = new EnvironmentRepository(this.context, mainHandler, this.ioExecutor,
             db.environmentEntryDao(), this);
+        alertRepository = new ProactiveAlertRepository(this.context, mainHandler, this.ioExecutor,
+            db.proactiveAlertDao());
     }
 
     public MeasurementRepository measurementRepository() {
@@ -130,6 +134,10 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public GalleryRepository galleryRepository() {
         return galleryRepository;
+    }
+
+    public ProactiveAlertRepository alertRepository() {
+        return alertRepository;
     }
 
     /** Exposes bulk read operations for export and import managers. */
@@ -355,6 +363,10 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public void getAllPlants(Consumer<List<Plant>> callback) {
         getAllPlants(callback, null);
+    }
+
+    public List<Plant> getAllPlantsSync() {
+        return plantDao.getAll();
     }
 
     public void getAllPlants(Consumer<List<Plant>> callback, Consumer<Exception> errorCallback) {

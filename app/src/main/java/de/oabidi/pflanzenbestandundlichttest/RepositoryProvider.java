@@ -6,6 +6,7 @@ import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 
@@ -40,6 +41,10 @@ public interface RepositoryProvider {
 
     default GalleryRepository getGalleryRepository() {
         return getRepository().galleryRepository();
+    }
+
+    default ProactiveAlertRepository getAlertRepository() {
+        return getRepository().alertRepository();
     }
 
     /**
@@ -79,5 +84,9 @@ public interface RepositoryProvider {
 
     static GalleryRepository getGalleryRepository(Context context) {
         return getRepository(context).galleryRepository();
+    }
+
+    static ProactiveAlertRepository getAlertRepository(Context context) {
+        return getRepository(context).alertRepository();
     }
 }

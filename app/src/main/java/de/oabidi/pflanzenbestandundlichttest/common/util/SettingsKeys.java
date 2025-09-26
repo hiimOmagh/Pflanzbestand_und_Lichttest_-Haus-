@@ -72,4 +72,9 @@ public final class SettingsKeys {
      * Base key for storing dismissed care recommendation identifiers per plant.
      */
     public static final String KEY_DISMISSED_CARE_RECOMMENDATIONS = "dismissed_care_recommendations";
+
+    /**
+     * Enables periodic proactive care alerts.
+     */
+    public static final String KEY_PROACTIVE_ALERTS_ENABLED = "proactive_alerts_enabled";
 }

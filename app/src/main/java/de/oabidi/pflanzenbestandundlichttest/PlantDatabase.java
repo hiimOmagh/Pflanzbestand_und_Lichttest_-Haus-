@@ -37,6 +37,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
+import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertDao;
+import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
 
 /**
  * Singleton Room database for storing {@link Plant} data.
@@ -56,7 +58,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
         DiaryEntryFts.class,
         PlantPhoto.class,
         PlantCalibration.class,
-        EnvironmentEntry.class
+        EnvironmentEntry.class,
+        ProactiveAlertLog.class
     },
     version = 1
 )
@@ -368,6 +371,8 @@ public abstract class PlantDatabase extends RoomDatabase {
 
     public abstract EnvironmentEntryDao environmentEntryDao();
 
+    public abstract ProactiveAlertDao proactiveAlertDao();
+    
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {

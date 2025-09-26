@@ -4,15 +4,17 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.preference.EditTextPreference;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
-import androidx.preference.ListPreference;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.BackupScheduler;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
-import de.oabidi.pflanzenbestandundlichttest.BackupScheduler;
+import de.oabidi.pflanzenbestandundlichttest.feature.alerts.AlertHistoryDialogFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.alerts.ProactiveAlertWorkScheduler;
 
 /**
  * Fragment displaying application settings.
@@ -47,11 +49,30 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         SwitchPreferenceCompat backupPref = findPreference(SettingsKeys.KEY_AUTO_BACKUP);
         if (backupPref != null) {
             backupPref.setOnPreferenceChangeListener((pref, newValue) -> {
-                if ((Boolean) newValue) {
+                boolean enabled = Boolean.TRUE.equals(newValue);
+                if (enabled) {
                     BackupScheduler.schedule(requireContext());
                 } else {
                     BackupScheduler.cancel(requireContext());
                 }
+                return true;
+            });
+        }
+
+        SwitchPreferenceCompat alertsPref = findPreference(SettingsKeys.KEY_PROACTIVE_ALERTS_ENABLED);
+        if (alertsPref != null) {
+            alertsPref.setOnPreferenceChangeListener((pref, newValue) -> {
+                boolean enabled = Boolean.TRUE.equals(newValue);
+                ProactiveAlertWorkScheduler.ensureScheduled(requireContext(), enabled);
+                return true;
+            });
+        }
+
+        Preference historyPref = findPreference("alert_history");
+        if (historyPref != null) {
+            historyPref.setOnPreferenceClickListener(pref -> {
+                AlertHistoryDialogFragment.newInstance()
+                    .show(getParentFragmentManager(), "alert_history");
                 return true;
             });
         }

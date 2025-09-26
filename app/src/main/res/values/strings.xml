@@ -283,6 +283,15 @@
     <string name="reminder_mark_done">Done</string>
     <string name="reminder_snooze">Snooze</string>
     <string name="reminder_channel">Reminders</string>
+    <string name="alert_channel_name">Proactive care alerts</string>
+    <string name="alert_notification_title">Care alert for %1$s</string>
+    <string name="alert_view_details">View details</string>
+    <string name="alert_generic_message">Check on %1$s</string>
+    <string name="alert_diary_inactive_message">It&#39;s been a while since the last diary entry for %1$s. Add your latest care notes.</string>
+    <string name="alert_history_title">Proactive alert history</string>
+    <string name="alert_history_loading">Loading alerts…</string>
+    <string name="alert_history_empty">No proactive alerts recorded yet.</string>
+    <string name="alert_history_error">Unable to load alert history.</string>
     <string name="reminder_dli_low">DLI for %1$s below target for %2$d days</string>
     <string name="reminder_dli_high">DLI for %1$s above target for %2$d days</string>
     <string name="action_undo">Undo</string>
@@ -303,6 +312,10 @@
     <string name="hint_number">Number</string>
     <string name="pref_auto_backup">Automatic backups</string>
     <string name="pref_auto_backup_summary">Export data weekly to app storage</string>
+    <string name="pref_proactive_alerts">Proactive care alerts</string>
+    <string name="pref_proactive_alerts_summary">Periodically evaluate plant health and notify on critical issues</string>
+    <string name="pref_alert_history">Alert history</string>
+    <string name="pref_alert_history_summary">View recently triggered proactive alerts</string>
     <string name="pref_theme">Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>

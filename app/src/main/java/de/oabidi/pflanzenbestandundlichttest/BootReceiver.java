@@ -5,8 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.feature.alerts.ProactiveAlertWorkScheduler;
 
 /**
  * Broadcast receiver that reschedules pending reminders after a device reboot.
@@ -29,6 +30,8 @@ public class BootReceiver extends BroadcastReceiver {
             if (prefs.getBoolean(SettingsKeys.KEY_AUTO_BACKUP, false)) {
                 BackupScheduler.schedule(context);
             }
+            ProactiveAlertWorkScheduler.ensureScheduled(context,
+                prefs.getBoolean(SettingsKeys.KEY_PROACTIVE_ALERTS_ENABLED, true));
             PendingResult result = goAsync();
             ReminderRepository repo = reminderRepository != null
                 ? reminderRepository

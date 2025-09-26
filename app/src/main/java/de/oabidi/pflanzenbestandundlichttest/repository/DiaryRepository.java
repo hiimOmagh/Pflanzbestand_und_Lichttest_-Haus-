@@ -62,6 +62,10 @@ public class DiaryRepository extends BaseRepository {
         diaryEntriesForPlant(plantId, callback, null);
     }
 
+    public DiaryEntry getLatestDiaryEntrySync(long plantId) {
+        return diaryDao.latestForPlant(plantId);
+    }
+
     public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback,
                                    @Nullable Consumer<Exception> errorCallback) {
         queryAsync(() -> {

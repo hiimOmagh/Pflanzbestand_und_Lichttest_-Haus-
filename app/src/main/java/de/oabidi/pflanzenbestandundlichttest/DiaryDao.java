@@ -76,6 +76,9 @@ public interface DiaryDao {
     @Query("SELECT id, plantId, timeEpoch, type, note, photoUri FROM DiaryEntry WHERE plantId = :plantId ORDER BY timeEpoch DESC")
     List<DiaryEntry> entriesForPlant(long plantId);
 
+    @Query("SELECT id, plantId, timeEpoch, type, note, photoUri FROM DiaryEntry WHERE plantId = :plantId ORDER BY timeEpoch DESC LIMIT 1")
+    DiaryEntry latestForPlant(long plantId);
+
     @Query("SELECT DiaryEntry.id, DiaryEntry.plantId, DiaryEntry.timeEpoch, DiaryEntry.type, DiaryEntry.note, DiaryEntry.photoUri FROM DiaryEntry JOIN DiaryEntryFts ON DiaryEntry.id = DiaryEntryFts.rowid WHERE DiaryEntry.plantId = :plantId AND DiaryEntryFts MATCH :query ORDER BY DiaryEntry.timeEpoch DESC")
     List<DiaryEntry> searchDiaryEntries(long plantId, String query);
 

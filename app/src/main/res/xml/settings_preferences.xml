@@ -31,6 +31,18 @@
         app:defaultValue="false"
         app:summary="@string/pref_dli_alerts_summary" />
 
+    <SwitchPreferenceCompat
+        app:key="proactive_alerts_enabled"
+        app:title="@string/pref_proactive_alerts"
+        app:defaultValue="true"
+        app:summary="@string/pref_proactive_alerts_summary" />
+
+    <Preference
+        app:key="alert_history"
+        app:title="@string/pref_alert_history"
+        app:summary="@string/pref_alert_history_summary"
+        app:dependency="proactive_alerts_enabled" />
+
     <EditTextPreference
         app:key="dli_alert_threshold"
         app:title="@string/pref_dli_alert_threshold"
