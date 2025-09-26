@@ -36,13 +36,13 @@ public class SpeciesRepositoryTest extends RepositoryTestBase {
     public void getPlantProfilesByCategory_filtersNullProfiles() throws Exception {
         SpeciesTarget valid = new SpeciesTarget();
         valid.setSpeciesKey("test");
-        valid.setCategory(SpeciesTarget.Category.HERBS);
+        valid.setCategory(SpeciesTarget.Category.HERB);
         List<SpeciesTarget> daoResult = Arrays.asList(valid, null);
-        when(speciesTargetDao.getByCategory(SpeciesTarget.Category.HERBS)).thenReturn(daoResult);
+        when(speciesTargetDao.getByCategory(SpeciesTarget.Category.HERB)).thenReturn(daoResult);
 
         AtomicReference<List<PlantProfile>> result = new AtomicReference<>();
 
-        repository.getPlantProfilesByCategory(SpeciesTarget.Category.HERBS, profiles -> {
+        repository.getPlantProfilesByCategory(SpeciesTarget.Category.HERB, profiles -> {
             result.set(profiles);
         });
 
@@ -51,7 +51,7 @@ public class SpeciesRepositoryTest extends RepositoryTestBase {
         List<PlantProfile> profiles = result.get();
         assertEquals(1, profiles.size());
         assertEquals("test", profiles.get(0).getSpeciesKey());
-        verify(speciesTargetDao).getByCategory(SpeciesTarget.Category.HERBS);
+        verify(speciesTargetDao).getByCategory(SpeciesTarget.Category.HERB);
     }
 
     @Test
