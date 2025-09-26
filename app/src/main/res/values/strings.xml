@@ -287,7 +287,7 @@
     <string name="alert_notification_title">Care alert for %1$s</string>
     <string name="alert_view_details">View details</string>
     <string name="alert_generic_message">Check on %1$s</string>
-    <string name="alert_diary_inactive_message">It&#39;s been a while since the last diary entry for %1$s. Add your latest care notes.</string>
+    <string name="alert_diary_inactive_message">It\'s been a while since the last diary entry for %1$s. Add your latest care notes.</string>
     <string name="alert_history_title">Proactive alert history</string>
     <string name="alert_history_loading">Loading alerts…</string>
     <string name="alert_history_empty">No proactive alerts recorded yet.</string>
