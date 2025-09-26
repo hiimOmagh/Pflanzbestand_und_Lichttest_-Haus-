@@ -554,7 +554,7 @@ public class PlantRepository implements CareRecommendationDelegate {
     }
 
     public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback) {
-        environmentRepository.environmentEntriesForPlant(plantId, callback, errorCallback);
+        insertEnvironmentEntry(entry, callback, null);
     }
 
     public void insertEnvironmentEntry(EnvironmentEntry entry, Runnable callback,
