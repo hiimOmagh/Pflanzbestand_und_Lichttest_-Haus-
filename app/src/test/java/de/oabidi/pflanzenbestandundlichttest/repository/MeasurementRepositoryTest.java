@@ -7,7 +7,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.SharedPreferences;
+import android.content.Context;
+    import android.content.SharedPreferences;
 
 import org.junit.Before;
 import org.junit.Test;
