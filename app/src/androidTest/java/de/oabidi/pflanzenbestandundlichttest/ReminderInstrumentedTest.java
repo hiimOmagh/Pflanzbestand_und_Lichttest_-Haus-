@@ -21,7 +21,6 @@ import org.robolectric.annotation.Config;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
@@ -125,9 +124,8 @@ public class ReminderInstrumentedTest {
         assertTrue("Reminder inserted", insertLatch.await(2, TimeUnit.SECONDS));
 
         Context appContext = context.getApplicationContext();
-        ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
         BootReceiver receiver = new BootReceiver(
-            new PlantRepository(appContext, executor).reminderRepository());
+            RepositoryProvider.getReminderRepository(appContext));
         receiver.onReceive(context, new Intent(Intent.ACTION_BOOT_COMPLETED));
 
         CountDownLatch latch = new CountDownLatch(1);
