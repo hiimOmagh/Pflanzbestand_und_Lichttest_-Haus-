@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
-import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestionDao;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
 
 /**
  * Repository encapsulating {@link Reminder} persistence operations.
@@ -71,11 +71,15 @@ public class ReminderRepository extends BaseRepository {
     }
 
     public ReminderSuggestion getSuggestionForPlantSync(long plantId) {
-        return reminderSuggestionDao.findByPlantId(plantId);
+        return reminderSuggestionDao.getByPlantId(plantId);
     }
 
     public void saveSuggestionSync(ReminderSuggestion suggestion) {
-        reminderSuggestionDao.insertOrUpdate(suggestion);
+        reminderSuggestionDao.upsert(suggestion);
+    }
+
+    public List<ReminderSuggestion> getAllSuggestionsSync() {
+        return reminderSuggestionDao.getAll();
     }
 
     public void deleteSuggestionSync(long plantId) {

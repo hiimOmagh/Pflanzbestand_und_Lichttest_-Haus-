@@ -7,6 +7,7 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,11 +60,12 @@ public final class PhotoManager {
      * @param context   context used to resolve the URI
      * @param uriString string representation of the photo URI, may be {@code null}
      */
-    public static void deletePhoto(@NonNull Context context, String uriString) {
+    public static Runnable deletePhoto(@NonNull Context context, String uriString) {
         if (uriString == null || uriString.isEmpty()) {
-            return;
+            return null;
         }
         deletePhoto(context, Uri.parse(uriString));
+        return null;
     }
 
     /**
@@ -86,11 +88,10 @@ public final class PhotoManager {
     }
 
     public static boolean isEnvironmentPhoto(@NonNull Context context, @Nullable String uriString) {
-        return isPhotoInDirectory(context, uriString, DIR_ENVIRONMENT_PHOTOS);
+        return isPhotoInDirectory(context, uriString);
     }
 
-    private static boolean isPhotoInDirectory(@NonNull Context context, @Nullable String uriString,
-                                              @NonNull String directoryName) {
+    private static boolean isPhotoInDirectory(@NonNull Context context, @Nullable String uriString) {
         if (uriString == null || uriString.isEmpty()) {
             return false;
         }
@@ -102,7 +103,7 @@ public final class PhotoManager {
         if (path == null) {
             return false;
         }
-        File directory = new File(context.getFilesDir(), directoryName);
+        File directory = new File(context.getFilesDir(), PhotoManager.DIR_ENVIRONMENT_PHOTOS);
         File file = new File(path);
         try {
             String dirPath = directory.getCanonicalPath();

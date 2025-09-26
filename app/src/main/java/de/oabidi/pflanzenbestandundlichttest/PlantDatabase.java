@@ -39,6 +39,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertDao;
 import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
 
 /**
  * Singleton Room database for storing {@link Plant} data.

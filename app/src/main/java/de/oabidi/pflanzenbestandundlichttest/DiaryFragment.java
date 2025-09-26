@@ -33,7 +33,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
-import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 

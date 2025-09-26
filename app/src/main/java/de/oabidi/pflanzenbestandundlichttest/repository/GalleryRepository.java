@@ -1,5 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.repository;
 
+import static de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager.*;
+
 import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
@@ -12,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
-import de.oabidi.pflanzenbestandundlichttest.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 
@@ -38,7 +40,7 @@ public class GalleryRepository extends BaseRepository {
         }
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
-                Uri stored = PhotoManager.savePlantPhoto(context, sourceUri);
+                Uri stored = savePlantPhoto(context, sourceUri);
                 PlantPhoto photo = new PlantPhoto(plantId, stored.toString(), System.currentTimeMillis());
                 long id = plantPhotoDao.insert(photo);
                 photo.setId(id);
@@ -66,7 +68,7 @@ public class GalleryRepository extends BaseRepository {
         }
         final String uri = photo.getUri();
         runAsync(() -> plantPhotoDao.deleteForPlant(photo.getPlantId(), photo.getId()),
-            () -> PhotoManager.deletePhoto(context, uri), callback, errorCallback);
+            () -> deletePhoto(context, uri), callback, errorCallback);
     }
 
     public void deletePlantPhoto(PlantPhoto photo, Runnable callback) {

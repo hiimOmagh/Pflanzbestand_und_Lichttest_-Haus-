@@ -13,7 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
-import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
@@ -812,15 +812,27 @@ public class PlantRepository implements CareRecommendationDelegate {
         ReminderSuggestion entity = new ReminderSuggestion();
         entity.setPlantId(plantId);
         entity.setSuggestedIntervalDays(suggestion.getSuggestedDays());
-        entity.setBaselineIntervalDays(suggestion.getBaselineDays());
-        entity.setAdjustmentDays(suggestion.getAdjustmentDays());
-        entity.setUpdatedAt(timestamp);
-        entity.setBaselineSource(suggestion.getBaselineSource().name());
-        entity.setEnvironmentSignal(suggestion.getEnvironmentSignal().name());
-        entity.setAverageSoilMoisture(suggestion.getAverageSoilMoisture());
+        entity.setLastEvaluatedAt(timestamp);
+        entity.setConfidenceScore(computeConfidenceScore(suggestion));
         entity.setExplanation(reminderSuggestionFormatter.format(plant, profile, suggestion));
-        entity.setAlgorithmVersion(SmartReminderEngine.ALGORITHM_VERSION);
         return entity;
+    }
+
+    private float computeConfidenceScore(SmartReminderEngine.Suggestion suggestion) {
+        float confidence = 0.3f;
+        if (suggestion.getBaselineDays() > 0) {
+            confidence += 0.3f;
+        }
+        if (suggestion.getEnvironmentSignal() != SmartReminderEngine.EnvironmentSignal.NO_DATA) {
+            confidence += 0.2f;
+        }
+        if (suggestion.getAverageSoilMoisture() != null) {
+            confidence += 0.2f;
+        }
+        if (suggestion.getLatestSoilMoisture() != null) {
+            confidence += 0.1f;
+        }
+        return Math.max(0f, Math.min(1f, confidence));
     }
 
     private PlantProfile resolveProfileForPlant(Plant plant) {
