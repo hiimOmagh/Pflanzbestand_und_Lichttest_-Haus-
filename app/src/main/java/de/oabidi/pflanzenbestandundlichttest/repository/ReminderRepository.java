@@ -12,17 +12,21 @@ import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestionDao;
 
 /**
  * Repository encapsulating {@link Reminder} persistence operations.
  */
 public class ReminderRepository extends BaseRepository {
     private final ReminderDao reminderDao;
+    private final ReminderSuggestionDao reminderSuggestionDao;
 
     public ReminderRepository(Context context, Handler mainHandler, ExecutorService ioExecutor,
-                              ReminderDao reminderDao) {
+                              ReminderDao reminderDao, ReminderSuggestionDao reminderSuggestionDao) {
         super(context, mainHandler, ioExecutor);
         this.reminderDao = Objects.requireNonNull(reminderDao, "reminderDao");
+        this.reminderSuggestionDao = Objects.requireNonNull(reminderSuggestionDao, "reminderSuggestionDao");
     }
 
     public void getAllReminders(Consumer<List<Reminder>> callback, @Nullable Consumer<Exception> errorCallback) {
@@ -64,5 +68,17 @@ public class ReminderRepository extends BaseRepository {
 
     public List<Reminder> getRemindersForPlantSync(long plantId) {
         return reminderDao.getForPlant(plantId);
+    }
+
+    public ReminderSuggestion getSuggestionForPlantSync(long plantId) {
+        return reminderSuggestionDao.findByPlantId(plantId);
+    }
+
+    public void saveSuggestionSync(ReminderSuggestion suggestion) {
+        reminderSuggestionDao.insertOrUpdate(suggestion);
+    }
+
+    public void deleteSuggestionSync(long plantId) {
+        reminderSuggestionDao.deleteByPlantId(plantId);
     }
 }

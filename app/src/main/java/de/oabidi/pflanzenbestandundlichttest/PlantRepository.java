@@ -7,11 +7,13 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
@@ -27,6 +29,8 @@ import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
+import de.oabidi.pflanzenbestandundlichttest.feature.reminders.ReminderSuggestionFormatter;
+import de.oabidi.pflanzenbestandundlichttest.feature.reminders.SmartReminderEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +69,10 @@ public class PlantRepository implements CareRecommendationDelegate {
     private final ExecutorService ioExecutor;
     private final SharedPreferences sharedPreferences;
     private final CareRecommendationEngine careRecommendationEngine = new CareRecommendationEngine();
+    private final SmartReminderEngine smartReminderEngine = new SmartReminderEngine();
+    private final ReminderSuggestionFormatter reminderSuggestionFormatter;
     private final ConcurrentHashMap<Long, CopyOnWriteArrayList<CareRecommendationListener>> careRecommendationListeners = new ConcurrentHashMap<>();
+    private static final String TAG = "PlantRepository";
     private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
     private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
     private static final int CARE_RECOMMENDATION_ENTRY_LIMIT = 30;
@@ -101,7 +108,8 @@ public class PlantRepository implements CareRecommendationDelegate {
         plantCalibrationDao = db.plantCalibrationDao();
         bulkDao = db.bulkDao();
         speciesRepository = new SpeciesRepository(this.context, mainHandler, this.ioExecutor, db.speciesTargetDao());
-        reminderRepository = new ReminderRepository(this.context, mainHandler, this.ioExecutor, db.reminderDao());
+        reminderRepository = new ReminderRepository(this.context, mainHandler, this.ioExecutor,
+            db.reminderDao(), db.reminderSuggestionDao());
         measurementRepository = new MeasurementRepository(this.context, mainHandler, this.ioExecutor,
             db.measurementDao(), plantDao, db.speciesTargetDao(), db.reminderDao());
         diaryRepository = new DiaryRepository(this.context, mainHandler, this.ioExecutor, db.diaryDao());
@@ -110,6 +118,7 @@ public class PlantRepository implements CareRecommendationDelegate {
             db.environmentEntryDao(), this);
         alertRepository = new ProactiveAlertRepository(this.context, mainHandler, this.ioExecutor,
             db.proactiveAlertDao());
+        reminderSuggestionFormatter = new ReminderSuggestionFormatter(this.context.getResources());
     }
 
     public MeasurementRepository measurementRepository() {
@@ -225,6 +234,22 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
+    private <T> void queryAsync(Supplier<T> query, Consumer<T> callback,
+                                Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                T result = query.get();
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(result));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
     private Supplier<Runnable> careRecommendationRefreshSupplier(long plantId) {
         return () -> refreshCareRecommendationsAsync(plantId);
     }
@@ -237,6 +262,11 @@ public class PlantRepository implements CareRecommendationDelegate {
                 notifyCareRecommendationListeners(plantId, recommendations);
             } catch (Exception e) {
                 notifyCareRecommendationError(plantId, e);
+            }
+            try {
+                refreshReminderSuggestionSync(plantId, System.currentTimeMillis());
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to refresh reminder suggestion", e);
             }
         };
     }
@@ -712,6 +742,97 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public void deleteReminderById(long id, Runnable callback, Consumer<Exception> errorCallback) {
         reminderRepository.deleteReminderById(id, callback, errorCallback);
+    }
+
+    public void getReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback) {
+        getReminderSuggestion(plantId, callback, null);
+    }
+
+    public void getReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback,
+                                      Consumer<Exception> errorCallback) {
+        queryAsync(() -> reminderRepository.getSuggestionForPlantSync(plantId), callback, errorCallback);
+    }
+
+    public void computeReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback) {
+        computeReminderSuggestion(plantId, callback, null);
+    }
+
+    public void computeReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback,
+                                          Consumer<Exception> errorCallback) {
+        queryAsync(() -> refreshReminderSuggestionSync(plantId, System.currentTimeMillis()), callback, errorCallback);
+    }
+
+    public ReminderSuggestion refreshReminderSuggestionSync(long plantId) {
+        return refreshReminderSuggestionSync(plantId, System.currentTimeMillis());
+    }
+
+    public void refreshAllReminderSuggestionsSync() {
+        List<Plant> plants = plantDao.getAll();
+        if (plants == null || plants.isEmpty()) {
+            return;
+        }
+        long timestamp = System.currentTimeMillis();
+        for (Plant plant : plants) {
+            try {
+                refreshReminderSuggestionForPlant(plant, timestamp);
+            } catch (Exception e) {
+                Log.w(TAG, "Failed to refresh reminder suggestion for plant " + plant.getId(), e);
+            }
+        }
+    }
+
+    private ReminderSuggestion refreshReminderSuggestionSync(long plantId, long timestamp) {
+        Plant plant = plantDao.findById(plantId);
+        if (plant == null) {
+            reminderRepository.deleteSuggestionSync(plantId);
+            return null;
+        }
+        ReminderSuggestion suggestion = buildReminderSuggestion(plant, timestamp);
+        reminderRepository.saveSuggestionSync(suggestion);
+        return suggestion;
+    }
+
+    private void refreshReminderSuggestionForPlant(Plant plant, long timestamp) {
+        if (plant == null) {
+            return;
+        }
+        ReminderSuggestion suggestion = buildReminderSuggestion(plant, timestamp);
+        reminderRepository.saveSuggestionSync(suggestion);
+    }
+
+    private ReminderSuggestion buildReminderSuggestion(Plant plant, long timestamp) {
+        long plantId = plant.getId();
+        PlantProfile profile = resolveProfileForPlant(plant);
+        List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId,
+            SmartReminderEngine.HISTORY_LIMIT);
+        if (entries == null) {
+            entries = Collections.emptyList();
+        }
+        SmartReminderEngine.Suggestion suggestion = smartReminderEngine.suggest(profile, entries);
+        ReminderSuggestion entity = new ReminderSuggestion();
+        entity.setPlantId(plantId);
+        entity.setSuggestedIntervalDays(suggestion.getSuggestedDays());
+        entity.setBaselineIntervalDays(suggestion.getBaselineDays());
+        entity.setAdjustmentDays(suggestion.getAdjustmentDays());
+        entity.setUpdatedAt(timestamp);
+        entity.setBaselineSource(suggestion.getBaselineSource().name());
+        entity.setEnvironmentSignal(suggestion.getEnvironmentSignal().name());
+        entity.setAverageSoilMoisture(suggestion.getAverageSoilMoisture());
+        entity.setExplanation(reminderSuggestionFormatter.format(plant, profile, suggestion));
+        entity.setAlgorithmVersion(SmartReminderEngine.ALGORITHM_VERSION);
+        return entity;
+    }
+
+    private PlantProfile resolveProfileForPlant(Plant plant) {
+        if (plant == null) {
+            return null;
+        }
+        String speciesKey = plant.getSpecies();
+        if (!TextUtils.isEmpty(speciesKey)) {
+            SpeciesTarget target = speciesRepository.getSpeciesTargetSync(speciesKey);
+            return PlantProfile.fromTarget(target);
+        }
+        return null;
     }
 
     public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback) {

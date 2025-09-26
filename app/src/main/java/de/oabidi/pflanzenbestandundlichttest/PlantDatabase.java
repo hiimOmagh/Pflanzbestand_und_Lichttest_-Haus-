@@ -54,6 +54,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
         DiaryEntry.class,
         SpeciesTarget.class,
         Reminder.class,
+        ReminderSuggestion.class,
         PlantFts.class,
         DiaryEntryFts.class,
         PlantPhoto.class,
@@ -361,6 +362,9 @@ public abstract class PlantDatabase extends RoomDatabase {
     public abstract SpeciesTargetDao speciesTargetDao();
 
     public abstract ReminderDao reminderDao();
+
+    /** Provides access to stored reminder suggestions. */
+    public abstract ReminderSuggestionDao reminderSuggestionDao();
 
     /** Provides bulk read access for export and import operations. */
     public abstract BulkReadDao bulkDao();

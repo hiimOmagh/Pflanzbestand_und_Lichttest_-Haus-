@@ -26,6 +26,16 @@
         android:inputType="number"
         android:minHeight="48dp" />
 
+    <TextView
+        android:id="@+id/diary_entry_suggestion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="?android:attr/textColorSecondary"
+        android:visibility="gone" />
+
     <Button
         android:id="@+id/diary_entry_add_photo"
         android:layout_width="match_parent"

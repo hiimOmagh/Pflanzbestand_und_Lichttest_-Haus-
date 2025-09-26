@@ -21,18 +21,22 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestionDao;
 
 @RunWith(RobolectricTestRunner.class)
 public class ReminderRepositoryTest extends RepositoryTestBase {
     @Mock
     private ReminderDao reminderDao;
+    @Mock
+    private ReminderSuggestionDao reminderSuggestionDao;
 
     private ReminderRepository repository;
 
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        repository = new ReminderRepository(context, handler, ioExecutor, reminderDao);
+        repository = new ReminderRepository(context, handler, ioExecutor, reminderDao, reminderSuggestionDao);
     }
 
     @Test
@@ -69,5 +73,23 @@ public class ReminderRepositoryTest extends RepositoryTestBase {
         assertTrue(latch.await(2, TimeUnit.SECONDS));
         assertSame(failure, error.get());
         verify(reminderDao).deleteById(42L);
+    }
+
+    @Test
+    public void saveSuggestionSync_delegatesToDao() {
+        ReminderSuggestion suggestion = new ReminderSuggestion();
+        repository.saveSuggestionSync(suggestion);
+        verify(reminderSuggestionDao).insertOrUpdate(suggestion);
+    }
+
+    @Test
+    public void getSuggestionForPlantSync_queriesDao() {
+        ReminderSuggestion suggestion = new ReminderSuggestion();
+        when(reminderSuggestionDao.findByPlantId(7L)).thenReturn(suggestion);
+
+        ReminderSuggestion result = repository.getSuggestionForPlantSync(7L);
+
+        assertSame(suggestion, result);
+        verify(reminderSuggestionDao).findByPlantId(7L);
     }
 }

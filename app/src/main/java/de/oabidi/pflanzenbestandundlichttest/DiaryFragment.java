@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import androidx.appcompat.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,10 +33,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
+import de.oabidi.pflanzenbestandundlichttest.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -244,6 +249,26 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
         EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
         EditText remindEdit = dialogView.findViewById(R.id.diary_entry_remind_days);
+        TextView suggestionView = dialogView.findViewById(R.id.diary_entry_suggestion);
+        suggestionView.setVisibility(View.GONE);
+        AtomicBoolean userEdited = new AtomicBoolean(false);
+        AtomicBoolean suppressWatcher = new AtomicBoolean(false);
+        remindEdit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!suppressWatcher.get()) {
+                    userEdited.set(true);
+                }
+            }
+        });
         Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
         final String[] photoUri = new String[1];
         photoButton.setOnClickListener(v -> {
@@ -294,6 +319,51 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
             })
             .setNegativeButton(android.R.string.cancel, null)
             .show();
+
+        PlantRepository repo = repository;
+        if (repo != null) {
+            final long targetPlantId = plantId;
+            repo.getReminderSuggestion(targetPlantId, suggestion ->
+                applyReminderSuggestion(suggestionView, remindEdit, suggestion, suppressWatcher, userEdited));
+            repo.computeReminderSuggestion(targetPlantId, suggestion ->
+                    applyReminderSuggestion(suggestionView, remindEdit, suggestion, suppressWatcher, userEdited),
+                e -> {
+                    if (isAdded()) {
+                        Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                    }
+                });
+        }
+    }
+
+    private void applyReminderSuggestion(TextView suggestionView,
+                                         EditText remindEdit,
+                                         @Nullable ReminderSuggestion suggestion,
+                                         AtomicBoolean suppressWatcher,
+                                         AtomicBoolean userEdited) {
+        if (!isAdded()) {
+            return;
+        }
+        if (suggestion == null) {
+            suggestionView.setVisibility(View.GONE);
+            return;
+        }
+        String explanation = suggestion.getExplanation();
+        if (explanation == null || explanation.trim().isEmpty()) {
+            suggestionView.setVisibility(View.GONE);
+        } else {
+            suggestionView.setVisibility(View.VISIBLE);
+            suggestionView.setText(explanation);
+        }
+        if (!userEdited.get()) {
+            String value = String.valueOf(suggestion.getSuggestedIntervalDays());
+            String current = remindEdit.getText().toString().trim();
+            if (!value.equals(current)) {
+                suppressWatcher.set(true);
+                remindEdit.setText(value);
+                remindEdit.setSelection(value.length());
+                suppressWatcher.set(false);
+            }
+        }
     }
 
     private void loadEntries() {
