@@ -64,9 +64,11 @@ dependencies {
     testImplementation(libs.fragment.testing)
     testImplementation(libs.mockito.core)
     testImplementation(libs.work.testing)
+    testImplementation(libs.hamcrest)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.espresso.intents)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.robolectric)
+    androidTestImplementation(libs.hamcrest)
 }
