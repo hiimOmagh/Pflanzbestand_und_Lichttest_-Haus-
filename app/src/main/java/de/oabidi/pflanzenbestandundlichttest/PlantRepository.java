@@ -497,9 +497,10 @@ public class PlantRepository implements CareRecommendationDelegate {
         AtomicReference<List<Reminder>> remindersRef = new AtomicReference<>(Collections.emptyList());
         AtomicReference<List<PlantPhoto>> plantPhotosRef = new AtomicReference<>(Collections.emptyList());
         runAsync(() -> {
+            long plantId = plant.getId();
             List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
-            remindersRef.set(reminders);
-            List<PlantPhoto> photos = galleryRepository.getPlantPhotosForPlantSync(plant.getId());
+            remindersRef.set(reminderRepository.getRemindersForPlantSync(plantId));
+            List<PlantPhoto> photos = galleryRepository.getPlantPhotosForPlantSync(plantId);
             plantPhotosRef.set(photos);
             plantDao.delete(plant);
             SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
