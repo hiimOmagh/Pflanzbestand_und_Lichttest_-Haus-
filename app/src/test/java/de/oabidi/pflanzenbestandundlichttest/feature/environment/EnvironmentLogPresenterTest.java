@@ -9,6 +9,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,12 +21,18 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
+import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -104,7 +112,7 @@ public class EnvironmentLogPresenterTest {
     @Test
     public void onSubmit_withOnlyPhotoPersistsEntry() {
         Context context = ApplicationProvider.getApplicationContext();
-        PlantRepository repository = Mockito.mock(PlantRepository.class);
+        EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);
         EnvironmentLogView view = Mockito.mock(EnvironmentLogView.class);
         EnvironmentLogPresenter presenter = new EnvironmentLogPresenter(view, repository, 5L, context);
 
@@ -139,19 +147,96 @@ public class EnvironmentLogPresenterTest {
         return entry;
     }
 
-    private static class StubRepository extends PlantRepository {
+    private static class StubRepository extends EnvironmentRepository {
         private final List<EnvironmentEntry> entries;
 
         StubRepository(Context context, List<EnvironmentEntry> entries) {
-            super(context);
+            super(context, new Handler(Looper.getMainLooper()), new DirectExecutorService(),
+                new NoOpEnvironmentEntryDao(), new NoOpCareDelegate());
             this.entries = entries;
         }
 
         @Override
-        public void environmentEntriesForPlant(long plantId, java.util.function.Consumer<List<EnvironmentEntry>> callback,
-                                               java.util.function.Consumer<Exception> errorCallback) {
+        public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback,
+                                               @Nullable Consumer<Exception> errorCallback) {
             if (callback != null) {
                 callback.accept(entries);
+            }
+        }
+    }
+
+    private static class NoOpEnvironmentEntryDao implements EnvironmentEntryDao {
+        @Override
+        public List<EnvironmentEntry> getForPlantOrdered(long plantId) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<EnvironmentEntry> getRecentForPlant(long plantId, int limit) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public long insert(EnvironmentEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void update(EnvironmentEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void delete(EnvironmentEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void deleteById(long id) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private static class NoOpCareDelegate implements CareRecommendationDelegate {
+        @Override
+        public Runnable refreshCareRecommendationsAsync(long plantId) {
+            return () -> { };
+        }
+    }
+
+    private static class DirectExecutorService extends AbstractExecutorService {
+        private volatile boolean shutdown;
+
+        @Override
+        public void shutdown() {
+            shutdown = true;
+        }
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            shutdown = true;
+            return Collections.emptyList();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) {
+            return true;
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            if (command != null) {
+                command.run();
             }
         }
     }
