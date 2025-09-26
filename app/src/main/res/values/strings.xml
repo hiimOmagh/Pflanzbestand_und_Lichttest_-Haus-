@@ -156,12 +156,12 @@
     <string name="metadata_toxic_option_toxic">Toxic to pets</string>
     <string name="metadata_care_tips_fallback">No care tips recorded.</string>
     <string name="metadata_unavailable">No species metadata available.</string>
-    <string name="metadata_range_single_value">%1$s%2$s</string>
-    <string name="metadata_range_between">%1$s–%2$s%3$s</string>
+    <string name="metadata_range_single_value" translatable="false">%1$s%2$s</string>
+    <string name="metadata_range_between" translatable="false">%1$s–%2$s%3$s</string>
     <string name="metadata_range_min_only">Above %1$s%2$s</string>
     <string name="metadata_range_max_only">Below %1$s%2$s</string>
-    <string name="metadata_temperature_unit">°C</string>
-    <string name="metadata_humidity_unit">%</string>
+    <string name="metadata_temperature_unit" translatable="false">°C</string>
+    <string name="metadata_humidity_unit" translatable="false">%</string>
     <string name="metadata_tooltip_watering">Watering guidance</string>
     <string name="metadata_tooltip_temperature">Ideal temperature range</string>
     <string name="metadata_tooltip_humidity">Preferred humidity range</string>
