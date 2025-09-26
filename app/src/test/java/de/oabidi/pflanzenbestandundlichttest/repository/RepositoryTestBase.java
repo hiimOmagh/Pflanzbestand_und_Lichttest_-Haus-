@@ -8,6 +8,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.After;
 import org.junit.Before;
+import org.robolectric.Shadows;
+import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +22,7 @@ abstract class RepositoryTestBase {
     @Before
     public void setUpBase() {
         context = ApplicationProvider.getApplicationContext();
-        handler = new ImmediateHandler();
+        handler = new Handler(Looper.getMainLooper());
         ioExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -29,15 +31,8 @@ abstract class RepositoryTestBase {
         ioExecutor.shutdownNow();
     }
 
-    protected static class ImmediateHandler extends Handler {
-        ImmediateHandler() {
-            super(Looper.getMainLooper());
-        }
-
-        @Override
-        public boolean post(Runnable r) {
-            r.run();
-            return true;
-        }
+    protected void drainMainLooper() {
+        ShadowLooper shadowLooper = Shadows.shadowOf(Looper.getMainLooper());
+        shadowLooper.runToEndOfTasks();
     }
 }

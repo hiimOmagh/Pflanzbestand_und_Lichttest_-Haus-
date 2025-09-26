@@ -15,8 +15,6 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -43,15 +41,14 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
         List<EnvironmentEntry> entries = Arrays.asList(new EnvironmentEntry(), new EnvironmentEntry());
         when(environmentEntryDao.getForPlantOrdered(9L)).thenReturn(entries);
 
-        CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<List<EnvironmentEntry>> result = new AtomicReference<>();
 
         repository.environmentEntriesForPlant(9L, list -> {
             result.set(list);
-            latch.countDown();
         });
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
         assertEquals(entries.size(), result.get().size());
         verify(environmentEntryDao).getForPlantOrdered(9L);
     }
@@ -63,11 +60,13 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
         AtomicBoolean refreshed = new AtomicBoolean(false);
         when(careDelegate.refreshCareRecommendationsAsync(anyLong())).thenReturn(() -> refreshed.set(true));
 
-        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean callbackInvoked = new AtomicBoolean(false);
 
-        repository.insertEnvironmentEntry(entry, latch::countDown, null);
+        repository.insertEnvironmentEntry(entry, () -> callbackInvoked.set(true), null);
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
+        assertTrue(callbackInvoked.get());
         assertEquals(15L, entry.getId());
         assertTrue(refreshed.get());
         verify(environmentEntryDao).insert(entry);

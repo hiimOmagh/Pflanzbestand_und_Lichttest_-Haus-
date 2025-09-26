@@ -2,7 +2,6 @@ package de.oabidi.pflanzenbestandundlichttest.repository;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,8 +15,6 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryDao;
@@ -41,15 +38,14 @@ public class DiaryRepositoryTest extends RepositoryTestBase {
         List<DiaryEntry> allEntries = Collections.singletonList(new DiaryEntry());
         when(diaryDao.entriesForPlant(5L)).thenReturn(allEntries);
 
-        CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<List<DiaryEntry>> result = new AtomicReference<>();
 
         repository.searchDiaryEntries(5L, "", entries -> {
             result.set(entries);
-            latch.countDown();
         });
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
         assertSame(allEntries, result.get());
         verify(diaryDao).entriesForPlant(5L);
     }
@@ -60,15 +56,14 @@ public class DiaryRepositoryTest extends RepositoryTestBase {
         when(diaryDao.searchDiaryEntries(7L, "note*"))
             .thenReturn(searchResults);
 
-        CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<List<DiaryEntry>> result = new AtomicReference<>();
 
         repository.searchDiaryEntries(7L, "note", entries -> {
             result.set(entries);
-            latch.countDown();
         });
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
         assertEquals(searchResults.size(), result.get().size());
         verify(diaryDao).searchDiaryEntries(7L, "note*");
     }

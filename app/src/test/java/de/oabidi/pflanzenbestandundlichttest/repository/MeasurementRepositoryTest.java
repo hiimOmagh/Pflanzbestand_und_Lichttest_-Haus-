@@ -16,8 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -51,11 +50,13 @@ public class MeasurementRepositoryTest extends RepositoryTestBase {
     @Test
     public void insertMeasurement_invokesDaoAndCallback() throws Exception {
         Measurement measurement = new Measurement(1L, System.currentTimeMillis(), 100f, null, null, null);
-        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean callbackInvoked = new AtomicBoolean(false);
 
-        repository.insertMeasurement(measurement, latch::countDown, null);
+        repository.insertMeasurement(measurement, () -> callbackInvoked.set(true), null);
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
+        assertTrue(callbackInvoked.get());
         verify(measurementDao).insert(measurement);
     }
 
@@ -63,15 +64,14 @@ public class MeasurementRepositoryTest extends RepositoryTestBase {
     public void sumPpfdAndCountDays_returnsZeroWhenDaoNull() throws Exception {
         when(measurementDao.sumPpfdAndCountDays(anyLong(), anyLong(), anyLong())).thenReturn(null);
 
-        CountDownLatch latch = new CountDownLatch(1);
         AtomicReference<MeasurementDao.SumAndDays> result = new AtomicReference<>();
 
         repository.sumPpfdAndCountDays(2L, 0L, 10L, value -> {
             result.set(value);
-            latch.countDown();
         });
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
+        drainMainLooper();
+
         MeasurementDao.SumAndDays data = result.get();
         assertNotNull(data);
         assertEquals(0f, data.sum, 0.0001f);
