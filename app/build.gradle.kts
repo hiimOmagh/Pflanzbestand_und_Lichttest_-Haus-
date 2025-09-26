@@ -71,4 +71,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.robolectric)
     androidTestImplementation(libs.hamcrest)
+    androidTestImplementation(libs.work.testing)
 }
