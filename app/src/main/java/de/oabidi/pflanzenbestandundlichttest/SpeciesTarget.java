@@ -371,6 +371,24 @@ public class SpeciesTarget {
     }
 
     @Ignore
+    public SpeciesTarget() {
+        this("",
+            null,
+            null,
+            Category.OTHER,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+    }
+
+    @Ignore
     public SpeciesTarget(@NonNull String speciesKey, float ppfdMin, float ppfdMax) {
         this(speciesKey,
             null,
