@@ -6,11 +6,17 @@ import androidx.room.TypeConverter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 
 public class Converters {
     @TypeConverter
@@ -82,5 +88,109 @@ public class Converters {
     @TypeConverter
     public static LocalDate toLocalDate(Long epochDay) {
         return epochDay != null ? LocalDate.ofEpochDay(epochDay) : null;
+    }
+
+    @TypeConverter
+    public static Map<String, Float> fromJsonToCalibrationMap(String json) {
+        Map<String, Float> factors = new HashMap<>();
+        if (json == null || json.isEmpty()) {
+            return factors;
+        }
+        try {
+            JSONObject object = new JSONObject(json);
+            Iterator<String> keys = object.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if (key == null || key.isEmpty()) {
+                    continue;
+                }
+                if (!object.isNull(key)) {
+                    double value = object.optDouble(key, Double.NaN);
+                    if (!Double.isNaN(value)) {
+                        factors.put(key, (float) value);
+                    }
+                }
+            }
+            return factors;
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("Unable to parse calibration factor map", e);
+        }
+    }
+
+    @TypeConverter
+    public static String fromCalibrationMapToJson(Map<String, Float> factors) {
+        if (factors == null || factors.isEmpty()) {
+            return null;
+        }
+        JSONObject object = new JSONObject();
+        try {
+            for (Map.Entry<String, Float> entry : factors.entrySet()) {
+                String key = entry.getKey();
+                Float value = entry.getValue();
+                if (key == null || key.isEmpty() || value == null) {
+                    continue;
+                }
+                object.put(key, value.doubleValue());
+            }
+            return object.length() == 0 ? null : object.toString();
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("Unable to serialise calibration factor map", e);
+        }
+    }
+
+    @TypeConverter
+    public static List<LedProfile.ScheduleEntry> fromJsonToSchedule(String json) {
+        List<LedProfile.ScheduleEntry> schedule = new ArrayList<>();
+        if (json == null || json.isEmpty()) {
+            return schedule;
+        }
+        try {
+            JSONArray array = new JSONArray(json);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject object = array.optJSONObject(i);
+                if (object == null) {
+                    continue;
+                }
+                LedProfile.ScheduleEntry entry = new LedProfile.ScheduleEntry();
+                if (!object.isNull("startTime")) {
+                    entry.setStartTime(object.optString("startTime", null));
+                }
+                if (!object.isNull("endTime")) {
+                    entry.setEndTime(object.optString("endTime", null));
+                }
+                entry.setIntensityPercent(object.optInt("intensityPercent", 0));
+                schedule.add(entry);
+            }
+            return schedule;
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("Unable to parse LED schedule", e);
+        }
+    }
+
+    @TypeConverter
+    public static String fromScheduleToJson(List<LedProfile.ScheduleEntry> schedule) {
+        if (schedule == null || schedule.isEmpty()) {
+            return null;
+        }
+        JSONArray array = new JSONArray();
+        try {
+            for (LedProfile.ScheduleEntry entry : schedule) {
+                if (entry == null) {
+                    continue;
+                }
+                JSONObject object = new JSONObject();
+                if (entry.getStartTime() != null && !entry.getStartTime().isEmpty()) {
+                    object.put("startTime", entry.getStartTime());
+                }
+                if (entry.getEndTime() != null && !entry.getEndTime().isEmpty()) {
+                    object.put("endTime", entry.getEndTime());
+                }
+                object.put("intensityPercent", entry.getIntensityPercent());
+                array.put(object);
+            }
+            return array.length() == 0 ? null : array.toString();
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("Unable to serialise LED schedule", e);
+        }
     }
 }

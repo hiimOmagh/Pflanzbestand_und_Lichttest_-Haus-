@@ -28,6 +28,8 @@ import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -62,6 +64,7 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
         PlantZone.class,
         PlantCalibration.class,
         EnvironmentEntry.class,
+        LedProfile.class,
         ProactiveAlertLog.class,
         NaturalLightEstimate.class
     },
@@ -300,6 +303,7 @@ public abstract class PlantDatabase extends RoomDatabase {
     }
 
     public abstract PlantDao plantDao();
+    public abstract LedProfileDao ledProfileDao();
 
     /**
      * Provides access to stored light measurements.

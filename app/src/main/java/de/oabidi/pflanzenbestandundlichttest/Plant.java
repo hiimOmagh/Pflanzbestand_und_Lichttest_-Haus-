@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
@@ -26,12 +27,14 @@ public class Plant {
     private String locationHint;
     private long acquiredAtEpoch;
     private Uri photoUri;
+    private Long ledProfileId;
 
     /**
      * Default constructor required by Room. Prefer {@link #Plant(String, String, String, String, long, Uri)}
      * to create fully initialised instances.
      */
     public Plant() {
+        this.ledProfileId = null;
     }
 
     /**
@@ -52,6 +55,7 @@ public class Plant {
         this.locationHint = locationHint;
         this.acquiredAtEpoch = acquiredAtEpoch;
         this.photoUri = photoUri;
+        this.ledProfileId = null;
     }
 
     /**
@@ -165,5 +169,22 @@ public class Plant {
      */
     public void setPhotoUri(Uri photoUri) {
         this.photoUri = photoUri;
+    }
+
+    /**
+     * @return identifier of the associated LED profile or {@code null} if none is linked
+     */
+    @Nullable
+    public Long getLedProfileId() {
+        return ledProfileId;
+    }
+
+    /**
+     * Associates this plant with an LED profile.
+     *
+     * @param ledProfileId optional identifier of the LED profile, may be {@code null}
+     */
+    public void setLedProfileId(@Nullable Long ledProfileId) {
+        this.ledProfileId = ledProfileId;
     }
 }
