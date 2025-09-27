@@ -2,6 +2,10 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
+
 /**
  * View contract for the plant edit screen.
  */
@@ -26,6 +30,17 @@ public interface PlantEditView {
 
     /** @return ID of the plant being edited or 0 for a new plant. */
     long getPlantId();
+
+    /** @return selected zone orientation code or {@code null} if not set. */
+    @Nullable
+    String getZoneOrientation();
+
+    /** @return free-form notes for the plant zone or {@code null}. */
+    @Nullable
+    String getZoneNotes();
+
+    /** Display the stored plant zone information for editing. */
+    void setPlantZone(@Nullable PlantZone zone);
 
     /** Show an error indicating that the name field is required. */
     void showNameError();

@@ -125,8 +125,14 @@
     <string name="hint_plant_name">Name</string>
     <string name="hint_species">Species</string>
     <string name="hint_location">Location</string>
+    <string name="hint_zone_orientation">Zone orientation</string>
+    <string name="hint_zone_notes">Zone notes</string>
     <string name="hint_acquired">Acquired</string>
     <string name="hint_notes">Notes</string>
+    <string name="orientation_north">North</string>
+    <string name="orientation_east">East</string>
+    <string name="orientation_south">South</string>
+    <string name="orientation_west">West</string>
     <string name="action_pick_photo">Pick Photo</string>
     <string name="action_capture_photo">Capture Photo</string>
     <string name="action_close_camera">Close camera</string>

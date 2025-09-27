@@ -32,6 +32,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZoneDao;
 import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertDao;
 import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
 import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
@@ -55,6 +57,7 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
         PlantFts.class,
         DiaryEntryFts.class,
         PlantPhoto.class,
+        PlantZone.class,
         PlantCalibration.class,
         EnvironmentEntry.class,
         ProactiveAlertLog.class
@@ -316,6 +319,8 @@ public abstract class PlantDatabase extends RoomDatabase {
      */
     public abstract BulkReadDao bulkDao();
 
+    public abstract PlantZoneDao plantZoneDao();
+    
     public abstract PlantPhotoDao plantPhotoDao();
 
     public abstract PlantCalibrationDao plantCalibrationDao();

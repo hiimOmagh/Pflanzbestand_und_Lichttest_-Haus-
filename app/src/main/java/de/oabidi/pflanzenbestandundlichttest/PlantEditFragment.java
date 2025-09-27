@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
@@ -20,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,6 +30,7 @@ import java.util.Locale;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
 
 /**
  * Fragment allowing creation or editing of a {@link Plant}.
@@ -43,18 +46,24 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private static final String ARG_ACQUIRED = "acquired";
     private static final String ARG_NOTES = "notes";
     private static final String ARG_PHOTO = "photo";
+    private static final String ARG_ZONE_ORIENTATION = "zone_orientation";
+    private static final String ARG_ZONE_NOTES = "zone_notes";
 
     private TextInputEditText nameInput;
     private TextInputEditText speciesInput;
     private TextInputEditText locationInput;
     private TextInputEditText acquiredInput;
     private TextInputEditText notesInput;
+    private MaterialAutoCompleteTextView zoneOrientationInput;
+    private TextInputEditText zoneNotesInput;
     private ImageView photoView;
 
     private Uri photoUri;
     private long acquiredEpoch = System.currentTimeMillis();
     private PlantEditPresenter presenter;
     private PlantRepository repository;
+    private String[] zoneOrientationValues;
+    private String[] zoneOrientationLabels;
 
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -124,6 +133,8 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         locationInput = view.findViewById(R.id.input_location);
         acquiredInput = view.findViewById(R.id.input_acquired);
         notesInput = view.findViewById(R.id.input_notes);
+        zoneOrientationInput = view.findViewById(R.id.input_zone_orientation);
+        zoneNotesInput = view.findViewById(R.id.input_zone_notes);
         photoView = view.findViewById(R.id.image_photo);
 
         Button pickPhoto = view.findViewById(R.id.btn_pick_photo);
@@ -133,6 +144,18 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         pickPhoto.setOnClickListener(v -> photoPicker.launch("image/*"));
         capturePhoto.setOnClickListener(v -> launchCameraCapture());
 
+        zoneOrientationValues = getResources().getStringArray(R.array.plant_zone_orientation_values);
+        zoneOrientationLabels = getResources().getStringArray(R.array.plant_zone_orientation_labels);
+        ArrayAdapter<String> orientationAdapter = new ArrayAdapter<>(requireContext(),
+            android.R.layout.simple_list_item_1, zoneOrientationLabels);
+        zoneOrientationInput.setAdapter(orientationAdapter);
+        zoneOrientationInput.setOnClickListener(v -> zoneOrientationInput.showDropDown());
+        zoneOrientationInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                zoneOrientationInput.post(zoneOrientationInput::showDropDown);
+            }
+        });
+
         Bundle args = getArguments();
         if (args != null) {
             nameInput.setText(args.getString(ARG_NAME));
@@ -141,6 +164,8 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             acquiredEpoch = args.getLong(ARG_ACQUIRED, System.currentTimeMillis());
             acquiredInput.setText(formatDate(acquiredEpoch));
             notesInput.setText(args.getString(ARG_NOTES));
+            applyZoneOrientation(args.getString(ARG_ZONE_ORIENTATION));
+            zoneNotesInput.setText(args.getString(ARG_ZONE_NOTES));
             String photo = args.getString(ARG_PHOTO);
             if (photo != null) {
                 photoUri = Uri.parse(photo);
@@ -162,6 +187,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
 
         acquiredInput.setOnClickListener(v -> showDatePicker());
         saveButton.setOnClickListener(v -> presenter.savePlant());
+        presenter.loadPlantZone();
     }
 
     private static String getText(TextInputEditText editText) {
@@ -229,6 +255,50 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         return args != null ? args.getLong(ARG_ID, 0) : 0;
     }
 
+    @Nullable
+    @Override
+    public String getZoneOrientation() {
+        if (zoneOrientationInput == null) {
+            return null;
+        }
+        String text = getAutoCompleteText(zoneOrientationInput);
+        if (text.isEmpty()) {
+            return null;
+        }
+        if (zoneOrientationLabels != null && zoneOrientationValues != null) {
+            for (int i = 0; i < zoneOrientationLabels.length; i++) {
+                if (zoneOrientationLabels[i].equalsIgnoreCase(text)) {
+                    return zoneOrientationValues[i];
+                }
+            }
+        }
+        return PlantZone.normalizeOrientation(text);
+    }
+
+    @Nullable
+    @Override
+    public String getZoneNotes() {
+        if (zoneNotesInput == null) {
+            return null;
+        }
+        String text = getText(zoneNotesInput);
+        return text.isEmpty() ? null : text;
+    }
+
+    @Override
+    public void setPlantZone(@Nullable PlantZone zone) {
+        if (!isAdded() || zoneOrientationInput == null || zoneNotesInput == null) {
+            return;
+        }
+        if (zone == null) {
+            zoneOrientationInput.setText(null, false);
+            zoneNotesInput.setText(null);
+        } else {
+            applyZoneOrientation(zone.getOrientation());
+            zoneNotesInput.setText(zone.getNotes());
+        }
+    }
+
     @Override
     public void showNameError() {
         nameInput.setError(getString(R.string.error_required));
@@ -243,6 +313,14 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         result.putString(ARG_LOCATION, plant.getLocationHint());
         result.putLong(ARG_ACQUIRED, plant.getAcquiredAtEpoch());
         result.putString(ARG_NOTES, plant.getDescription());
+        String zoneOrientation = getZoneOrientation();
+        if (zoneOrientation != null) {
+            result.putString(ARG_ZONE_ORIENTATION, zoneOrientation);
+        }
+        String zoneNotes = getZoneNotes();
+        if (zoneNotes != null) {
+            result.putString(ARG_ZONE_NOTES, zoneNotes);
+        }
         if (plant.getPhotoUri() != null) {
             result.putString(ARG_PHOTO, plant.getPhotoUri().toString());
         }
@@ -255,5 +333,43 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         if (isAdded()) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void applyZoneOrientation(@Nullable String orientation) {
+        if (zoneOrientationInput == null) {
+            return;
+        }
+        if (orientation == null) {
+            zoneOrientationInput.setText(null, false);
+            return;
+        }
+        String normalized = PlantZone.normalizeOrientation(orientation);
+        if (normalized == null) {
+            zoneOrientationInput.setText(orientation, false);
+            return;
+        }
+        int index = findOrientationIndex(normalized);
+        if (index >= 0 && zoneOrientationLabels != null && index < zoneOrientationLabels.length) {
+            zoneOrientationInput.setText(zoneOrientationLabels[index], false);
+        } else {
+            zoneOrientationInput.setText(normalized, false);
+        }
+    }
+
+    private int findOrientationIndex(@NonNull String orientation) {
+        if (zoneOrientationValues == null) {
+            return -1;
+        }
+        for (int i = 0; i < zoneOrientationValues.length; i++) {
+            if (zoneOrientationValues[i].equalsIgnoreCase(orientation)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static String getAutoCompleteText(MaterialAutoCompleteTextView view) {
+        CharSequence cs = view.getText();
+        return cs != null ? cs.toString().trim() : "";
     }
 }

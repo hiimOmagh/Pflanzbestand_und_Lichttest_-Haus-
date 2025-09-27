@@ -6,4 +6,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 public interface PlantEditPresenter {
     /** Validate inputs and save the plant. */
     void savePlant();
+
+    /** Load existing plant zone information for editing. */
+    void loadPlantZone();
 }

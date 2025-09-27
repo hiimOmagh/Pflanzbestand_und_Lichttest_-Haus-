@@ -21,6 +21,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.data.PlantZoneDao;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
@@ -56,6 +58,7 @@ import java.util.regex.Pattern;
 public class PlantRepository implements CareRecommendationDelegate {
     private final PlantDao plantDao;
     private final PlantCalibrationDao plantCalibrationDao;
+    private final PlantZoneDao plantZoneDao;
     private final BulkReadDao bulkDao;
     private final MeasurementRepository measurementRepository;
     private final DiaryRepository diaryRepository;
@@ -106,6 +109,7 @@ public class PlantRepository implements CareRecommendationDelegate {
         PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
         plantCalibrationDao = db.plantCalibrationDao();
+        plantZoneDao = db.plantZoneDao();
         bulkDao = db.bulkDao();
         speciesRepository = new SpeciesRepository(this.context, mainHandler, this.ioExecutor, db.speciesTargetDao());
         reminderRepository = new ReminderRepository(this.context, mainHandler, this.ioExecutor,
@@ -468,6 +472,53 @@ public class PlantRepository implements CareRecommendationDelegate {
                 }
             }
         });
+    }
+
+    public void getPlantZone(long plantId, Consumer<PlantZone> callback) {
+        getPlantZone(plantId, callback, null);
+    }
+
+    public void getPlantZone(long plantId, Consumer<PlantZone> callback,
+                             Consumer<Exception> errorCallback) {
+        queryAsync(() -> plantZoneDao.getForPlant(plantId), callback, errorCallback);
+    }
+
+    public void savePlantZone(long plantId, @Nullable String orientation, @Nullable String notes,
+                              Runnable callback, Consumer<Exception> errorCallback) {
+        if (plantId <= 0) {
+            if (callback != null) {
+                mainHandler.post(callback);
+            }
+            return;
+        }
+        final String normalizedOrientation = PlantZone.normalizeOrientation(orientation);
+        final String normalizedNotes;
+        if (notes == null) {
+            normalizedNotes = null;
+        } else {
+            String trimmed = notes.trim();
+            normalizedNotes = TextUtils.isEmpty(trimmed) ? null : trimmed;
+        }
+        runAsync(() -> {
+            if (normalizedOrientation == null) {
+                plantZoneDao.deleteForPlant(plantId);
+                return;
+            }
+            long now = System.currentTimeMillis();
+            PlantZone existing = plantZoneDao.getForPlant(plantId);
+            if (existing == null) {
+                PlantZone zone = new PlantZone(plantId, normalizedOrientation, normalizedNotes, now, now);
+                plantZoneDao.insert(zone);
+            } else {
+                existing.setOrientation(normalizedOrientation);
+                existing.setNotes(normalizedNotes);
+                if (existing.getCreatedAt() == 0L) {
+                    existing.setCreatedAt(now);
+                }
+                existing.setUpdatedAt(now);
+                plantZoneDao.update(existing);
+            }
+        }, callback, errorCallback);
     }
 
     public void insert(Plant plant, Runnable callback) {
