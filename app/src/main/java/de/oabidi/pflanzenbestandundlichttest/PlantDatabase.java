@@ -63,37 +63,11 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
 )
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
-    private static volatile PlantDatabase INSTANCE;
-
     private static final int NUMBER_OF_THREADS = 4;
     public static final ExecutorService databaseWriteExecutor =
         Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+    private static volatile PlantDatabase INSTANCE;
 
-    public abstract PlantDao plantDao();
-
-    /** Provides access to stored light measurements. */
-    public abstract MeasurementDao measurementDao();
-
-    public abstract DiaryDao diaryDao();
-
-    public abstract SpeciesTargetDao speciesTargetDao();
-
-    public abstract ReminderDao reminderDao();
-
-    /** Provides access to stored reminder suggestions. */
-    public abstract ReminderSuggestionDao reminderSuggestionDao();
-
-    /** Provides bulk read access for export and import operations. */
-    public abstract BulkReadDao bulkDao();
-
-    public abstract PlantPhotoDao plantPhotoDao();
-
-    public abstract PlantCalibrationDao plantCalibrationDao();
-
-    public abstract EnvironmentEntryDao environmentEntryDao();
-
-    public abstract ProactiveAlertDao proactiveAlertDao();
-    
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -318,4 +292,35 @@ public abstract class PlantDatabase extends RoomDatabase {
             return SpeciesTarget.Category.OTHER;
         }
     }
+
+    public abstract PlantDao plantDao();
+
+    /**
+     * Provides access to stored light measurements.
+     */
+    public abstract MeasurementDao measurementDao();
+
+    public abstract DiaryDao diaryDao();
+
+    public abstract SpeciesTargetDao speciesTargetDao();
+
+    public abstract ReminderDao reminderDao();
+
+    /**
+     * Provides access to stored reminder suggestions.
+     */
+    public abstract ReminderSuggestionDao reminderSuggestionDao();
+
+    /**
+     * Provides bulk read access for export and import operations.
+     */
+    public abstract BulkReadDao bulkDao();
+
+    public abstract PlantPhotoDao plantPhotoDao();
+
+    public abstract PlantCalibrationDao plantCalibrationDao();
+
+    public abstract EnvironmentEntryDao environmentEntryDao();
+
+    public abstract ProactiveAlertDao proactiveAlertDao();
 }
