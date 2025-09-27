@@ -137,7 +137,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
             }
 
             confirmButton.setEnabled(false);
-            repository.savePlantCalibration(plantId, ambient, camera, () -> {
+            repository.saveLedCalibrationForPlant(plantId, ambient, camera, () -> {
                 if (!isAdded()) {
                     return;
                 }
@@ -184,7 +184,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         if (plantId == -1L) {
             return;
         }
-        repository.getPlantCalibration(plantId, calibration -> {
+        repository.getLedCalibrationForPlant(plantId, calibration -> {
             if (!isAdded()) {
                 return;
             }

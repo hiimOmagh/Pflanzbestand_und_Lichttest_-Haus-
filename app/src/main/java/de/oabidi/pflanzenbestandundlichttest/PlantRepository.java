@@ -17,6 +17,10 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociationDao;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -37,10 +41,12 @@ import de.oabidi.pflanzenbestandundlichttest.feature.reminders.SmartReminderEngi
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -59,6 +65,8 @@ import java.util.regex.Pattern;
 public class PlantRepository implements CareRecommendationDelegate {
     private final PlantDao plantDao;
     private final PlantCalibrationDao plantCalibrationDao;
+    private final LedProfileDao ledProfileDao;
+    private final LedProfileAssociationDao ledProfileAssociationDao;
     private final PlantZoneDao plantZoneDao;
     private final BulkReadDao bulkDao;
     private final MeasurementRepository measurementRepository;
@@ -111,6 +119,8 @@ public class PlantRepository implements CareRecommendationDelegate {
         PlantDatabase db = PlantDatabase.getDatabase(this.context);
         plantDao = db.plantDao();
         plantCalibrationDao = db.plantCalibrationDao();
+        ledProfileDao = db.ledProfileDao();
+        ledProfileAssociationDao = db.ledProfileAssociationDao();
         plantZoneDao = db.plantZoneDao();
         bulkDao = db.bulkDao();
         speciesRepository = new SpeciesRepository(this.context, mainHandler, this.ioExecutor, db.speciesTargetDao());
@@ -224,19 +234,149 @@ public class PlantRepository implements CareRecommendationDelegate {
         return bulkDao;
     }
 
-    /** Retrieves the calibration entry for the specified plant. */
-    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
-        getPlantCalibration(plantId, callback, null);
+    /** Returns all LED profiles stored in the database. */
+    public void getLedProfiles(Consumer<List<LedProfile>> callback) {
+        getLedProfiles(callback, null);
     }
 
-    /** Retrieves the calibration entry for the specified plant. */
-    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
-                                    Consumer<Exception> errorCallback) {
+    /** Returns all LED profiles stored in the database. */
+    public void getLedProfiles(Consumer<List<LedProfile>> callback,
+                               Consumer<Exception> errorCallback) {
+        queryAsync(() -> ledProfileDao.getAll(), callback, errorCallback);
+    }
+
+    /** Loads a single LED profile by its identifier. */
+    public void getLedProfile(long profileId, Consumer<LedProfile> callback) {
+        getLedProfile(profileId, callback, null);
+    }
+
+    /** Loads a single LED profile by its identifier. */
+    public void getLedProfile(long profileId, Consumer<LedProfile> callback,
+                              Consumer<Exception> errorCallback) {
+        queryAsync(() -> ledProfileDao.findById(profileId), callback, errorCallback);
+    }
+
+    /** Persists a new LED profile and emits the stored instance including its identifier. */
+    public void createLedProfile(LedProfile profile, Consumer<LedProfile> callback) {
+        createLedProfile(profile, callback, null);
+    }
+
+    /** Persists a new LED profile and emits the stored instance including its identifier. */
+    public void createLedProfile(LedProfile profile, Consumer<LedProfile> callback,
+                                 Consumer<Exception> errorCallback) {
+        Runnable completion = callback == null ? null : () -> callback.accept(profile);
+        runAsync(() -> {
+            long id = ledProfileDao.insert(profile);
+            profile.setId(id);
+        }, completion, errorCallback);
+    }
+
+    /** Updates an existing LED profile. */
+    public void updateLedProfile(LedProfile profile, Runnable callback) {
+        updateLedProfile(profile, callback, null);
+    }
+
+    /** Updates an existing LED profile. */
+    public void updateLedProfile(LedProfile profile, Runnable callback,
+                                 Consumer<Exception> errorCallback) {
+        runAsync(() -> ledProfileDao.update(profile), callback, errorCallback);
+    }
+
+    /** Deletes the provided LED profile and detaches it from any assigned plants. */
+    public void deleteLedProfile(LedProfile profile, Runnable callback) {
+        deleteLedProfile(profile, callback, null);
+    }
+
+    /** Deletes the provided LED profile and detaches it from any assigned plants. */
+    public void deleteLedProfile(LedProfile profile, Runnable callback,
+                                 Consumer<Exception> errorCallback) {
+        runAsync(() -> {
+            long profileId = profile.getId();
+            List<LedProfileAssociation> associations =
+                ledProfileAssociationDao.getAssociationsForProfile(profileId);
+            for (LedProfileAssociation association : associations) {
+                long plantId = association.getPlantId();
+                Plant plant = plantDao.findById(plantId);
+                if (plant != null) {
+                    persistCalibrationFallback(plantId, profile);
+                    plant.setLedProfileId(null);
+                    plantDao.update(plant);
+                }
+                ledProfileAssociationDao.delete(association);
+            }
+            ledProfileDao.delete(profile);
+        }, callback, errorCallback);
+    }
+
+    /** Assigns the provided LED profile to the given plant. */
+    public void assignLedProfileToPlant(long plantId, long profileId, Runnable callback) {
+        assignLedProfileToPlant(plantId, profileId, callback, null);
+    }
+
+    /** Assigns the provided LED profile to the given plant. */
+    public void assignLedProfileToPlant(long plantId, long profileId, Runnable callback,
+                                        Consumer<Exception> errorCallback) {
+        runAsync(() -> {
+            Plant plant = plantDao.findById(plantId);
+            if (plant == null) {
+                throw new IllegalArgumentException("Plant not found: " + plantId);
+            }
+            LedProfile profile = ledProfileDao.findById(profileId);
+            if (profile == null) {
+                throw new IllegalArgumentException("LED profile not found: " + profileId);
+            }
+            plant.setLedProfileId(profileId);
+            plantDao.update(plant);
+            ledProfileAssociationDao.upsert(new LedProfileAssociation(plantId, profileId));
+            plantCalibrationDao.deleteForPlant(plantId);
+        }, callback, errorCallback);
+    }
+
+    /** Removes any LED profile assignment from the specified plant. */
+    public void unassignLedProfileFromPlant(long plantId, Runnable callback) {
+        unassignLedProfileFromPlant(plantId, callback, null);
+    }
+
+    /** Removes any LED profile assignment from the specified plant. */
+    public void unassignLedProfileFromPlant(long plantId, Runnable callback,
+                                            Consumer<Exception> errorCallback) {
+        runAsync(() -> {
+            Plant plant = plantDao.findById(plantId);
+            if (plant == null) {
+                throw new IllegalArgumentException("Plant not found: " + plantId);
+            }
+            Long profileId = plant.getLedProfileId();
+            if (profileId != null) {
+                LedProfile profile = ledProfileDao.findById(profileId);
+                persistCalibrationFallback(plantId, profile);
+            }
+            plant.setLedProfileId(null);
+            plantDao.update(plant);
+            ledProfileAssociationDao.deleteByPlantId(plantId);
+        }, callback, errorCallback);
+    }
+
+    /** Returns the LED profile currently assigned to the specified plant, if any. */
+    public void getLedProfileForPlant(long plantId, Consumer<LedProfile> callback) {
+        getLedProfileForPlant(plantId, callback, null);
+    }
+
+    /** Returns the LED profile currently assigned to the specified plant, if any. */
+    public void getLedProfileForPlant(long plantId, Consumer<LedProfile> callback,
+                                      Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
-                PlantCalibration calibration = plantCalibrationDao.getForPlant(plantId);
+                Plant plant = plantDao.findById(plantId);
+                LedProfile profile = null;
+                if (plant != null) {
+                    Long profileId = plant.getLedProfileId();
+                    if (profileId != null) {
+                        profile = ledProfileDao.findById(profileId);
+                    }
+                }
+                LedProfile finalProfile = profile;
                 if (callback != null) {
-                    mainHandler.post(() -> callback.accept(calibration));
+                    mainHandler.post(() -> callback.accept(finalProfile));
                 }
             } catch (Exception e) {
                 if (errorCallback != null) {
@@ -246,17 +386,131 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
-    /** Stores the calibration for the specified plant. */
-    public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
-                                     Runnable callback) {
-        savePlantCalibration(plantId, ambientFactor, cameraFactor, callback, null);
+    /**
+     * Retrieves calibration factors for the specified plant. LED profile assignments take
+     * precedence and fall back to legacy per-plant calibration values when no profile is linked.
+     */
+    public void getLedCalibrationForPlant(long plantId, Consumer<PlantCalibration> callback) {
+        getLedCalibrationForPlant(plantId, callback, null);
     }
 
-    /** Stores the calibration for the specified plant. */
+    /**
+     * Retrieves calibration factors for the specified plant. LED profile assignments take
+     * precedence and fall back to legacy per-plant calibration values when no profile is linked.
+     */
+    public void getLedCalibrationForPlant(long plantId, Consumer<PlantCalibration> callback,
+                                          Consumer<Exception> errorCallback) {
+        PlantDatabase.databaseWriteExecutor.execute(() -> {
+            try {
+                Plant plant = plantDao.findById(plantId);
+                PlantCalibration calibration = null;
+                if (plant != null) {
+                    Long profileId = plant.getLedProfileId();
+                    if (profileId != null) {
+                        LedProfile profile = ledProfileDao.findById(profileId);
+                        calibration = calibrationFromProfile(plantId, profile);
+                    }
+                    if (calibration == null) {
+                        calibration = plantCalibrationDao.getForPlant(plantId);
+                    }
+                }
+                PlantCalibration finalCalibration = calibration;
+                if (callback != null) {
+                    mainHandler.post(() -> callback.accept(finalCalibration));
+                }
+            } catch (Exception e) {
+                if (errorCallback != null) {
+                    mainHandler.post(() -> errorCallback.accept(e));
+                }
+            }
+        });
+    }
+
+    /** Stores calibration factors for the specified plant respecting LED profile assignments. */
+    public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
+                                           Runnable callback) {
+        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
+    }
+
+    /** Stores calibration factors for the specified plant respecting LED profile assignments. */
+    public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
+                                           Runnable callback, Consumer<Exception> errorCallback) {
+        runAsync(() -> {
+            Plant plant = plantDao.findById(plantId);
+            if (plant == null) {
+                throw new IllegalArgumentException("Plant not found: " + plantId);
+            }
+            Long profileId = plant.getLedProfileId();
+            if (profileId != null) {
+                LedProfile profile = ledProfileDao.findById(profileId);
+                if (profile != null) {
+                    Map<String, Float> factors = new HashMap<>(profile.getCalibrationFactors());
+                    factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, ambientFactor);
+                    factors.put(LedProfile.CALIBRATION_KEY_CAMERA, cameraFactor);
+                    profile.setCalibrationFactors(factors);
+                    ledProfileDao.update(profile);
+                    ledProfileAssociationDao.upsert(new LedProfileAssociation(plantId, profileId));
+                    plantCalibrationDao.deleteForPlant(plantId);
+                    return;
+                } else {
+                    ledProfileAssociationDao.deleteByPlantId(plantId);
+                    plant.setLedProfileId(null);
+                    plantDao.update(plant);
+                }
+            }
+            PlantCalibration calibration = new PlantCalibration(plantId, ambientFactor, cameraFactor);
+            plantCalibrationDao.insertOrUpdate(calibration);
+        }, callback, errorCallback);
+    }
+
+    /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer)} instead. */
+    @Deprecated
+    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
+        getLedCalibrationForPlant(plantId, callback, null);
+    }
+
+    /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer, Consumer)} instead. */
+    @Deprecated
+    public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
+                                    Consumer<Exception> errorCallback) {
+        getLedCalibrationForPlant(plantId, callback, errorCallback);
+    }
+
+    /** @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable)} instead. */
+    @Deprecated
+    public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
+                                     Runnable callback) {
+        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
+    }
+
+    /** @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable, Consumer)} instead. */
+    @Deprecated
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback, Consumer<Exception> errorCallback) {
-        PlantCalibration calibration = new PlantCalibration(plantId, ambientFactor, cameraFactor);
-        runAsync(() -> plantCalibrationDao.insertOrUpdate(calibration), callback, errorCallback);
+        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, errorCallback);
+    }
+
+    @Nullable
+    private PlantCalibration calibrationFromProfile(long plantId, @Nullable LedProfile profile) {
+        if (profile == null) {
+            return null;
+        }
+        Map<String, Float> factors = profile.getCalibrationFactors();
+        Float ambient = factors.get(LedProfile.CALIBRATION_KEY_AMBIENT);
+        Float camera = factors.get(LedProfile.CALIBRATION_KEY_CAMERA);
+        if (ambient == null || camera == null) {
+            return null;
+        }
+        return new PlantCalibration(plantId, ambient, camera);
+    }
+
+    private void persistCalibrationFallback(long plantId, @Nullable LedProfile profile) {
+        PlantCalibration fallback = calibrationFromProfile(plantId, profile);
+        if (fallback == null) {
+            plantCalibrationDao.deleteForPlant(plantId);
+        } else {
+            plantCalibrationDao.insertOrUpdate(fallback);
+        }
     }
 
     private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {

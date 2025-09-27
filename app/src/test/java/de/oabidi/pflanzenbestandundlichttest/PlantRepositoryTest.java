@@ -21,7 +21,9 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import java.lang.reflect.Field;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -30,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 
 /**
@@ -649,7 +652,7 @@ public class PlantRepositoryTest {
 
         CountDownLatch missingLatch = new CountDownLatch(1);
         final PlantCalibration[] initial = new PlantCalibration[1];
-        repository.getPlantCalibration(plant.getId(), calibration -> {
+        repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             initial[0] = calibration;
             missingLatch.countDown();
         });
@@ -657,12 +660,12 @@ public class PlantRepositoryTest {
         assertNull(initial[0]);
 
         CountDownLatch saveLatch = new CountDownLatch(1);
-        repository.savePlantCalibration(plant.getId(), 0.02f, 0.03f, saveLatch::countDown);
+        repository.saveLedCalibrationForPlant(plant.getId(), 0.02f, 0.03f, saveLatch::countDown);
         awaitLatch(saveLatch);
 
         CountDownLatch loadLatch = new CountDownLatch(1);
         final PlantCalibration[] holder = new PlantCalibration[1];
-        repository.getPlantCalibration(plant.getId(), calibration -> {
+        repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             holder[0] = calibration;
             loadLatch.countDown();
         });
@@ -673,12 +676,12 @@ public class PlantRepositoryTest {
         assertEquals(0.03f, holder[0].getCameraFactor(), 0.0001f);
 
         CountDownLatch updateLatch = new CountDownLatch(1);
-        repository.savePlantCalibration(plant.getId(), 0.05f, 0.06f, updateLatch::countDown);
+        repository.saveLedCalibrationForPlant(plant.getId(), 0.05f, 0.06f, updateLatch::countDown);
         awaitLatch(updateLatch);
 
         CountDownLatch reloadLatch = new CountDownLatch(1);
         final PlantCalibration[] updated = new PlantCalibration[1];
-        repository.getPlantCalibration(plant.getId(), calibration -> {
+        repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             updated[0] = calibration;
             reloadLatch.countDown();
         });
@@ -686,6 +689,49 @@ public class PlantRepositoryTest {
         assertNotNull(updated[0]);
         assertEquals(0.05f, updated[0].getAmbientFactor(), 0.0001f);
         assertEquals(0.06f, updated[0].getCameraFactor(), 0.0001f);
+    }
+
+    @Test
+    public void ledProfileAssignmentProvidesCalibration() throws Exception {
+        Plant plant = new Plant();
+        plant.setName("Fern");
+        plant.setAcquiredAtEpoch(0L);
+        CountDownLatch plantLatch = new CountDownLatch(1);
+        repository.insert(plant, plantLatch::countDown);
+        awaitLatch(plantLatch);
+
+        LedProfile profile = new LedProfile();
+        profile.setName("Grow Light");
+        Map<String, Float> factors = new HashMap<>();
+        factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, 0.04f);
+        factors.put(LedProfile.CALIBRATION_KEY_CAMERA, 0.05f);
+        profile.setCalibrationFactors(factors);
+
+        CountDownLatch profileLatch = new CountDownLatch(1);
+        final LedProfile[] stored = new LedProfile[1];
+        repository.createLedProfile(profile, created -> {
+            stored[0] = created;
+            profileLatch.countDown();
+        }, e -> fail("Creation failed"));
+        awaitLatch(profileLatch);
+        assertNotNull(stored[0]);
+
+        CountDownLatch assignLatch = new CountDownLatch(1);
+        repository.assignLedProfileToPlant(plant.getId(), stored[0].getId(), assignLatch::countDown,
+            e -> fail("Assignment failed"));
+        awaitLatch(assignLatch);
+
+        CountDownLatch calibrationLatch = new CountDownLatch(1);
+        final PlantCalibration[] fromProfile = new PlantCalibration[1];
+        repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
+            fromProfile[0] = calibration;
+            calibrationLatch.countDown();
+        });
+        awaitLatch(calibrationLatch);
+
+        assertNotNull(fromProfile[0]);
+        assertEquals(0.04f, fromProfile[0].getAmbientFactor(), 0.0001f);
+        assertEquals(0.05f, fromProfile[0].getCameraFactor(), 0.0001f);
     }
 
     private static final class BlockingExecutor extends AbstractExecutorService {

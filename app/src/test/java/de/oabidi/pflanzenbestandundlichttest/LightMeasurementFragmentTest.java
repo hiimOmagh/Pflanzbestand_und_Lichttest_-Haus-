@@ -60,7 +60,7 @@ public class LightMeasurementFragmentTest {
         awaitLatch(plantLatch);
 
         CountDownLatch saveLatch = new CountDownLatch(1);
-        repo.savePlantCalibration(plant.getId(), 0.05f, 0.07f, saveLatch::countDown);
+        repo.saveLedCalibrationForPlant(plant.getId(), 0.05f, 0.07f, saveLatch::countDown);
         awaitLatch(saveLatch);
 
         context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE)

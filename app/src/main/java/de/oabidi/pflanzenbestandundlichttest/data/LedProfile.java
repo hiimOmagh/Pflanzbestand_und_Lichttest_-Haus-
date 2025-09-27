@@ -16,6 +16,12 @@ import java.util.Map;
  */
 @Entity
 public class LedProfile {
+    /** Calibration key representing the ambient light sensor factor. */
+    public static final String CALIBRATION_KEY_AMBIENT = "ambient";
+
+    /** Calibration key representing the camera-derived light factor. */
+    public static final String CALIBRATION_KEY_CAMERA = "camera";
+
     @PrimaryKey(autoGenerate = true)
     private long id;
 

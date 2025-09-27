@@ -128,8 +128,9 @@ home-screen quick actions reflect the latest state.
 ## Calibration storage
 
 Per-plant calibration data lives in the `PlantCalibration` entity with columns `plantId`,
-`ambientFactor`, and `cameraFactor`. `PlantRepository` exposes `getPlantCalibration` and
-`savePlantCalibration` helpers used by both `LightMeasurementPresenter` (to refresh factors when a
+`ambientFactor`, and `cameraFactor`. `PlantRepository` exposes `getLedCalibrationForPlant` and
+`saveLedCalibrationForPlant` helpers that prefer LED profile assignments but fall back to legacy
+per-plant rows. These helpers are used by both `LightMeasurementPresenter` (to refresh factors when a
 plant is selected) and `CalibrationFragment` (to persist user-entered values). Calibrations are
 exported in both CSV (`PlantCalibrations` section) and JSON (`plantCalibrations` array) backups and are
 restored during imports before any measurements are processed.

@@ -312,7 +312,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             return;
         }
         if (selectedPlantId != -1) {
-            repository.getPlantCalibration(selectedPlantId, calibration -> {
+            repository.getLedCalibrationForPlant(selectedPlantId, calibration -> {
                 if (calibration != null) {
                     presenter.setCalibrationFactor(calibration.getAmbientFactor());
                     presenter.setCameraCalibrationFactor(calibration.getCameraFactor());
