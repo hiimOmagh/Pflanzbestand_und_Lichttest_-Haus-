@@ -55,7 +55,6 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.work.runtime)
     implementation(libs.firebase.crashlytics)
-    implementation(libs.androidx.work.testing)
     annotationProcessor(libs.room.compiler)
     testAnnotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
@@ -63,7 +62,7 @@ dependencies {
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.fragment.testing)
     testImplementation(libs.mockito.core)
-    testImplementation(libs.work.testing)
+    testImplementation(libs.androidx.work.testing)
     testImplementation(libs.hamcrest)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -71,5 +70,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.robolectric)
     androidTestImplementation(libs.hamcrest)
-    androidTestImplementation(libs.work.testing)
+    androidTestImplementation(libs.androidx.work.testing)
 }
