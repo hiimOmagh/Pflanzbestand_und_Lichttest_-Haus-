@@ -213,6 +213,46 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/environment_natural_dli_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/environment_natural_dli_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/environment_log_latest_dli_title"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+
+                <TextView
+                    android:id="@+id/environment_natural_dli_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/environment_log_latest_dli_placeholder"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                    tools:text="DLI: 12.5 mol/m²/day" />
+
+                <TextView
+                    android:id="@+id/environment_natural_dli_timestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    tools:text="Updated May 23, 2024" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <include
             layout="@layout/include_environment_charts"
             android:layout_width="match_parent"

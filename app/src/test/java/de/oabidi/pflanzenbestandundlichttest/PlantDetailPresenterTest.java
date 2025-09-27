@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
 /**
  * Unit tests for {@link PlantDetailPresenter} verifying export handling and
@@ -134,11 +135,53 @@ public class PlantDetailPresenterTest {
         assertEquals("no-metadata", view.metadataFallback);
     }
 
+    @Test
+    public void loadLatestNaturalDli_withValue_updatesView() {
+        FakeExportManager manager = new FakeExportManager(context, repository, true);
+        PlantDetailPresenter presenter = new PlantDetailPresenter(view, 5L, manager, repository);
+        EnvironmentEntry entry = new EnvironmentEntry();
+        entry.setNaturalDli(12.3f);
+        entry.setTimestamp(12345L);
+        doAnswer(invocation -> {
+            java.util.function.Consumer<EnvironmentEntry> callback = invocation.getArgument(1);
+            callback.accept(entry);
+            return null;
+        }).when(repository).latestNaturalDliForPlant(eq(5L), any(), any());
+
+        presenter.loadLatestNaturalDli();
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+        assertEquals(Float.valueOf(12.3f), view.lastDli);
+        assertEquals(Long.valueOf(12345L), view.lastDliTimestamp);
+        assertEquals(1, view.naturalDliCallCount);
+    }
+
+    @Test
+    public void loadLatestNaturalDli_withoutValue_hidesView() {
+        FakeExportManager manager = new FakeExportManager(context, repository, true);
+        PlantDetailPresenter presenter = new PlantDetailPresenter(view, 6L, manager, repository);
+        doAnswer(invocation -> {
+            java.util.function.Consumer<EnvironmentEntry> callback = invocation.getArgument(1);
+            callback.accept(null);
+            return null;
+        }).when(repository).latestNaturalDliForPlant(eq(6L), any(), any());
+
+        presenter.loadLatestNaturalDli();
+        Shadows.shadowOf(Looper.getMainLooper()).idle();
+
+        assertNull(view.lastDli);
+        assertNull(view.lastDliTimestamp);
+        assertEquals(1, view.naturalDliCallCount);
+    }
+
     private static class FakeView implements PlantDetailView {
         boolean success;
         boolean failure;
         PlantMetadataViewModel lastMetadata;
         String metadataFallback;
+        Float lastDli;
+        Long lastDliTimestamp;
+        int naturalDliCallCount;
 
         @Override
         public void showExportSuccess() {
@@ -205,6 +248,13 @@ public class PlantDetailPresenterTest {
         @Override
         public String getSpeciesMetadataUnavailableText() {
             return "no-metadata";
+        }
+
+        @Override
+        public void showNaturalDli(Float dli, Long timestamp) {
+            naturalDliCallCount++;
+            lastDli = dli;
+            lastDliTimestamp = timestamp;
         }
     }
 

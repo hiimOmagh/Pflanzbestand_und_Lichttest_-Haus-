@@ -1189,8 +1189,17 @@ public class ImportManager {
                     return false;
                 }
             }
-            String notes = parts.get(8);
-            String photoFile = parts.get(9);
+            Float naturalDli = null;
+            if (parts.size() > 8 && !parts.get(8).isEmpty()) {
+                try {
+                    naturalDli = Objects.requireNonNull(nf.parse(parts.get(8))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid natural DLI"));
+                    return false;
+                }
+            }
+            String notes = parts.size() > 9 ? parts.get(9) : "";
+            String photoFile = parts.size() > 10 ? parts.get(10) : "";
             EnvironmentEntry entry = new EnvironmentEntry();
             entry.setPlantId(plantId);
             entry.setTimestamp(timestamp);
@@ -1199,6 +1208,7 @@ public class ImportManager {
             entry.setSoilMoisture(soilMoisture);
             entry.setHeight(height);
             entry.setWidth(width);
+            entry.setNaturalDli(naturalDli);
             entry.setNotes(notes.isEmpty() ? null : notes);
             if (!photoFile.isEmpty()) {
                 Uri restored = restoreImage(new File(baseDir, photoFile));
@@ -1481,6 +1491,7 @@ public class ImportManager {
             Float soilMoisture = null;
             Float height = null;
             Float width = null;
+            Float naturalDli = null;
             String notes = null;
             String photo = null;
             reader.beginObject();
@@ -1514,6 +1525,9 @@ public class ImportManager {
                     case "width":
                         width = readNullableFloat(reader);
                         break;
+                    case "naturalDli":
+                        naturalDli = readNullableFloat(reader);
+                        break;
                     case "notes":
                         notes = readOptionalString(reader);
                         break;
@@ -1526,7 +1540,7 @@ public class ImportManager {
                 }
             }
             reader.endObject();
-            List<String> parts = new ArrayList<>(10);
+            List<String> parts = new ArrayList<>(11);
             parts.add(Long.toString(id));
             parts.add(Long.toString(plantId));
             parts.add(Long.toString(timestamp));
@@ -1535,6 +1549,7 @@ public class ImportManager {
             parts.add(soilMoisture != null ? Float.toString(soilMoisture) : "");
             parts.add(height != null ? Float.toString(height) : "");
             parts.add(width != null ? Float.toString(width) : "");
+            List<String> parts = new ArrayList<>(11);
             parts.add(notes != null ? notes : "");
             parts.add(photo != null ? photo : "");
             if (insertEnvironmentEntryRow(parts, mode, baseDir, plantIdMap, warnings, index,

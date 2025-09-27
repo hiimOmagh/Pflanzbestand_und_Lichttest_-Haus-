@@ -1,9 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.environment;
 
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
@@ -29,6 +29,9 @@ public interface EnvironmentLogView {
     /** Displays photo highlights aligned with the chart timeline. */
     void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights);
 
+    /** Displays the latest natural DLI estimate if available. */
+    void showNaturalDli(@NonNull NaturalDliPayload payload);
+
     /** Updates the currently selected photo preview in the form. */
     void showPhotoPreview(@Nullable String photoUri);
 
@@ -52,4 +55,29 @@ public interface EnvironmentLogView {
 
     /** Notifies the host that the log changed. */
     void notifyLogEvent(@NonNull String event, long entryId);
+
+    /**
+     * Value object describing the latest natural DLI reading and when it was captured.
+     */
+    final class NaturalDliPayload {
+        @Nullable
+        private final Float dli;
+        @Nullable
+        private final Long timestamp;
+
+        public NaturalDliPayload(@Nullable Float dli, @Nullable Long timestamp) {
+            this.dli = dli;
+            this.timestamp = timestamp;
+        }
+
+        @Nullable
+        public Float getDli() {
+            return dli;
+        }
+
+        @Nullable
+        public Long getTimestamp() {
+            return timestamp;
+        }
+    }
 }

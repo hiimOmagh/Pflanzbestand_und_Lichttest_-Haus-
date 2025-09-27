@@ -55,7 +55,7 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
 
     @Test
     public void insertEnvironmentEntry_invokesDelegateAndSetsId() throws Exception {
-        EnvironmentEntry entry = new EnvironmentEntry(3L, System.currentTimeMillis(), null, null, null, null, null, null, null);
+        EnvironmentEntry entry = new EnvironmentEntry(3L, System.currentTimeMillis(), null, null, null, null, null, null, null, null);
         when(environmentEntryDao.insert(entry)).thenReturn(15L);
         AtomicBoolean refreshed = new AtomicBoolean(false);
         when(careDelegate.refreshCareRecommendationsAsync(anyLong())).thenReturn(() -> refreshed.set(true));
@@ -70,5 +70,19 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
         assertEquals(15L, entry.getId());
         assertTrue(refreshed.get());
         verify(environmentEntryDao).insert(entry);
+    }
+
+    @Test
+    public void getLatestNaturalDli_delegatesToDao() throws Exception {
+        EnvironmentEntry expected = new EnvironmentEntry();
+        when(environmentEntryDao.getLatestWithNaturalDli(7L)).thenReturn(expected);
+
+        AtomicReference<EnvironmentEntry> result = new AtomicReference<>();
+        repository.getLatestNaturalDli(7L, result::set, null);
+
+        drainMainLooper();
+
+        assertEquals(expected, result.get());
+        verify(environmentEntryDao).getLatestWithNaturalDli(7L);
     }
 }

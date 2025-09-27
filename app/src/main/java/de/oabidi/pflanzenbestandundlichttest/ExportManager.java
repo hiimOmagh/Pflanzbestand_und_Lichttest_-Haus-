@@ -308,14 +308,14 @@ public class ExportManager {
             }
 
             writer.write("\nEnvironmentEntries\n");
-            writer.write("id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo\n");
+            writer.write("id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo\n");
             for (EnvironmentEntry entry : data.environmentEntries) {
                 String photoName = "";
                 String uri = entry.getPhotoUri();
                 if (uri != null && !uri.isEmpty()) {
                     photoName = copyPhotoIfPresent(tempDir, "environment_", entry.getId(), Uri.parse(uri));
                 }
-                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s,%s,%s,%s,%s\n",
+                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
                     entry.getId(),
                     entry.getPlantId(),
                     entry.getTimestamp(),
@@ -324,6 +324,7 @@ public class ExportManager {
                     formatFloat(entry.getSoilMoisture()),
                     formatFloat(entry.getHeight()),
                     formatFloat(entry.getWidth()),
+                    formatFloat(entry.getNaturalDli()),
                     escape(entry.getNotes()),
                     escape(photoName)));
             }
@@ -474,6 +475,7 @@ public class ExportManager {
                 writeOptionalFloat(writer, "soilMoisture", entry.getSoilMoisture());
                 writeOptionalFloat(writer, "height", entry.getHeight());
                 writeOptionalFloat(writer, "width", entry.getWidth());
+                writeOptionalFloat(writer, "naturalDli", entry.getNaturalDli());
                 writeString(writer, "notes", entry.getNotes());
                 String fileName = "";
                 String uriString = entry.getPhotoUri();

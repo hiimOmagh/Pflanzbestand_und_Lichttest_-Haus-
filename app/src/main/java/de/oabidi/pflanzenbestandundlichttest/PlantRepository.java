@@ -697,6 +697,15 @@ public class PlantRepository implements CareRecommendationDelegate {
         environmentRepository.deleteEnvironmentEntry(entry, callback, errorCallback);
     }
 
+    public void latestNaturalDliForPlant(long plantId, Consumer<EnvironmentEntry> callback) {
+        environmentRepository.getLatestNaturalDli(plantId, callback);
+    }
+
+    public void latestNaturalDliForPlant(long plantId, Consumer<EnvironmentEntry> callback,
+                                         Consumer<Exception> errorCallback) {
+        environmentRepository.getLatestNaturalDli(plantId, callback, errorCallback);
+    }
+
     /**
      * Retrieves the current care recommendations for the supplied plant.
      */

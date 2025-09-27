@@ -296,7 +296,16 @@
     <string name="environment_log_metric_soil_moisture">Boden: %1$.1f%%</string>
     <string name="environment_log_metric_height">Höhe: %1$.1f cm</string>
     <string name="environment_log_metric_width">Breite: %1$.1f cm</string>
+    <string name="environment_log_metric_natural_dli">Natürlicher DLI: %1$.1f mol/m²/Tag</string>
     <string name="environment_log_metrics_empty">Keine Messungen aufgezeichnet</string>
+    <string name="environment_log_latest_dli_title">Geschätztes natürliches Licht</string>
+    <string name="environment_log_latest_dli_placeholder">Natürlicher DLI: —</string>
+    <string name="environment_log_latest_dli_value">Natürlicher DLI: %1$s mol/m²/Tag</string>
+    <string name="environment_log_latest_dli_updated">Zuletzt aktualisiert %1$s</string>
+    <string name="plant_detail_dli_title">Geschätztes natürliches Licht</string>
+    <string name="plant_detail_dli_placeholder">Natürlicher DLI: —</string>
+    <string name="plant_detail_dli_value">Natürlicher DLI: %1$s mol/m²/Tag</string>
+    <string name="plant_detail_dli_updated">Zuletzt aktualisiert %1$s</string>
     <string name="care_temperature_low_range">Temperatur %1$.1f°C liegt unter dem empfohlenen Bereich von %2$.1f–%3$.1f°C.</string>
     <string name="care_temperature_low_min">Temperatur %1$.1f°C liegt unter dem empfohlenen Minimum von %2$.1f°C.</string>
     <string name="care_temperature_high_range">Temperatur %1$.1f°C liegt über dem empfohlenen Bereich von %2$.1f–%3$.1f°C.</string>

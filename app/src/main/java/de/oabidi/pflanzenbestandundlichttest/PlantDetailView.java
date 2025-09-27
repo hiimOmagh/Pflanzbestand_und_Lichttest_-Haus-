@@ -2,6 +2,8 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import java.util.List;
 
+import androidx.annotation.Nullable;
+
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 
 /**
@@ -52,4 +54,7 @@ public interface PlantDetailView {
 
     /** Provides the localized fallback text when metadata cannot be resolved. */
     String getSpeciesMetadataUnavailableText();
+
+    /** Displays the latest natural DLI estimate for the plant. */
+    void showNaturalDli(@Nullable Float dli, @Nullable Long timestamp);
 }

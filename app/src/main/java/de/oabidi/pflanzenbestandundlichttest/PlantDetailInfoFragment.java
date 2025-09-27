@@ -63,6 +63,8 @@ public class PlantDetailInfoFragment extends Fragment {
         @Nullable
         public final MaterialCardView speciesMetadataCardView;
         @Nullable
+        public final MaterialCardView naturalDliCardView;
+        @Nullable
         public final View wateringSectionView;
         @Nullable
         public final TextView wateringFrequencyView;
@@ -89,6 +91,10 @@ public class PlantDetailInfoFragment extends Fragment {
         @Nullable
         public final TextView metadataUnavailableView;
         @Nullable
+        public final TextView naturalDliValueView;
+        @Nullable
+        public final TextView naturalDliTimestampView;
+        @Nullable
         public final ImageView wateringIconView;
         @Nullable
         public final ImageView temperatureIconView;
@@ -110,6 +116,7 @@ public class PlantDetailInfoFragment extends Fragment {
                     @Nullable View careRecommendationsLoadingView,
                     @Nullable TextView careRecommendationsEmptyView,
                     @Nullable MaterialCardView speciesMetadataCardView,
+                    @Nullable MaterialCardView naturalDliCardView,
                     @Nullable View wateringSectionView,
                     @Nullable TextView wateringFrequencyView,
                     @Nullable TextView wateringSoilView,
@@ -123,6 +130,8 @@ public class PlantDetailInfoFragment extends Fragment {
                     @Nullable View careTipsSectionView,
                     @Nullable TextView careTipsTextView,
                     @Nullable TextView metadataUnavailableView,
+                    @Nullable TextView naturalDliValueView,
+                    @Nullable TextView naturalDliTimestampView,
                     @Nullable ImageView wateringIconView,
                     @Nullable ImageView temperatureIconView,
                     @Nullable ImageView humidityIconView,
@@ -139,6 +148,7 @@ public class PlantDetailInfoFragment extends Fragment {
             this.careRecommendationsLoadingView = careRecommendationsLoadingView;
             this.careRecommendationsEmptyView = careRecommendationsEmptyView;
             this.speciesMetadataCardView = speciesMetadataCardView;
+            this.naturalDliCardView = naturalDliCardView;
             this.wateringSectionView = wateringSectionView;
             this.wateringFrequencyView = wateringFrequencyView;
             this.wateringSoilView = wateringSoilView;
@@ -152,6 +162,8 @@ public class PlantDetailInfoFragment extends Fragment {
             this.careTipsSectionView = careTipsSectionView;
             this.careTipsTextView = careTipsTextView;
             this.metadataUnavailableView = metadataUnavailableView;
+            this.naturalDliValueView = naturalDliValueView;
+            this.naturalDliTimestampView = naturalDliTimestampView;
             this.wateringIconView = wateringIconView;
             this.temperatureIconView = temperatureIconView;
             this.humidityIconView = humidityIconView;
@@ -254,6 +266,7 @@ public class PlantDetailInfoFragment extends Fragment {
                 view.findViewById(R.id.detail_care_loading),
                 view.findViewById(R.id.detail_care_empty),
                 view.findViewById(R.id.detail_species_metadata_card),
+                view.findViewById(R.id.detail_natural_dli_card),
                 view.findViewById(R.id.detail_watering_section),
                 view.findViewById(R.id.detail_watering_frequency),
                 view.findViewById(R.id.detail_watering_soil),
@@ -267,6 +280,8 @@ public class PlantDetailInfoFragment extends Fragment {
                 view.findViewById(R.id.detail_care_tips_section),
                 view.findViewById(R.id.detail_care_tips_text),
                 view.findViewById(R.id.detail_metadata_unavailable),
+                view.findViewById(R.id.detail_natural_dli_value),
+                view.findViewById(R.id.detail_natural_dli_timestamp),
                 view.findViewById(R.id.detail_watering_icon),
                 view.findViewById(R.id.detail_temperature_icon),
                 view.findViewById(R.id.detail_humidity_icon),

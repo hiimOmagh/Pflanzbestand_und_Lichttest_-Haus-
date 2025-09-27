@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest.data;
 
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -36,4 +37,9 @@ public interface EnvironmentEntryDao {
     /** Deletes an environment entry by its unique identifier. */
     @Query("DELETE FROM EnvironmentEntry WHERE id = :id")
     void deleteById(long id);
+
+    /** Returns the newest entry that has a natural DLI value recorded. */
+    @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId AND naturalDli IS NOT NULL ORDER BY timestamp DESC, id DESC LIMIT 1")
+    @Nullable
+    EnvironmentEntry getLatestWithNaturalDli(long plantId);
 }

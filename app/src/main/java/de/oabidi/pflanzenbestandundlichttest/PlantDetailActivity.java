@@ -43,9 +43,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -110,6 +112,12 @@ public class PlantDetailActivity extends AppCompatActivity
     private TextView cameraBandView;
     private View ambientColumn;
     private View lightMeterSpacer;
+    @Nullable
+    private MaterialCardView naturalDliCard;
+    @Nullable
+    private TextView naturalDliValueView;
+    @Nullable
+    private TextView naturalDliTimestampView;
     private ViewPager2 detailViewPager;
     private TabLayout detailTabLayout;
     private PlantDetailPagerAdapter pagerAdapter;
@@ -178,6 +186,8 @@ public class PlantDetailActivity extends AppCompatActivity
     private String speciesKey;
     private boolean metadataViewsReady;
     private LocationProvider locationProvider;
+    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
+    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,6 +195,8 @@ public class PlantDetailActivity extends AppCompatActivity
         // Allow the layout to extend into the system bar areas.
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
+        naturalDliFormat.setMinimumFractionDigits(1);
+        naturalDliFormat.setMaximumFractionDigits(2);
 
         detailViewPager = findViewById(R.id.detail_view_pager);
         detailTabLayout = findViewById(R.id.detail_tab_layout);
@@ -301,7 +313,10 @@ public class PlantDetailActivity extends AppCompatActivity
         getSupportFragmentManager().setFragmentResultListener(
             EnvironmentLogFragment.RESULT_KEY_CHANGES,
             this,
-            (requestKey, bundle) -> presenter.loadCareRecommendations()
+            (requestKey, bundle) -> {
+                presenter.loadCareRecommendations();
+                presenter.loadLatestNaturalDli();
+            }
         );
         getSupportFragmentManager().setFragmentResultListener(
             PlantEditFragment.RESULT_KEY,
@@ -326,6 +341,9 @@ public class PlantDetailActivity extends AppCompatActivity
         cameraBandView = views.cameraBandView;
         ambientColumn = views.ambientColumnView;
         lightMeterSpacer = views.lightMeterSpacerView;
+        naturalDliCard = views.naturalDliCardView;
+        naturalDliValueView = views.naturalDliValueView;
+        naturalDliTimestampView = views.naturalDliTimestampView;
         careTipsCard = views.careTipsCardView;
         careTipsList = views.careRecommendationsListView;
         careTipsLoadingView = views.careRecommendationsLoadingView;
@@ -349,6 +367,7 @@ public class PlantDetailActivity extends AppCompatActivity
         humidityIconView = views.humidityIconView;
         toxicityIconView = views.toxicityIconView;
         careTipsIconView = views.careTipsIconView;
+        showNaturalDli(null, null);
 
         if (wateringIconView != null) {
             TooltipCompat.setTooltipText(wateringIconView, getString(R.string.metadata_tooltip_watering));
@@ -434,6 +453,31 @@ public class PlantDetailActivity extends AppCompatActivity
     @Override
     public String getSpeciesMetadataUnavailableText() {
         return getString(R.string.metadata_unavailable);
+    }
+
+    @Override
+    public void showNaturalDli(@Nullable Float dli, @Nullable Long timestamp) {
+        if (naturalDliCard == null || naturalDliValueView == null || naturalDliTimestampView == null) {
+            return;
+        }
+        if (dli == null) {
+            naturalDliCard.setVisibility(View.GONE);
+            naturalDliValueView.setText(R.string.plant_detail_dli_placeholder);
+            naturalDliTimestampView.setText(null);
+            naturalDliTimestampView.setVisibility(View.GONE);
+            return;
+        }
+        naturalDliCard.setVisibility(View.VISIBLE);
+        naturalDliValueView.setText(getString(R.string.plant_detail_dli_value,
+            naturalDliFormat.format(dli)));
+        if (timestamp != null) {
+            naturalDliTimestampView.setVisibility(View.VISIBLE);
+            naturalDliTimestampView.setText(getString(R.string.plant_detail_dli_updated,
+                naturalDliDateFormat.format(new Date(timestamp))));
+        } else {
+            naturalDliTimestampView.setText(null);
+            naturalDliTimestampView.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -586,6 +630,7 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         startCameraUpdatesIfPossible();
         presenter.loadCareRecommendations();
+        presenter.loadLatestNaturalDli();
         ensureLocationPermission();
     }
 

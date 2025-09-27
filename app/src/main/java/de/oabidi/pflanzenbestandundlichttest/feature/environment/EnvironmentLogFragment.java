@@ -38,7 +38,10 @@ import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFra
 import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentPhotoAdapter;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 
+import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -111,11 +114,19 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     @Nullable
     private EnvironmentPhotoAdapter photoHighlightsAdapter;
     @Nullable
+    private View naturalDliCard;
+    @Nullable
+    private TextView naturalDliValueView;
+    @Nullable
+    private TextView naturalDliTimestampView;
+    @Nullable
     private ActivityResultLauncher<String> photoPickerLauncher;
     @Nullable
     private Uri currentPhotoUri;
     private boolean awaitingCaptureResult;
     private boolean captureResultDelivered;
+    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
+    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
     /** Displays the fragment inside the provided container. */
     public static void show(@NonNull FragmentManager fragmentManager, int containerId, long plantId) {
@@ -151,6 +162,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
                 currentPhotoUri = Uri.parse(photo);
             }
         }
+        naturalDliFormat.setMinimumFractionDigits(1);
+        naturalDliFormat.setMaximumFractionDigits(2);
         Bundle args = getArguments();
         if (args != null) {
             plantId = args.getLong(ARG_PLANT_ID, -1);
@@ -254,6 +267,9 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         photoHighlightsView = view.findViewById(R.id.environment_photo_carousel);
         photoHighlightsEmptyView = view.findViewById(R.id.environment_photo_empty);
         photoHighlightsTitleView = view.findViewById(R.id.environment_photo_section_title);
+        naturalDliCard = view.findViewById(R.id.environment_natural_dli_card);
+        naturalDliValueView = view.findViewById(R.id.environment_natural_dli_value);
+        naturalDliTimestampView = view.findViewById(R.id.environment_natural_dli_timestamp);
 
         if (listView != null) {
             listView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -465,6 +481,33 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         }
         if (photoHighlightsTitleView != null) {
             photoHighlightsTitleView.setVisibility(empty ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void showNaturalDli(@NonNull NaturalDliPayload payload) {
+        if (naturalDliCard == null || naturalDliValueView == null || naturalDliTimestampView == null) {
+            return;
+        }
+        Float dli = payload.getDli();
+        if (dli == null) {
+            naturalDliCard.setVisibility(View.GONE);
+            naturalDliValueView.setText(R.string.environment_log_latest_dli_placeholder);
+            naturalDliTimestampView.setText(null);
+            naturalDliTimestampView.setVisibility(View.GONE);
+            return;
+        }
+        naturalDliCard.setVisibility(View.VISIBLE);
+        naturalDliValueView.setText(getString(R.string.environment_log_latest_dli_value,
+            naturalDliFormat.format(dli)));
+        Long timestamp = payload.getTimestamp();
+        if (timestamp != null) {
+            String formatted = naturalDliDateFormat.format(new Date(timestamp));
+            naturalDliTimestampView.setVisibility(View.VISIBLE);
+            naturalDliTimestampView.setText(getString(R.string.environment_log_latest_dli_updated, formatted));
+        } else {
+            naturalDliTimestampView.setText(null);
+            naturalDliTimestampView.setVisibility(View.GONE);
         }
     }
 

@@ -42,8 +42,8 @@ public class CareRecommendationEngineTest {
     public void evaluateReturnsEmptyWhenMetricsWithinRange() {
         PlantProfile profile = createProfile(18f, 26f);
         List<EnvironmentEntry> entries = new ArrayList<>();
-        entries.add(new EnvironmentEntry(1L, 2_000L, 22f, 50f, 50f, 15f, 12f, "healthy", null));
-        entries.add(new EnvironmentEntry(1L, 1_000L, 21f, 55f, 45f, 14f, 11f, "previous", null));
+        entries.add(new EnvironmentEntry(1L, 2_000L, 22f, 50f, 50f, 15f, 12f, null, "healthy", null));
+        entries.add(new EnvironmentEntry(1L, 1_000L, 21f, 55f, 45f, 14f, 11f, null, "previous", null));
 
         List<CareRecommendation> recommendations = engine.evaluate(profile, entries, resources);
 
@@ -54,7 +54,7 @@ public class CareRecommendationEngineTest {
     public void evaluateReturnsWarningsForOutOfRangeMetrics() {
         PlantProfile profile = createProfile(20f, 24f);
         EnvironmentEntry entry = new EnvironmentEntry(1L, 5_000L, 16f, 70f, 10f,
-            null, null, "dry", null);
+            null, null, null, "dry", null);
 
         List<CareRecommendation> recommendations = engine.evaluate(profile,
             Collections.singletonList(entry), resources);
@@ -89,7 +89,7 @@ public class CareRecommendationEngineTest {
     public void evaluateHandlesMissingDataGracefully() {
         PlantProfile profile = createProfile(18f, 24f);
         EnvironmentEntry empty = new EnvironmentEntry(1L, 3_000L, null, null, null,
-            null, null, null, null);
+            null, null, null, null, null);
 
         List<CareRecommendation> withEmptyEntry = engine.evaluate(profile,
             Collections.singletonList(empty), resources);

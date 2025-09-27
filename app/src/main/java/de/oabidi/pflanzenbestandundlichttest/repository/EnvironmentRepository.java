@@ -88,6 +88,15 @@ public class EnvironmentRepository extends BaseRepository {
         return environmentEntryDao.getRecentForPlant(plantId, limit);
     }
 
+    public void getLatestNaturalDli(long plantId, Consumer<EnvironmentEntry> callback,
+                                    @Nullable Consumer<Exception> errorCallback) {
+        queryAsync(() -> environmentEntryDao.getLatestWithNaturalDli(plantId), callback, errorCallback);
+    }
+
+    public void getLatestNaturalDli(long plantId, Consumer<EnvironmentEntry> callback) {
+        getLatestNaturalDli(plantId, callback, null);
+    }
+
     @Nullable
     private String persistEnvironmentPhoto(@Nullable String uriString) {
         if (TextUtils.isEmpty(uriString)) {

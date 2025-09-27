@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 
 /**
  * Presenter for {@link PlantDetailView} handling non-UI logic such as export,
@@ -103,6 +104,21 @@ public class PlantDetailPresenter {
         repository.getCareRecommendations(plantId,
             recommendations -> runOnViewThread(() -> deliverRecommendations(recommendations)),
             error -> runOnViewThread(this::handleCareRecommendationError));
+    }
+
+    /** Loads the latest natural DLI estimate for the current plant. */
+    public void loadLatestNaturalDli() {
+        if (plantId <= 0) {
+            runOnViewThread(() -> view.showNaturalDli(null, null));
+            return;
+        }
+        repository.latestNaturalDliForPlant(plantId, entry -> runOnViewThread(() -> {
+            if (entry == null || entry.getNaturalDli() == null) {
+                view.showNaturalDli(null, null);
+            } else {
+                view.showNaturalDli(entry.getNaturalDli(), entry.getTimestamp());
+            }
+        }), error -> runOnViewThread(() -> view.showNaturalDli(null, null)));
     }
 
     /** Loads metadata associated with the supplied species key. */

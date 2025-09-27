@@ -16,6 +16,7 @@ import java.util.List;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
+import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogView.NaturalDliPayload;
 
 /**
  * Presenter coordinating the environment log between the repository and the view.
@@ -65,6 +66,7 @@ public class EnvironmentLogPresenter {
             view.showEmptyState(items.isEmpty());
             view.showPhotoHighlights(buildPhotoHighlights(entries));
             refreshCharts(entries);
+            view.showNaturalDli(extractLatestNaturalDli(entries));
             view.showLoading(false);
         }, e -> {
             view.showLoading(false);
@@ -261,6 +263,9 @@ public class EnvironmentLogPresenter {
         if (entry.getWidth() != null) {
             parts.add(context.getString(R.string.environment_log_metric_width, entry.getWidth()));
         }
+        if (entry.getNaturalDli() != null) {
+            parts.add(context.getString(R.string.environment_log_metric_natural_dli, entry.getNaturalDli()));
+        }
         if (parts.isEmpty()) {
             return context.getString(R.string.environment_log_metrics_empty);
         }
@@ -284,9 +289,31 @@ public class EnvironmentLogPresenter {
         copy.setSoilMoisture(entry.getSoilMoisture());
         copy.setHeight(entry.getHeight());
         copy.setWidth(entry.getWidth());
+        copy.setNaturalDli(entry.getNaturalDli());
         copy.setNotes(entry.getNotes());
         copy.setPhotoUri(entry.getPhotoUri());
         return copy;
+    }
+
+    private NaturalDliPayload extractLatestNaturalDli(List<EnvironmentEntry> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return new NaturalDliPayload(null, null);
+        }
+        EnvironmentEntry latest = null;
+        for (EnvironmentEntry entry : entries) {
+            if (entry == null || entry.getNaturalDli() == null) {
+                continue;
+            }
+            if (latest == null
+                || entry.getTimestamp() > latest.getTimestamp()
+                || (entry.getTimestamp() == latest.getTimestamp() && entry.getId() > latest.getId())) {
+                latest = entry;
+            }
+        }
+        if (latest == null) {
+            return new NaturalDliPayload(null, null);
+        }
+        return new NaturalDliPayload(latest.getNaturalDli(), latest.getTimestamp());
     }
 
     private List<PhotoHighlight> buildPhotoHighlights(List<EnvironmentEntry> entries) {

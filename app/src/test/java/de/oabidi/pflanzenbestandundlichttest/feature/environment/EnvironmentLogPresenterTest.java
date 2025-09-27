@@ -33,6 +33,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
+import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogView.NaturalDliPayload;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -107,6 +108,25 @@ public class EnvironmentLogPresenterTest {
 
         assertNull(view.growthData);
         assertNull(view.climateData);
+    }
+
+    @Test
+    public void loadEntries_reportsLatestNaturalDli() {
+        Context context = ApplicationProvider.getApplicationContext();
+        EnvironmentEntry older = buildEntry(1L, 1_000L, null, null, null, null);
+        older.setNaturalDli(8.4f);
+        EnvironmentEntry newer = buildEntry(1L, 2_000L, null, null, null, null);
+        newer.setNaturalDli(12.1f);
+        EnvironmentEntry without = buildEntry(1L, 3_000L, null, null, null, null);
+        StubRepository repository = new StubRepository(context, List.of(older, newer, without));
+        StubView view = new StubView();
+        EnvironmentLogPresenter presenter = new EnvironmentLogPresenter(view, repository, 1L, context);
+
+        presenter.loadEntries();
+
+        assertNotNull(view.naturalDliPayload);
+        assertEquals(Float.valueOf(12.1f), view.naturalDliPayload.getDli());
+        assertEquals(Long.valueOf(2_000L), view.naturalDliPayload.getTimestamp());
     }
 
     @Test
@@ -195,6 +215,11 @@ public class EnvironmentLogPresenterTest {
         public void deleteById(long id) {
             throw new UnsupportedOperationException();
         }
+
+        @Override
+        public EnvironmentEntry getLatestWithNaturalDli(long plantId) {
+            return null;
+        }
     }
 
     private static class NoOpCareDelegate implements CareRecommendationDelegate {
@@ -245,6 +270,7 @@ public class EnvironmentLogPresenterTest {
         EnvironmentLogPresenter.ChartData growthData;
         EnvironmentLogPresenter.ChartData climateData;
         List<EnvironmentLogPresenter.PhotoHighlight> photoHighlights;
+        NaturalDliPayload naturalDliPayload;
 
         @Override
         public void showEntries(List<EnvironmentLogPresenter.EnvironmentLogItem> items) {
@@ -271,6 +297,11 @@ public class EnvironmentLogPresenterTest {
         @Override
         public void showPhotoHighlights(List<EnvironmentLogPresenter.PhotoHighlight> highlights) {
             photoHighlights = highlights;
+        }
+
+        @Override
+        public void showNaturalDli(@NonNull NaturalDliPayload payload) {
+            naturalDliPayload = payload;
         }
 
         @Override

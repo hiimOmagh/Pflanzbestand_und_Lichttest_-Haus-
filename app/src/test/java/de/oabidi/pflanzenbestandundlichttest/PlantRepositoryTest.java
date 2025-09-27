@@ -195,7 +195,7 @@ public class PlantRepositoryTest {
         awaitLatch(plantLatch);
 
         EnvironmentEntry entry = new EnvironmentEntry(plant.getId(), 5L, 21.5f, 40f, 0.5f,
-            10f, 5f, "initial", null);
+            10f, 5f, null, "initial", null);
         CountDownLatch insertLatch = new CountDownLatch(1);
         repository.insertEnvironmentEntry(entry, () -> {
             assertTrue(entry.getId() > 0);
@@ -268,7 +268,7 @@ public class PlantRepositoryTest {
         }
 
         EnvironmentEntry entry = new EnvironmentEntry(plant.getId(), 10L, null, null, null,
-            null, null, "with photo", Uri.fromFile(source).toString());
+            null, null, null, "with photo", Uri.fromFile(source).toString());
         CountDownLatch insertLatch = new CountDownLatch(1);
         repository.insertEnvironmentEntry(entry, insertLatch::countDown);
         awaitLatch(insertLatch);
@@ -314,11 +314,11 @@ public class PlantRepositoryTest {
         awaitLatch(plantLatch);
 
         EnvironmentEntry oldest = new EnvironmentEntry(plant.getId(), 1_000L, null, null,
-            null, null, null, "oldest", null);
+            null, null, null, null, "oldest", null);
         EnvironmentEntry newer = new EnvironmentEntry(plant.getId(), 5_000L, null, null,
-            null, null, null, "newer", null);
+            null, null, null, null, "newer", null);
         EnvironmentEntry latest = new EnvironmentEntry(plant.getId(), 5_000L, null, null,
-            null, null, null, "latest", null);
+            null, null, null, null, "latest", null);
 
         CountDownLatch insertLatch = new CountDownLatch(3);
         repository.insertEnvironmentEntry(oldest, insertLatch::countDown);
