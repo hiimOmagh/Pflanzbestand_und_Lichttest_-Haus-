@@ -7,6 +7,7 @@ import androidx.room.TypeConverter;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,5 +72,15 @@ public class Converters {
         } catch (IllegalArgumentException e) {
             return SpeciesTarget.Category.OTHER;
         }
+    }
+
+    @TypeConverter
+    public static Long fromLocalDate(LocalDate date) {
+        return date != null ? date.toEpochDay() : null;
+    }
+
+    @TypeConverter
+    public static LocalDate toLocalDate(Long epochDay) {
+        return epochDay != null ? LocalDate.ofEpochDay(epochDay) : null;
     }
 }

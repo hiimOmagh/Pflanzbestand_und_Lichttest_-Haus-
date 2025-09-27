@@ -28,6 +28,7 @@ import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.NaturalLightRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
@@ -67,6 +68,7 @@ public class PlantRepository implements CareRecommendationDelegate {
     private final SpeciesRepository speciesRepository;
     private final GalleryRepository galleryRepository;
     private final ProactiveAlertRepository alertRepository;
+    private final NaturalLightRepository naturalLightRepository;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Context context; // This will be the application context
     private final ExecutorService ioExecutor;
@@ -122,6 +124,8 @@ public class PlantRepository implements CareRecommendationDelegate {
             db.environmentEntryDao(), this);
         alertRepository = new ProactiveAlertRepository(this.context, mainHandler, this.ioExecutor,
             db.proactiveAlertDao());
+        naturalLightRepository = new NaturalLightRepository(this.context, mainHandler, this.ioExecutor,
+            db.naturalLightEstimateDao(), plantZoneDao, sharedPreferences);
         reminderSuggestionFormatter = new ReminderSuggestionFormatter(this.context.getResources());
     }
 
@@ -151,6 +155,68 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public ProactiveAlertRepository alertRepository() {
         return alertRepository;
+    }
+
+    public NaturalLightRepository naturalLightRepository() {
+        return naturalLightRepository;
+    }
+
+    /** Records the last known coarse/fine location for later background usage. */
+    public void updateLastKnownLocation(double latitude, double longitude, float accuracy, long timestamp) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(SettingsKeys.KEY_LAST_KNOWN_LATITUDE, Double.doubleToRawLongBits(latitude));
+        editor.putLong(SettingsKeys.KEY_LAST_KNOWN_LONGITUDE, Double.doubleToRawLongBits(longitude));
+        editor.putInt(SettingsKeys.KEY_LAST_KNOWN_LOCATION_ACCURACY, Float.floatToRawIntBits(accuracy));
+        editor.putLong(SettingsKeys.KEY_LAST_KNOWN_LOCATION_TIME, timestamp);
+        editor.apply();
+    }
+
+    /** Returns the most recent location fix recorded by {@link #updateLastKnownLocation}. */
+    @Nullable
+    public LastKnownLocation getLastKnownLocation() {
+        if (!sharedPreferences.contains(SettingsKeys.KEY_LAST_KNOWN_LATITUDE)
+            || !sharedPreferences.contains(SettingsKeys.KEY_LAST_KNOWN_LONGITUDE)) {
+            return null;
+        }
+        double latitude = Double.longBitsToDouble(sharedPreferences.getLong(SettingsKeys.KEY_LAST_KNOWN_LATITUDE, 0L));
+        double longitude = Double.longBitsToDouble(sharedPreferences.getLong(SettingsKeys.KEY_LAST_KNOWN_LONGITUDE, 0L));
+        float accuracy = Float.intBitsToFloat(sharedPreferences.getInt(SettingsKeys.KEY_LAST_KNOWN_LOCATION_ACCURACY, 0));
+        long timestamp = sharedPreferences.getLong(SettingsKeys.KEY_LAST_KNOWN_LOCATION_TIME, 0L);
+        if (Double.isNaN(latitude) || Double.isNaN(longitude)) {
+            return null;
+        }
+        return new LastKnownLocation(latitude, longitude, accuracy, timestamp);
+    }
+
+    /** Lightweight holder describing a cached location fix. */
+    public static final class LastKnownLocation {
+        private final double latitude;
+        private final double longitude;
+        private final float accuracy;
+        private final long timestamp;
+
+        LastKnownLocation(double latitude, double longitude, float accuracy, long timestamp) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.accuracy = accuracy;
+            this.timestamp = timestamp;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public float getAccuracy() {
+            return accuracy;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
     }
 
     /** Exposes bulk read operations for export and import managers. */

@@ -3,10 +3,12 @@ package de.oabidi.pflanzenbestandundlichttest;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,11 +47,13 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.common.location.LocationProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
@@ -88,6 +92,7 @@ public class PlantDetailActivity extends AppCompatActivity
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
+    private ActivityResultLauncher<String[]> locationPermissionLauncher;
     private PlantRepository repository;
     private RecyclerView photoGrid;
     private View photoEmptyView;
@@ -116,6 +121,7 @@ public class PlantDetailActivity extends AppCompatActivity
     private ImageAnalysis imageAnalysis;
     private CameraLumaMonitor cameraLumaMonitor;
     private boolean cameraPermissionDenied;
+    private boolean locationPermissionDenied;
     @Nullable
     private MaterialCardView careTipsCard;
     @Nullable
@@ -171,6 +177,7 @@ public class PlantDetailActivity extends AppCompatActivity
     @Nullable
     private String speciesKey;
     private boolean metadataViewsReady;
+    private LocationProvider locationProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -182,6 +189,7 @@ public class PlantDetailActivity extends AppCompatActivity
         detailViewPager = findViewById(R.id.detail_view_pager);
         detailTabLayout = findViewById(R.id.detail_tab_layout);
         repository = ((RepositoryProvider) getApplication()).getRepository();
+        locationProvider = new LocationProvider(this);
 
         plantId = getIntent().getLongExtra("plantId", -1L); // Database ID of the plant
         String name = getIntent().getStringExtra("name"); // Plant's display name
@@ -211,6 +219,24 @@ public class PlantDetailActivity extends AppCompatActivity
                 } else {
                     cameraPermissionDenied = true;
                     showCameraPermissionDenied();
+                }
+            }
+        );
+
+        locationPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(),
+            permissions -> {
+                boolean granted = false;
+                for (Boolean value : permissions.values()) {
+                    if (Boolean.TRUE.equals(value)) {
+                        granted = true;
+                        break;
+                    }
+                }
+                if (granted) {
+                    fetchAndPersistLocation();
+                } else {
+                    locationPermissionDenied = true;
                 }
             }
         );
@@ -560,6 +586,7 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         startCameraUpdatesIfPossible();
         presenter.loadCareRecommendations();
+        ensureLocationPermission();
     }
 
     @Override
@@ -569,6 +596,37 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         stopCameraAnalysis();
         super.onPause();
+    }
+
+    private void ensureLocationPermission() {
+        if (locationProvider == null) {
+            return;
+        }
+        if (locationProvider.hasLocationPermission()) {
+            fetchAndPersistLocation();
+        } else if (!locationPermissionDenied && locationPermissionLauncher != null) {
+            locationPermissionLauncher.launch(new String[]{
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            });
+        }
+    }
+
+    private void fetchAndPersistLocation() {
+        if (locationProvider == null || repository == null) {
+            return;
+        }
+        locationProvider.getCurrentLocation(this::cacheLocation,
+            error -> Log.w("PlantDetailActivity", "Unable to obtain location", error));
+    }
+
+    private void cacheLocation(@NonNull Location location) {
+        if (repository == null) {
+            return;
+        }
+        float accuracy = location.hasAccuracy() ? location.getAccuracy() : Float.NaN;
+        repository.updateLastKnownLocation(location.getLatitude(), location.getLongitude(), accuracy,
+            System.currentTimeMillis());
     }
 
     @Override

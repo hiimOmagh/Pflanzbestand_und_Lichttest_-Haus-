@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.ProactiveAlertWorkScheduler;
+import de.oabidi.pflanzenbestandundlichttest.feature.naturallight.NaturalLightWorkScheduler;
 
 /**
  * Application subclass providing a single {@link PlantRepository} instance.
@@ -36,6 +37,7 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
 
         boolean proactiveEnabled = prefs.getBoolean(SettingsKeys.KEY_PROACTIVE_ALERTS_ENABLED, true);
         ProactiveAlertWorkScheduler.ensureScheduled(this, proactiveEnabled);
+        NaturalLightWorkScheduler.ensureScheduled(this);
     }
 
     /**

@@ -7,6 +7,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import java.util.List;
+
 /** Data access object for {@link PlantZone} entries. */
 @Dao
 public interface PlantZoneDao {
@@ -29,4 +31,8 @@ public interface PlantZoneDao {
     /** Removes the zone associated with the given plant. */
     @Query("DELETE FROM PlantZone WHERE plantId = :plantId")
     void deleteForPlant(long plantId);
+
+    /** Returns all zones stored in the database. */
+    @Query("SELECT * FROM PlantZone")
+    List<PlantZone> getAll();
 }

@@ -1,9 +1,16 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.time.LocalDate;
+
 /**
  * Utility methods for light calculations.
  */
 public class LightMath {
+
+    private static final float PAR_MOL_PER_MJ = 2.02f;
 
     public enum RangeStatus {
         LOW,
@@ -30,6 +37,71 @@ public class LightMath {
      */
     public static float dliFromPpfd(float ppfd, float hours) {
         return ppfd * hours * 0.0036f;
+    }
+
+    /**
+     * Converts short-wave radiation energy (MJ/m²) into a DLI approximation.
+     */
+    public static float dliFromShortwaveRadiation(float shortwaveRadiationMj) {
+        return Math.max(0f, shortwaveRadiationMj) * PAR_MOL_PER_MJ;
+    }
+
+    /**
+     * Estimates the solar declination angle for a given date.
+     */
+    public static double solarDeclination(@NonNull LocalDate date) {
+        double dayOfYear = date.getDayOfYear();
+        return Math.toRadians(23.44) * Math.sin(Math.toRadians((360d / 365d) * (dayOfYear - 81d)));
+    }
+
+    /**
+     * Calculates daylight duration (sunrise to sunset) for a latitude.
+     */
+    public static double daylightDurationHours(double latitudeDegrees, @NonNull LocalDate date) {
+        double latRad = Math.toRadians(latitudeDegrees);
+        double declination = solarDeclination(date);
+        double cosH = -Math.tan(latRad) * Math.tan(declination);
+        if (cosH >= 1d) {
+            return 0d;
+        }
+        if (cosH <= -1d) {
+            return 24d;
+        }
+        double hourAngle = Math.acos(cosH);
+        return (2d * hourAngle * 24d) / (2d * Math.PI);
+    }
+
+    /**
+     * Applies a simple orientation factor for indoor placement.
+     */
+    public static float orientationModifier(@Nullable String orientationCode) {
+        if (orientationCode == null) {
+            return 1f;
+        }
+        switch (orientationCode) {
+            case "S":
+            case "SOUTH":
+                return 1f;
+            case "E":
+            case "EAST":
+            case "W":
+            case "WEST":
+                return 0.85f;
+            case "N":
+            case "NORTH":
+                return 0.7f;
+            default:
+                return 0.9f;
+        }
+    }
+
+    /**
+     * Applies a heuristic attenuation based on mean cloud cover percentage.
+     */
+    public static float applyCloudCover(float dli, float cloudCoverPercent) {
+        float normalized = Math.min(Math.max(cloudCoverPercent / 100f, 0f), 1f);
+        float attenuation = 1f - (0.6f * normalized);
+        return Math.max(0f, dli * attenuation);
     }
 
     /**
