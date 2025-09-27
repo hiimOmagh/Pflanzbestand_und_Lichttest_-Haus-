@@ -31,13 +31,14 @@ import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 /**
  * Manager responsible for exporting measurements and diary entries to a CSV file.
  */
 public class ExportManager {
     private static final String TAG = "ExportManager";
-    private static final int EXPORT_VERSION = 3;
+    private static final int EXPORT_VERSION = 4;
     private final Context context;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -170,6 +171,7 @@ public class ExportManager {
             List<DiaryEntry> diaryEntries;
             List<Reminder> reminders;
             List<EnvironmentEntry> environmentEntries;
+            List<ReminderSuggestion> reminderSuggestions;
             if (plantId >= 0) {
                 Plant p = bulkDao.getPlant(plantId);
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
@@ -179,18 +181,23 @@ public class ExportManager {
                 reminders = bulkDao.getRemindersForPlant(plantId);
                 List<PlantCalibration> calibrations = bulkDao.getPlantCalibrationsForPlant(plantId);
                 environmentEntries = bulkDao.getEnvironmentEntriesForPlant(plantId);
+                ReminderSuggestion suggestion = bulkDao.getReminderSuggestionForPlant(plantId);
+                reminderSuggestions = suggestion != null
+                    ? Collections.singletonList(suggestion)
+                    : Collections.emptyList();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
                     bulkDao.getAllSpeciesTargets(), photos != null ? photos : Collections.emptyList(), calibrations,
-                    environmentEntries != null ? environmentEntries : Collections.emptyList());
+                    environmentEntries != null ? environmentEntries : Collections.emptyList(), reminderSuggestions);
             } else {
                 plants = bulkDao.getAllPlants();
                 measurements = bulkDao.getAllMeasurements();
                 diaryEntries = bulkDao.getAllDiaryEntries();
                 List<PlantPhoto> plantPhotos = bulkDao.getAllPlantPhotos();
                 reminders = bulkDao.getAllReminders();
+                reminderSuggestions = bulkDao.getAllReminderSuggestions();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
                     bulkDao.getAllSpeciesTargets(), plantPhotos, bulkDao.getAllPlantCalibrations(),
-                    bulkDao.getAllEnvironmentEntries());
+                    bulkDao.getAllEnvironmentEntries(), reminderSuggestions);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading data", e);
@@ -347,6 +354,17 @@ public class ExportManager {
                     r.getTriggerAt(),
                     escape(r.getMessage())));
             }
+
+            writer.write("\nReminderSuggestions\n");
+            writer.write("plantId,suggestedIntervalDays,lastEvaluatedAt,confidenceScore,explanation\n");
+            for (ReminderSuggestion suggestion : data.reminderSuggestions) {
+                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s\n",
+                    suggestion.getPlantId(),
+                    suggestion.getSuggestedIntervalDays(),
+                    suggestion.getLastEvaluatedAt(),
+                    escape(formatFloat(suggestion.getConfidenceScore())),
+                    escape(suggestion.getExplanation())));
+            }
         } catch (IOException e) {
             Log.e(TAG, "Error writing CSV", e);
             throw e;
@@ -494,6 +512,19 @@ public class ExportManager {
                 writer.name("plantId").value(reminder.getPlantId());
                 writer.name("triggerAt").value(reminder.getTriggerAt());
                 writeString(writer, "message", reminder.getMessage());
+                writer.endObject();
+            }
+            writer.endArray();
+
+            writer.name("reminderSuggestions");
+            writer.beginArray();
+            for (ReminderSuggestion suggestion : data.reminderSuggestions) {
+                writer.beginObject();
+                writer.name("plantId").value(suggestion.getPlantId());
+                writer.name("suggestedIntervalDays").value(suggestion.getSuggestedIntervalDays());
+                writer.name("lastEvaluatedAt").value(suggestion.getLastEvaluatedAt());
+                writer.name("confidenceScore").value(suggestion.getConfidenceScore());
+                writeOptionalString(writer, "explanation", suggestion.getExplanation());
                 writer.endObject();
             }
             writer.endArray();
@@ -704,10 +735,12 @@ public class ExportManager {
         final List<PlantPhoto> plantPhotos;
         final List<PlantCalibration> calibrations;
         final List<EnvironmentEntry> environmentEntries;
+        final List<ReminderSuggestion> reminderSuggestions;
 
         ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
                    List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos,
-                   List<PlantCalibration> calibrations, List<EnvironmentEntry> environmentEntries) {
+                   List<PlantCalibration> calibrations, List<EnvironmentEntry> environmentEntries,
+                   List<ReminderSuggestion> reminderSuggestions) {
             this.plants = plants;
             this.measurements = measurements;
             this.diaryEntries = diaryEntries;
@@ -716,6 +749,7 @@ public class ExportManager {
             this.plantPhotos = plantPhotos;
             this.calibrations = calibrations;
             this.environmentEntries = environmentEntries;
+            this.reminderSuggestions = reminderSuggestions;
         }
     }
 }

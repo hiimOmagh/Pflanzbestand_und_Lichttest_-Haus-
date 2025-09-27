@@ -125,8 +125,16 @@ public class ImportManagerParseHelpersTest {
         assertEquals(ImportManager.ImportError.INVALID_VERSION, err);
 
         err = (ImportManager.ImportError)
-            m.invoke(importer, new BufferedReader(new StringReader("Version,3")));
+            m.invoke(importer, new BufferedReader(new StringReader("Version,5")));
         assertEquals(ImportManager.ImportError.UNSUPPORTED_VERSION, err);
+
+        err = (ImportManager.ImportError)
+            m.invoke(importer, new BufferedReader(new StringReader("Version,4")));
+        assertNull(err);
+
+        err = (ImportManager.ImportError)
+            m.invoke(importer, new BufferedReader(new StringReader("Version,3")));
+        assertNull(err);
 
         err = (ImportManager.ImportError)
             m.invoke(importer, new BufferedReader(new StringReader("Version,2")));

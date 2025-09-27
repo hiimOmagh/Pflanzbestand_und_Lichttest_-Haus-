@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -116,5 +117,58 @@ public class ImportExportSpeciesTargetTest {
         assertEquals(10.4f, loadedFlower.getDliMax(), 0.001f);
         assertEquals("moderate", loaded.getTolerance());
         assertEquals("unit test", loaded.getSource());
+    }
+
+    @Test
+    public void reminderSuggestionRoundTripCsv() throws Exception {
+        Plant plant = new Plant("Csv Plant", null, null, null, 0L, null);
+        long plantId = db.plantDao().insert(plant);
+
+        ReminderSuggestion suggestion = new ReminderSuggestion();
+        suggestion.setPlantId(plantId);
+        suggestion.setSuggestedIntervalDays(4);
+        suggestion.setLastEvaluatedAt(4242L);
+        suggestion.setConfidenceScore(0.42f);
+        suggestion.setExplanation("csv suggestion");
+        db.reminderSuggestionDao().upsert(suggestion);
+
+        File exportFile = new File(context.getCacheDir(), "suggestion-export.zip");
+        if (exportFile.exists()) {
+            exportFile.delete();
+        }
+        PlantRepository repository = new PlantRepository(context, executor);
+        ExportManager exporter = new ExportManager(context, repository, executor);
+        CountDownLatch exportLatch = new CountDownLatch(1);
+        final boolean[] exportSuccess = {false};
+        exporter.export(Uri.fromFile(exportFile), success -> {
+            exportSuccess[0] = success;
+            exportLatch.countDown();
+        });
+        assertTrue(exportLatch.await(10, TimeUnit.SECONDS));
+        assertTrue(exportSuccess[0]);
+
+        db.clearAllTables();
+
+        ImportManager importer = new ImportManager(context, executor);
+        CountDownLatch importLatch = new CountDownLatch(1);
+        final boolean[] importSuccess = {false};
+        importer.importData(Uri.fromFile(exportFile), ImportManager.Mode.REPLACE,
+            (success, err, w, message) -> {
+                importSuccess[0] = success;
+                importLatch.countDown();
+            });
+        assertTrue(importLatch.await(10, TimeUnit.SECONDS));
+        assertTrue(importSuccess[0]);
+
+        List<Plant> plants = db.plantDao().getAll();
+        assertEquals(1, plants.size());
+        List<ReminderSuggestion> suggestions = db.reminderSuggestionDao().getAll();
+        assertEquals(1, suggestions.size());
+        ReminderSuggestion restored = suggestions.get(0);
+        assertEquals(plants.get(0).getId(), restored.getPlantId());
+        assertEquals(4, restored.getSuggestedIntervalDays());
+        assertEquals(4242L, restored.getLastEvaluatedAt());
+        assertEquals(0.42f, restored.getConfidenceScore(), 0.0001f);
+        assertEquals("csv suggestion", restored.getExplanation());
     }
 }

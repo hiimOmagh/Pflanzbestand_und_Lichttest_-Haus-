@@ -61,6 +61,7 @@ import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
@@ -74,8 +75,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
  */
 public class ImportManager {
     static final String TAG = "ImportManager";
-    private static final int CURRENT_VERSION = 3;
-    private static final int[] SUPPORTED_VERSIONS = {1, 2, 3};
+    private static final int CURRENT_VERSION = 4;
+    private static final int[] SUPPORTED_VERSIONS = {1, 2, 3, 4};
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -387,7 +388,8 @@ public class ImportManager {
                             new MeasurementsSectionParser(),
                             new EnvironmentEntriesSectionParser(),
                             new DiaryEntriesSectionParser(),
-                            new RemindersSectionParser()
+                            new RemindersSectionParser(),
+                            new ReminderSuggestionsSectionParser()
                         ),
                         context,
                         progress,
@@ -545,6 +547,18 @@ public class ImportManager {
                                     reader.nextNull();
                                 } else {
                                     ParseResult result = parseJsonRemindersArray(reader, mode, plantIdMap,
+                                        warnings, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
+                                }
+                                break;
+                            case "reminderSuggestions":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else {
+                                    ParseResult result = parseJsonReminderSuggestionsArray(reader, mode, plantIdMap,
                                         warnings, db);
                                     if (result.imported) {
                                         importedAny[0] = true;
@@ -801,6 +815,74 @@ public class ImportManager {
         } catch (Exception e) {
             Log.e(TAG, "Malformed reminder row: " + parts, e);
             warnings.add(new ImportWarning("reminders", currentLine, "malformed row"));
+            return false;
+        }
+    }
+
+    boolean insertReminderSuggestionRow(List<String> parts, Mode mode,
+                                        Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                        int currentLine, PlantDatabase db) {
+        if (parts.size() < 5) {
+            Log.e(TAG, "Malformed reminder suggestion row: " + parts);
+            warnings.add(new ImportWarning("reminder suggestions", currentLine, "malformed row"));
+            return false;
+        }
+        try {
+            long plantId;
+            try {
+                plantId = Long.parseLong(parts.get(0));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("reminder suggestions", currentLine, "invalid plant id"));
+                return false;
+            }
+            if (mode == Mode.MERGE) {
+                Long mappedId = plantIdMap.get(plantId);
+                if (mappedId == null) {
+                    warnings.add(new ImportWarning("reminder suggestions", currentLine, "unknown plant"));
+                    return false;
+                }
+                plantId = mappedId;
+            }
+            int intervalDays;
+            try {
+                intervalDays = Integer.parseInt(parts.get(1));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("reminder suggestions", currentLine, "invalid interval"));
+                return false;
+            }
+            long evaluatedAt;
+            try {
+                evaluatedAt = Long.parseLong(parts.get(2));
+            } catch (NumberFormatException e) {
+                warnings.add(new ImportWarning("reminder suggestions", currentLine, "invalid timestamp"));
+                return false;
+            }
+            float confidence = 0f;
+            String confidenceRaw = parts.get(3);
+            if (!confidenceRaw.isEmpty()) {
+                try {
+                    confidence = Float.parseFloat(confidenceRaw);
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("reminder suggestions", currentLine, "invalid confidence"));
+                    return false;
+                }
+            }
+            String explanation = parts.get(4);
+            ReminderSuggestion suggestion = new ReminderSuggestion();
+            suggestion.setPlantId(plantId);
+            suggestion.setSuggestedIntervalDays(intervalDays);
+            suggestion.setLastEvaluatedAt(evaluatedAt);
+            suggestion.setConfidenceScore(confidence);
+            if (explanation != null && !explanation.isEmpty()) {
+                suggestion.setExplanation(explanation);
+            } else {
+                suggestion.setExplanation(null);
+            }
+            db.reminderSuggestionDao().upsert(suggestion);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Malformed reminder suggestion row: " + parts, e);
+            warnings.add(new ImportWarning("reminder suggestions", currentLine, "malformed row"));
             return false;
         }
     }
@@ -1577,6 +1659,61 @@ public class ImportManager {
         return new ParseResult(imported, index - 1);
     }
 
+    private ParseResult parseJsonReminderSuggestionsArray(JsonReader reader, Mode mode,
+                                                          Map<Long, Long> plantIdMap,
+                                                          List<ImportWarning> warnings,
+                                                          PlantDatabase db) throws IOException {
+        boolean imported = false;
+        reader.beginArray();
+        int index = 1;
+        while (reader.hasNext()) {
+            long plantId = 0L;
+            Integer interval = null;
+            Long evaluated = null;
+            Float confidence = null;
+            String explanation = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String field = reader.nextName();
+                switch (field) {
+                    case "plantId":
+                        Long plantValue = readNullableLong(reader);
+                        plantId = plantValue != null ? plantValue : 0L;
+                        break;
+                    case "suggestedIntervalDays":
+                        Long intervalValue = readNullableLong(reader);
+                        interval = intervalValue != null ? intervalValue.intValue() : null;
+                        break;
+                    case "lastEvaluatedAt":
+                        evaluated = readNullableLong(reader);
+                        break;
+                    case "confidenceScore":
+                        confidence = readNullableFloat(reader);
+                        break;
+                    case "explanation":
+                        explanation = readOptionalString(reader);
+                        break;
+                    default:
+                        reader.skipValue();
+                        break;
+                }
+            }
+            reader.endObject();
+            List<String> parts = new ArrayList<>(5);
+            parts.add(Long.toString(plantId));
+            parts.add(interval != null ? Integer.toString(interval) : "0");
+            parts.add(Long.toString(evaluated != null ? evaluated : 0L));
+            parts.add(confidence != null ? Float.toString(confidence) : "");
+            parts.add(explanation != null ? explanation : "");
+            if (insertReminderSuggestionRow(parts, mode, plantIdMap, warnings, index, db)) {
+                imported = true;
+            }
+            index++;
+        }
+        reader.endArray();
+        return new ParseResult(imported, index - 1);
+    }
+
     private ParseResult parseJsonSpeciesTargetsArray(JsonReader reader, List<ImportWarning> warnings,
                                                  PlantDatabase db) throws IOException {
         boolean imported = false;
@@ -2108,7 +2245,8 @@ public class ImportManager {
         MEASUREMENTS("Measurements"),
         ENVIRONMENT_ENTRIES("EnvironmentEntries"),
         DIARY_ENTRIES("DiaryEntries"),
-        REMINDERS("Reminders");
+        REMINDERS("Reminders"),
+        REMINDER_SUGGESTIONS("ReminderSuggestions");
 
         private final String header;
 

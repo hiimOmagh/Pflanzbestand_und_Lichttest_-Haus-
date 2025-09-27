@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -135,6 +136,16 @@ public class ExportManagerCleanupTest {
                 @Override
                 public List<Reminder> getRemindersForPlant(long plantId) {
                     return Collections.emptyList();
+                }
+
+                @Override
+                public List<ReminderSuggestion> getAllReminderSuggestions() {
+                    return Collections.emptyList();
+                }
+
+                @Override
+                public ReminderSuggestion getReminderSuggestionForPlant(long plantId) {
+                    return null;
                 }
 
                 @Override

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 /**
  * Verifies that JSON exports round-trip through the import pipeline.
@@ -80,6 +81,14 @@ public class JsonImportExportTest {
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(80f, 120f, 3.2f, 4.6f);
         SpeciesTarget target = new SpeciesTarget("json-species", stage, stage, stage, "moderate", "unit");
         db.speciesTargetDao().insert(target);
+
+        ReminderSuggestion suggestion = new ReminderSuggestion();
+        suggestion.setPlantId(plantId);
+        suggestion.setSuggestedIntervalDays(5);
+        suggestion.setLastEvaluatedAt(9999L);
+        suggestion.setConfidenceScore(0.6f);
+        suggestion.setExplanation("json suggestion");
+        db.reminderSuggestionDao().upsert(suggestion);
 
         File exportFile = new File(context.getCacheDir(), "json-export.zip");
         if (exportFile.exists()) {
@@ -144,6 +153,15 @@ public class JsonImportExportTest {
         assertEquals(19.5f, restoredEnv.getTemperature(), 0.0001f);
         assertEquals(55f, restoredEnv.getHumidity(), 0.0001f);
         assertEquals("env note", restoredEnv.getNotes());
+
+        List<ReminderSuggestion> suggestions = db.reminderSuggestionDao().getAll();
+        assertEquals(1, suggestions.size());
+        ReminderSuggestion restoredSuggestion = suggestions.get(0);
+        assertEquals(plants.get(0).getId(), restoredSuggestion.getPlantId());
+        assertEquals(5, restoredSuggestion.getSuggestedIntervalDays());
+        assertEquals(9999L, restoredSuggestion.getLastEvaluatedAt());
+        assertEquals(0.6f, restoredSuggestion.getConfidenceScore(), 0.0001f);
+        assertEquals("json suggestion", restoredSuggestion.getExplanation());
     }
 
     @Test

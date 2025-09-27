@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -69,9 +70,15 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(
+            java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
+            java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
+            java.util.List.class);
         ctor.setAccessible(true);
-        Object data = ctor.newInstance(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvtest");
         dir.mkdirs();
@@ -87,11 +94,17 @@ public class ExportManagerMethodsTest {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
         Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
-        Constructor<?> ctor = dataClass.getDeclaredConstructor(java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class);
+        Constructor<?> ctor = dataClass.getDeclaredConstructor(
+            java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
+            java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
+            java.util.List.class);
         ctor.setAccessible(true);
         Plant plant = new Plant("p", null, null, null, 0L, Uri.parse("content://missing"));
         plant.setId(1);
-        Object data = ctor.newInstance(Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        Object data = ctor.newInstance(
+            Collections.singletonList(plant), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList());
 
         File dir = new File(context.getCacheDir(), "csvfail");
         dir.mkdirs();
@@ -237,6 +250,16 @@ public class ExportManagerMethodsTest {
         }
 
         @Override
+        public List<ReminderSuggestion> getAllReminderSuggestions() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public ReminderSuggestion getReminderSuggestionForPlant(long plantId) {
+            return null;
+        }
+
+        @Override
         public List<SpeciesTarget> getAllSpeciesTargets() {
             return Collections.emptyList();
         }
@@ -314,6 +337,16 @@ public class ExportManagerMethodsTest {
 
         @Override
         public List<Reminder> getRemindersForPlant(long plantId) {
+            throw fail();
+        }
+
+        @Override
+        public List<ReminderSuggestion> getAllReminderSuggestions() {
+            throw fail();
+        }
+
+        @Override
+        public ReminderSuggestion getReminderSuggestionForPlant(long plantId) {
             throw fail();
         }
 

@@ -8,6 +8,7 @@ import java.util.List;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 /**
  * Specialized DAO providing bulk read access for export and import operations.
@@ -53,6 +54,14 @@ public interface BulkReadDao {
     /** Retrieves reminders associated with the given plant. */
     @Query("SELECT * FROM Reminder WHERE plantId = :plantId")
     List<Reminder> getRemindersForPlant(long plantId);
+
+    /** Retrieves all reminder suggestions. */
+    @Query("SELECT * FROM ReminderSuggestion")
+    List<ReminderSuggestion> getAllReminderSuggestions();
+
+    /** Retrieves the reminder suggestion associated with the given plant. */
+    @Query("SELECT * FROM ReminderSuggestion WHERE plantId = :plantId LIMIT 1")
+    ReminderSuggestion getReminderSuggestionForPlant(long plantId);
 
     /** Retrieves all species targets. */
     @Query("SELECT * FROM SpeciesTarget")

@@ -37,6 +37,7 @@ import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -274,6 +275,34 @@ public class SectionParserTest {
         assertEquals("reminders", warnings.get(0).category);
     }
 
+    @Test
+    public void reminderSuggestionsParserImportsRows() throws Exception {
+        String csv = "ReminderSuggestions\n" +
+            "plantId,suggestedIntervalDays,lastEvaluatedAt,confidenceScore,explanation\n" +
+            "1,6,12345,0.75,Needs water soon\n" +
+            "1,invalid,12346,0.5,\n";
+        ImportManager.SectionReader sectionReader = newSectionReader(csv);
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.REMINDER_SUGGESTIONS, chunk.getSection());
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.ReminderSuggestionsSectionParser();
+        ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
+            new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
+        boolean imported = parser.parseSection(chunk, context);
+        assertTrue(imported);
+        assertEquals(1, warnings.size());
+        assertEquals("reminder suggestions", warnings.get(0).category);
+        List<ReminderSuggestion> suggestions = db.reminderSuggestionDao().getAll();
+        assertEquals(1, suggestions.size());
+        ReminderSuggestion suggestion = suggestions.get(0);
+        assertEquals(1, suggestion.getPlantId());
+        assertEquals(6, suggestion.getSuggestedIntervalDays());
+        assertEquals(12345L, suggestion.getLastEvaluatedAt());
+        assertEquals(0.75f, suggestion.getConfidenceScore(), 0.0001f);
+        assertEquals("Needs water soon", suggestion.getExplanation());
+    }
+
     private ImportManager.SectionReader newSectionReader(String csv) {
         return new ImportManager.SectionReader(
             new BufferedReader(new StringReader(csv)),
@@ -295,7 +324,7 @@ public class SectionParserTest {
             restoredUris,
             db,
             nf,
-            3,
+            4,
             new AtomicBoolean(false)
         );
     }
