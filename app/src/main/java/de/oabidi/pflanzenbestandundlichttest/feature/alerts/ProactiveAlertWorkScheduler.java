@@ -40,7 +40,7 @@ public final class ProactiveAlertWorkScheduler {
             .setConstraints(constraints)
             .build();
         WorkManager.getInstance(context)
-            .enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.UPDATE, request);
+            .enqueueUniquePeriodicWork(WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, request);
     }
 
     public static void cancel(@NonNull Context context) {
