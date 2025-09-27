@@ -68,6 +68,15 @@ with existing content or **replace** it entirely. Merge discards original identi
 and their related records are added alongside current data. Replace wipes the database before
 restoring the backup, preserving the identifiers from the archive.
 
+### Database migrations
+
+The app deliberately relies on Room's destructive migration mode. No schema migrations are shipped,
+so upgrading or downgrading the app recreates the `plant_database` file instead of attempting to
+transform old tables. Because targets and sample data are reseeded on creation, destructive
+migrations keep the schema consistent without risking partially migrated states. Remember that
+updating the app will reset locally stored data unless it has been exported with the backup flow
+described above.
+
 After a successful export you can immediately share the resulting archive using the system share
 sheet.
 
