@@ -4,7 +4,10 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import java.util.List;
+
 import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 
 /**
  * View contract for the plant edit screen.
@@ -28,6 +31,10 @@ public interface PlantEditView {
     /** @return selected photo URI or {@code null}. */
     Uri getPhotoUri();
 
+    /** @return identifier of the selected LED profile or {@code null}. */
+    @Nullable
+    Long getSelectedLedProfileId();
+
     /** @return ID of the plant being edited or 0 for a new plant. */
     long getPlantId();
 
@@ -41,6 +48,9 @@ public interface PlantEditView {
 
     /** Display the stored plant zone information for editing. */
     void setPlantZone(@Nullable PlantZone zone);
+
+    /** Display available LED profiles and preselect the current assignment. */
+    void showLedProfiles(List<LedProfile> profiles, @Nullable Long selectedProfileId);
 
     /** Show an error indicating that the name field is required. */
     void showNameError();

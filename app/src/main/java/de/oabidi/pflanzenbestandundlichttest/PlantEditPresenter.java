@@ -9,4 +9,7 @@ public interface PlantEditPresenter {
 
     /** Load existing plant zone information for editing. */
     void loadPlantZone();
+
+    /** Load available LED profiles for selection. */
+    void loadLedProfiles();
 }

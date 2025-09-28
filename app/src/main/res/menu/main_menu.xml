@@ -16,6 +16,10 @@
         android:title="@string/menu_species_targets"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_led_profiles"
+        android:title="@string/menu_led_profiles"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_export_data"
         android:title="@string/menu_export_data"
         app:showAsAction="never" />

@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileListFragment;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 
 /**
@@ -312,6 +313,9 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         } else if (itemId == R.id.action_species_targets) {
             navigateToSpeciesTargets();
             return true;
+        } else if (itemId == R.id.action_led_profiles) {
+            navigateToLedProfiles();
+            return true;
         } else if (itemId == R.id.action_export_data) {
             presenter.requestExport();
             return true;
@@ -332,6 +336,14 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
 
     private void navigateToSpeciesTargets() {
         SpeciesTargetListFragment fragment = SpeciesTargetListFragment.newInstance(repository);
+        getParentFragmentManager().beginTransaction()
+            .replace(R.id.nav_host_fragment, fragment)
+            .addToBackStack(null)
+            .commit();
+    }
+
+    private void navigateToLedProfiles() {
+        LedProfileListFragment fragment = LedProfileListFragment.newInstance(repository);
         getParentFragmentManager().beginTransaction()
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)

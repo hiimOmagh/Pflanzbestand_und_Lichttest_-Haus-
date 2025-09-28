@@ -408,4 +408,29 @@
     <string name="onboarding_measurement">Measure light levels to help your plants thrive.</string>
     <string name="onboarding_diary">Record care activities in the diary.</string>
     <string name="action_done">Got it</string>
+    <string name="menu_led_profiles">LED Profiles</string>
+    <string name="action_add_led_profile">Add LED Profile</string>
+    <string name="action_edit_led_profile">Edit LED Profile</string>
+    <string name="action_delete_led_profile">Delete LED Profile</string>
+    <string name="confirm_delete_led_profile">Delete "%1$s"?</string>
+    <string name="hint_led_profile">LED profile</string>
+    <string name="led_profile_none">No LED profile</string>
+    <string name="hint_led_profile_name">Profile name</string>
+    <string name="hint_led_profile_type">Fixture type</string>
+    <string name="hint_led_profile_distance">Mounting distance (cm)</string>
+    <string name="hint_led_profile_calibration_ambient">Ambient factor</string>
+    <string name="hint_led_profile_calibration_camera">Camera factor</string>
+    <string name="led_profile_calibration_hint">Store calibration factors from your light measurements to reuse them across plants.</string>
+    <string name="led_profile_schedule_header">Schedule</string>
+    <string name="action_add_schedule_entry">Add schedule entry</string>
+    <string name="action_remove_schedule_entry">Remove</string>
+    <string name="hint_led_schedule_start">Start time</string>
+    <string name="hint_led_schedule_end">End time</string>
+    <string name="hint_led_schedule_intensity">Intensity (%)</string>
+    <string name="format_led_profile_type">Type: %1$s</string>
+    <string name="format_led_profile_distance">Distance: %1$s cm</string>
+    <plurals name="format_led_profile_schedule_count">
+        <item quantity="one">1 schedule entry</item>
+        <item quantity="other">%d schedule entries</item>
+    </plurals>
 </resources>

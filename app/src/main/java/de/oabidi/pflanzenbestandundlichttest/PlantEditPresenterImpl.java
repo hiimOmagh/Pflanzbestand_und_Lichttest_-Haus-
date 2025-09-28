@@ -41,7 +41,8 @@ public class PlantEditPresenterImpl implements PlantEditPresenter {
         long id = view.getPlantId();
         plant.setId(id);
         Runnable afterSave = () -> repository.savePlantZone(plant.getId(), zoneOrientation, zoneNotes,
-            () -> view.finishWithResult(plant), errorHandler);
+            () -> handleLedProfileAssignment(plant, () -> view.finishWithResult(plant), errorHandler),
+            errorHandler);
         if (id == 0) {
             repository.insert(plant, afterSave, errorHandler);
         } else {
@@ -59,7 +60,42 @@ public class PlantEditPresenterImpl implements PlantEditPresenter {
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
+    @Override
+    public void loadLedProfiles() {
+        repository.getLedProfiles(profiles -> {
+            long plantId = view.getPlantId();
+            if (plantId > 0) {
+                repository.getLedProfileForPlant(plantId, profile -> {
+                    Long selectedId = profile != null ? profile.getId() : null;
+                    view.showLedProfiles(profiles, selectedId);
+                }, e -> {
+                    view.showLedProfiles(profiles, null);
+                    view.showError(context.getString(R.string.error_database));
+                });
+            } else {
+                view.showLedProfiles(profiles, null);
+            }
+        }, e -> view.showError(context.getString(R.string.error_database)));
+    }
+
     private static String emptyToNull(String s) {
         return s == null || s.isEmpty() ? null : s;
+    }
+
+    private void handleLedProfileAssignment(Plant plant, Runnable onComplete,
+                                            Consumer<Exception> errorHandler) {
+        long plantId = plant.getId();
+        if (plantId <= 0) {
+            onComplete.run();
+            return;
+        }
+        Long selectedProfileId = view.getSelectedLedProfileId();
+        if (selectedProfileId == null) {
+            plant.setLedProfileId(null);
+            repository.unassignLedProfileFromPlant(plantId, onComplete, errorHandler);
+        } else {
+            plant.setLedProfileId(selectedProfileId);
+            repository.assignLedProfileToPlant(plantId, selectedProfileId, onComplete, errorHandler);
+        }
     }
 }

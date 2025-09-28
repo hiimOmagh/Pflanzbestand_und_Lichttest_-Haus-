@@ -24,13 +24,16 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 
 /**
  * Fragment allowing creation or editing of a {@link Plant}.
@@ -48,6 +51,8 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private static final String ARG_PHOTO = "photo";
     private static final String ARG_ZONE_ORIENTATION = "zone_orientation";
     private static final String ARG_ZONE_NOTES = "zone_notes";
+    private static final String ARG_LED_PROFILE_ID = "led_profile_id";
+    private static final String STATE_LED_PROFILE_ID = "state_led_profile_id";
 
     private TextInputEditText nameInput;
     private TextInputEditText speciesInput;
@@ -56,6 +61,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private TextInputEditText notesInput;
     private MaterialAutoCompleteTextView zoneOrientationInput;
     private TextInputEditText zoneNotesInput;
+    private MaterialAutoCompleteTextView ledProfileInput;
     private ImageView photoView;
 
     private Uri photoUri;
@@ -64,6 +70,10 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private PlantRepository repository;
     private String[] zoneOrientationValues;
     private String[] zoneOrientationLabels;
+    private final List<LedProfile> ledProfiles = new ArrayList<>();
+    private ArrayAdapter<String> ledProfileAdapter;
+    @Nullable
+    private Long selectedLedProfileId;
 
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -88,6 +98,9 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             args.putString(ARG_NOTES, plant.getDescription());
             if (plant.getPhotoUri() != null) {
                 args.putString(ARG_PHOTO, plant.getPhotoUri().toString());
+            }
+            if (plant.getLedProfileId() != null) {
+                args.putLong(ARG_LED_PROFILE_ID, plant.getLedProfileId());
             }
             fragment.setArguments(args);
         }
@@ -135,6 +148,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         notesInput = view.findViewById(R.id.input_notes);
         zoneOrientationInput = view.findViewById(R.id.input_zone_orientation);
         zoneNotesInput = view.findViewById(R.id.input_zone_notes);
+        ledProfileInput = view.findViewById(R.id.input_led_profile);
         photoView = view.findViewById(R.id.image_photo);
 
         Button pickPhoto = view.findViewById(R.id.btn_pick_photo);
@@ -153,6 +167,28 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         zoneOrientationInput.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 zoneOrientationInput.post(zoneOrientationInput::showDropDown);
+            }
+        });
+
+        ledProfileAdapter = new ArrayAdapter<>(requireContext(),
+            android.R.layout.simple_list_item_1, new ArrayList<>());
+        ledProfileInput.setAdapter(ledProfileAdapter);
+        ledProfileAdapter.add(getString(R.string.led_profile_none));
+        ledProfileInput.setText(getString(R.string.led_profile_none), false);
+        ledProfileInput.setOnClickListener(v -> ledProfileInput.showDropDown());
+        ledProfileInput.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                ledProfileInput.post(ledProfileInput::showDropDown);
+            }
+        });
+        ledProfileInput.setOnItemClickListener((parent, view1, position, id) -> {
+            if (position == 0) {
+                selectedLedProfileId = null;
+            } else {
+                int index = position - 1;
+                if (index >= 0 && index < ledProfiles.size()) {
+                    selectedLedProfileId = ledProfiles.get(index).getId();
+                }
             }
         });
 
@@ -178,6 +214,17 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
                 }
                 photoView.setImageURI(photoUri);
             }
+            if (args.containsKey(ARG_LED_PROFILE_ID)) {
+                long id = args.getLong(ARG_LED_PROFILE_ID);
+                if (id > 0) {
+                    selectedLedProfileId = id;
+                }
+            }
+        }
+
+        if (savedInstanceState != null && savedInstanceState.containsKey(STATE_LED_PROFILE_ID)) {
+            long savedId = savedInstanceState.getLong(STATE_LED_PROFILE_ID, 0);
+            selectedLedProfileId = savedId > 0 ? savedId : null;
         }
 
         if (repository == null) {
@@ -188,6 +235,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         acquiredInput.setOnClickListener(v -> showDatePicker());
         saveButton.setOnClickListener(v -> presenter.savePlant());
         presenter.loadPlantZone();
+        presenter.loadLedProfiles();
     }
 
     private static String getText(TextInputEditText editText) {
@@ -247,6 +295,12 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     @Override
     public Uri getPhotoUri() {
         return photoUri;
+    }
+
+    @Nullable
+    @Override
+    public Long getSelectedLedProfileId() {
+        return selectedLedProfileId;
     }
 
     @Override
@@ -324,6 +378,9 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         if (plant.getPhotoUri() != null) {
             result.putString(ARG_PHOTO, plant.getPhotoUri().toString());
         }
+        if (selectedLedProfileId != null) {
+            result.putLong(ARG_LED_PROFILE_ID, selectedLedProfileId);
+        }
         getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
         getParentFragmentManager().popBackStack();
     }
@@ -332,6 +389,59 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     public void showError(String message) {
         if (isAdded()) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void showLedProfiles(List<LedProfile> profiles, @Nullable Long selectedId) {
+        if (!isAdded() || ledProfileInput == null) {
+            return;
+        }
+        ledProfiles.clear();
+        if (profiles != null) {
+            ledProfiles.addAll(profiles);
+        }
+        List<String> displayNames = new ArrayList<>();
+        displayNames.add(getString(R.string.led_profile_none));
+        for (LedProfile profile : ledProfiles) {
+            displayNames.add(profile.getName());
+        }
+        ledProfileAdapter.clear();
+        ledProfileAdapter.addAll(displayNames);
+        ledProfileAdapter.notifyDataSetChanged();
+        if (selectedId != null) {
+            selectedLedProfileId = selectedId;
+            int index = findProfileIndex(selectedId);
+            if (index >= 0 && index + 1 < displayNames.size()) {
+                ledProfileInput.setText(displayNames.get(index + 1), false);
+            }
+        } else if (selectedLedProfileId != null) {
+            int index = findProfileIndex(selectedLedProfileId);
+            if (index >= 0 && index + 1 < displayNames.size()) {
+                ledProfileInput.setText(displayNames.get(index + 1), false);
+            } else {
+                selectedLedProfileId = null;
+                ledProfileInput.setText(displayNames.get(0), false);
+            }
+        } else {
+            ledProfileInput.setText(displayNames.get(0), false);
+        }
+    }
+
+    private int findProfileIndex(long profileId) {
+        for (int i = 0; i < ledProfiles.size(); i++) {
+            if (ledProfiles.get(i).getId() == profileId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (selectedLedProfileId != null) {
+            outState.putLong(STATE_LED_PROFILE_ID, selectedLedProfileId);
         }
     }
 

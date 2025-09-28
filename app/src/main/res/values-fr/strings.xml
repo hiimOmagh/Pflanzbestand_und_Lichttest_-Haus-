@@ -119,8 +119,10 @@
     <string name="hint_plant_name">Nom</string>
     <string name="hint_species">Espèce</string>
     <string name="hint_location">Emplacement</string>
+    <string name="hint_zone_notes">Notes de la zone</string>
     <string name="hint_acquired">Acquis</string>
     <string name="hint_notes">Notes</string>
+    <string name="orientation_west">Ouest</string>
     <string name="action_pick_photo">Choisir une photo</string>
     <string name="light_meter_ev100_note">La luminance de la caméra approxime l’exposition EV100 et sert de guide relatif au style EV100.</string>
     <string name="action_save_plant">Enregistrer</string>
@@ -130,6 +132,7 @@
     <string name="label_known_ppfd">PPFD connu :</string>
     <string name="label_ambient_factor">Facteur ambiant :</string>
     <string name="label_camera_factor">Facteur caméra :</string>
+    <string name="calibration_missing_profile_warning">Assignez un profil LED à cette plante afin que les facteurs de calibration suivent la configuration lumineuse correcte.</string>
     <string name="action_calibrate">Confirmer</string>
     <string name="menu_calibrate">Étalonner</string>
     <string name="action_add_photo">Ajouter une photo</string>
@@ -381,4 +384,33 @@
     <string name="reminder_suggestion_env_dry">Les relevés récents du sol sont secs (moyenne %1$.0f%%), raccourcis de %2$d jours.</string>
     <string name="reminder_suggestion_env_wet">Les relevés récents du sol sont élevés (moyenne %1$.0f%%), prolongés de %2$d jours.</string>
     <string name="reminder_suggestion_env_balanced">Les relevés récents du sol semblent équilibrés.</string>
+    <string name="hint_zone_orientation">Orientation de la zone</string>
+    <string name="orientation_north">Nord</string>
+    <string name="orientation_east">Est</string>
+    <string name="orientation_south">Sud</string>
+    <string name="menu_led_profiles">Profils LED</string>
+    <string name="action_add_led_profile">Ajouter un profil LED</string>
+    <string name="action_edit_led_profile">Modifier le profil LED</string>
+    <string name="action_delete_led_profile">Supprimer le profil LED</string>
+    <string name="confirm_delete_led_profile">Supprimer « %1$s » ?</string>
+    <string name="hint_led_profile">Profil LED</string>
+    <string name="led_profile_none">Aucun profil LED</string>
+    <string name="hint_led_profile_name">Nom du profil</string>
+    <string name="hint_led_profile_type">Type de luminaire</string>
+    <string name="hint_led_profile_distance">Distance de montage (cm)</string>
+    <string name="hint_led_profile_calibration_ambient">Facteur ambiant</string>
+    <string name="hint_led_profile_calibration_camera">Facteur caméra</string>
+    <string name="led_profile_calibration_hint">Enregistrez les facteurs d’étalonnage de vos mesures de lumière pour les réutiliser sur plusieurs plantes.</string>
+    <string name="led_profile_schedule_header">Programme</string>
+    <string name="action_add_schedule_entry">Ajouter une période</string>
+    <string name="action_remove_schedule_entry">Supprimer</string>
+    <string name="hint_led_schedule_start">Heure de début</string>
+    <string name="hint_led_schedule_end">Heure de fin</string>
+    <string name="hint_led_schedule_intensity">Intensité (%)</string>
+    <string name="format_led_profile_type">Type : %1$s</string>
+    <string name="format_led_profile_distance">Distance : %1$s cm</string>
+    <plurals name="format_led_profile_schedule_count">
+        <item quantity="one">1 période</item>
+        <item quantity="other">%d périodes</item>
+    </plurals>
 </resources>
