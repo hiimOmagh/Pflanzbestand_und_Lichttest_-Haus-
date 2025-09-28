@@ -283,18 +283,18 @@ public class ImportManagerHelperTest {
     private String buildCsv(boolean includePlant) {
         StringBuilder builder = new StringBuilder();
         builder.append("Version,2\n\n")
-            .append("Plants\n")
-            .append("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+            .append("LedProfiles\n")
+            .append("id,name,type,mountingDistanceCm,ambientFactor,cameraFactor\n");
         if (includePlant) {
-            builder.append("1,Test Plant,,,,0,\n");
+            builder.append("1,Default,,,0.0185,0.0185\n");
+        }
+        builder.append("\nPlants\n")
+            .append("id,name,description,species,locationHint,acquiredAtEpoch,photoUri,ledProfileId\n");
+        if (includePlant) {
+            builder.append("1,Test Plant,,,,0,,1\n");
         }
         builder.append("\nPlantPhotos\n")
             .append("id,plantId,uri,createdAt\n");
-        builder.append("\nPlantCalibrations\n")
-            .append("plantId,ambientFactor,cameraFactor\n");
-        if (includePlant) {
-            builder.append("1,0.0185,0.0185\n");
-        }
         builder.append("\nSpeciesTargets\n")
             .append("speciesKey,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,"
                 + "vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,"

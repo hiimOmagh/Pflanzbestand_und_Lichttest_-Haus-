@@ -195,14 +195,14 @@ public class ImportManagerParseHelpersTest {
 
     @Test
     public void coordinatorEmitsProgressPerSection() throws Exception {
-        String csv = "Plants\n" +
-            "id,name,description,species,location,acquired,photo\n" +
-            "1,Plant,,,loc,0,\n" +
+        String csv = "LedProfiles\n" +
+            "id,name,type,mountingDistanceCm,ambientFactor,cameraFactor\n" +
+            "1,Profile,,,0.02,0.03\n" +
+            "Plants\n" +
+            "id,name,description,species,location,acquired,photo,ledProfileId\n" +
+            "1,Plant,,,loc,0,,1\n" +
             "PlantPhotos\n" +
             "id,plantId,uri,createdAt\n" +
-            "PlantCalibrations\n" +
-            "plantId,ambientFactor,cameraFactor\n" +
-            "1,0.02,0.03\n" +
             "SpeciesTargets\n" +
             SPECIES_TARGETS_HEADER + "\n" +
             "species,5,10,1,2,5,10,3,4,5,10,5,6,,\n" +
@@ -217,9 +217,9 @@ public class ImportManagerParseHelpersTest {
             "1,1,0,hi\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         List<ImportManager.SectionParser> parsers = Arrays.asList(
+            new de.oabidi.pflanzenbestandundlichttest.data.util.LedProfilesSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.PlantsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.PlantCalibrationsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.SpeciesTargetsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.MeasurementsSectionParser(),
             new de.oabidi.pflanzenbestandundlichttest.data.util.DiaryEntriesSectionParser(),
@@ -231,14 +231,14 @@ public class ImportManagerParseHelpersTest {
         ImportManager.SectionContext context = newContext(
             plantIdMap, warnings, uris, newNumberFormat());
         AtomicInteger progress = new AtomicInteger();
-        AtomicInteger totalSteps = new AtomicInteger(7);
+        AtomicInteger totalSteps = new AtomicInteger(8);
         List<Integer> updates = new ArrayList<>();
         ImportManager.ProgressCallback callback = (current, total) -> updates.add(current);
         de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator coordinator = new de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator(
             importer, sectionReader, parsers, context, progress, callback, totalSteps, context.cancelled);
         assertTrue(coordinator.process());
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();
-        List<Integer> expectedProgress = Arrays.asList(0, 1, 2, 3, 4, 5, 6);
+        List<Integer> expectedProgress = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7);
         assertEquals(
             "Empty sections like PlantPhotos report zero work units, so only six positive "
                 + "steps follow the initial publish.",

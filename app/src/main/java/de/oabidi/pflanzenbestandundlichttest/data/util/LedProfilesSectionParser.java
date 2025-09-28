@@ -6,15 +6,13 @@ import androidx.annotation.VisibleForTesting;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Parses the PlantCalibrations section from an import CSV.
- */
+/** Parses the LedProfiles section from an import CSV. */
 @VisibleForTesting
-class PlantCalibrationsSectionParser implements ImportManager.SectionParser {
+class LedProfilesSectionParser implements ImportManager.SectionParser {
     @NonNull
     @Override
     public ImportManager.Section getSection() {
-        return ImportManager.Section.PLANT_CALIBRATIONS;
+        return ImportManager.Section.LED_PROFILES;
     }
 
     @Override
@@ -23,7 +21,7 @@ class PlantCalibrationsSectionParser implements ImportManager.SectionParser {
         boolean imported = false;
         for (ImportManager.SectionRow row : chunk.getRows()) {
             List<String> parts = ImportManager.parseCsv(row.line);
-            if (context.manager.insertCalibrationRow(parts, context.mode, context.plantIdMap,
+            if (context.manager.insertLedProfileRow(parts, context.mode, context.ledProfileIdMap,
                 context.warnings, row.lineNumber, context.db)) {
                 imported = true;
             }

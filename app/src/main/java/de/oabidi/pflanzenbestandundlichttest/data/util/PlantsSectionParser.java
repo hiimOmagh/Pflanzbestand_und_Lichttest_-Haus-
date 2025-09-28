@@ -21,7 +21,7 @@ class PlantsSectionParser implements ImportManager.SectionParser {
         for (ImportManager.SectionRow row : chunk.getRows()) {
             List<String> parts = ImportManager.parseCsv(row.line);
             if (context.manager.parsePlantRow(parts, context.mode, context.baseDir,
-                context.plantIdMap, context.warnings, row.lineNumber,
+                context.plantIdMap, context.ledProfileIdMap, context.warnings, row.lineNumber,
                 context.restoredUris, context.db)) {
                 imported = true;
             }

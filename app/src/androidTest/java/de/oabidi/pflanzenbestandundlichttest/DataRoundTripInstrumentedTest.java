@@ -13,6 +13,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -21,7 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 
 import static org.junit.Assert.*;
 
@@ -79,8 +82,17 @@ public class DataRoundTripInstrumentedTest {
         });
 
         awaitDb(() -> {
-            PlantDatabase.getDatabase(context).plantCalibrationDao()
-                .insertOrUpdate(new PlantCalibration(plant.getId(), 0.04f, 0.06f));
+            LedProfile profile = new LedProfile();
+            profile.setName("RoundTripProfile");
+            Map<String, Float> factors = new HashMap<>();
+            factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, 0.04f);
+            factors.put(LedProfile.CALIBRATION_KEY_CAMERA, 0.06f);
+            profile.setCalibrationFactors(factors);
+            long profileId = PlantDatabase.getDatabase(context).ledProfileDao().insert(profile);
+            plant.setLedProfileId(profileId);
+            PlantDatabase.getDatabase(context).plantDao().update(plant);
+            PlantDatabase.getDatabase(context).ledProfileAssociationDao()
+                .upsert(new LedProfileAssociation(plant.getId(), profileId));
             return null;
         });
 
@@ -115,10 +127,10 @@ public class DataRoundTripInstrumentedTest {
         // Verify counts
         int plantCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().size());
         int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
-        int calibrationCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().size());
+        int profileCount = awaitDb(() -> PlantDatabase.getDatabase(context).ledProfileDao().getAll().size());
         assertEquals(1, plantCount);
         assertEquals(1, diaryCount);
-        assertEquals(1, calibrationCount);
+        assertEquals(1, profileCount);
 
         // Verify plant photo restored
         Plant restoredPlant = awaitDb(() -> PlantDatabase.getDatabase(context).plantDao().getAll().get(0));
@@ -148,10 +160,12 @@ public class DataRoundTripInstrumentedTest {
             assertArrayEquals(diaryPhotoBytes, baos.toByteArray());
         }
 
-        PlantCalibration restoredCalibration = awaitDb(
-            () -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().get(0)
+        LedProfile restoredProfile = awaitDb(
+            () -> PlantDatabase.getDatabase(context).ledProfileDao().getAll().get(0)
         );
-        assertEquals(0.04f, restoredCalibration.getAmbientFactor(), 0.0001f);
-        assertEquals(0.06f, restoredCalibration.getCameraFactor(), 0.0001f);
+        Map<String, Float> restoredFactors = restoredProfile.getCalibrationFactors();
+        assertEquals(0.04f, restoredFactors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+        assertEquals(0.06f, restoredFactors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
+        assertEquals(restoredProfile.getId(), restoredPlant.getLedProfileId().longValue());
     }
 }

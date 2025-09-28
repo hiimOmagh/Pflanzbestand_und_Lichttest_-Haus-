@@ -36,7 +36,7 @@ import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
@@ -149,32 +149,33 @@ public class SectionParserTest {
     }
 
     @Test
-    public void plantCalibrationsParserValidatesRows() throws Exception {
-        String csv = "PlantCalibrations\n" +
-            "plantId,ambientFactor,cameraFactor\n" +
-            "1,0.02,0.03\n" +
-            "2,invalid,0.03\n" +
-            "3,0.04,\n" +
+    public void ledProfilesParserValidatesRows() throws Exception {
+        String csv = "LedProfiles\n" +
+            "id,name,type,mountingDistanceCm,ambientFactor,cameraFactor\n" +
+            "1,Profile,,5,0.02,0.03\n" +
+            "2,BadAmbient,,5,invalid,0.03\n" +
+            "3,MissingCamera,,5,0.04,\n" +
             "SpeciesTargets\n" +
             SPECIES_TARGETS_HEADER + "\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
         assertNotNull(chunk);
-        assertEquals(ImportManager.Section.PLANT_CALIBRATIONS, chunk.getSection());
+        assertEquals(ImportManager.Section.LED_PROFILES, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantCalibrationsSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.LedProfilesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertEquals(2, warnings.size());
-        assertEquals("calibrations", warnings.get(0).category);
-        List<PlantCalibration> calibrations = db.plantCalibrationDao().getAll();
-        assertEquals(1, calibrations.size());
-        assertEquals(0.02f, calibrations.get(0).getAmbientFactor(), 0.0001f);
-        assertEquals(0.03f, calibrations.get(0).getCameraFactor(), 0.0001f);
+        assertEquals("led profiles", warnings.get(0).category);
+        List<LedProfile> profiles = db.ledProfileDao().getAll();
+        assertEquals(1, profiles.size());
+        Map<String, Float> factors = profiles.get(0).getCalibrationFactors();
+        assertEquals(0.02f, factors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+        assertEquals(0.03f, factors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
     }
 
     @Test

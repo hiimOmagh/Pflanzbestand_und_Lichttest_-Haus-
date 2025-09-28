@@ -16,13 +16,16 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
@@ -71,8 +74,17 @@ public class JsonImportExportTest {
         DiaryEntry diaryEntry = new DiaryEntry(plantId, 1357L, DiaryEntry.TYPE_WATER, "diary note");
         db.diaryDao().insert(diaryEntry);
 
-        PlantCalibration calibration = new PlantCalibration(plantId, 1.2f, 2.3f);
-        db.plantCalibrationDao().insertOrUpdate(calibration);
+        LedProfile profile = new LedProfile();
+        profile.setName("Calibrated");
+        Map<String, Float> factors = new HashMap<>();
+        factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, 1.2f);
+        factors.put(LedProfile.CALIBRATION_KEY_CAMERA, 2.3f);
+        profile.setCalibrationFactors(factors);
+        long profileId = db.ledProfileDao().insert(profile);
+        plant.setId(plantId);
+        plant.setLedProfileId(profileId);
+        db.plantDao().update(plant);
+        db.ledProfileAssociationDao().upsert(new LedProfileAssociation(plantId, profileId));
 
         EnvironmentEntry environmentEntry = new EnvironmentEntry(plantId, 2468L, 19.5f, 55f, 0.45f,
             12.5f, 8.1f, 4.2f, "env note", null);
@@ -138,10 +150,12 @@ public class JsonImportExportTest {
         assertEquals(1, diaries.size());
         assertEquals("diary note", diaries.get(0).getNote());
 
-        List<PlantCalibration> calibrations = db.plantCalibrationDao().getAll();
-        assertEquals(1, calibrations.size());
-        assertEquals(1.2f, calibrations.get(0).getAmbientFactor(), 0.0001f);
-        assertEquals(2.3f, calibrations.get(0).getCameraFactor(), 0.0001f);
+        List<LedProfile> profiles = db.ledProfileDao().getAll();
+        assertEquals(1, profiles.size());
+        Map<String, Float> restoredFactors = profiles.get(0).getCalibrationFactors();
+        assertEquals(1.2f, restoredFactors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+        assertEquals(2.3f, restoredFactors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
+        assertEquals(profiles.get(0).getId(), plants.get(0).getLedProfileId().longValue());
 
         List<SpeciesTarget> targets = db.speciesTargetDao().getAll();
         assertEquals(1, targets.size());
@@ -179,8 +193,17 @@ public class JsonImportExportTest {
         Reminder reminderA = new Reminder(6666L, "A reminder", plantAId);
         long reminderAId = db.reminderDao().insert(reminderA);
         reminderA.setId(reminderAId);
-        PlantCalibration calibrationA = new PlantCalibration(plantAId, 1.5f, 2.6f);
-        db.plantCalibrationDao().insertOrUpdate(calibrationA);
+        LedProfile profile = new LedProfile();
+        profile.setName("Profile A");
+        Map<String, Float> profileFactors = new HashMap<>();
+        profileFactors.put(LedProfile.CALIBRATION_KEY_AMBIENT, 1.5f);
+        profileFactors.put(LedProfile.CALIBRATION_KEY_CAMERA, 2.6f);
+        profile.setCalibrationFactors(profileFactors);
+        long profileId = db.ledProfileDao().insert(profile);
+        plantA.setId(plantAId);
+        plantA.setLedProfileId(profileId);
+        db.plantDao().update(plantA);
+        db.ledProfileAssociationDao().upsert(new LedProfileAssociation(plantAId, profileId));
 
         EnvironmentEntry environmentEntryA = new EnvironmentEntry(plantAId, 7777L, 23.2f, 60f, null,
             14.0f, 9.5f, 5.7f, "A env", null);
@@ -239,10 +262,12 @@ public class JsonImportExportTest {
         assertEquals(1, reminders.size());
         assertEquals("A reminder", reminders.get(0).getMessage());
 
-        List<PlantCalibration> calibrations = db.plantCalibrationDao().getAll();
-        assertEquals(1, calibrations.size());
-        assertEquals(1.5f, calibrations.get(0).getAmbientFactor(), 0.0001f);
-        assertEquals(2.6f, calibrations.get(0).getCameraFactor(), 0.0001f);
+        List<LedProfile> mergedProfiles = db.ledProfileDao().getAll();
+        assertEquals(1, mergedProfiles.size());
+        Map<String, Float> mergedFactors = mergedProfiles.get(0).getCalibrationFactors();
+        assertEquals(1.5f, mergedFactors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+        assertEquals(2.6f, mergedFactors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
+        assertEquals(mergedProfiles.get(0).getId(), plants.get(0).getLedProfileId().longValue());
 
         List<SpeciesTarget> targets = db.speciesTargetDao().getAll();
         assertEquals(1, targets.size());

@@ -111,10 +111,12 @@ flowchart LR
     PlantRepository --> PlantDatabase
 ```
 
-`ExportManager` gathers plants, measurements, diary entries, reminders, calibrations, species targets,
-and media paths via `BulkReadDao`, writes the chosen manifest format, and zips the result with copied
-media files. `ImportManager` detects JSON or CSV manifests, streams them through parser helpers, and
-persists the entities inside a Room transaction to ensure atomic imports.
+`ExportManager` gathers plants, LED profiles (with their calibration factors), measurements, diary
+entries, reminders, species targets, and media paths via `BulkReadDao`, writes the chosen manifest
+format, and zips the result with copied media files. `ImportManager` detects JSON or CSV manifests,
+streams them through parser helpers, and persists the entities inside a Room transaction to ensure
+atomic imports. LED profiles are restored before plants so calibration references remain valid
+throughout the import.
 
 ## Background work and scheduling
 
@@ -127,13 +129,15 @@ home-screen quick actions reflect the latest state.
 
 ## Calibration storage
 
-Per-plant calibration data lives in the `PlantCalibration` entity with columns `plantId`,
-`ambientFactor`, and `cameraFactor`. `PlantRepository` exposes `getLedCalibrationForPlant` and
-`saveLedCalibrationForPlant` helpers that prefer LED profile assignments but fall back to legacy
-per-plant rows. These helpers are used by both `LightMeasurementPresenter` (to refresh factors when a
-plant is selected) and `CalibrationFragment` (to persist user-entered values). Calibrations are
-exported in both CSV (`PlantCalibrations` section) and JSON (`plantCalibrations` array) backups and are
-restored during imports before any measurements are processed.
+Calibration data is primarily stored on the `LedProfile` entity inside the `calibrationFactors` map
+(`LedProfile.CALIBRATION_KEY_AMBIENT` and `LedProfile.CALIBRATION_KEY_CAMERA`).
+`PlantRepository` exposes `getLedCalibrationForPlant` and `saveLedCalibrationForPlant` helpers that
+prefer LED profile assignments but fall back to the legacy per-plant `PlantCalibration` rows when no
+profile is linked. These helpers are used by both `LightMeasurementPresenter` (to refresh factors when
+the user selects a plant) and `CalibrationFragment` (to persist user-entered values). Backups export the
+profile calibration data via the `LedProfiles` CSV section and `ledProfiles` JSON array, restoring LED
+profile records before any measurements are processed so dependent calculations use the correct
+factors.
 
 ## Resource and code conventions
 

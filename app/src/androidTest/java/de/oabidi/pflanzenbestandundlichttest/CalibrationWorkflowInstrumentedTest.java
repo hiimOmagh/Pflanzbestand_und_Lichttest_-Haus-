@@ -23,12 +23,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 
 /**
  * Espresso test covering the end-to-end calibration workflow.
@@ -55,6 +58,23 @@ public class CalibrationWorkflowInstrumentedTest {
             onView(withId(R.id.input_name)).perform(replaceText("Calibration Plant"), closeSoftKeyboard());
             onView(withId(R.id.btn_save)).perform(click());
             SystemClock.sleep(600);
+
+            CountDownLatch profileLatch = new CountDownLatch(1);
+            PlantDatabase.databaseWriteExecutor.execute(() -> {
+                List<Plant> plants = db.plantDao().getAll();
+                if (!plants.isEmpty()) {
+                    Plant inserted = plants.get(0);
+                    LedProfile profile = new LedProfile();
+                    profile.setName("WorkflowProfile");
+                    profile.setCalibrationFactors(new HashMap<>());
+                    long profileId = db.ledProfileDao().insert(profile);
+                    inserted.setLedProfileId(profileId);
+                    db.plantDao().update(inserted);
+                    db.ledProfileAssociationDao().upsert(new LedProfileAssociation(inserted.getId(), profileId));
+                }
+                profileLatch.countDown();
+            });
+            assertTrue(profileLatch.await(2, TimeUnit.SECONDS));
 
             // Navigate to measurement screen and open calibration
             onView(withId(R.id.nav_measure)).perform(click());
@@ -90,17 +110,21 @@ public class CalibrationWorkflowInstrumentedTest {
             long plantId = plantIdHolder[0];
             assertTrue(plantId > 0);
 
-            final PlantCalibration[] calibrationHolder = new PlantCalibration[1];
+            final LedProfile[] profileHolder = new LedProfile[1];
             CountDownLatch calibrationLatch = new CountDownLatch(1);
             PlantDatabase.databaseWriteExecutor.execute(() -> {
-                calibrationHolder[0] = db.plantCalibrationDao().getForPlant(plantId);
+                Plant stored = db.plantDao().findById(plantId);
+                if (stored != null && stored.getLedProfileId() != null) {
+                    profileHolder[0] = db.ledProfileDao().findById(stored.getLedProfileId());
+                }
                 calibrationLatch.countDown();
             });
             assertTrue(calibrationLatch.await(2, TimeUnit.SECONDS));
-            PlantCalibration calibration = calibrationHolder[0];
-            assertNotNull(calibration);
-            assertEquals(ambient, calibration.getAmbientFactor(), 0.0001f);
-            assertEquals(camera, calibration.getCameraFactor(), 0.0001f);
+            LedProfile profile = profileHolder[0];
+            assertNotNull(profile);
+            Map<String, Float> factors = profile.getCalibrationFactors();
+            assertEquals(ambient, factors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+            assertEquals(camera, factors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
         }
     }
 }

@@ -13,6 +13,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -28,7 +30,8 @@ import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 
 import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 import de.oabidi.pflanzenbestandundlichttest.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
@@ -110,8 +113,17 @@ public class DataImportExportInstrumentedTest {
         });
 
         awaitDb(() -> {
-            PlantDatabase.getDatabase(context).plantCalibrationDao()
-                .insertOrUpdate(new PlantCalibration(plant.getId(), 0.05f, 0.07f));
+            LedProfile profile = new LedProfile();
+            profile.setName("ExportProfile");
+            Map<String, Float> factors = new HashMap<>();
+            factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, 0.05f);
+            factors.put(LedProfile.CALIBRATION_KEY_CAMERA, 0.07f);
+            profile.setCalibrationFactors(factors);
+            long profileId = PlantDatabase.getDatabase(context).ledProfileDao().insert(profile);
+            plant.setLedProfileId(profileId);
+            PlantDatabase.getDatabase(context).plantDao().update(plant);
+            PlantDatabase.getDatabase(context).ledProfileAssociationDao()
+                .upsert(new LedProfileAssociation(plant.getId(), profileId));
             return null;
         });
 
@@ -161,14 +173,14 @@ public class DataImportExportInstrumentedTest {
         int measurementCount = awaitDb(() -> PlantDatabase.getDatabase(context).measurementDao().getAll().size());
         int diaryCount = awaitDb(() -> PlantDatabase.getDatabase(context).diaryDao().getAll().size());
         int reminderCount = awaitDb(() -> PlantDatabase.getDatabase(context).reminderDao().getAll().size());
-        int calibrationCount = awaitDb(() -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().size());
+        int profileCount = awaitDb(() -> PlantDatabase.getDatabase(context).ledProfileDao().getAll().size());
 
         assertEquals(1, plantCount);
         assertEquals(1, targetCount);
         assertEquals(1, measurementCount);
         assertEquals(1, diaryCount);
         assertEquals(1, reminderCount);
-        assertEquals(1, calibrationCount);
+        assertEquals(1, profileCount);
 
         Measurement restoredMeasurement = awaitDb(
             () -> PlantDatabase.getDatabase(context).measurementDao().getAll().get(0)
@@ -211,11 +223,13 @@ public class DataImportExportInstrumentedTest {
         assertEquals(reminderTrigger, restoredReminder.getTriggerAt());
         assertEquals("ExportReminder", restoredReminder.getMessage());
 
-        PlantCalibration restoredCalibration = awaitDb(
-            () -> PlantDatabase.getDatabase(context).plantCalibrationDao().getAll().get(0)
+        LedProfile restoredProfile = awaitDb(
+            () -> PlantDatabase.getDatabase(context).ledProfileDao().getAll().get(0)
         );
-        assertEquals(0.05f, restoredCalibration.getAmbientFactor(), 0.0001f);
-        assertEquals(0.07f, restoredCalibration.getCameraFactor(), 0.0001f);
+        Map<String, Float> restoredFactors = restoredProfile.getCalibrationFactors();
+        assertEquals(0.05f, restoredFactors.get(LedProfile.CALIBRATION_KEY_AMBIENT), 0.0001f);
+        assertEquals(0.07f, restoredFactors.get(LedProfile.CALIBRATION_KEY_CAMERA), 0.0001f);
+        assertEquals(restoredProfile.getId(), restoredPlant.getLedProfileId().longValue());
         assertEquals(plant.getId(), restoredReminder.getPlantId());
 
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);

@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -28,7 +29,7 @@ import java.util.zip.ZipOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
 import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
@@ -172,6 +173,7 @@ public class ExportManager {
             List<Reminder> reminders;
             List<EnvironmentEntry> environmentEntries;
             List<ReminderSuggestion> reminderSuggestions;
+            List<LedProfile> ledProfiles;
             if (plantId >= 0) {
                 Plant p = bulkDao.getPlant(plantId);
                 plants = p != null ? Collections.singletonList(p) : Collections.emptyList();
@@ -179,14 +181,20 @@ public class ExportManager {
                 diaryEntries = bulkDao.getDiaryEntriesForPlant(plantId);
                 List<PlantPhoto> photos = bulkDao.getPlantPhotosForPlant(plantId);
                 reminders = bulkDao.getRemindersForPlant(plantId);
-                List<PlantCalibration> calibrations = bulkDao.getPlantCalibrationsForPlant(plantId);
                 environmentEntries = bulkDao.getEnvironmentEntriesForPlant(plantId);
                 ReminderSuggestion suggestion = bulkDao.getReminderSuggestionForPlant(plantId);
                 reminderSuggestions = suggestion != null
                     ? Collections.singletonList(suggestion)
                     : Collections.emptyList();
+                LedProfile profile = null;
+                if (p != null && p.getLedProfileId() != null) {
+                    profile = bulkDao.getLedProfile(p.getLedProfileId());
+                }
+                ledProfiles = profile != null
+                    ? Collections.singletonList(profile)
+                    : Collections.emptyList();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), photos != null ? photos : Collections.emptyList(), calibrations,
+                    bulkDao.getAllSpeciesTargets(), photos != null ? photos : Collections.emptyList(), ledProfiles,
                     environmentEntries != null ? environmentEntries : Collections.emptyList(), reminderSuggestions);
             } else {
                 plants = bulkDao.getAllPlants();
@@ -195,8 +203,9 @@ public class ExportManager {
                 List<PlantPhoto> plantPhotos = bulkDao.getAllPlantPhotos();
                 reminders = bulkDao.getAllReminders();
                 reminderSuggestions = bulkDao.getAllReminderSuggestions();
+                ledProfiles = bulkDao.getAllLedProfiles();
                 return new ExportData(plants, measurements, diaryEntries, reminders,
-                    bulkDao.getAllSpeciesTargets(), plantPhotos, bulkDao.getAllPlantCalibrations(),
+                    bulkDao.getAllSpeciesTargets(), plantPhotos, ledProfiles,
                     bulkDao.getAllEnvironmentEntries(), reminderSuggestions);
             }
         } catch (Exception e) {
@@ -210,19 +219,36 @@ public class ExportManager {
         try (BufferedWriter writer = new BufferedWriter(
             new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
             writer.write("Version," + EXPORT_VERSION + "\n\n");
-            writer.write("Plants\n");
-            writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri\n");
+            writer.write("LedProfiles\n");
+            writer.write("id,name,type,mountingDistanceCm,ambientFactor,cameraFactor\n");
+            for (LedProfile profile : data.ledProfiles) {
+                Map<String, Float> factors = profile.getCalibrationFactors();
+                Float ambient = factors.get(LedProfile.CALIBRATION_KEY_AMBIENT);
+                Float camera = factors.get(LedProfile.CALIBRATION_KEY_CAMERA);
+                writer.write(String.format(Locale.US, "%d,%s,%s,%s,%s,%s\n",
+                    profile.getId(),
+                    escape(profile.getName()),
+                    escape(profile.getType()),
+                    formatFloat(profile.getMountingDistanceCm()),
+                    formatFloat(ambient),
+                    formatFloat(camera)));
+            }
+
+            writer.write("\nPlants\n");
+            writer.write("id,name,description,species,locationHint,acquiredAtEpoch,photoUri,ledProfileId\n");
             for (Plant p : data.plants) {
                 String photoName = copyPhotoIfPresent(tempDir, "plant_", p.getId(), p.getPhotoUri());
+                Long ledProfileId = p.getLedProfileId();
                 writer.write(String.format(Locale.US,
-                    "%d,%s,%s,%s,%s,%d,%s\n",
+                    "%d,%s,%s,%s,%s,%d,%s,%s\n",
                     p.getId(),
                     escape(p.getName()),
                     escape(p.getDescription()),
                     escape(p.getSpecies()),
                     escape(p.getLocationHint()),
                     p.getAcquiredAtEpoch(),
-                    escape(photoName)));
+                    escape(photoName),
+                    ledProfileId != null ? ledProfileId.toString() : ""));
             }
 
             writer.write("\nPlantPhotos\n");
@@ -239,15 +265,6 @@ public class ExportManager {
                     photo.getPlantId(),
                     escape(photoName),
                     photo.getCreatedAt()));
-            }
-
-            writer.write("\nPlantCalibrations\n");
-            writer.write("plantId,ambientFactor,cameraFactor\n");
-            for (PlantCalibration calibration : data.calibrations) {
-                writer.write(String.format(Locale.US, "%d,%f,%f\n",
-                    calibration.getPlantId(),
-                    calibration.getAmbientFactor(),
-                    calibration.getCameraFactor()));
             }
 
             writer.write("\nSpeciesTargets\n");
@@ -382,6 +399,28 @@ public class ExportManager {
             writer.beginObject();
             writer.name("version").value(EXPORT_VERSION);
 
+            writer.name("ledProfiles");
+            writer.beginArray();
+            for (LedProfile profile : data.ledProfiles) {
+                writer.beginObject();
+                writer.name("id").value(profile.getId());
+                writeString(writer, "name", profile.getName());
+                writeOptionalString(writer, "type", profile.getType());
+                writeOptionalFloat(writer, "mountingDistanceCm", profile.getMountingDistanceCm());
+                writer.name("calibrationFactors");
+                writer.beginObject();
+                for (Map.Entry<String, Float> entry : profile.getCalibrationFactors().entrySet()) {
+                    String key = entry.getKey();
+                    Float value = entry.getValue();
+                    if (key != null && value != null) {
+                        writer.name(key).value(value);
+                    }
+                }
+                writer.endObject();
+                writer.endObject();
+            }
+            writer.endArray();
+
             writer.name("plants");
             writer.beginArray();
             for (Plant plant : data.plants) {
@@ -394,6 +433,7 @@ public class ExportManager {
                 writer.name("acquiredAtEpoch").value(plant.getAcquiredAtEpoch());
                 String photoName = copyPhotoIfPresent(tempDir, "plant_", plant.getId(), plant.getPhotoUri());
                 writeOptionalString(writer, "photo", photoName);
+                writeOptionalLong(writer, "ledProfileId", plant.getLedProfileId());
                 writer.endObject();
             }
             writer.endArray();
@@ -411,17 +451,6 @@ public class ExportManager {
                 }
                 writeOptionalString(writer, "fileName", fileName);
                 writer.name("createdAt").value(photo.getCreatedAt());
-                writer.endObject();
-            }
-            writer.endArray();
-
-            writer.name("plantCalibrations");
-            writer.beginArray();
-            for (PlantCalibration calibration : data.calibrations) {
-                writer.beginObject();
-                writer.name("plantId").value(calibration.getPlantId());
-                writer.name("ambientFactor").value(calibration.getAmbientFactor());
-                writer.name("cameraFactor").value(calibration.getCameraFactor());
                 writer.endObject();
             }
             writer.endArray();
@@ -705,6 +734,15 @@ public class ExportManager {
         }
     }
 
+    private void writeOptionalLong(JsonWriter writer, String name, @Nullable Long value)
+        throws IOException {
+        if (value == null) {
+            writer.name(name).nullValue();
+        } else {
+            writer.name(name).value(value);
+        }
+    }
+
     private static String escape(String value) {
         if (value == null) {
             return "";
@@ -735,13 +773,13 @@ public class ExportManager {
         final List<Reminder> reminders;
         final List<SpeciesTarget> targets;
         final List<PlantPhoto> plantPhotos;
-        final List<PlantCalibration> calibrations;
+        final List<LedProfile> ledProfiles;
         final List<EnvironmentEntry> environmentEntries;
         final List<ReminderSuggestion> reminderSuggestions;
 
         ExportData(List<Plant> plants, List<Measurement> measurements, List<DiaryEntry> diaryEntries,
                    List<Reminder> reminders, List<SpeciesTarget> targets, List<PlantPhoto> plantPhotos,
-                   List<PlantCalibration> calibrations, List<EnvironmentEntry> environmentEntries,
+                   List<LedProfile> ledProfiles, List<EnvironmentEntry> environmentEntries,
                    List<ReminderSuggestion> reminderSuggestions) {
             this.plants = plants;
             this.measurements = measurements;
@@ -749,7 +787,7 @@ public class ExportManager {
             this.reminders = reminders;
             this.targets = targets;
             this.plantPhotos = plantPhotos;
-            this.calibrations = calibrations;
+            this.ledProfiles = ledProfiles;
             this.environmentEntries = environmentEntries;
             this.reminderSuggestions = reminderSuggestions;
         }

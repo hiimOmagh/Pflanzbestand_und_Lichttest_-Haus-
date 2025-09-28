@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
@@ -154,13 +154,13 @@ public class ExportManagerCleanupTest {
                 }
 
                 @Override
-                public List<PlantCalibration> getAllPlantCalibrations() {
+                public List<LedProfile> getAllLedProfiles() {
                     return Collections.emptyList();
                 }
 
                 @Override
-                public List<PlantCalibration> getPlantCalibrationsForPlant(long plantId) {
-                    return Collections.emptyList();
+                public LedProfile getLedProfile(long profileId) {
+                    return null;
                 }
 
                 @Override

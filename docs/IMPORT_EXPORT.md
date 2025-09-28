@@ -34,20 +34,19 @@ with the section name followed by a header row listing the column names. Rows ar
 and quoted where needed. The supported sections match `ImportManager.Section`:
 
 | Section              | Columns                                                                                                                                                                                                                                                                                                                                                                                       |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Plants`             | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri`                                                                                                                                                                                                                                                                                                                           |
-| `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                                                                                                                                                                                                                                                                                    |
-| `PlantCalibrations`  | `plantId,ambientFactor,cameraFactor`                                                                                                                                                                                                                                                                                                                                                          |
+|----------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `LedProfiles`        | `id,name,type,mountingDistanceCm,ambientFactor,cameraFactor`                                                                  |
+| `Plants`             | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri,ledProfileId`                                             |
+| `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                   |
 | `SpeciesTargets`     | `speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,wateringFrequency,wateringSoilType,wateringTolerance,temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources` |
-| `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                                                                                                                                                                                                                                                                                            |
-| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo`                                                                                                                                                                                                                                                                                                             |
-| `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                                                                                                                                                                                                                                                                                     |
-| `Reminders`          | `id,plantId,triggerAt,message`                                                                                                                                                                                                                                                                                                                                                                |
-
+| `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                            |
+| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo`                                            |
+| `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                    |
+| `Reminders`          | `id,plantId,triggerAt,message`                                                                                               |
 The importer is tolerant of missing trailing columns and blank numeric values; empty strings map to
-`NULL` in Room. Plant calibrations expect positive floating-point factors and are silently skipped
-when malformed. Environment entries restore optional photos by resolving the exported file name
-against the archive contents.
+`NULL` in Room. LED profile calibrations expect positive floating-point factors and are silently
+skipped when malformed. Environment entries restore optional photos by resolving the exported file
+name against the archive contents.
 
 ## JSON manifest
 
@@ -55,14 +54,14 @@ JSON exports write a single prettified file `data.json` with the following top-l
 
 ```json
 {
-    "version": 3,
+    "version": 4,
+    "ledProfiles": [
+        ...
+    ],
     "plants": [
         ...
     ],
     "plantPhotos": [
-        ...
-    ],
-    "plantCalibrations": [
         ...
     ],
     "speciesTargets": [
@@ -86,10 +85,11 @@ JSON exports write a single prettified file `data.json` with the following top-l
 Each array entry mirrors the Room entities and uses `null` for optional fields. The expected object
 schemas are:
 
+- **ledProfiles** – `{ "id": long, "name": string, "type": string?, "mountingDistanceCm": float?,
+  "calibrationFactors": { "ambient": float?, "camera": float? } }`
 - **plants** – `{ "id": long, "name": string, "description": string?, "species": string?,
-  "locationHint": string?, "acquiredAtEpoch": long, "photo": string? }`
+  "locationHint": string?, "acquiredAtEpoch": long, "photo": string?, "ledProfileId": long? }`
 - **plantPhotos** – `{ "id": long, "plantId": long, "fileName": string?, "createdAt": long }`
-- **plantCalibrations** – `{ "plantId": long, "ambientFactor": float, "cameraFactor": float }`
 - **speciesTargets** – `{ "speciesKey": string, "commonName": string?, "scientificName": string?,
   "category": string, "seedling": Stage?, "vegetative": Stage?, "flower": Stage?,
   "watering": WateringInfo?, "temperature": Range?, "humidity": Range?, "growthHabit": string?,
@@ -102,7 +102,7 @@ schemas are:
   "luxAvg": float, "ppfd": float?, "dli": float?, "note": string? }`
 - **environmentEntries** – `{ "id": long, "plantId": long, "timestamp": long,
   "temperature": float?, "humidity": float?, "soilMoisture": float?, "height": float?,
-  "width": float?, "notes": string?, "photo": string? }`
+  "width": float?, "naturalDli": float?, "notes": string?, "photo": string? }`
 - **diaryEntries** – `{ "id": long, "plantId": long, "timeEpoch": long, "type": string,
   "note": string?, "photo": string? }`
 - **reminders** – `{ "id": long, "plantId": long, "triggerAt": long, "message": string }`
@@ -118,8 +118,8 @@ like:
 
 ```
 EnvironmentEntries
-id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,notes,photo
-42,11,1707410400,,58.2,,12.5,8.0,"Bluetooth sensor",
+id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo
+42,11,1707410400,,58.2,,12.5,8.0,2.1,"Bluetooth sensor",
 ```
 
 The matching JSON export uses compact objects:
@@ -136,6 +136,7 @@ The matching JSON export uses compact objects:
             "soilMoisture": null,
             "height": 12.5,
             "width": 8.0,
+            "naturalDli": 2.1,
             "notes": "Bluetooth sensor",
             "photo": null
         }

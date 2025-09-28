@@ -65,10 +65,10 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantApp;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -365,6 +365,7 @@ public class ImportManager {
 
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
+        Map<Long, Long> ledProfileIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
         final NumberFormat nf = NumberFormat.getInstance(Locale.US);
         nf.setGroupingUsed(false);
@@ -376,14 +377,14 @@ public class ImportManager {
                 try {
                     SectionReader sectionReader = new SectionReader(reader, lineNumber);
                     SectionContext context = new SectionContext(this, mode, baseDir,
-                        plantIdMap, warnings, restoredUris, db, nf, importVersion, cancelled);
+                        plantIdMap, ledProfileIdMap, warnings, restoredUris, db, nf, importVersion, cancelled);
                     SectionCoordinator coordinator = new SectionCoordinator(
                         this,
                         sectionReader,
                         Arrays.asList(
+                            new LedProfilesSectionParser(),
                             new PlantsSectionParser(),
                             new PlantPhotosSectionParser(),
-                            new PlantCalibrationsSectionParser(),
                             new SpeciesTargetsSectionParser(),
                             new MeasurementsSectionParser(),
                             new EnvironmentEntriesSectionParser(),
@@ -454,6 +455,18 @@ public class ImportManager {
                                 }
                                 versionSeen = true;
                                 break;
+                            case "ledProfiles":
+                                if (reader.peek() == JsonToken.NULL) {
+                                    reader.nextNull();
+                                } else {
+                                    ParseResult result = parseJsonLedProfilesArray(reader, mode,
+                                        ledProfileIdMap, warnings, db);
+                                    if (result.imported) {
+                                        importedAny[0] = true;
+                                    }
+                                    applySectionProgress(result, totalSteps, progress, progressCallback);
+                                }
+                                break;
                             case "plants":
                                 if (!versionSeen) {
                                     errorHolder[0] = ImportError.MISSING_VERSION;
@@ -464,7 +477,7 @@ public class ImportManager {
                                     reader.nextNull();
                                 } else {
                                     ParseResult result = parseJsonPlantsArray(reader, mode, baseDir,
-                                        plantIdMap, warnings, restoredUris, db);
+                                        plantIdMap, ledProfileIdMap, warnings, restoredUris, db);
                                     if (result.imported) {
                                         importedAny[0] = true;
                                     }
@@ -475,20 +488,8 @@ public class ImportManager {
                                 if (reader.peek() == JsonToken.NULL) {
                                     reader.nextNull();
                                 } else {
-                                    ParseResult result = parseJsonPlantsArray(reader, mode, baseDir,
+                                    ParseResult result = parseJsonPlantPhotosArray(reader, mode, baseDir,
                                         plantIdMap, warnings, restoredUris, db);
-                                    if (result.imported) {
-                                        importedAny[0] = true;
-                                    }
-                                    applySectionProgress(result, totalSteps, progress, progressCallback);
-                                }
-                                break;
-                            case "plantCalibrations":
-                                if (reader.peek() == JsonToken.NULL) {
-                                    reader.nextNull();
-                                } else {
-                                    ParseResult result = parseJsonPlantCalibrationsArray(reader, mode,
-                                        plantIdMap, warnings, db);
                                     if (result.imported) {
                                         importedAny[0] = true;
                                     }
@@ -888,7 +889,8 @@ public class ImportManager {
     }
 
     boolean parsePlantRow(List<String> parts, Mode mode, File baseDir,
-                          Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                          Map<Long, Long> plantIdMap, Map<Long, Long> ledProfileIdMap,
+                          List<ImportWarning> warnings,
                           int currentLine, List<Uri> restoredUris,
                           PlantDatabase db) {
         if (parts.size() < 7) {
@@ -904,6 +906,18 @@ public class ImportManager {
             String location = parts.get(4).isEmpty() ? null : parts.get(4);
             long acquired = Long.parseLong(parts.get(5));
             String photo = parts.get(6);
+            Long profileId = null;
+            if (parts.size() > 7) {
+                String profileValue = parts.get(7);
+                if (!profileValue.isEmpty()) {
+                    try {
+                        profileId = Long.parseLong(profileValue);
+                    } catch (NumberFormatException e) {
+                        warnings.add(new ImportWarning("plants", currentLine, "invalid led profile id"));
+                        profileId = null;
+                    }
+                }
+            }
             Uri photoUri = null;
             if (!photo.isEmpty()) {
                 Uri restored = restoreImage(new File(baseDir, photo));
@@ -915,13 +929,29 @@ public class ImportManager {
                 }
             }
             Plant p = new Plant(name, description, species, location, acquired, photoUri);
+            Long resolvedProfileId = null;
+            if (profileId != null) {
+                Long mapped = ledProfileIdMap.get(profileId);
+                if (mapped == null) {
+                    warnings.add(new ImportWarning("plants", currentLine, "unknown led profile"));
+                } else {
+                    resolvedProfileId = mapped;
+                    p.setLedProfileId(mapped);
+                }
+            }
             if (mode == Mode.MERGE) {
                 p.setId(0);
                 long newId = db.plantDao().insert(p);
                 plantIdMap.put(id, newId);
+                if (resolvedProfileId != null) {
+                    db.ledProfileAssociationDao().upsert(new LedProfileAssociation(newId, resolvedProfileId));
+                }
             } else {
                 p.setId(id);
-                db.plantDao().insert(p);
+                long newId = db.plantDao().insert(p);
+                if (resolvedProfileId != null) {
+                    db.ledProfileAssociationDao().upsert(new LedProfileAssociation(newId, resolvedProfileId));
+                }
             }
             return true;
         } catch (Exception e) {
@@ -996,49 +1026,80 @@ public class ImportManager {
         }
     }
 
-    boolean insertCalibrationRow(List<String> parts, Mode mode,
-                                 Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                 int currentLine, PlantDatabase db) {
-        if (parts.size() < 3) {
-            Log.e(TAG, "Malformed calibration row: " + parts);
-            warnings.add(new ImportWarning("calibrations", currentLine, "malformed row"));
+    boolean insertLedProfileRow(List<String> parts, Mode mode,
+                                Map<Long, Long> ledProfileIdMap, List<ImportWarning> warnings,
+                                int currentLine, PlantDatabase db) {
+        if (parts.size() < 6) {
+            Log.e(TAG, "Malformed LED profile row: " + parts);
+            warnings.add(new ImportWarning("led profiles", currentLine, "malformed row"));
             return false;
         }
         try {
-            long plantId;
+            long originalId;
             try {
-                plantId = Long.parseLong(parts.get(0));
+                originalId = Long.parseLong(parts.get(0));
             } catch (NumberFormatException e) {
-                warnings.add(new ImportWarning("calibrations", currentLine, "invalid plant id"));
+                warnings.add(new ImportWarning("led profiles", currentLine, "invalid profile id"));
                 return false;
             }
-            if (mode == Mode.MERGE) {
-                Long mappedId = plantIdMap.get(plantId);
-                if (mappedId == null) {
-                    warnings.add(new ImportWarning("calibrations", currentLine, "unknown plant"));
+            String name = parts.get(1);
+            String type = parts.get(2).isEmpty() ? null : parts.get(2);
+            Float mountingDistance = null;
+            if (parts.size() > 3 && !parts.get(3).isEmpty()) {
+                try {
+                    mountingDistance = Float.parseFloat(parts.get(3));
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("led profiles", currentLine, "invalid distance"));
                     return false;
                 }
-                plantId = mappedId;
             }
-            float ambient;
-            float camera;
-            try {
-                ambient = Float.parseFloat(parts.get(1));
-                camera = Float.parseFloat(parts.get(2));
-            } catch (NumberFormatException e) {
-                warnings.add(new ImportWarning("calibrations", currentLine, "invalid factor"));
+            Float ambient = null;
+            if (parts.size() > 4 && !parts.get(4).isEmpty()) {
+                try {
+                    ambient = Float.parseFloat(parts.get(4));
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("led profiles", currentLine, "invalid ambient factor"));
+                    return false;
+                }
+            }
+            Float camera = null;
+            if (parts.size() > 5 && !parts.get(5).isEmpty()) {
+                try {
+                    camera = Float.parseFloat(parts.get(5));
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("led profiles", currentLine, "invalid camera factor"));
+                    return false;
+                }
+            }
+            if ((ambient != null && ambient <= 0f) || (camera != null && camera <= 0f)) {
+                warnings.add(new ImportWarning("led profiles", currentLine, "non-positive factor"));
                 return false;
             }
-            if (ambient <= 0f || camera <= 0f) {
-                warnings.add(new ImportWarning("calibrations", currentLine, "non-positive factor"));
-                return false;
+            LedProfile profile = new LedProfile();
+            profile.setName(name);
+            profile.setType(type);
+            profile.setMountingDistanceCm(mountingDistance);
+            Map<String, Float> factors = new HashMap<>();
+            if (ambient != null) {
+                factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, ambient);
             }
-            PlantCalibration calibration = new PlantCalibration(plantId, ambient, camera);
-            db.plantCalibrationDao().insertOrUpdate(calibration);
+            if (camera != null) {
+                factors.put(LedProfile.CALIBRATION_KEY_CAMERA, camera);
+            }
+            profile.setCalibrationFactors(factors);
+            long storedId;
+            if (mode == Mode.MERGE) {
+                profile.setId(0);
+                storedId = db.ledProfileDao().insert(profile);
+            } else {
+                profile.setId(originalId);
+                storedId = db.ledProfileDao().insert(profile);
+            }
+            ledProfileIdMap.put(originalId, storedId);
             return true;
         } catch (Exception e) {
-            Log.e(TAG, "Malformed calibration row: " + parts, e);
-            warnings.add(new ImportWarning("calibrations", currentLine, "malformed row"));
+            Log.e(TAG, "Malformed LED profile row: " + parts, e);
+            warnings.add(new ImportWarning("led profiles", currentLine, "malformed row"));
             return false;
         }
     }
@@ -1251,7 +1312,8 @@ public class ImportManager {
     }
 
     private ParseResult parseJsonPlantsArray(JsonReader reader, Mode mode, File baseDir,
-                                             Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                             Map<Long, Long> plantIdMap, Map<Long, Long> ledProfileIdMap,
+                                             List<ImportWarning> warnings,
                                          List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
@@ -1264,6 +1326,7 @@ public class ImportManager {
             String location = null;
             long acquired = 0L;
             String photo = null;
+            Long ledProfileId = null;
             reader.beginObject();
             while (reader.hasNext()) {
                 String field = reader.nextName();
@@ -1291,13 +1354,16 @@ public class ImportManager {
                     case "photo":
                         photo = readOptionalString(reader);
                         break;
+                    case "ledProfileId":
+                        ledProfileId = readNullableLong(reader);
+                        break;
                     default:
                         reader.skipValue();
                         break;
                 }
             }
             reader.endObject();
-            List<String> parts = new ArrayList<>(7);
+            List<String> parts = new ArrayList<>(8);
             parts.add(Long.toString(id));
             parts.add(name != null ? name : "");
             parts.add(description != null ? description : "");
@@ -1305,7 +1371,8 @@ public class ImportManager {
             parts.add(location != null ? location : "");
             parts.add(Long.toString(acquired));
             parts.add(photo != null ? photo : "");
-            if (parsePlantRow(parts, mode, baseDir, plantIdMap, warnings, index, restoredUris, db)) {
+            parts.add(ledProfileId != null ? Long.toString(ledProfileId) : "");
+            if (parsePlantRow(parts, mode, baseDir, plantIdMap, ledProfileIdMap, warnings, index, restoredUris, db)) {
                 imported = true;
             }
             index++;
@@ -1364,30 +1431,50 @@ public class ImportManager {
         return new ParseResult(imported, index - 1);
     }
 
-    private ParseResult parseJsonPlantCalibrationsArray(JsonReader reader, Mode mode,
-                                                        Map<Long, Long> plantIdMap,
-                                                        List<ImportWarning> warnings,
-                                                        PlantDatabase db) throws IOException {
+    private ParseResult parseJsonLedProfilesArray(JsonReader reader, Mode mode,
+                                                  Map<Long, Long> ledProfileIdMap,
+                                                  List<ImportWarning> warnings,
+                                                  PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
         while (reader.hasNext()) {
-            long plantId = 0L;
-            Float ambient = null;
-            Float camera = null;
+            long id = 0L;
+            String name = null;
+            String type = null;
+            Float distance = null;
+            Map<String, Float> factors = new HashMap<>();
             reader.beginObject();
             while (reader.hasNext()) {
                 String field = reader.nextName();
                 switch (field) {
-                    case "plantId":
+                    case "id":
                         Long value = readNullableLong(reader);
-                        plantId = value != null ? value : 0L;
+                        id = value != null ? value : 0L;
                         break;
-                    case "ambientFactor":
-                        ambient = readNullableFloat(reader);
+                    case "name":
+                        name = readOptionalString(reader);
                         break;
-                    case "cameraFactor":
-                        camera = readNullableFloat(reader);
+                    case "type":
+                        type = readOptionalString(reader);
+                        break;
+                    case "mountingDistanceCm":
+                        distance = readNullableFloat(reader);
+                        break;
+                    case "calibrationFactors":
+                        if (reader.peek() == JsonToken.NULL) {
+                            reader.nextNull();
+                        } else {
+                            reader.beginObject();
+                            while (reader.hasNext()) {
+                                String key = reader.nextName();
+                                Float value = readNullableFloat(reader);
+                                if (key != null && value != null) {
+                                    factors.put(key, value);
+                                }
+                            }
+                            reader.endObject();
+                        }
                         break;
                     default:
                         reader.skipValue();
@@ -1395,11 +1482,16 @@ public class ImportManager {
                 }
             }
             reader.endObject();
-            List<String> parts = new ArrayList<>(3);
-            parts.add(Long.toString(plantId));
+            List<String> parts = new ArrayList<>(6);
+            parts.add(Long.toString(id));
+            parts.add(name != null ? name : "");
+            parts.add(type != null ? type : "");
+            parts.add(distance != null ? Float.toString(distance) : "");
+            Float ambient = factors.get(LedProfile.CALIBRATION_KEY_AMBIENT);
+            Float camera = factors.get(LedProfile.CALIBRATION_KEY_CAMERA);
             parts.add(ambient != null ? Float.toString(ambient) : "");
             parts.add(camera != null ? Float.toString(camera) : "");
-            if (insertCalibrationRow(parts, mode, plantIdMap, warnings, index, db)) {
+            if (insertLedProfileRow(parts, mode, ledProfileIdMap, warnings, index, db)) {
                 imported = true;
             }
             index++;
@@ -2252,9 +2344,9 @@ public class ImportManager {
      */
     public enum Section {
         NONE(""),
+        LED_PROFILES("LedProfiles"),
         PLANTS("Plants"),
         PLANT_PHOTOS("PlantPhotos"),
-        PLANT_CALIBRATIONS("PlantCalibrations"),
         SPECIES_TARGETS("SpeciesTargets"),
         MEASUREMENTS("Measurements"),
         ENVIRONMENT_ENTRIES("EnvironmentEntries"),
@@ -2380,6 +2472,7 @@ public class ImportManager {
         final Mode mode;
         final File baseDir;
         final Map<Long, Long> plantIdMap;
+        final Map<Long, Long> ledProfileIdMap;
         final List<ImportWarning> warnings;
         final List<Uri> restoredUris;
         final PlantDatabase db;
@@ -2391,6 +2484,7 @@ public class ImportManager {
                               @NonNull Mode mode,
                               @NonNull File baseDir,
                               @NonNull Map<Long, Long> plantIdMap,
+                              @NonNull Map<Long, Long> ledProfileIdMap,
                               @NonNull List<ImportWarning> warnings,
                               @NonNull List<Uri> restoredUris,
                               @NonNull PlantDatabase db,
@@ -2401,6 +2495,7 @@ public class ImportManager {
             this.mode = mode;
             this.baseDir = baseDir;
             this.plantIdMap = plantIdMap;
+            this.ledProfileIdMap = ledProfileIdMap;
             this.warnings = warnings;
             this.restoredUris = restoredUris;
             this.db = db;
