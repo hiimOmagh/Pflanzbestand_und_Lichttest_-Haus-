@@ -9,11 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.gms.location.CancellationTokenSource;
+//import com.google.android.gms.location.CancellationTokenSource;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.CancellationTokenSource;
 
 import java.util.Objects;
 import java.util.function.Consumer;

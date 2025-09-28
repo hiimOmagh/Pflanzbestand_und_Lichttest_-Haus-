@@ -55,7 +55,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.work.runtime)
     implementation(libs.firebase.crashlytics)
-    implementation(libs.play.services.location)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     annotationProcessor(libs.room.compiler)
     testAnnotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
