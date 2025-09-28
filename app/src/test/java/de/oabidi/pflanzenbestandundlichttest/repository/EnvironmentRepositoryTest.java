@@ -55,7 +55,7 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
 
     @Test
     public void insertEnvironmentEntry_invokesDelegateAndSetsId() throws Exception {
-        EnvironmentEntry entry = new EnvironmentEntry(3L, System.currentTimeMillis(), null, null, null, null, null, null, null, null);
+        EnvironmentEntry entry = new EnvironmentEntry(3L, System.currentTimeMillis(), null, null, null, null, null, null, null, null, null, null);
         when(environmentEntryDao.insert(entry)).thenReturn(15L);
         AtomicBoolean refreshed = new AtomicBoolean(false);
         when(careDelegate.refreshCareRecommendationsAsync(anyLong())).thenReturn(() -> refreshed.set(true));

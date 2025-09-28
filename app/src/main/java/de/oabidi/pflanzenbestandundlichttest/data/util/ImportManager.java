@@ -1259,8 +1259,33 @@ public class ImportManager {
                     return false;
                 }
             }
-            String notes = parts.size() > 9 ? parts.get(9) : "";
-            String photoFile = parts.size() > 10 ? parts.get(10) : "";
+            Float artificialDli = null;
+            Float artificialHours = null;
+            String notes;
+            String photoFile;
+            if (parts.size() > 11) {
+                if (!parts.get(9).isEmpty()) {
+                    try {
+                        artificialDli = Objects.requireNonNull(nf.parse(parts.get(9))).floatValue();
+                    } catch (Exception e) {
+                        warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial DLI"));
+                        return false;
+                    }
+                }
+                if (!parts.get(10).isEmpty()) {
+                    try {
+                        artificialHours = Objects.requireNonNull(nf.parse(parts.get(10))).floatValue();
+                    } catch (Exception e) {
+                        warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial hours"));
+                        return false;
+                    }
+                }
+                notes = parts.get(11);
+                photoFile = parts.size() > 12 ? parts.get(12) : "";
+            } else {
+                notes = parts.size() > 9 ? parts.get(9) : "";
+                photoFile = parts.size() > 10 ? parts.get(10) : "";
+            }
             EnvironmentEntry entry = new EnvironmentEntry();
             entry.setPlantId(plantId);
             entry.setTimestamp(timestamp);
@@ -1270,6 +1295,8 @@ public class ImportManager {
             entry.setHeight(height);
             entry.setWidth(width);
             entry.setNaturalDli(naturalDli);
+            entry.setArtificialDli(artificialDli);
+            entry.setArtificialHours(artificialHours);
             entry.setNotes(notes.isEmpty() ? null : notes);
             if (!photoFile.isEmpty()) {
                 Uri restored = restoreImage(new File(baseDir, photoFile));
@@ -1584,6 +1611,8 @@ public class ImportManager {
             Float height = null;
             Float width = null;
             Float naturalDli = null;
+            Float artificialDli = null;
+            Float artificialHours = null;
             String notes = null;
             String photo = null;
             reader.beginObject();
@@ -1620,6 +1649,12 @@ public class ImportManager {
                     case "naturalDli":
                         naturalDli = readNullableFloat(reader);
                         break;
+                    case "artificialDli":
+                        artificialDli = readNullableFloat(reader);
+                        break;
+                    case "artificialHours":
+                        artificialHours = readNullableFloat(reader);
+                        break;
                     case "notes":
                         notes = readOptionalString(reader);
                         break;
@@ -1632,7 +1667,7 @@ public class ImportManager {
                 }
             }
             reader.endObject();
-            List<String> parts = new ArrayList<>(11);
+            List<String> parts = new ArrayList<>(13);
             parts.add(Long.toString(id));
             parts.add(Long.toString(plantId));
             parts.add(Long.toString(timestamp));
@@ -1641,6 +1676,9 @@ public class ImportManager {
             parts.add(soilMoisture != null ? Float.toString(soilMoisture) : "");
             parts.add(height != null ? Float.toString(height) : "");
             parts.add(width != null ? Float.toString(width) : "");
+            parts.add(naturalDli != null ? Float.toString(naturalDli) : "");
+            parts.add(artificialDli != null ? Float.toString(artificialDli) : "");
+            parts.add(artificialHours != null ? Float.toString(artificialHours) : "");
             parts.add(notes != null ? notes : "");
             parts.add(photo != null ? photo : "");
             if (insertEnvironmentEntryRow(parts, mode, baseDir, plantIdMap, warnings, index,

@@ -87,7 +87,7 @@ public class JsonImportExportTest {
         db.ledProfileAssociationDao().upsert(new LedProfileAssociation(plantId, profileId));
 
         EnvironmentEntry environmentEntry = new EnvironmentEntry(plantId, 2468L, 19.5f, 55f, 0.45f,
-            12.5f, 8.1f, 4.2f, "env note", null);
+            12.5f, 8.1f, 4.2f, 1.8f, 10.5f, "env note", null);
         db.environmentEntryDao().insert(environmentEntry);
 
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(80f, 120f, 3.2f, 4.6f);
@@ -167,6 +167,8 @@ public class JsonImportExportTest {
         assertEquals(19.5f, restoredEnv.getTemperature(), 0.0001f);
         assertEquals(55f, restoredEnv.getHumidity(), 0.0001f);
         assertEquals(4.2f, restoredEnv.getNaturalDli(), 0.0001f);
+        assertEquals(1.8f, restoredEnv.getArtificialDli(), 0.0001f);
+        assertEquals(10.5f, restoredEnv.getArtificialHours(), 0.0001f);
         assertEquals("env note", restoredEnv.getNotes());
 
         List<ReminderSuggestion> suggestions = db.reminderSuggestionDao().getAll();
@@ -206,7 +208,7 @@ public class JsonImportExportTest {
         db.ledProfileAssociationDao().upsert(new LedProfileAssociation(plantAId, profileId));
 
         EnvironmentEntry environmentEntryA = new EnvironmentEntry(plantAId, 7777L, 23.2f, 60f, null,
-            14.0f, 9.5f, 5.7f, "A env", null);
+            14.0f, 9.5f, 5.7f, null, null, "A env", null);
         db.environmentEntryDao().insert(environmentEntryA);
 
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(70f, 110f, 2.5f, 4.5f);

@@ -300,20 +300,29 @@ public class EnvironmentLogPresenter {
             return new NaturalDliPayload(null, null);
         }
         EnvironmentEntry latest = null;
+        Float latestValue = null;
         for (EnvironmentEntry entry : entries) {
-            if (entry == null || entry.getNaturalDli() == null) {
+            if (entry == null) {
+                continue;
+            }
+            Float value = entry.getNaturalDli();
+            if (value == null) {
+                value = entry.getArtificialDli();
+            }
+            if (value == null) {
                 continue;
             }
             if (latest == null
                 || entry.getTimestamp() > latest.getTimestamp()
                 || (entry.getTimestamp() == latest.getTimestamp() && entry.getId() > latest.getId())) {
                 latest = entry;
+                latestValue = value;
             }
         }
         if (latest == null) {
             return new NaturalDliPayload(null, null);
         }
-        return new NaturalDliPayload(latest.getNaturalDli(), latest.getTimestamp());
+        return new NaturalDliPayload(latestValue, latest.getTimestamp());
     }
 
     private List<PhotoHighlight> buildPhotoHighlights(List<EnvironmentEntry> entries) {

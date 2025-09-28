@@ -38,8 +38,9 @@ public interface EnvironmentEntryDao {
     @Query("DELETE FROM EnvironmentEntry WHERE id = :id")
     void deleteById(long id);
 
-    /** Returns the newest entry that has a natural DLI value recorded. */
-    @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId AND naturalDli IS NOT NULL ORDER BY timestamp DESC, id DESC LIMIT 1")
+    /** Returns the newest entry that has any DLI value recorded. */
+    @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId AND (naturalDli IS NOT NULL OR artificialDli IS NOT NULL) ORDER BY timestamp DESC, id DESC LIMIT 1")
+
     @Nullable
     EnvironmentEntry getLatestWithNaturalDli(long plantId);
 }

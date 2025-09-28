@@ -130,6 +130,27 @@ public class EnvironmentLogPresenterTest {
     }
 
     @Test
+    public void loadEntries_reportsArtificialDliWhenNaturalMissing() {
+        Context context = ApplicationProvider.getApplicationContext();
+        EnvironmentEntry natural = buildEntry(1L, 1_000L, null, null, null, null);
+        natural.setNaturalDli(5.5f);
+        EnvironmentEntry artificial = buildEntry(1L, 3_000L, null, null, null, null);
+        artificial.setArtificialDli(9.3f);
+        EnvironmentEntry hours = buildEntry(1L, 4_000L, null, null, null, null);
+        hours.setArtificialHours(11.5f);
+        hours.setArtificialDli(6.2f);
+        StubRepository repository = new StubRepository(context, List.of(natural, artificial, hours));
+        StubView view = new StubView();
+        EnvironmentLogPresenter presenter = new EnvironmentLogPresenter(view, repository, 1L, context);
+
+        presenter.loadEntries();
+
+        assertNotNull(view.naturalDliPayload);
+        assertEquals(Float.valueOf(9.3f), view.naturalDliPayload.getDli());
+        assertEquals(Long.valueOf(3_000L), view.naturalDliPayload.getTimestamp());
+    }
+
+    @Test
     public void onSubmit_withOnlyPhotoPersistsEntry() {
         Context context = ApplicationProvider.getApplicationContext();
         EnvironmentRepository repository = Mockito.mock(EnvironmentRepository.class);

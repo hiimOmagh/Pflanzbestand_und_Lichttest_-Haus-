@@ -40,7 +40,7 @@ and quoted where needed. The supported sections match `ImportManager.Section`:
 | `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                   |
 | `SpeciesTargets`     | `speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,wateringFrequency,wateringSoilType,wateringTolerance,temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources` |
 | `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                            |
-| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo`                                            |
+| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo`                                            |
 | `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                    |
 | `Reminders`          | `id,plantId,triggerAt,message`                                                                                               |
 The importer is tolerant of missing trailing columns and blank numeric values; empty strings map to
@@ -102,7 +102,8 @@ schemas are:
   "luxAvg": float, "ppfd": float?, "dli": float?, "note": string? }`
 - **environmentEntries** – `{ "id": long, "plantId": long, "timestamp": long,
   "temperature": float?, "humidity": float?, "soilMoisture": float?, "height": float?,
-  "width": float?, "naturalDli": float?, "notes": string?, "photo": string? }`
+  "width": float?, "naturalDli": float?, "artificialDli": float?, "artificialHours": float?,
+  "notes": string?, "photo": string? }`
 - **diaryEntries** – `{ "id": long, "plantId": long, "timeEpoch": long, "type": string,
   "note": string?, "photo": string? }`
 - **reminders** – `{ "id": long, "plantId": long, "triggerAt": long, "message": string }`
@@ -118,8 +119,8 @@ like:
 
 ```
 EnvironmentEntries
-id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo
-42,11,1707410400,,58.2,,12.5,8.0,2.1,"Bluetooth sensor",
+id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo
+42,11,1707410400,,58.2,,12.5,8.0,2.1,1.6,12.0,"Bluetooth sensor",
 ```
 
 The matching JSON export uses compact objects:
@@ -137,6 +138,8 @@ The matching JSON export uses compact objects:
             "height": 12.5,
             "width": 8.0,
             "naturalDli": 2.1,
+            "artificialDli": 1.6,
+            "artificialHours": 12.0,
             "notes": "Bluetooth sensor",
             "photo": null
         }

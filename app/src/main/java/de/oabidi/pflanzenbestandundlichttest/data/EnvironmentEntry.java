@@ -42,6 +42,10 @@ public class EnvironmentEntry {
     @Nullable
     private Float naturalDli;
     @Nullable
+    private Float artificialDli;
+    @Nullable
+    private Float artificialHours;
+    @Nullable
     private String notes;
     @Nullable
     private String photoUri;
@@ -57,7 +61,8 @@ public class EnvironmentEntry {
     public EnvironmentEntry(long plantId, long timestamp, @Nullable Float temperature,
                             @Nullable Float humidity, @Nullable Float soilMoisture,
                             @Nullable Float height, @Nullable Float width,
-                            @Nullable Float naturalDli,
+                            @Nullable Float naturalDli, @Nullable Float artificialDli,
+                            @Nullable Float artificialHours,
                             @Nullable String notes, @Nullable String photoUri) {
         this.plantId = plantId;
         this.timestamp = timestamp;
@@ -67,6 +72,8 @@ public class EnvironmentEntry {
         this.height = height;
         this.width = width;
         this.naturalDli = naturalDli;
+        this.artificialDli = artificialDli;
+        this.artificialHours = artificialHours;
         this.notes = notes;
         this.photoUri = photoUri;
     }
@@ -147,6 +154,24 @@ public class EnvironmentEntry {
 
     public void setNaturalDli(@Nullable Float naturalDli) {
         this.naturalDli = naturalDli;
+    }
+
+    @Nullable
+    public Float getArtificialDli() {
+        return artificialDli;
+    }
+
+    public void setArtificialDli(@Nullable Float artificialDli) {
+        this.artificialDli = artificialDli;
+    }
+
+    @Nullable
+    public Float getArtificialHours() {
+        return artificialHours;
+    }
+
+    public void setArtificialHours(@Nullable Float artificialHours) {
+        this.artificialHours = artificialHours;
     }
 
     @Nullable

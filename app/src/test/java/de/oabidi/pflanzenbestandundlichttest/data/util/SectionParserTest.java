@@ -205,9 +205,9 @@ public class SectionParserTest {
     @Test
     public void environmentEntriesParserMalformedRows() throws Exception {
         String csv = "EnvironmentEntries\n" +
-            "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo\n" +
-            "0,1,0,21.5,40,0.5,10,5,2.4,note,\n" +
-            "1,missing,0,,,,,,,note,\n" +
+            "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo\n" +
+            "0,1,0,21.5,40,0.5,10,5,2.4,1.2,10.0,note,\n" +
+            "1,missing,0,,,,,,,,note,\n" +
             "bad,row\n" +
             "Reminders\n" +
             "id,plantId,triggerAt,message\n";
