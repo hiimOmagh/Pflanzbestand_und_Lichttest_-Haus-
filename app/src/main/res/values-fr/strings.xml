@@ -131,7 +131,7 @@
     <string name="error_required">Obligatoire</string>
     <string name="error_ppfd_range">Le min doit être inférieur au max</string>
     <string name="calibration_step_title_confirm">Confirmer les facteurs</string>
-    <string name="calibration_instructions">Suivez les étapes guidées pour capturer une mesure en lux, saisir le PPFD de votre appareil de référence et vérifier les facteurs d&#39;étalonnage avant d&#39;enregistrer.</string>
+    <string name="calibration_instructions">Suivez les étapes guidées pour capturer une mesure en lux, saisir le PPFD de votre appareil de référence et vérifier les facteurs d\'étalonnage avant d\'enregistrer.</string>
     <string name="label_known_ppfd">PPFD connu :</string>
     <string name="label_ambient_factor">Facteur ambiant :</string>
     <string name="label_camera_factor">Facteur caméra :</string>

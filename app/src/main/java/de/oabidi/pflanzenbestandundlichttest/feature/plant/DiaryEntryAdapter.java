@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -17,6 +17,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 
 /**

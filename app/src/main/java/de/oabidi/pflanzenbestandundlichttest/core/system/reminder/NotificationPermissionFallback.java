@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.system.reminder;
 
 import android.content.Context;
 import android.content.SharedPreferences;

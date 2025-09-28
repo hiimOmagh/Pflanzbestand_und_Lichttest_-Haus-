@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import android.content.Context;
 
@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;

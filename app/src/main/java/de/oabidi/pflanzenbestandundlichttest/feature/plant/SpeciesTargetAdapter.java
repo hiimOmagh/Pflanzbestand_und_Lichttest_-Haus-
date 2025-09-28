@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Locale;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**

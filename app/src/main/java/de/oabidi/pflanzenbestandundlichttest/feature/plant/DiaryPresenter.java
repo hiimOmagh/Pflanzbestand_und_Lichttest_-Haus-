@@ -1,9 +1,10 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import android.content.Context;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 

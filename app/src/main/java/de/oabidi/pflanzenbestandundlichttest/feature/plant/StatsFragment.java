@@ -1,5 +1,7 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 

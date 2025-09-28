@@ -41,7 +41,7 @@ widget update validation in `ReminderWidgetInstrumentedTest`, the round-trip bac
 To execute only the statistics fragment test, run:
 
 ```bash
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=de.oabidi.pflanzenbestandundlichttest.StatsFragmentInstrumentedTest
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=de.oabidi.pflanzenbestandundlichttest.feature.plant.StatsFragmentInstrumentedTest
 ```
 
 ## Usage

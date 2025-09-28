@@ -1,5 +1,7 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 
@@ -39,6 +41,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import android.widget.Toast;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
