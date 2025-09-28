@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest.data.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.Context;
@@ -225,6 +226,37 @@ public class SectionParserTest {
         assertTrue(imported);
         assertEquals(2, warnings.size());
         assertEquals("environment entries", warnings.get(0).category);
+    }
+
+    @Test
+    public void environmentEntriesParserAcceptsLegacyColumns() throws Exception {
+        String csv = "EnvironmentEntries\n" +
+            "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,notes,photo\n" +
+            "0,1,0,21.5,40,0.5,10,5,2.4,legacy note,\n" +
+            "Reminders\n" +
+            "id,plantId,triggerAt,message\n";
+        ImportManager.SectionReader sectionReader = newSectionReader(csv);
+        ImportManager.SectionChunk chunk = sectionReader.nextSectionChunk(importer);
+        assertNotNull(chunk);
+        assertEquals(ImportManager.Section.ENVIRONMENT_ENTRIES, chunk.getSection());
+        List<ImportManager.ImportWarning> warnings = new ArrayList<>();
+        Map<Long, Long> plantIdMap = new HashMap<>();
+        plantIdMap.put(1L, 1L);
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.EnvironmentEntriesSectionParser();
+        ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
+            plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
+        boolean imported = parser.parseSection(chunk, context);
+        assertTrue(imported);
+        assertTrue(warnings.isEmpty());
+
+        List<de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry> entries =
+            db.environmentEntryDao().getForPlantOrdered(1L);
+        assertEquals(1, entries.size());
+        de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry entry = entries.get(0);
+        assertEquals(2.4f, entry.getNaturalDli(), 0.0001f);
+        assertEquals("legacy note", entry.getNotes());
+        assertNull(entry.getArtificialDli());
+        assertNull(entry.getArtificialHours());
     }
 
     @Test

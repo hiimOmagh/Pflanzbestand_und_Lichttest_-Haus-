@@ -223,7 +223,7 @@
     <string name="environment_log_metric_artificial_dli">Artificial DLI: %1$.1f mol/m²/day</string>
     <string name="environment_log_metrics_empty">No measurements recorded</string>
     <string name="environment_log_metrics_separator" translatable="false"> • </string>
-    <string name="environment_log_latest_light_title">Recent light summary</string>
+    <string name="environment_log_latest_light_title">Recent natural &amp; artificial light summary</string>
     <string name="environment_log_latest_natural_placeholder">Natural DLI: —</string>
     <string name="environment_log_latest_natural_value">Natural DLI: %1$s mol/m²/day</string>
     <string name="environment_log_latest_natural_updated">Last updated %1$s</string>
@@ -232,7 +232,7 @@
     <string name="environment_log_latest_artificial_updated">Last updated %1$s</string>
     <string name="environment_log_chart_label_natural_dli">Natural DLI</string>
     <string name="environment_log_chart_label_artificial_dli">Artificial DLI</string>
-    <string name="plant_detail_light_title">Light summary</string>
+    <string name="plant_detail_light_title">Natural &amp; artificial light summary</string>
     <string name="plant_detail_light_natural_placeholder">Natural DLI: —</string>
     <string name="plant_detail_light_natural_value">Natural DLI: %1$s mol/m²/day</string>
     <string name="plant_detail_light_natural_updated">Last updated %1$s</string>

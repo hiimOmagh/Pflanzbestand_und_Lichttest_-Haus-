@@ -21,6 +21,7 @@ Exports always produce a flat ZIP archive whose root contains the manifest (`dat
 - Plant hero photos → `plant_<plantId>_<originalName>`
 - Gallery photos → `plant_photo_<photoId>_<originalName>`
 - Diary attachments → `diary_<entryId>_<originalName>`
+- Environment entry photos → `environment_<entryId>_<originalName>`
 
 The importer recreates `content://` URIs for these files when restoring on API 29+ by copying the
 files into `MediaStore.Images` under `Pictures/PlantImports`. On older API levels the files are
@@ -34,15 +35,16 @@ with the section name followed by a header row listing the column names. Rows ar
 and quoted where needed. The supported sections match `ImportManager.Section`:
 
 | Section              | Columns                                                                                                                                                                                                                                                                                                                                                                                       |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `LedProfiles`        | `id,name,type,mountingDistanceCm,ambientFactor,cameraFactor`                                                                  |
-| `Plants`             | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri,ledProfileId`                                             |
-| `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                   |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `LedProfiles`        | `id,name,type,mountingDistanceCm,ambientFactor,cameraFactor`                                                                                                                                                                                                                                                                                                                                  |
+| `Plants`             | `id,name,description,species,locationHint,acquiredAtEpoch,photoUri,ledProfileId`                                                                                                                                                                                                                                                                                                              |
+| `PlantPhotos`        | `id,plantId,uri,createdAt`                                                                                                                                                                                                                                                                                                                                                                    |
 | `SpeciesTargets`     | `speciesKey,commonName,scientificName,category,seedlingPpfdMin,seedlingPpfdMax,seedlingDliMin,seedlingDliMax,vegetativePpfdMin,vegetativePpfdMax,vegetativeDliMin,vegetativeDliMax,flowerPpfdMin,flowerPpfdMax,flowerDliMin,flowerDliMax,wateringFrequency,wateringSoilType,wateringTolerance,temperatureMin,temperatureMax,humidityMin,humidityMax,growthHabit,toxicToPets,careTips,sources` |
-| `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                            |
-| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo`                                            |
-| `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                    |
-| `Reminders`          | `id,plantId,triggerAt,message`                                                                                               |
+| `Measurements`       | `id,plantId,timeEpoch,luxAvg,ppfd`                                                                                                                                                                                                                                                                                                                                                            |
+| `EnvironmentEntries` | `id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo`                                                                                                                                                                                                                                                                    |
+| `DiaryEntries`       | `id,plantId,timeEpoch,type,note,photoUri`                                                                                                                                                                                                                                                                                                                                                     |
+| `Reminders`          | `id,plantId,triggerAt,message`                                                                                                                                                                                                                                                                                                                                                                |
+
 The importer is tolerant of missing trailing columns and blank numeric values; empty strings map to
 `NULL` in Room. LED profile calibrations expect positive floating-point factors and are silently
 skipped when malformed. Environment entries restore optional photos by resolving the exported file

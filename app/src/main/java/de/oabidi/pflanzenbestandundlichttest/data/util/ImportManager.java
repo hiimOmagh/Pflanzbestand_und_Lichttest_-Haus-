@@ -75,9 +75,16 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.FileUtils;
  */
 public class ImportManager {
     static final String TAG = "ImportManager";
-    private static final int CURRENT_VERSION = 4;
-    private static final int[] SUPPORTED_VERSIONS = {1, 2, 3, 4};
+    private static final int CURRENT_VERSION = 1;
+    private static final int[] SUPPORTED_VERSIONS = {1};
     private static final int DEFAULT_ARCHIVE_PROGRESS_STEPS = 1_048_576; // 1 MiB heuristic
+    private static final int ENVIRONMENT_MIN_COLUMNS = 10;
+    private static final int ENVIRONMENT_LEGACY_NOTES_INDEX = 9;
+    private static final int ENVIRONMENT_LEGACY_PHOTO_INDEX = 10;
+    private static final int ENVIRONMENT_ARTIFICIAL_DLI_INDEX = 9;
+    private static final int ENVIRONMENT_ARTIFICIAL_HOURS_INDEX = 10;
+    private static final int ENVIRONMENT_NOTES_INDEX = 11;
+    private static final int ENVIRONMENT_PHOTO_INDEX = 12;
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor;
@@ -1177,7 +1184,8 @@ public class ImportManager {
                                       Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                       int currentLine, List<Uri> restoredUris, NumberFormat nf,
                                       PlantDatabase db) {
-        if (parts.size() < 10) {
+        int columnCount = parts.size();
+        if (columnCount < ENVIRONMENT_MIN_COLUMNS) {
             Log.e(TAG, "Malformed environment entry row: " + parts);
             warnings.add(new ImportWarning("environment entries", currentLine, "malformed row"));
             return false;
@@ -1251,7 +1259,7 @@ public class ImportManager {
                 }
             }
             Float naturalDli = null;
-            if (parts.size() > 8 && !parts.get(8).isEmpty()) {
+            if (columnCount > 8 && !parts.get(8).isEmpty()) {
                 try {
                     naturalDli = Objects.requireNonNull(nf.parse(parts.get(8))).floatValue();
                 } catch (Exception e) {
@@ -1259,33 +1267,29 @@ public class ImportManager {
                     return false;
                 }
             }
+            boolean hasArtificialColumns = columnCount > ENVIRONMENT_LEGACY_PHOTO_INDEX + 1;
             Float artificialDli = null;
-            Float artificialHours = null;
-            String notes;
-            String photoFile;
-            if (parts.size() > 11) {
-                if (!parts.get(9).isEmpty()) {
-                    try {
-                        artificialDli = Objects.requireNonNull(nf.parse(parts.get(9))).floatValue();
-                    } catch (Exception e) {
-                        warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial DLI"));
-                        return false;
-                    }
+            if (hasArtificialColumns && !parts.get(ENVIRONMENT_ARTIFICIAL_DLI_INDEX).isEmpty()) {
+                try {
+                    artificialDli = Objects.requireNonNull(nf.parse(parts.get(ENVIRONMENT_ARTIFICIAL_DLI_INDEX))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial DLI"));
+                    return false;
                 }
-                if (!parts.get(10).isEmpty()) {
-                    try {
-                        artificialHours = Objects.requireNonNull(nf.parse(parts.get(10))).floatValue();
-                    } catch (Exception e) {
-                        warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial hours"));
-                        return false;
-                    }
-                }
-                notes = parts.get(11);
-                photoFile = parts.size() > 12 ? parts.get(12) : "";
-            } else {
-                notes = parts.size() > 9 ? parts.get(9) : "";
-                photoFile = parts.size() > 10 ? parts.get(10) : "";
             }
+            Float artificialHours = null;
+            if (hasArtificialColumns && !parts.get(ENVIRONMENT_ARTIFICIAL_HOURS_INDEX).isEmpty()) {
+                try {
+                    artificialHours = Objects.requireNonNull(nf.parse(parts.get(ENVIRONMENT_ARTIFICIAL_HOURS_INDEX))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("environment entries", currentLine, "invalid artificial hours"));
+                    return false;
+                }
+            }
+            int notesIndex = hasArtificialColumns ? ENVIRONMENT_NOTES_INDEX : ENVIRONMENT_LEGACY_NOTES_INDEX;
+            int photoIndex = hasArtificialColumns ? ENVIRONMENT_PHOTO_INDEX : ENVIRONMENT_LEGACY_PHOTO_INDEX;
+            String notes = columnCount > notesIndex ? parts.get(notesIndex) : "";
+            String photoFile = columnCount > photoIndex ? parts.get(photoIndex) : "";
             EnvironmentEntry entry = new EnvironmentEntry();
             entry.setPlantId(plantId);
             entry.setTimestamp(timestamp);

@@ -16,12 +16,18 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
@@ -86,9 +92,14 @@ public class JsonImportExportTest {
         db.plantDao().update(plant);
         db.ledProfileAssociationDao().upsert(new LedProfileAssociation(plantId, profileId));
 
+        File envPhotoSource = new File(context.getCacheDir(), "env-photo.jpg");
+        try (FileOutputStream fos = new FileOutputStream(envPhotoSource)) {
+            fos.write(new byte[]{1, 2, 3});
+        }
         EnvironmentEntry environmentEntry = new EnvironmentEntry(plantId, 2468L, 19.5f, 55f, 0.45f,
-            12.5f, 8.1f, 4.2f, 1.8f, 10.5f, "env note", null);
-        db.environmentEntryDao().insert(environmentEntry);
+            12.5f, 8.1f, 4.2f, 1.8f, 10.5f, "env note", Uri.fromFile(envPhotoSource).toString());
+        long environmentEntryId = db.environmentEntryDao().insert(environmentEntry);
+        environmentEntry.setId(environmentEntryId);
 
         SpeciesTarget.StageTarget stage = new SpeciesTarget.StageTarget(80f, 120f, 3.2f, 4.6f);
         SpeciesTarget target = new SpeciesTarget("json-species", stage, stage, stage, "moderate", "unit");
@@ -116,6 +127,17 @@ public class JsonImportExportTest {
         });
         assertTrue(exportLatch.await(5, TimeUnit.SECONDS));
         assertTrue(exportSuccess[0]);
+
+        String expectedEnvironmentFile = "environment_" + environmentEntryId + "_" + envPhotoSource.getName();
+        Set<String> zipEntries = new HashSet<>();
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(exportFile))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                zipEntries.add(entry.getName());
+            }
+        }
+        assertTrue(zipEntries.contains("data.json"));
+        assertTrue(zipEntries.contains(expectedEnvironmentFile));
 
         db.clearAllTables();
 

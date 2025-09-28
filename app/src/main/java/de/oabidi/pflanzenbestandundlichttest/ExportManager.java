@@ -40,6 +40,9 @@ import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
 public class ExportManager {
     private static final String TAG = "ExportManager";
     private static final int EXPORT_VERSION = 4;
+    private static final String ENVIRONMENT_PHOTO_PREFIX = "environment_";
+    private static final String ENVIRONMENT_CSV_HEADER =
+        "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo";
     private final Context context;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -325,27 +328,11 @@ public class ExportManager {
             }
 
             writer.write("\nEnvironmentEntries\n");
-            writer.write("id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo\n");
+            writer.write(ENVIRONMENT_CSV_HEADER);
+            writer.write("\n");
             for (EnvironmentEntry entry : data.environmentEntries) {
-                String photoName = "";
-                String uri = entry.getPhotoUri();
-                if (uri != null && !uri.isEmpty()) {
-                    photoName = copyPhotoIfPresent(tempDir, "environment_", entry.getId(), Uri.parse(uri));
-                }
-                writer.write(String.format(Locale.US, "%d,%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                    entry.getId(),
-                    entry.getPlantId(),
-                    entry.getTimestamp(),
-                    formatFloat(entry.getTemperature()),
-                    formatFloat(entry.getHumidity()),
-                    formatFloat(entry.getSoilMoisture()),
-                    formatFloat(entry.getHeight()),
-                    formatFloat(entry.getWidth()),
-                    formatFloat(entry.getNaturalDli()),
-                    formatFloat(entry.getArtificialDli()),
-                    formatFloat(entry.getArtificialHours()),
-                    escape(entry.getNotes()),
-                    escape(photoName)));
+                writer.write(buildEnvironmentEntryCsvRow(tempDir, entry));
+                writer.write("\n");
             }
 
             writer.write("\nDiaryEntries\n");
@@ -497,26 +484,7 @@ public class ExportManager {
             writer.name("environmentEntries");
             writer.beginArray();
             for (EnvironmentEntry entry : data.environmentEntries) {
-                writer.beginObject();
-                writer.name("id").value(entry.getId());
-                writer.name("plantId").value(entry.getPlantId());
-                writer.name("timestamp").value(entry.getTimestamp());
-                writeOptionalFloat(writer, "temperature", entry.getTemperature());
-                writeOptionalFloat(writer, "humidity", entry.getHumidity());
-                writeOptionalFloat(writer, "soilMoisture", entry.getSoilMoisture());
-                writeOptionalFloat(writer, "height", entry.getHeight());
-                writeOptionalFloat(writer, "width", entry.getWidth());
-                writeOptionalFloat(writer, "naturalDli", entry.getNaturalDli());
-                writeOptionalFloat(writer, "artificialDli", entry.getArtificialDli());
-                writeOptionalFloat(writer, "artificialHours", entry.getArtificialHours());
-                writeString(writer, "notes", entry.getNotes());
-                String fileName = "";
-                String uriString = entry.getPhotoUri();
-                if (uriString != null && !uriString.isEmpty()) {
-                    fileName = copyPhotoIfPresent(tempDir, "environment_", entry.getId(), Uri.parse(uriString));
-                }
-                writeOptionalString(writer, "photo", fileName);
-                writer.endObject();
+                writeEnvironmentEntry(writer, tempDir, entry);
             }
             writer.endArray();
 
@@ -631,6 +599,52 @@ public class ExportManager {
         String fileName = prefix + id + "_" + getFileName(uri);
         copyUriToFile(uri, new File(tempDir, fileName));
         return fileName;
+    }
+
+    private String buildEnvironmentEntryCsvRow(File tempDir, EnvironmentEntry entry) throws IOException {
+        String photoName = copyEnvironmentPhoto(tempDir, entry);
+        String[] columns = new String[] {
+            Long.toString(entry.getId()),
+            Long.toString(entry.getPlantId()),
+            Long.toString(entry.getTimestamp()),
+            formatFloat(entry.getTemperature()),
+            formatFloat(entry.getHumidity()),
+            formatFloat(entry.getSoilMoisture()),
+            formatFloat(entry.getHeight()),
+            formatFloat(entry.getWidth()),
+            formatFloat(entry.getNaturalDli()),
+            formatFloat(entry.getArtificialDli()),
+            formatFloat(entry.getArtificialHours()),
+            escape(entry.getNotes()),
+            escape(photoName)
+        };
+        return String.join(",", columns);
+    }
+
+    private void writeEnvironmentEntry(JsonWriter writer, File tempDir, EnvironmentEntry entry) throws IOException {
+        writer.beginObject();
+        writer.name("id").value(entry.getId());
+        writer.name("plantId").value(entry.getPlantId());
+        writer.name("timestamp").value(entry.getTimestamp());
+        writeOptionalFloat(writer, "temperature", entry.getTemperature());
+        writeOptionalFloat(writer, "humidity", entry.getHumidity());
+        writeOptionalFloat(writer, "soilMoisture", entry.getSoilMoisture());
+        writeOptionalFloat(writer, "height", entry.getHeight());
+        writeOptionalFloat(writer, "width", entry.getWidth());
+        writeOptionalFloat(writer, "naturalDli", entry.getNaturalDli());
+        writeOptionalFloat(writer, "artificialDli", entry.getArtificialDli());
+        writeOptionalFloat(writer, "artificialHours", entry.getArtificialHours());
+        writeString(writer, "notes", entry.getNotes());
+        writeOptionalString(writer, "photo", copyEnvironmentPhoto(tempDir, entry));
+        writer.endObject();
+    }
+
+    private String copyEnvironmentPhoto(File tempDir, EnvironmentEntry entry) throws IOException {
+        String uriString = entry.getPhotoUri();
+        if (uriString == null || uriString.isEmpty()) {
+            return "";
+        }
+        return copyPhotoIfPresent(tempDir, ENVIRONMENT_PHOTO_PREFIX, entry.getId(), Uri.parse(uriString));
     }
 
     private void writeWatering(JsonWriter writer, @Nullable SpeciesTarget.WateringInfo info)

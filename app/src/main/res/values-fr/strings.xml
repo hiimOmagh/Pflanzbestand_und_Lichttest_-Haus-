@@ -302,7 +302,7 @@
     <string name="environment_log_metric_natural_dli">DLI naturel : %1$.1f mol/m²/jour</string>
     <string name="environment_log_metric_artificial_dli">DLI artificiel : %1$.1f mol/m²/jour</string>
     <string name="environment_log_metrics_empty">Aucune mesure enregistrée</string>
-    <string name="environment_log_latest_light_title">Résumé lumineux récent</string>
+    <string name="environment_log_latest_light_title">Résumé lumineux récent (naturel et artificiel)</string>
     <string name="environment_log_latest_natural_placeholder">DLI naturel : —</string>
     <string name="environment_log_latest_natural_value">DLI naturel : %1$s mol/m²/jour</string>
     <string name="environment_log_latest_natural_updated">Dernière mise à jour %1$s</string>
@@ -311,7 +311,7 @@
     <string name="environment_log_latest_artificial_updated">Dernière mise à jour %1$s</string>
     <string name="environment_log_chart_label_natural_dli">DLI naturel</string>
     <string name="environment_log_chart_label_artificial_dli">DLI artificiel</string>
-    <string name="plant_detail_light_title">Résumé lumineux</string>
+    <string name="plant_detail_light_title">Résumé lumineux (naturel et artificiel)</string>
     <string name="plant_detail_light_natural_placeholder">DLI naturel : —</string>
     <string name="plant_detail_light_natural_value">DLI naturel : %1$s mol/m²/jour</string>
     <string name="plant_detail_light_natural_updated">Dernière mise à jour %1$s</string>
