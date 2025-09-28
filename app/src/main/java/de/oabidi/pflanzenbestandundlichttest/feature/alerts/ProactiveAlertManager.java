@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;

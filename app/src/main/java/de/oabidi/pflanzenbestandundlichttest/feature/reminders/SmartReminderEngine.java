@@ -11,8 +11,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 
 /**

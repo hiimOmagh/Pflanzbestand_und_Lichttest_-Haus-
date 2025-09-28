@@ -22,8 +22,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)

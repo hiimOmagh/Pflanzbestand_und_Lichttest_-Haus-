@@ -6,7 +6,7 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 
-import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 
 /**
  * Presenter contract for main screen orchestration.

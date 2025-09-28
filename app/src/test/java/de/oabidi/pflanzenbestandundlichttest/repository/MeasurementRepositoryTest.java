@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.MeasurementDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantDao;
-import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderDao;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 

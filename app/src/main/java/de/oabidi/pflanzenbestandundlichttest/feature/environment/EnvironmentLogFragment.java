@@ -29,11 +29,11 @@ import com.google.android.material.button.MaterialButton;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.LineChartView;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.feature.camera.PlantPhotoCaptureFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentPhotoAdapter;

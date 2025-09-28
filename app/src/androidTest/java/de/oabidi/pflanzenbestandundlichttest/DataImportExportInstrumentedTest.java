@@ -29,11 +29,11 @@ import org.robolectric.Shadows;
 import org.robolectric.shadows.ShadowAlarmManager;
 import org.robolectric.shadows.ShadowPendingIntent;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
-import de.oabidi.pflanzenbestandundlichttest.Reminder;
-import de.oabidi.pflanzenbestandundlichttest.ReminderScheduler;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociation;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 
 import static org.junit.Assert.assertArrayEquals;

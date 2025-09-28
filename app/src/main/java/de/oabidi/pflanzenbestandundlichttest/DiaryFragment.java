@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -33,8 +34,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import android.widget.Toast;
 
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 
 import java.util.Objects;

@@ -16,7 +16,9 @@ import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
 import java.util.concurrent.ExecutorService;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 
 /**
  * Implementation of {@link MainPresenter} handling main screen interactions such as

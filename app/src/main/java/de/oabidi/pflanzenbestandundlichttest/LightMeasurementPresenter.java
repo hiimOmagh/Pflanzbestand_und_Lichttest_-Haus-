@@ -12,8 +12,8 @@ import java.util.Map;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
 
 /**

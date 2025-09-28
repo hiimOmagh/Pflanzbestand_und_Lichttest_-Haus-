@@ -13,9 +13,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 
 /**

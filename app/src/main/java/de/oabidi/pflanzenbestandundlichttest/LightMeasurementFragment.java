@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -36,7 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**

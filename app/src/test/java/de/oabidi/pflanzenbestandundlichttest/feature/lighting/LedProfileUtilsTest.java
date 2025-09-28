@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.oabidi.pflanzenbestandundlichttest.LightMath;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

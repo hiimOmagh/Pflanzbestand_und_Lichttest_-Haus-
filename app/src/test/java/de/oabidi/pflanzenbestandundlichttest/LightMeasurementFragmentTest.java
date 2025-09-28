@@ -20,7 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
 /**
  * Tests for LightMeasurementFragment ensuring preferences are validated.

@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget.FloatRange;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 
 /**
  * Analyses recent {@link EnvironmentEntry} values and produces actionable care suggestions.

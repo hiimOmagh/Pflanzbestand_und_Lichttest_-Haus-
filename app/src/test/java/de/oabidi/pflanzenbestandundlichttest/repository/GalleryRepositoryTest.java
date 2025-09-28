@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhotoDao;
 
 @RunWith(RobolectricTestRunner.class)
 public class GalleryRepositoryTest extends RepositoryTestBase {

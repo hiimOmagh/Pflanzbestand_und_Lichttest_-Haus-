@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.lang.reflect.Method;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)

@@ -22,9 +22,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociation;
 
 import static org.junit.Assert.*;
 

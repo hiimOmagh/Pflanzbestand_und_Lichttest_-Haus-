@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,7 +25,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -22,9 +22,9 @@ import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 
 @RunWith(RobolectricTestRunner.class)
 public class ProactiveAlertEvaluatorTest {

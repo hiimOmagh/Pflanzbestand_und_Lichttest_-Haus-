@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
-import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 
 /**
  * Unit tests for {@link MainPresenterImpl} verifying navigation and onboarding logic.

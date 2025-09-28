@@ -24,8 +24,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
-import de.oabidi.pflanzenbestandundlichttest.ExportManager;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 
 /**
  * Activity hosting the main navigation of the app.

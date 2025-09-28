@@ -10,10 +10,10 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.Reminder;
-import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderDao;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestionDao;
 
 /**
  * Repository encapsulating {@link Reminder} persistence operations.

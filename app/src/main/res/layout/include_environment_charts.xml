@@ -31,7 +31,7 @@
                 android:text="@string/environment_log_chart_overview_title"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
-            <de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView
+            <de.oabidi.pflanzenbestandundlichttest.core.ui.LineChartView
                 android:id="@+id/environment_chart_overview"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
@@ -68,7 +68,7 @@
                 android:text="@string/environment_log_chart_trends_title"
                 android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
-            <de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView
+            <de.oabidi.pflanzenbestandundlichttest.core.ui.LineChartView
                 android:id="@+id/environment_chart_trends"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"

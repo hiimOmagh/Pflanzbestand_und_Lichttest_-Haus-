@@ -10,7 +10,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.BackupScheduler;
+import de.oabidi.pflanzenbestandundlichttest.core.system.BackupScheduler;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.AlertHistoryDialogFragment;

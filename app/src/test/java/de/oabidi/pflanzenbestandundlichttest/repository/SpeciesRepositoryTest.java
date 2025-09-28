@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
 

@@ -13,9 +13,9 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
-import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 
 /**
  * Repository handling {@link EnvironmentEntry} persistence and photo management.

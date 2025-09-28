@@ -31,8 +31,8 @@ import de.oabidi.pflanzenbestandundlichttest.PlantDao;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
 
 @RunWith(AndroidJUnit4.class)
 public class ProactiveAlertWorkerInstrumentedTest {

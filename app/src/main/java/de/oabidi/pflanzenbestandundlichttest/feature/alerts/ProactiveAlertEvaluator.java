@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantProfile;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
 
 /**

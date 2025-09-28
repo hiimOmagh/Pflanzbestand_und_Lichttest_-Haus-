@@ -20,7 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)

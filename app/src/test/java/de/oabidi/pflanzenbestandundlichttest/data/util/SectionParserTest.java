@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest.data.util;
+package de.oabidi.pflanzenbestandundlichttest.core.data.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,12 +33,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -96,7 +96,7 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         List<Uri> uris = new ArrayList<>();
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantsSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.PlantsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, uris, newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -118,7 +118,7 @@ public class SectionParserTest {
         assertNotNull(chunk);
         assertEquals(ImportManager.Section.SPECIES_TARGETS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.SpeciesTargetsSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.SpeciesTargetsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -140,7 +140,7 @@ public class SectionParserTest {
         assertNotNull(chunk);
         assertEquals(ImportManager.Section.PLANT_PHOTOS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.PlantPhotosSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
             new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -165,7 +165,7 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.LedProfilesSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.LedProfilesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -194,7 +194,7 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.MeasurementsSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.MeasurementsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -219,7 +219,7 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.EnvironmentEntriesSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.EnvironmentEntriesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -242,17 +242,17 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.EnvironmentEntriesSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.EnvironmentEntriesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
         assertTrue(imported);
         assertTrue(warnings.isEmpty());
 
-        List<de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry> entries =
+        List<de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry> entries =
             db.environmentEntryDao().getForPlantOrdered(1L);
         assertEquals(1, entries.size());
-        de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry entry = entries.get(0);
+        de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry entry = entries.get(0);
         assertEquals(2.4f, entry.getNaturalDli(), 0.0001f);
         assertEquals("legacy note", entry.getNotes());
         assertNull(entry.getArtificialDli());
@@ -276,7 +276,7 @@ public class SectionParserTest {
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
         List<Uri> uris = new ArrayList<>();
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.DiaryEntriesSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.DiaryEntriesSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, uris, newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -299,7 +299,7 @@ public class SectionParserTest {
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
         Map<Long, Long> plantIdMap = new HashMap<>();
         plantIdMap.put(1L, 1L);
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.RemindersSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.RemindersSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.MERGE,
             plantIdMap, warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);
@@ -319,7 +319,7 @@ public class SectionParserTest {
         assertNotNull(chunk);
         assertEquals(ImportManager.Section.REMINDER_SUGGESTIONS, chunk.getSection());
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
-        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.data.util.ReminderSuggestionsSectionParser();
+        ImportManager.SectionParser parser = new de.oabidi.pflanzenbestandundlichttest.core.data.util.ReminderSuggestionsSectionParser();
         ImportManager.SectionContext context = newContext(ImportManager.Mode.REPLACE,
             new HashMap<>(), warnings, new ArrayList<>(), newNumberFormat());
         boolean imported = parser.parseSection(chunk, context);

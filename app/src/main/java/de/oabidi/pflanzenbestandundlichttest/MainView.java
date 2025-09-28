@@ -2,7 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import androidx.fragment.app.Fragment;
 
-import de.oabidi.pflanzenbestandundlichttest.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 
 /**
  * View contract for {@link MainPresenter} interactions with the main screen.

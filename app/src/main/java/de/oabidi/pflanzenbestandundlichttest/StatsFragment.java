@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,7 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-import de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.BarChartView;
 import de.oabidi.pflanzenbestandundlichttest.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.MeasurementListFragment;
 

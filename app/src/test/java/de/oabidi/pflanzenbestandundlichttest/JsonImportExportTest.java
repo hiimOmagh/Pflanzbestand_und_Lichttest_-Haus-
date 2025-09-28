@@ -29,11 +29,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociation;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 /**
  * Verifies that JSON exports round-trip through the import pipeline.
