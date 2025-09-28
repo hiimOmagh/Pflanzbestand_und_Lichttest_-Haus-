@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.common.location;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -16,6 +17,8 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.CancellationTokenSource;
 
+import android.util.Log;
+
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -24,6 +27,7 @@ import java.util.function.Consumer;
  * retrieving coarse/fine location coordinates.
  */
 public class LocationProvider {
+    private static final String TAG = "LocationProvider";
     private final Context context;
     private final FusedLocationProviderClient fusedClient;
 
@@ -46,6 +50,7 @@ public class LocationProvider {
      * Attempts to fetch the current location using a balanced power request and
      * falls back to {@link #getLastLocation(Consumer, Consumer)} when unavailable.
      */
+    @SuppressLint("MissingPermission")
     public void getCurrentLocation(@NonNull Consumer<Location> successCallback,
                                    @Nullable Consumer<Exception> errorCallback) {
         Objects.requireNonNull(successCallback, "successCallback");
@@ -56,20 +61,29 @@ public class LocationProvider {
             return;
         }
         CancellationTokenSource tokenSource = new CancellationTokenSource();
-        fusedClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, tokenSource.getToken())
-            .addOnSuccessListener(location -> {
-                if (location != null) {
-                    successCallback.accept(location);
-                } else {
-                    getLastLocation(successCallback, errorCallback);
-                }
-            })
-            .addOnFailureListener(wrapFailure(errorCallback));
+        try {
+            fusedClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, tokenSource.getToken())
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        successCallback.accept(location);
+                    } else {
+                        getLastLocation(successCallback, errorCallback);
+                    }
+                })
+                .addOnFailureListener(wrapFailure(errorCallback));
+        } catch (SecurityException e) {
+            if (errorCallback != null) {
+                errorCallback.accept(e);
+            } else {
+                Log.e(TAG, "Missing location permission while requesting current location", e);
+            }
+        }
     }
 
     /**
      * Retrieves the last known location if available.
      */
+    @SuppressLint("MissingPermission")
     public void getLastLocation(@NonNull Consumer<Location> successCallback,
                                 @Nullable Consumer<Exception> errorCallback) {
         Objects.requireNonNull(successCallback, "successCallback");
@@ -79,15 +93,23 @@ public class LocationProvider {
             }
             return;
         }
-        fusedClient.getLastLocation()
-            .addOnSuccessListener(location -> {
-                if (location != null) {
-                    successCallback.accept(location);
-                } else if (errorCallback != null) {
-                    errorCallback.accept(new IllegalStateException("Location unavailable"));
-                }
-            })
-            .addOnFailureListener(wrapFailure(errorCallback));
+        try {
+            fusedClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        successCallback.accept(location);
+                    } else if (errorCallback != null) {
+                        errorCallback.accept(new IllegalStateException("Location unavailable"));
+                    }
+                })
+                .addOnFailureListener(wrapFailure(errorCallback));
+        } catch (SecurityException e) {
+            if (errorCallback != null) {
+                errorCallback.accept(e);
+            } else {
+                Log.e(TAG, "Missing location permission while retrieving last location", e);
+            }
+        }
     }
 
     private OnFailureListener wrapFailure(@Nullable Consumer<Exception> errorCallback) {
