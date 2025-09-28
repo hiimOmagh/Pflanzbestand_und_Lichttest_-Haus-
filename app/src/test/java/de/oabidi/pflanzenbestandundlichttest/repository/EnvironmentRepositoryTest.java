@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 
 @RunWith(RobolectricTestRunner.class)
 public class EnvironmentRepositoryTest extends RepositoryTestBase {
@@ -27,13 +28,18 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
     private EnvironmentEntryDao environmentEntryDao;
     @Mock
     private CareRecommendationDelegate careDelegate;
+    @Mock
+    private ArtificialLightEstimateSource artificialLightSource;
 
     private EnvironmentRepository repository;
 
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        repository = new EnvironmentRepository(context, handler, ioExecutor, environmentEntryDao, careDelegate);
+        when(artificialLightSource.estimate(anyLong()))
+            .thenReturn(ArtificialLightEstimateSource.ArtificialLightEstimate.empty());
+        repository = new EnvironmentRepository(context, handler, ioExecutor, environmentEntryDao,
+            careDelegate, artificialLightSource);
     }
 
     @Test
@@ -73,16 +79,16 @@ public class EnvironmentRepositoryTest extends RepositoryTestBase {
     }
 
     @Test
-    public void getLatestNaturalDli_delegatesToDao() throws Exception {
+    public void getLatestLight_delegatesToDao() throws Exception {
         EnvironmentEntry expected = new EnvironmentEntry();
-        when(environmentEntryDao.getLatestWithNaturalDli(7L)).thenReturn(expected);
+        when(environmentEntryDao.getLatestWithLight(7L)).thenReturn(expected);
 
         AtomicReference<EnvironmentEntry> result = new AtomicReference<>();
-        repository.getLatestNaturalDli(7L, result::set, null);
+        repository.getLatestLight(7L, result::set, null);
 
         drainMainLooper();
 
         assertEquals(expected, result.get());
-        verify(environmentEntryDao).getLatestWithNaturalDli(7L);
+        verify(environmentEntryDao).getLatestWithLight(7L);
     }
 }

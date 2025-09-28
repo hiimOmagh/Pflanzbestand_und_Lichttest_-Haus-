@@ -157,7 +157,7 @@
                 android:textSize="12sp" />
 
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/detail_natural_dli_card"
+                android:id="@+id/detail_light_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -172,28 +172,45 @@
                     android:padding="@dimen/care_card_padding">
 
                     <TextView
-                        android:id="@+id/detail_natural_dli_title"
+                        android:id="@+id/detail_light_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/plant_detail_dli_title"
+                        android:text="@string/plant_detail_light_title"
                         android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
                     <TextView
-                        android:id="@+id/detail_natural_dli_value"
+                        android:id="@+id/detail_light_natural_value"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="@string/plant_detail_dli_placeholder"
+                        android:text="@string/plant_detail_light_natural_placeholder"
                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                         tools:text="Natural DLI: 12.4 mol/m²/day" />
 
                     <TextView
-                        android:id="@+id/detail_natural_dli_timestamp"
+                        android:id="@+id/detail_light_natural_timestamp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                         tools:text="Last updated May 23" />
+
+                    <TextView
+                        android:id="@+id/detail_light_artificial_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/plant_detail_light_artificial_placeholder"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        tools:text="Artificial DLI: 8.1 mol/m²/day" />
+
+                    <TextView
+                        android:id="@+id/detail_light_artificial_timestamp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        tools:text="Last updated May 24" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

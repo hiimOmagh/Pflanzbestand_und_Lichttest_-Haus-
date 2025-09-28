@@ -40,7 +40,6 @@ public interface EnvironmentEntryDao {
 
     /** Returns the newest entry that has any DLI value recorded. */
     @Query("SELECT * FROM EnvironmentEntry WHERE plantId = :plantId AND (naturalDli IS NOT NULL OR artificialDli IS NOT NULL) ORDER BY timestamp DESC, id DESC LIMIT 1")
-
     @Nullable
-    EnvironmentEntry getLatestWithNaturalDli(long plantId);
+    EnvironmentEntry getLatestWithLight(long plantId);
 }

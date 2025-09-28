@@ -27,6 +27,7 @@ import java.util.Arrays;
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
 
 /**
  * Unit tests for {@link PlantDetailPresenter} verifying export handling and
@@ -136,42 +137,49 @@ public class PlantDetailPresenterTest {
     }
 
     @Test
-    public void loadLatestNaturalDli_withValue_updatesView() {
+    public void loadLatestLightSummary_withValue_updatesView() {
         FakeExportManager manager = new FakeExportManager(context, repository, true);
         PlantDetailPresenter presenter = new PlantDetailPresenter(view, 5L, manager, repository);
         EnvironmentEntry entry = new EnvironmentEntry();
         entry.setNaturalDli(12.3f);
+        entry.setArtificialDli(4.2f);
         entry.setTimestamp(12345L);
         doAnswer(invocation -> {
             java.util.function.Consumer<EnvironmentEntry> callback = invocation.getArgument(1);
             callback.accept(entry);
             return null;
-        }).when(repository).latestNaturalDliForPlant(eq(5L), any(), any());
+        }).when(repository).latestLightForPlant(eq(5L), any(), any());
 
-        presenter.loadLatestNaturalDli();
+        presenter.loadLatestLightSummary();
         Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-        assertEquals(Float.valueOf(12.3f), view.lastDli);
-        assertEquals(Long.valueOf(12345L), view.lastDliTimestamp);
-        assertEquals(1, view.naturalDliCallCount);
+        assertNotNull(view.lastLightSummary);
+        assertEquals(Float.valueOf(12.3f), view.lastLightSummary.getNaturalDli());
+        assertEquals(Long.valueOf(12345L), view.lastLightSummary.getNaturalTimestamp());
+        assertEquals(Float.valueOf(4.2f), view.lastLightSummary.getArtificialDli());
+        assertEquals(Long.valueOf(12345L), view.lastLightSummary.getArtificialTimestamp());
+        assertEquals(1, view.lightSummaryCallCount);
     }
 
     @Test
-    public void loadLatestNaturalDli_withoutValue_hidesView() {
+    public void loadLatestLightSummary_withoutValue_hidesView() {
         FakeExportManager manager = new FakeExportManager(context, repository, true);
         PlantDetailPresenter presenter = new PlantDetailPresenter(view, 6L, manager, repository);
         doAnswer(invocation -> {
             java.util.function.Consumer<EnvironmentEntry> callback = invocation.getArgument(1);
             callback.accept(null);
             return null;
-        }).when(repository).latestNaturalDliForPlant(eq(6L), any(), any());
+        }).when(repository).latestLightForPlant(eq(6L), any(), any());
 
-        presenter.loadLatestNaturalDli();
+        presenter.loadLatestLightSummary();
         Shadows.shadowOf(Looper.getMainLooper()).idle();
 
-        assertNull(view.lastDli);
-        assertNull(view.lastDliTimestamp);
-        assertEquals(1, view.naturalDliCallCount);
+        assertNotNull(view.lastLightSummary);
+        assertNull(view.lastLightSummary.getNaturalDli());
+        assertNull(view.lastLightSummary.getNaturalTimestamp());
+        assertNull(view.lastLightSummary.getArtificialDli());
+        assertNull(view.lastLightSummary.getArtificialTimestamp());
+        assertEquals(1, view.lightSummaryCallCount);
     }
 
     private static class FakeView implements PlantDetailView {
@@ -179,9 +187,8 @@ public class PlantDetailPresenterTest {
         boolean failure;
         PlantMetadataViewModel lastMetadata;
         String metadataFallback;
-        Float lastDli;
-        Long lastDliTimestamp;
-        int naturalDliCallCount;
+        LightSummary lastLightSummary;
+        int lightSummaryCallCount;
 
         @Override
         public void showExportSuccess() {
@@ -251,10 +258,9 @@ public class PlantDetailPresenterTest {
         }
 
         @Override
-        public void showNaturalDli(Float dli, Long timestamp) {
-            naturalDliCallCount++;
-            lastDli = dli;
-            lastDliTimestamp = timestamp;
+        public void showLightSummary(@NonNull LightSummary summary) {
+            lightSummaryCallCount++;
+            lastLightSummary = summary;
         }
     }
 

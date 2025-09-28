@@ -2,9 +2,10 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import java.util.List;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
 
 /**
  * View interface for displaying plant details.
@@ -55,6 +56,6 @@ public interface PlantDetailView {
     /** Provides the localized fallback text when metadata cannot be resolved. */
     String getSpeciesMetadataUnavailableText();
 
-    /** Displays the latest natural DLI estimate for the plant. */
-    void showNaturalDli(@Nullable Float dli, @Nullable Long timestamp);
+    /** Displays the latest light summary for the plant. */
+    void showLightSummary(@NonNull LightSummary summary);
 }

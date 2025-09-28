@@ -29,6 +29,8 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantZoneDao;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
+import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
+import de.oabidi.pflanzenbestandundlichttest.repository.DatabaseArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.GalleryRepository;
@@ -131,8 +133,10 @@ public class PlantRepository implements CareRecommendationDelegate {
             db.measurementDao(), plantDao, db.speciesTargetDao(), db.reminderDao());
         diaryRepository = new DiaryRepository(this.context, mainHandler, this.ioExecutor, db.diaryDao());
         galleryRepository = new GalleryRepository(this.context, mainHandler, this.ioExecutor, db.plantPhotoDao());
+        ArtificialLightEstimateSource artificialLightSource =
+            new DatabaseArtificialLightEstimateSource(plantDao, ledProfileDao, plantCalibrationDao);
         environmentRepository = new EnvironmentRepository(this.context, mainHandler, this.ioExecutor,
-            db.environmentEntryDao(), this);
+            db.environmentEntryDao(), this, artificialLightSource);
         alertRepository = new ProactiveAlertRepository(this.context, mainHandler, this.ioExecutor,
             db.proactiveAlertDao());
         naturalLightRepository = new NaturalLightRepository(this.context, mainHandler, this.ioExecutor,
@@ -936,12 +940,21 @@ public class PlantRepository implements CareRecommendationDelegate {
     }
 
     public void latestNaturalDliForPlant(long plantId, Consumer<EnvironmentEntry> callback) {
-        environmentRepository.getLatestNaturalDli(plantId, callback);
+        latestLightForPlant(plantId, callback);
     }
 
     public void latestNaturalDliForPlant(long plantId, Consumer<EnvironmentEntry> callback,
                                          Consumer<Exception> errorCallback) {
-        environmentRepository.getLatestNaturalDli(plantId, callback, errorCallback);
+        latestLightForPlant(plantId, callback, errorCallback);
+    }
+
+    public void latestLightForPlant(long plantId, Consumer<EnvironmentEntry> callback) {
+        environmentRepository.getLatestLight(plantId, callback);
+    }
+
+    public void latestLightForPlant(long plantId, Consumer<EnvironmentEntry> callback,
+                                    Consumer<Exception> errorCallback) {
+        environmentRepository.getLatestLight(plantId, callback, errorCallback);
     }
 
     /**

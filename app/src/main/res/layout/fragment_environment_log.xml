@@ -184,6 +184,54 @@
                             android:text="@string/environment_log_remove_photo"
                             android:visibility="gone"
                             tools:visibility="visible" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+
+                            <TextView
+                                android:id="@+id/environment_light_title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/environment_log_latest_light_title"
+                                android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
+
+                            <TextView
+                                android:id="@+id/environment_light_natural_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/environment_log_latest_natural_placeholder"
+                                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                                tools:text="Natural DLI: 12.5 mol/m²/day" />
+
+                            <TextView
+                                android:id="@+id/environment_light_natural_timestamp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                tools:text="Updated May 23, 2024" />
+
+                            <TextView
+                                android:id="@+id/environment_light_artificial_value"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:text="@string/environment_log_latest_artificial_placeholder"
+                                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                                tools:text="Artificial DLI: 8.3 mol/m²/day" />
+
+                            <TextView
+                                android:id="@+id/environment_light_artificial_timestamp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                tools:text="Updated May 24, 2024" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 
@@ -214,43 +262,13 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/environment_natural_dli_card"
+            android:id="@+id/environment_light_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
             tools:visibility="visible">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/environment_natural_dli_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/environment_log_latest_dli_title"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
-
-                <TextView
-                    android:id="@+id/environment_natural_dli_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/environment_log_latest_dli_placeholder"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-                    tools:text="DLI: 12.5 mol/m²/day" />
-
-                <TextView
-                    android:id="@+id/environment_natural_dli_timestamp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    tools:text="Updated May 23, 2024" />
-            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <include

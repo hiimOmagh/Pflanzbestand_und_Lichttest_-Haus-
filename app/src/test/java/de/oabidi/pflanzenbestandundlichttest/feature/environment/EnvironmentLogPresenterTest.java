@@ -31,9 +31,10 @@ import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
-import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogView.NaturalDliPayload;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -124,9 +125,10 @@ public class EnvironmentLogPresenterTest {
 
         presenter.loadEntries();
 
-        assertNotNull(view.naturalDliPayload);
-        assertEquals(Float.valueOf(12.1f), view.naturalDliPayload.getDli());
-        assertEquals(Long.valueOf(2_000L), view.naturalDliPayload.getTimestamp());
+        assertNotNull(view.lightSummary);
+        assertEquals(Float.valueOf(12.1f), view.lightSummary.getNaturalDli());
+        assertEquals(Long.valueOf(2_000L), view.lightSummary.getNaturalTimestamp());
+        assertNull(view.lightSummary.getArtificialDli());
     }
 
     @Test
@@ -145,9 +147,11 @@ public class EnvironmentLogPresenterTest {
 
         presenter.loadEntries();
 
-        assertNotNull(view.naturalDliPayload);
-        assertEquals(Float.valueOf(9.3f), view.naturalDliPayload.getDli());
-        assertEquals(Long.valueOf(3_000L), view.naturalDliPayload.getTimestamp());
+        assertNotNull(view.lightSummary);
+        assertEquals(Float.valueOf(5.5f), view.lightSummary.getNaturalDli());
+        assertEquals(Long.valueOf(1_000L), view.lightSummary.getNaturalTimestamp());
+        assertEquals(Float.valueOf(9.3f), view.lightSummary.getArtificialDli());
+        assertEquals(Long.valueOf(3_000L), view.lightSummary.getArtificialTimestamp());
     }
 
     @Test
@@ -193,7 +197,8 @@ public class EnvironmentLogPresenterTest {
 
         StubRepository(Context context, List<EnvironmentEntry> entries) {
             super(context, new Handler(Looper.getMainLooper()), new DirectExecutorService(),
-                new NoOpEnvironmentEntryDao(), new NoOpCareDelegate());
+                new NoOpEnvironmentEntryDao(), new NoOpCareDelegate(),
+                plantId -> ArtificialLightEstimateSource.ArtificialLightEstimate.empty());
             this.entries = entries;
         }
 
@@ -238,7 +243,7 @@ public class EnvironmentLogPresenterTest {
         }
 
         @Override
-        public EnvironmentEntry getLatestWithNaturalDli(long plantId) {
+        public EnvironmentEntry getLatestWithLight(long plantId) {
             return null;
         }
     }
@@ -291,7 +296,7 @@ public class EnvironmentLogPresenterTest {
         EnvironmentLogPresenter.ChartData growthData;
         EnvironmentLogPresenter.ChartData climateData;
         List<EnvironmentLogPresenter.PhotoHighlight> photoHighlights;
-        NaturalDliPayload naturalDliPayload;
+        LightSummary lightSummary;
 
         @Override
         public void showEntries(List<EnvironmentLogPresenter.EnvironmentLogItem> items) {
@@ -321,8 +326,8 @@ public class EnvironmentLogPresenterTest {
         }
 
         @Override
-        public void showNaturalDli(@NonNull NaturalDliPayload payload) {
-            naturalDliPayload = payload;
+        public void showLightSummary(@NonNull LightSummary summary) {
+            lightSummary = summary;
         }
 
         @Override

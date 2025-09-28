@@ -17,6 +17,7 @@ import java.util.Objects;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
 
 /**
  * Presenter for {@link PlantDetailView} handling non-UI logic such as export,
@@ -106,19 +107,23 @@ public class PlantDetailPresenter {
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
 
-    /** Loads the latest natural DLI estimate for the current plant. */
-    public void loadLatestNaturalDli() {
+    /** Loads the latest light summary for the current plant. */
+    public void loadLatestLightSummary() {
         if (plantId <= 0) {
-            runOnViewThread(() -> view.showNaturalDli(null, null));
+            runOnViewThread(() -> view.showLightSummary(new LightSummary(null, null, null, null)));
             return;
         }
-        repository.latestNaturalDliForPlant(plantId, entry -> runOnViewThread(() -> {
-            if (entry == null || entry.getNaturalDli() == null) {
-                view.showNaturalDli(null, null);
-            } else {
-                view.showNaturalDli(entry.getNaturalDli(), entry.getTimestamp());
+        repository.latestLightForPlant(plantId, entry -> runOnViewThread(() -> {
+            if (entry == null) {
+                view.showLightSummary(new LightSummary(null, null, null, null));
+                return;
             }
-        }), error -> runOnViewThread(() -> view.showNaturalDli(null, null)));
+            Float natural = entry.getNaturalDli();
+            Float artificial = entry.getArtificialDli();
+            Long timestamp = entry.getTimestamp();
+            view.showLightSummary(new LightSummary(natural, natural != null ? timestamp : null,
+                artificial, artificial != null ? timestamp : null));
+        }), error -> runOnViewThread(() -> view.showLightSummary(new LightSummary(null, null, null, null))));
     }
 
     /** Loads metadata associated with the supplied species key. */

@@ -55,6 +55,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.common.location.LocationProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -113,11 +114,15 @@ public class PlantDetailActivity extends AppCompatActivity
     private View ambientColumn;
     private View lightMeterSpacer;
     @Nullable
-    private MaterialCardView naturalDliCard;
+    private MaterialCardView lightSummaryCard;
     @Nullable
     private TextView naturalDliValueView;
     @Nullable
     private TextView naturalDliTimestampView;
+    @Nullable
+    private TextView artificialDliValueView;
+    @Nullable
+    private TextView artificialDliTimestampView;
     private ViewPager2 detailViewPager;
     private TabLayout detailTabLayout;
     private PlantDetailPagerAdapter pagerAdapter;
@@ -315,7 +320,7 @@ public class PlantDetailActivity extends AppCompatActivity
             this,
             (requestKey, bundle) -> {
                 presenter.loadCareRecommendations();
-                presenter.loadLatestNaturalDli();
+                presenter.loadLatestLightSummary();
             }
         );
         getSupportFragmentManager().setFragmentResultListener(
@@ -341,9 +346,11 @@ public class PlantDetailActivity extends AppCompatActivity
         cameraBandView = views.cameraBandView;
         ambientColumn = views.ambientColumnView;
         lightMeterSpacer = views.lightMeterSpacerView;
-        naturalDliCard = views.naturalDliCardView;
+        lightSummaryCard = views.lightSummaryCardView;
         naturalDliValueView = views.naturalDliValueView;
         naturalDliTimestampView = views.naturalDliTimestampView;
+        artificialDliValueView = views.artificialDliValueView;
+        artificialDliTimestampView = views.artificialDliTimestampView;
         careTipsCard = views.careTipsCardView;
         careTipsList = views.careRecommendationsListView;
         careTipsLoadingView = views.careRecommendationsLoadingView;
@@ -367,7 +374,7 @@ public class PlantDetailActivity extends AppCompatActivity
         humidityIconView = views.humidityIconView;
         toxicityIconView = views.toxicityIconView;
         careTipsIconView = views.careTipsIconView;
-        showNaturalDli(null, null);
+        showLightSummary(new LightSummary(null, null, null, null));
 
         if (wateringIconView != null) {
             TooltipCompat.setTooltipText(wateringIconView, getString(R.string.metadata_tooltip_watering));
@@ -456,27 +463,58 @@ public class PlantDetailActivity extends AppCompatActivity
     }
 
     @Override
-    public void showNaturalDli(@Nullable Float dli, @Nullable Long timestamp) {
-        if (naturalDliCard == null || naturalDliValueView == null || naturalDliTimestampView == null) {
+    public void showLightSummary(@NonNull LightSummary summary) {
+        if (lightSummaryCard == null || naturalDliValueView == null || naturalDliTimestampView == null
+            || artificialDliValueView == null || artificialDliTimestampView == null) {
             return;
         }
-        if (dli == null) {
-            naturalDliCard.setVisibility(View.GONE);
-            naturalDliValueView.setText(R.string.plant_detail_dli_placeholder);
+        Float natural = summary.getNaturalDli();
+        Float artificial = summary.getArtificialDli();
+        if (natural == null && artificial == null) {
+            lightSummaryCard.setVisibility(View.GONE);
+            naturalDliValueView.setText(R.string.plant_detail_light_natural_placeholder);
             naturalDliTimestampView.setText(null);
             naturalDliTimestampView.setVisibility(View.GONE);
+            artificialDliValueView.setText(R.string.plant_detail_light_artificial_placeholder);
+            artificialDliTimestampView.setText(null);
+            artificialDliTimestampView.setVisibility(View.GONE);
             return;
         }
-        naturalDliCard.setVisibility(View.VISIBLE);
-        naturalDliValueView.setText(getString(R.string.plant_detail_dli_value,
-            naturalDliFormat.format(dli)));
-        if (timestamp != null) {
-            naturalDliTimestampView.setVisibility(View.VISIBLE);
-            naturalDliTimestampView.setText(getString(R.string.plant_detail_dli_updated,
-                naturalDliDateFormat.format(new Date(timestamp))));
+        lightSummaryCard.setVisibility(View.VISIBLE);
+        if (natural != null) {
+            naturalDliValueView.setText(getString(R.string.plant_detail_light_natural_value,
+                naturalDliFormat.format(natural)));
+            Long timestamp = summary.getNaturalTimestamp();
+            if (timestamp != null) {
+                naturalDliTimestampView.setVisibility(View.VISIBLE);
+                naturalDliTimestampView.setText(getString(R.string.plant_detail_light_natural_updated,
+                    naturalDliDateFormat.format(new Date(timestamp))));
+            } else {
+                naturalDliTimestampView.setText(null);
+                naturalDliTimestampView.setVisibility(View.GONE);
+            }
         } else {
+            naturalDliValueView.setText(R.string.plant_detail_light_natural_placeholder);
             naturalDliTimestampView.setText(null);
             naturalDliTimestampView.setVisibility(View.GONE);
+        }
+
+        if (artificial != null) {
+            artificialDliValueView.setText(getString(R.string.plant_detail_light_artificial_value,
+                naturalDliFormat.format(artificial)));
+            Long timestamp = summary.getArtificialTimestamp();
+            if (timestamp != null) {
+                artificialDliTimestampView.setVisibility(View.VISIBLE);
+                artificialDliTimestampView.setText(getString(R.string.plant_detail_light_artificial_updated,
+                    naturalDliDateFormat.format(new Date(timestamp))));
+            } else {
+                artificialDliTimestampView.setText(null);
+                artificialDliTimestampView.setVisibility(View.GONE);
+            }
+        } else {
+            artificialDliValueView.setText(R.string.plant_detail_light_artificial_placeholder);
+            artificialDliTimestampView.setText(null);
+            artificialDliTimestampView.setVisibility(View.GONE);
         }
     }
 
@@ -630,7 +668,7 @@ public class PlantDetailActivity extends AppCompatActivity
         }
         startCameraUpdatesIfPossible();
         presenter.loadCareRecommendations();
-        presenter.loadLatestNaturalDli();
+        presenter.loadLatestLightSummary();
         ensureLocationPermission();
     }
 

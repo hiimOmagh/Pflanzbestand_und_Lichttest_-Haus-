@@ -15,8 +15,8 @@ import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
-import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogView.NaturalDliPayload;
 
 /**
  * Presenter coordinating the environment log between the repository and the view.
@@ -66,7 +66,7 @@ public class EnvironmentLogPresenter {
             view.showEmptyState(items.isEmpty());
             view.showPhotoHighlights(buildPhotoHighlights(entries));
             refreshCharts(entries);
-            view.showNaturalDli(extractLatestNaturalDli(entries));
+            view.showLightSummary(extractLightSummary(entries));
             view.showLoading(false);
         }, e -> {
             view.showLoading(false);
@@ -217,7 +217,9 @@ public class EnvironmentLogPresenter {
             new MetricSpec(context.getString(R.string.environment_log_chart_label_width), EnvironmentEntry::getWidth));
         ChartData climate = buildChartData(sorted,
             new MetricSpec(context.getString(R.string.environment_log_chart_label_temperature), EnvironmentEntry::getTemperature),
-            new MetricSpec(context.getString(R.string.environment_log_chart_label_humidity), EnvironmentEntry::getHumidity));
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_humidity), EnvironmentEntry::getHumidity),
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_natural_dli), EnvironmentEntry::getNaturalDli),
+            new MetricSpec(context.getString(R.string.environment_log_chart_label_artificial_dli), EnvironmentEntry::getArtificialDli));
         view.showGrowthChart(growth);
         view.showClimateChart(climate);
     }
@@ -266,6 +268,9 @@ public class EnvironmentLogPresenter {
         if (entry.getNaturalDli() != null) {
             parts.add(context.getString(R.string.environment_log_metric_natural_dli, entry.getNaturalDli()));
         }
+        if (entry.getArtificialDli() != null) {
+            parts.add(context.getString(R.string.environment_log_metric_artificial_dli, entry.getArtificialDli()));
+        }
         if (parts.isEmpty()) {
             return context.getString(R.string.environment_log_metrics_empty);
         }
@@ -290,39 +295,51 @@ public class EnvironmentLogPresenter {
         copy.setHeight(entry.getHeight());
         copy.setWidth(entry.getWidth());
         copy.setNaturalDli(entry.getNaturalDli());
+        copy.setArtificialDli(entry.getArtificialDli());
+        copy.setArtificialHours(entry.getArtificialHours());
         copy.setNotes(entry.getNotes());
         copy.setPhotoUri(entry.getPhotoUri());
         return copy;
     }
 
-    private NaturalDliPayload extractLatestNaturalDli(List<EnvironmentEntry> entries) {
+    private LightSummary extractLightSummary(List<EnvironmentEntry> entries) {
         if (entries == null || entries.isEmpty()) {
-            return new NaturalDliPayload(null, null);
+            return new LightSummary(null, null, null, null);
         }
-        EnvironmentEntry latest = null;
-        Float latestValue = null;
+        EnvironmentEntry latestNatural = null;
+        EnvironmentEntry latestArtificial = null;
         for (EnvironmentEntry entry : entries) {
             if (entry == null) {
                 continue;
             }
-            Float value = entry.getNaturalDli();
-            if (value == null) {
-                value = entry.getArtificialDli();
+            Float natural = entry.getNaturalDli();
+            if (natural != null && isNewer(entry, latestNatural)) {
+                latestNatural = entry;
             }
-            if (value == null) {
-                continue;
-            }
-            if (latest == null
-                || entry.getTimestamp() > latest.getTimestamp()
-                || (entry.getTimestamp() == latest.getTimestamp() && entry.getId() > latest.getId())) {
-                latest = entry;
-                latestValue = value;
+            Float artificial = entry.getArtificialDli();
+            if (artificial != null && isNewer(entry, latestArtificial)) {
+                latestArtificial = entry;
             }
         }
-        if (latest == null) {
-            return new NaturalDliPayload(null, null);
+        Float naturalValue = latestNatural != null ? latestNatural.getNaturalDli() : null;
+        Long naturalTimestamp = latestNatural != null ? latestNatural.getTimestamp() : null;
+        Float artificialValue = latestArtificial != null ? latestArtificial.getArtificialDli() : null;
+        Long artificialTimestamp = latestArtificial != null ? latestArtificial.getTimestamp() : null;
+        return new LightSummary(naturalValue, naturalTimestamp, artificialValue, artificialTimestamp);
+    }
+
+    private boolean isNewer(EnvironmentEntry candidate, @Nullable EnvironmentEntry current) {
+        if (candidate == null) {
+            return false;
         }
-        return new NaturalDliPayload(latestValue, latest.getTimestamp());
+        if (current == null) {
+            return true;
+        }
+        if (candidate.getTimestamp() > current.getTimestamp()) {
+            return true;
+        }
+        return candidate.getTimestamp() == current.getTimestamp()
+            && candidate.getId() > current.getId();
     }
 
     private List<PhotoHighlight> buildPhotoHighlights(List<EnvironmentEntry> entries) {

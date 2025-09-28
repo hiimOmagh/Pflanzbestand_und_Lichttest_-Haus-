@@ -23,13 +23,16 @@ import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
 public class EnvironmentRepository extends BaseRepository {
     private final EnvironmentEntryDao environmentEntryDao;
     private final CareRecommendationDelegate careDelegate;
+    private final ArtificialLightEstimateSource artificialLightSource;
 
     public EnvironmentRepository(Context context, Handler mainHandler, ExecutorService ioExecutor,
                                  EnvironmentEntryDao environmentEntryDao,
-                                 CareRecommendationDelegate careDelegate) {
+                                 CareRecommendationDelegate careDelegate,
+                                 ArtificialLightEstimateSource artificialLightSource) {
         super(context, mainHandler, ioExecutor);
         this.environmentEntryDao = Objects.requireNonNull(environmentEntryDao, "environmentEntryDao");
         this.careDelegate = Objects.requireNonNull(careDelegate, "careDelegate");
+        this.artificialLightSource = Objects.requireNonNull(artificialLightSource, "artificialLightSource");
     }
 
     public void environmentEntriesForPlant(long plantId, Consumer<List<EnvironmentEntry>> callback,
@@ -45,6 +48,7 @@ public class EnvironmentRepository extends BaseRepository {
                                        @Nullable Consumer<Exception> errorCallback) {
         Objects.requireNonNull(entry, "entry");
         runAsync(() -> {
+            attachArtificialLightEstimate(entry);
             entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
             long id = environmentEntryDao.insert(entry);
             entry.setId(id);
@@ -59,6 +63,7 @@ public class EnvironmentRepository extends BaseRepository {
                                        @Nullable Consumer<Exception> errorCallback) {
         Objects.requireNonNull(entry, "entry");
         runAsync(() -> {
+            attachArtificialLightEstimate(entry);
             entry.setPhotoUri(persistEnvironmentPhoto(entry.getPhotoUri()));
             environmentEntryDao.update(entry);
         }, () -> combineEnvironmentPostActions(
@@ -88,13 +93,13 @@ public class EnvironmentRepository extends BaseRepository {
         return environmentEntryDao.getRecentForPlant(plantId, limit);
     }
 
-    public void getLatestNaturalDli(long plantId, Consumer<EnvironmentEntry> callback,
-                                    @Nullable Consumer<Exception> errorCallback) {
-        queryAsync(() -> environmentEntryDao.getLatestWithNaturalDli(plantId), callback, errorCallback);
+    public void getLatestLight(long plantId, Consumer<EnvironmentEntry> callback,
+                               @Nullable Consumer<Exception> errorCallback) {
+        queryAsync(() -> environmentEntryDao.getLatestWithLight(plantId), callback, errorCallback);
     }
 
-    public void getLatestNaturalDli(long plantId, Consumer<EnvironmentEntry> callback) {
-        getLatestNaturalDli(plantId, callback, null);
+    public void getLatestLight(long plantId, Consumer<EnvironmentEntry> callback) {
+        getLatestLight(plantId, callback, null);
     }
 
     @Nullable
@@ -128,6 +133,21 @@ public class EnvironmentRepository extends BaseRepository {
             return;
         }
         PhotoManager.deletePhoto(context, uriString);
+    }
+
+    private void attachArtificialLightEstimate(EnvironmentEntry entry) {
+        if (entry == null) {
+            return;
+        }
+        ArtificialLightEstimateSource.ArtificialLightEstimate estimate =
+            artificialLightSource.estimate(entry.getPlantId());
+        if (estimate.hasValues()) {
+            entry.setArtificialDli(estimate.getDli());
+            entry.setArtificialHours(estimate.getHours());
+        } else {
+            entry.setArtificialDli(null);
+            entry.setArtificialHours(null);
+        }
     }
 
     private Runnable combineEnvironmentPostActions(@Nullable Runnable cleanup, Runnable refresh) {
