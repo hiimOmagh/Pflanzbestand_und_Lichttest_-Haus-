@@ -8,6 +8,7 @@ import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * View contract for the plant edit screen.

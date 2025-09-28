@@ -43,6 +43,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileListFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
 
 /**
  * Fragment displaying the list of plants.

@@ -19,6 +19,7 @@ import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecomm
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 
 /**

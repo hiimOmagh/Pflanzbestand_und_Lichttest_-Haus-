@@ -21,6 +21,7 @@ import com.google.android.material.navigation.NavigationBarView;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantListFragment;
 
 /**
  * Fragment displaying a simple onboarding slider.

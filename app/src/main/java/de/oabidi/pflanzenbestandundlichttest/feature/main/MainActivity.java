@@ -30,6 +30,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantDetailActivity;
 
 /**
  * Activity hosting the main navigation of the app.

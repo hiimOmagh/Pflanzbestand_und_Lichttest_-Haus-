@@ -23,6 +23,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantDao;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
@@ -38,6 +39,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZoneDao;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.DatabaseArtificialLightEstimateSource;

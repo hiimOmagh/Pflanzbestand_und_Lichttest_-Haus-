@@ -34,7 +34,6 @@ import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightSens
 public class CalibrationFragment extends Fragment implements LightSensorHelper.OnLuxChangedListener {
 
     private static final float DEFAULT_CALIBRATION = 0.0185f;
-    private static final float DEFAULT_CALIBRATION = 0.0185f;
     private ViewFlipper stepFlipper;
     private TextView stepIndicatorView;
     private TextView stepTitleView;

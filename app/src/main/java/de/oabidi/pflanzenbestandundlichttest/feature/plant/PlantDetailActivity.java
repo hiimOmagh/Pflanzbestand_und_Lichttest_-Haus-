@@ -56,6 +56,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightSensorHelper;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.common.location.LocationProvider;

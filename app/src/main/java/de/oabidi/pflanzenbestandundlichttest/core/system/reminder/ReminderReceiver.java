@@ -19,7 +19,10 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantDetailActivity;
 
 /**

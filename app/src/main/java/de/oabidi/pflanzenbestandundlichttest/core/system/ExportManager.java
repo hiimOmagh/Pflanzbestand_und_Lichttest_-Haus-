@@ -33,7 +33,13 @@ import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.Converters;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.FileUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 /**
