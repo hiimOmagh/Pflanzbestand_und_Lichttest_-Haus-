@@ -1549,7 +1549,6 @@ public class ImportManager {
             parts.add(soilMoisture != null ? Float.toString(soilMoisture) : "");
             parts.add(height != null ? Float.toString(height) : "");
             parts.add(width != null ? Float.toString(width) : "");
-            List<String> parts = new ArrayList<>(11);
             parts.add(notes != null ? notes : "");
             parts.add(photo != null ? photo : "");
             if (insertEnvironmentEntryRow(parts, mode, baseDir, plantIdMap, warnings, index,
