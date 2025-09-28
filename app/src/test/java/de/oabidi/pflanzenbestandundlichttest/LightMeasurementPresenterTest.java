@@ -28,7 +28,7 @@ import de.oabidi.pflanzenbestandundlichttest.LightMath;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
-import de.oabidi.pflanzenbestandundlichttest.repository.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
 
 /** Tests for {@link LightMeasurementPresenter} artificial light projections. */
 @RunWith(RobolectricTestRunner.class)
