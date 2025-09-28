@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
@@ -21,9 +22,9 @@ import androidx.fragment.app.Fragment;
 import java.util.Locale;
 
 import de.oabidi.pflanzenbestandundlichttest.analytics.CalibrationAnalytics;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
 
 /**
  * Fragment guiding users through the LED calibration workflow using a step-by-step wizard.

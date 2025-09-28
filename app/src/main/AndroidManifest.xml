@@ -39,7 +39,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Pflanzenbestand">
         <activity
-            android:name=".PlantDetailActivity"
+            android:name=".feature.plant.PlantDetailActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
@@ -51,17 +51,17 @@
             </intent-filter>
         </activity>
         <receiver
-            android:name=".ReminderReceiver"
+            android:name=".core.system.reminder.ReminderReceiver"
             android:exported="false" />
         <receiver
-            android:name=".BootReceiver"
+            android:name=".core.system.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".ReminderWidgetProvider"
+            android:name=".core.system.reminder.ReminderWidgetProvider"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -71,7 +71,7 @@
                 android:resource="@xml/appwidget_provider" />
         </receiver>
         <receiver
-            android:name=".BackupScheduler"
+            android:name=".core.system.BackupScheduler"
             android:exported="false">
         </receiver>
         <provider

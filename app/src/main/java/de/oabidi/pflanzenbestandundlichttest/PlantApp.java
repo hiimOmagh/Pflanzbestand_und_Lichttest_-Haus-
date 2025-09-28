@@ -1,5 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;

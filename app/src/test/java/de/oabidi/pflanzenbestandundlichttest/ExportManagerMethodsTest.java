@@ -26,9 +26,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -69,7 +69,7 @@ public class ExportManagerMethodsTest {
     public void writeCsv_success() throws Exception {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
-        Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
+        Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(
             java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
             java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
@@ -93,7 +93,7 @@ public class ExportManagerMethodsTest {
     public void writeCsv_failure() throws Throwable {
         ExportManager mgr = new ExportManager(context, new StubRepository(context), executor);
 
-        Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.ExportManager$ExportData");
+        Class<?> dataClass = Class.forName("de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager$ExportData");
         Constructor<?> ctor = dataClass.getDeclaredConstructor(
             java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
             java.util.List.class, java.util.List.class, java.util.List.class, java.util.List.class,
@@ -230,12 +230,12 @@ public class ExportManagerMethodsTest {
         }
 
         @Override
-        public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() {
+        public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getAllPlantPhotos() {
             return Collections.emptyList();
         }
 
         @Override
-        public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
+        public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
             return Collections.emptyList();
         }
 
@@ -321,12 +321,12 @@ public class ExportManagerMethodsTest {
         }
 
         @Override
-        public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() {
+        public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getAllPlantPhotos() {
             throw fail();
         }
 
         @Override
-        public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
+        public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
             throw fail();
         }
 

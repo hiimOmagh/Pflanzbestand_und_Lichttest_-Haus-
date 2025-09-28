@@ -5,8 +5,8 @@ import androidx.annotation.Nullable;
 
 import java.util.List;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 
 /**
  * Contract implemented by the environment log UI.

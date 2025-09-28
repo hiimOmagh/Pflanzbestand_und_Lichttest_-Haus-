@@ -14,7 +14,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
 /** RecyclerView adapter for displaying {@link LedProfile} entries. */
 class LedProfileAdapter extends ListAdapter<LedProfile, LedProfileAdapter.ProfileViewHolder> {

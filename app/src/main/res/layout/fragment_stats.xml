@@ -11,7 +11,7 @@
         android:minHeight="32dp"
         android:text="@string/select_plants" />
 
-    <de.oabidi.pflanzenbestandundlichttest.common.ui.BarChartView
+    <de.oabidi.pflanzenbestandundlichttest.core.ui.BarChartView
         android:id="@+id/stats_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"

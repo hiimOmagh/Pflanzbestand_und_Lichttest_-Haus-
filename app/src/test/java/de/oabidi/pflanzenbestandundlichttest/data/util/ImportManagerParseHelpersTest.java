@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest.data.util;
+package de.oabidi.pflanzenbestandundlichttest.core.data.util;
 
 import static org.junit.Assert.*;
 
@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
@@ -217,13 +217,13 @@ public class ImportManagerParseHelpersTest {
             "1,1,0,hi\n";
         ImportManager.SectionReader sectionReader = newSectionReader(csv);
         List<ImportManager.SectionParser> parsers = Arrays.asList(
-            new de.oabidi.pflanzenbestandundlichttest.data.util.LedProfilesSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.PlantsSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.PlantPhotosSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.SpeciesTargetsSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.MeasurementsSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.DiaryEntriesSectionParser(),
-            new de.oabidi.pflanzenbestandundlichttest.data.util.RemindersSectionParser()
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.LedProfilesSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.PlantsSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.PlantPhotosSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.SpeciesTargetsSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.MeasurementsSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.DiaryEntriesSectionParser(),
+            new de.oabidi.pflanzenbestandundlichttest.core.data.util.RemindersSectionParser()
         );
         Map<Long, Long> plantIdMap = new HashMap<>();
         List<ImportManager.ImportWarning> warnings = new ArrayList<>();
@@ -234,7 +234,7 @@ public class ImportManagerParseHelpersTest {
         AtomicInteger totalSteps = new AtomicInteger(8);
         List<Integer> updates = new ArrayList<>();
         ImportManager.ProgressCallback callback = (current, total) -> updates.add(current);
-        de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator coordinator = new de.oabidi.pflanzenbestandundlichttest.data.util.SectionCoordinator(
+        de.oabidi.pflanzenbestandundlichttest.core.data.util.SectionCoordinator coordinator = new de.oabidi.pflanzenbestandundlichttest.core.data.util.SectionCoordinator(
             importer, sectionReader, parsers, context, progress, callback, totalSteps, context.cancelled);
         assertTrue(coordinator.process());
         Shadows.shadowOf(Looper.getMainLooper()).runToEndOfTasks();

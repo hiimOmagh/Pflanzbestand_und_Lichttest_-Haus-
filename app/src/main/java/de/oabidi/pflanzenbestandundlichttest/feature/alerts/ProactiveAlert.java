@@ -3,7 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest.feature.alerts;
 import androidx.annotation.NonNull;
 
 import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 
 /**
  * Value object describing a proactive alert for a specific plant.

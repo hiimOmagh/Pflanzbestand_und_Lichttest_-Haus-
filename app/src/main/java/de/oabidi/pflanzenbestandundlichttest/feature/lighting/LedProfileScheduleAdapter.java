@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
 /** Adapter for editing {@link LedProfile.ScheduleEntry} rows. */
 class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleAdapter.EntryViewHolder> {

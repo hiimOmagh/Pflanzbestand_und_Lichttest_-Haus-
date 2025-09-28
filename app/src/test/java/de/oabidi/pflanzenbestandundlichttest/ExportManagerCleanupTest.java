@@ -20,9 +20,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
@@ -119,12 +119,12 @@ public class ExportManagerCleanupTest {
                 }
 
                 @Override
-                public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getAllPlantPhotos() {
+                public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getAllPlantPhotos() {
                     return Collections.emptyList();
                 }
 
                 @Override
-                public List<de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
+                public List<de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto> getPlantPhotosForPlant(long plantId) {
                     return Collections.emptyList();
                 }
 

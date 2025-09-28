@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 
 /** Displays the list of LED lighting profiles. */

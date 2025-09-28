@@ -41,11 +41,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = PlantPhotoViewerFragmentTest.TestPlantApplication.class)

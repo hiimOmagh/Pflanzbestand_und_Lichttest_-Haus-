@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 
 /**
  * Tests for {@link PlantListPresenter} covering filtering, export and import behaviour.

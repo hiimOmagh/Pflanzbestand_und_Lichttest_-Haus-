@@ -10,10 +10,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-import de.oabidi.pflanzenbestandundlichttest.data.NaturalLightEstimate;
-import de.oabidi.pflanzenbestandundlichttest.data.NaturalLightEstimateDao;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantZoneDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.NaturalLightEstimate;
+import de.oabidi.pflanzenbestandundlichttest.core.data.NaturalLightEstimateDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZoneDao;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**

@@ -26,24 +26,24 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociationDao;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileDao;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
-import de.oabidi.pflanzenbestandundlichttest.data.NaturalLightEstimate;
-import de.oabidi.pflanzenbestandundlichttest.data.NaturalLightEstimateDao;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantZone;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantZoneDao;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertDao;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociation;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociationDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantCalibrationDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhotoDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.NaturalLightEstimate;
+import de.oabidi.pflanzenbestandundlichttest.core.data.NaturalLightEstimateDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZoneDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestionDao;
 
 /**
  * Singleton Room database for storing {@link Plant} data.

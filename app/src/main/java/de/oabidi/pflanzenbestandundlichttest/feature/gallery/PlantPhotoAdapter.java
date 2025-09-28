@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 
 /**
  * RecyclerView adapter that displays {@link PlantPhoto} thumbnails in a grid. Clicking an item opens

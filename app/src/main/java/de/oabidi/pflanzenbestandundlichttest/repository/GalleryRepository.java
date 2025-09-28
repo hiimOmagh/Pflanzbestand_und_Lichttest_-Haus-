@@ -1,6 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest.repository;
 
-import static de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager.*;
+import static de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager.*;
 
 import android.content.Context;
 import android.net.Uri;
@@ -14,9 +14,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhotoDao;
-import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhotoDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 
 /**
  * Repository handling plant gallery operations.

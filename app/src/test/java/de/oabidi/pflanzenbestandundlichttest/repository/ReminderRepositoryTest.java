@@ -16,10 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.Reminder;
-import de.oabidi.pflanzenbestandundlichttest.ReminderDao;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.reminder.ReminderSuggestionDao;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderDao;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestionDao;
 
 @RunWith(RobolectricTestRunner.class)
 public class ReminderRepositoryTest extends RepositoryTestBase {

@@ -9,10 +9,10 @@ import java.util.Map;
 
 import de.oabidi.pflanzenbestandundlichttest.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantDao;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileDao;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
 
 /**

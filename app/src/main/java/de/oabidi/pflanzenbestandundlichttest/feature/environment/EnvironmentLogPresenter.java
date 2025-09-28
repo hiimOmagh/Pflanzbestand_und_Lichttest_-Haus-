@@ -14,8 +14,8 @@ import java.util.Date;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
 
 /**

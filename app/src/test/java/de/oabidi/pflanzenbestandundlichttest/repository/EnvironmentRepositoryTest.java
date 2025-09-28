@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 
 @RunWith(RobolectricTestRunner.class)

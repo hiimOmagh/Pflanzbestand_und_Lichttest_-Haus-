@@ -26,8 +26,8 @@ import java.util.Arrays;
 
 import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 
 /**
  * Unit tests for {@link PlantDetailPresenter} verifying export handling and

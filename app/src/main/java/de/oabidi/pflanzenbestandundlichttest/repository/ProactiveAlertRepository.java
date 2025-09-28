@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertDao;
-import de.oabidi.pflanzenbestandundlichttest.data.ProactiveAlertLog;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 
 /**
  * Repository persisting proactive care alert history used for deduplication and UI.

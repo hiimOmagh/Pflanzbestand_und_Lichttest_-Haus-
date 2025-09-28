@@ -29,9 +29,9 @@ import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntryDao;
-import de.oabidi.pflanzenbestandundlichttest.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;

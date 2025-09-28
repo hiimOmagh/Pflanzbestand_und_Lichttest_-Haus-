@@ -12,7 +12,7 @@ import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.DiaryDao;
 import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
-import de.oabidi.pflanzenbestandundlichttest.data.util.PhotoManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 
 /**
  * Repository for {@link DiaryEntry} persistence.

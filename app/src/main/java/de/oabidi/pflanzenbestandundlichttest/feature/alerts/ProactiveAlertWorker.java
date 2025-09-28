@@ -11,7 +11,7 @@ import androidx.work.WorkerParameters;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**

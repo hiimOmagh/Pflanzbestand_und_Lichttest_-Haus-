@@ -40,8 +40,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import de.oabidi.pflanzenbestandundlichttest.data.util.ImportManager;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
+import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
+import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)

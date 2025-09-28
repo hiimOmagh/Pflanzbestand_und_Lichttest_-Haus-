@@ -17,7 +17,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.oabidi.pflanzenbestandundlichttest.TestExecutorApp;
-import de.oabidi.pflanzenbestandundlichttest.common.ui.LineChartView;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.LineChartView;
 
 /**
  * Robolectric tests covering the chart rendering behaviour of EnvironmentLogFragment.

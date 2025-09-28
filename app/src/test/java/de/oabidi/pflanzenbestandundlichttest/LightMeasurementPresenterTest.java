@@ -25,10 +25,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.LightMath;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
-import de.oabidi.pflanzenbestandundlichttest.ExecutorProvider;
+import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 
 /** Tests for {@link LightMeasurementPresenter} artificial light projections. */
 @RunWith(RobolectricTestRunner.class)

@@ -25,7 +25,7 @@ import java.util.Map;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
 /** Dialog fragment for creating or editing {@link LedProfile} entries. */
 public class LedProfileEditorFragment extends DialogFragment implements LedProfileScheduleAdapter.OnEntriesChangedListener {
@@ -312,12 +312,12 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
         }
 
         static PlantRepository fromContext(@NonNull android.content.Context context) {
-            if (context instanceof de.oabidi.pflanzenbestandundlichttest.RepositoryProvider) {
-                return ((de.oabidi.pflanzenbestandundlichttest.RepositoryProvider) context).getRepository();
+            if (context instanceof de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider) {
+                return ((de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider) context).getRepository();
             }
             android.content.Context appContext = context.getApplicationContext();
-            if (appContext instanceof de.oabidi.pflanzenbestandundlichttest.RepositoryProvider) {
-                return ((de.oabidi.pflanzenbestandundlichttest.RepositoryProvider) appContext).getRepository();
+            if (appContext instanceof de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider) {
+                return ((de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider) appContext).getRepository();
             }
             throw new IllegalStateException("Application does not implement RepositoryProvider");
         }
