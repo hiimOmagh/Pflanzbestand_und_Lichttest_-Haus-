@@ -45,6 +45,36 @@
         app:layout_constraintTop_toBottomOf="@id/ppfd_value" />
 
     <TextView
+        android:id="@+id/artificial_photon_hours_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/artificial_photon_hours_placeholder"
+        app:layout_constraintStart_toStartOf="@id/dli_value"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
+        app:layout_constraintTop_toBottomOf="@id/dli_value" />
+
+    <TextView
+        android:id="@+id/artificial_ambient_dli_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/artificial_ambient_dli_placeholder"
+        app:layout_constraintStart_toStartOf="@id/artificial_photon_hours_value"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
+        app:layout_constraintTop_toBottomOf="@id/artificial_photon_hours_value" />
+
+    <TextView
+        android:id="@+id/artificial_camera_dli_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/artificial_camera_dli_placeholder"
+        app:layout_constraintStart_toStartOf="@id/artificial_ambient_dli_value"
+        app:layout_constraintEnd_toStartOf="@id/camera_luma_value"
+        app:layout_constraintTop_toBottomOf="@id/artificial_ambient_dli_value" />
+
+    <TextView
         android:id="@+id/camera_luma_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -73,6 +103,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/camera_ppfd_value" />
 
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/light_projection_barrier"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="camera_dli_value,artificial_camera_dli_value"  android:layout_height="wrap_content"
+        android:layout_width="wrap_content"/>
+
     <Spinner
         android:id="@+id/plant_selector"
         android:layout_width="0dp"
@@ -83,7 +119,7 @@
         android:minHeight="48dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/camera_dli_value" />
+        app:layout_constraintTop_toBottomOf="@id/light_projection_barrier" />
 
     <Spinner
         android:id="@+id/stage_selector"

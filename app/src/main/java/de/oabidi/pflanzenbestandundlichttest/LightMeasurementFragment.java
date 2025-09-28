@@ -49,6 +49,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView luxView;
     private TextView ppfdView;
     private TextView dliView;
+    private TextView artificialPhotonHoursView;
+    private TextView artificialAmbientDliView;
+    private TextView artificialCameraDliView;
     private Spinner plantSelector;
     private Spinner stageSelector;
     private Button saveMeasurementButton;
@@ -117,6 +120,9 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         luxView = view.findViewById(R.id.lux_value);
         ppfdView = view.findViewById(R.id.ppfd_value);
         dliView = view.findViewById(R.id.dli_value);
+        artificialPhotonHoursView = view.findViewById(R.id.artificial_photon_hours_value);
+        artificialAmbientDliView = view.findViewById(R.id.artificial_ambient_dli_value);
+        artificialCameraDliView = view.findViewById(R.id.artificial_camera_dli_value);
         cameraLumaView = view.findViewById(R.id.camera_luma_value);
         cameraPpfdView = view.findViewById(R.id.camera_ppfd_value);
         cameraDliView = view.findViewById(R.id.camera_dli_value);
@@ -166,6 +172,15 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
         if (cameraDliView != null) {
             cameraDliView.setText(R.string.camera_dli_placeholder);
+        }
+        if (artificialPhotonHoursView != null) {
+            artificialPhotonHoursView.setText(R.string.artificial_photon_hours_placeholder);
+        }
+        if (artificialAmbientDliView != null) {
+            artificialAmbientDliView.setText(R.string.artificial_ambient_dli_placeholder);
+        }
+        if (artificialCameraDliView != null) {
+            artificialCameraDliView.setText(R.string.artificial_camera_dli_placeholder);
         }
 
         if (savedInstanceState != null) {
@@ -313,30 +328,16 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
         if (selectedPlantId != -1) {
             repository.getLedCalibrationForPlant(selectedPlantId, calibration -> {
-                presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
-                presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
-                if (calibration != null) {
-                    Float ambient = calibration.getAmbientFactor();
-                    Float camera = calibration.getCameraFactor();
-                    if (ambient != null) {
-                        presenter.setCalibrationFactor(ambient);
-                    }
-                    if (camera != null) {
-                        presenter.setCameraCalibrationFactor(camera);
-                    } else if (ambient != null) {
-                        presenter.setCameraCalibrationFactor(ambient);
-                    }
-                }
+                presenter.applyCalibration(calibration);
             }, e -> {
-                presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
-                presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+                presenter.applyCalibration(null);
                 if (isAdded()) {
                     showError(getString(R.string.error_database));
                 }
             });
+            presenter.refreshActivePlantProfile();
         } else {
-            presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
-            presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+            presenter.applyCalibration(null);
         }
     }
 
@@ -510,6 +511,52 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
                 if (cameraDliView != null) {
                     cameraDliView.setText(context.getString(R.string.format_camera_dli, camera.getDli()));
                 }
+            }
+        });
+    }
+
+    @Override
+    public void showArtificialLightProjection(LightMeasurementPresenter.ArtificialLightProjection projection) {
+        View fragmentView = getView();
+        Context context = getContext();
+        if (fragmentView == null || context == null) {
+            return;
+        }
+        fragmentView.post(() -> {
+            if (!isAdded() || fragmentView.getContext() == null) {
+                return;
+            }
+            if (projection == null) {
+                if (artificialPhotonHoursView != null) {
+                    artificialPhotonHoursView.setText(R.string.artificial_photon_hours_placeholder);
+                }
+                if (artificialAmbientDliView != null) {
+                    artificialAmbientDliView.setText(R.string.artificial_ambient_dli_placeholder);
+                }
+                if (artificialCameraDliView != null) {
+                    artificialCameraDliView.setText(R.string.artificial_camera_dli_placeholder);
+                }
+                return;
+            }
+            if (artificialPhotonHoursView != null) {
+                artificialPhotonHoursView.setText(context.getString(
+                    R.string.format_artificial_photon_hours, projection.getPhotonHours()));
+            }
+            if (artificialAmbientDliView != null) {
+                String suffix = projection.isAmbientUsingFallback()
+                    ? context.getString(R.string.artificial_fallback_suffix)
+                    : "";
+                artificialAmbientDliView.setText(context.getString(R.string.format_artificial_dli,
+                    context.getString(R.string.artificial_label_ambient),
+                    projection.getAmbientDli(), suffix));
+            }
+            if (artificialCameraDliView != null) {
+                String suffix = projection.isCameraUsingFallback()
+                    ? context.getString(R.string.artificial_fallback_suffix)
+                    : "";
+                artificialCameraDliView.setText(context.getString(R.string.format_artificial_dli,
+                    context.getString(R.string.artificial_label_camera),
+                    projection.getCameraDli(), suffix));
             }
         });
     }

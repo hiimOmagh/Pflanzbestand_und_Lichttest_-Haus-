@@ -5,11 +5,16 @@ import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
 
 /**
  * Presenter handling light sensor measurements and related calculations.
@@ -21,6 +26,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         void showPlants(List<Plant> plants);
         void showError(String message);
         void showSelectedStage(SpeciesTarget.GrowthStage stage);
+        void showArtificialLightProjection(ArtificialLightProjection projection);
     }
 
     private static final float DEFAULT_CALIBRATION = 0.0185f;
@@ -75,6 +81,13 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
     private SpeciesTarget.GrowthStage activeStage = SpeciesTarget.GrowthStage.VEGETATIVE;
+    private long activePlantId = -1L;
+    @Nullable
+    private LedProfile activeLedProfile;
+    @Nullable
+    private Float profileAmbientPpfd;
+    @Nullable
+    private Float profileCameraPpfd;
     private float calibrationFactor;
     private float cameraCalibrationFactor;
     private int sampleSize;
@@ -105,6 +118,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.cameraCalibrationFactor = calibrationFactor;
         this.sampleSize = sampleSize;
         lightSensorHelper = new LightSensorHelper(this.context, this, sampleSize);
+        updateArtificialLightProjection();
     }
 
     public boolean hasLightSensor() {
@@ -149,6 +163,48 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         this.lightHours = lightHours;
     }
 
+    public void applyCalibration(@Nullable LedProfileCalibration calibration) {
+        profileAmbientPpfd = null;
+        profileCameraPpfd = null;
+        if (calibration == null) {
+            applyDefaultCalibration();
+            return;
+        }
+        Float ambient = calibration.getAmbientFactor();
+        if (ambient != null && ambient > 0f) {
+            setCalibrationFactor(ambient);
+            profileAmbientPpfd = ambient;
+        } else {
+            setCalibrationFactor(DEFAULT_CALIBRATION);
+        }
+        Float camera = calibration.getCameraFactor();
+        if (camera != null && camera > 0f) {
+            setCameraCalibrationFactor(camera);
+            profileCameraPpfd = camera;
+        } else if (ambient != null && ambient > 0f) {
+            setCameraCalibrationFactor(ambient);
+        } else {
+            setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+        }
+        updateArtificialLightProjection();
+    }
+
+    public void refreshActivePlantProfile() {
+        if (activePlantId < 0) {
+            activeLedProfile = null;
+            updateArtificialLightProjection();
+            return;
+        }
+        plantRepository.getLedProfileForPlant(activePlantId, profile -> {
+            activeLedProfile = profile;
+            updateArtificialLightProjection();
+        }, e -> {
+            activeLedProfile = null;
+            updateArtificialLightProjection();
+            view.showError(context.getString(R.string.error_database));
+        });
+    }
+
     public void refreshPlants() {
         plantRepository.getAllPlants(plants -> {
             this.plants = plants;
@@ -165,6 +221,10 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     public void selectPlant(int index) {
         if (plants == null || index < 0 || index >= plants.size()) {
             speciesTarget = null;
+            activePlantId = -1L;
+            activeLedProfile = null;
+            profileAmbientPpfd = null;
+            profileCameraPpfd = null;
             applyDefaultCalibration();
             view.showSelectedStage(activeStage);
             return;
@@ -184,22 +244,21 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
         Plant selectedPlant = plants.get(index);
         long plantId = selectedPlant.getId();
+        activePlantId = plantId;
+        activeLedProfile = null;
+        updateArtificialLightProjection();
         plantRepository.getLedCalibrationForPlant(plantId, calibration -> {
-            applyDefaultCalibration();
-            if (calibration != null) {
-                Float ambient = calibration.getAmbientFactor();
-                Float camera = calibration.getCameraFactor();
-                if (ambient != null) {
-                    setCalibrationFactor(ambient);
-                }
-                if (camera != null) {
-                    setCameraCalibrationFactor(camera);
-                } else if (ambient != null) {
-                    setCameraCalibrationFactor(ambient);
-                }
-            }
+            applyCalibration(calibration);
         }, e -> {
             applyDefaultCalibration();
+            view.showError(context.getString(R.string.error_database));
+        });
+        plantRepository.getLedProfileForPlant(plantId, profile -> {
+            activeLedProfile = profile;
+            updateArtificialLightProjection();
+        }, e -> {
+            activeLedProfile = null;
+            updateArtificialLightProjection();
             view.showError(context.getString(R.string.error_database));
         });
     }
@@ -312,5 +371,75 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         }
         setCalibrationFactor(defaultValue);
         setCameraCalibrationFactor(defaultValue);
+        profileAmbientPpfd = null;
+        profileCameraPpfd = null;
+        updateArtificialLightProjection();
+    }
+
+    private void updateArtificialLightProjection() {
+        Map<String, Float> factors = null;
+        if (profileAmbientPpfd != null || profileCameraPpfd != null) {
+            factors = new HashMap<>();
+            if (profileAmbientPpfd != null) {
+                factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, profileAmbientPpfd);
+            }
+            if (profileCameraPpfd != null) {
+                factors.put(LedProfile.CALIBRATION_KEY_CAMERA, profileCameraPpfd);
+            }
+        } else if (activeLedProfile != null) {
+            Map<String, Float> profileFactors = activeLedProfile.getCalibrationFactors();
+            if (profileFactors != null && !profileFactors.isEmpty()) {
+                factors = new HashMap<>(profileFactors);
+            }
+        }
+        List<LedProfile.ScheduleEntry> schedule = activeLedProfile != null
+            ? activeLedProfile.getSchedule()
+            : null;
+        LedProfileUtils.ArtificialLightEstimate estimate = LedProfileUtils.estimateArtificialLight(schedule, factors);
+        view.showArtificialLightProjection(new ArtificialLightProjection(
+            estimate.getPhotonHours(),
+            estimate.getAmbientDli(),
+            estimate.isAmbientUsingFallback(),
+            estimate.getCameraDli(),
+            estimate.isCameraUsingFallback()
+        ));
+    }
+
+    public static final class ArtificialLightProjection {
+        private final float photonHours;
+        private final float ambientDli;
+        private final boolean ambientUsingFallback;
+        private final float cameraDli;
+        private final boolean cameraUsingFallback;
+
+        public ArtificialLightProjection(float photonHours, float ambientDli,
+                                         boolean ambientUsingFallback, float cameraDli,
+                                         boolean cameraUsingFallback) {
+            this.photonHours = photonHours;
+            this.ambientDli = ambientDli;
+            this.ambientUsingFallback = ambientUsingFallback;
+            this.cameraDli = cameraDli;
+            this.cameraUsingFallback = cameraUsingFallback;
+        }
+
+        public float getPhotonHours() {
+            return photonHours;
+        }
+
+        public float getAmbientDli() {
+            return ambientDli;
+        }
+
+        public boolean isAmbientUsingFallback() {
+            return ambientUsingFallback;
+        }
+
+        public float getCameraDli() {
+            return cameraDli;
+        }
+
+        public boolean isCameraUsingFallback() {
+            return cameraUsingFallback;
+        }
     }
 }

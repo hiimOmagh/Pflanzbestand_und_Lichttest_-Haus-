@@ -18,6 +18,14 @@
     <string name="format_camera_luma">Camera luma: %.0f</string>
     <string name="format_camera_ppfd">Camera PPFD: %.2f µmol/m²/s</string>
     <string name="format_camera_dli">Camera DLI: %.2f mol/m²/day</string>
+    <string name="artificial_photon_hours_placeholder">Projected photon-hours: —</string>
+    <string name="artificial_ambient_dli_placeholder">Projected ambient DLI: —</string>
+    <string name="artificial_camera_dli_placeholder">Projected camera DLI: —</string>
+    <string name="format_artificial_photon_hours">Projected photon-hours: %.1f h</string>
+    <string name="format_artificial_dli">Projected %1$s DLI: %.2f mol/m²/day%3$s</string>
+    <string name="artificial_label_ambient">ambient</string>
+    <string name="artificial_label_camera">camera</string>
+    <string name="artificial_fallback_suffix"> (est.)</string>
     <string name="location_check_placeholder">Location check: —</string>
     <string name="format_location_check">Location check: %s</string>
     <string name="new_plant_name">New Plant</string>
