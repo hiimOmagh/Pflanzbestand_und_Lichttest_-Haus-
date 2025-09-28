@@ -133,11 +133,13 @@ Calibration data is primarily stored on the `LedProfile` entity inside the `cali
 (`LedProfile.CALIBRATION_KEY_AMBIENT` and `LedProfile.CALIBRATION_KEY_CAMERA`).
 `PlantRepository` exposes `getLedCalibrationForPlant` and `saveLedCalibrationForPlant` helpers that
 prefer LED profile assignments but fall back to the legacy per-plant `PlantCalibration` rows when no
-profile is linked. These helpers are used by both `LightMeasurementPresenter` (to refresh factors when
-the user selects a plant) and `CalibrationFragment` (to persist user-entered values). Backups export the
-profile calibration data via the `LedProfiles` CSV section and `ledProfiles` JSON array, restoring LED
-profile records before any measurements are processed so dependent calculations use the correct
-factors.
+profile is linked. `getLedCalibrationForPlant` returns a `LedProfileCalibration` DTO describing the
+profile association and current factors, enabling callers to surface missing-profile messaging while
+still honoring legacy data. These helpers are used by both `LightMeasurementPresenter` (to refresh
+factors when the user selects a plant) and `CalibrationFragment` (to persist user-entered values).
+Backups export the profile calibration data via the `LedProfiles` CSV section and `ledProfiles` JSON
+array, restoring LED profile records before any measurements are processed so dependent calculations use
+the correct factors.
 
 ## Resource and code conventions
 

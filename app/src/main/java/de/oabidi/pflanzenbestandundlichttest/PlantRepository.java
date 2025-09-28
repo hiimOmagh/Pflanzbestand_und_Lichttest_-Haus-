@@ -21,6 +21,7 @@ import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociation;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfileAssociationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfileDao;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibrationDao;
 import de.oabidi.pflanzenbestandundlichttest.data.PlantPhoto;
@@ -298,7 +299,6 @@ public class PlantRepository implements CareRecommendationDelegate {
                 long plantId = association.getPlantId();
                 Plant plant = plantDao.findById(plantId);
                 if (plant != null) {
-                    persistCalibrationFallback(plantId, profile);
                     plant.setLedProfileId(null);
                     plantDao.update(plant);
                 }
@@ -328,7 +328,6 @@ public class PlantRepository implements CareRecommendationDelegate {
             plant.setLedProfileId(profileId);
             plantDao.update(plant);
             ledProfileAssociationDao.upsert(new LedProfileAssociation(plantId, profileId));
-            plantCalibrationDao.deleteForPlant(plantId);
         }, callback, errorCallback);
     }
 
@@ -346,10 +345,6 @@ public class PlantRepository implements CareRecommendationDelegate {
                 throw new IllegalArgumentException("Plant not found: " + plantId);
             }
             Long profileId = plant.getLedProfileId();
-            if (profileId != null) {
-                LedProfile profile = ledProfileDao.findById(profileId);
-                persistCalibrationFallback(plantId, profile);
-            }
             plant.setLedProfileId(null);
             plantDao.update(plant);
             ledProfileAssociationDao.deleteByPlantId(plantId);
@@ -390,7 +385,7 @@ public class PlantRepository implements CareRecommendationDelegate {
      * Retrieves calibration factors for the specified plant. LED profile assignments take
      * precedence and fall back to legacy per-plant calibration values when no profile is linked.
      */
-    public void getLedCalibrationForPlant(long plantId, Consumer<PlantCalibration> callback) {
+    public void getLedCalibrationForPlant(long plantId, Consumer<LedProfileCalibration> callback) {
         getLedCalibrationForPlant(plantId, callback, null);
     }
 
@@ -398,23 +393,23 @@ public class PlantRepository implements CareRecommendationDelegate {
      * Retrieves calibration factors for the specified plant. LED profile assignments take
      * precedence and fall back to legacy per-plant calibration values when no profile is linked.
      */
-    public void getLedCalibrationForPlant(long plantId, Consumer<PlantCalibration> callback,
+    public void getLedCalibrationForPlant(long plantId, Consumer<LedProfileCalibration> callback,
                                           Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
             try {
                 Plant plant = plantDao.findById(plantId);
-                PlantCalibration calibration = null;
+                LedProfileCalibration calibration = LedProfileCalibration.empty();
                 if (plant != null) {
+                    PlantCalibration legacy = plantCalibrationDao.getForPlant(plantId);
                     Long profileId = plant.getLedProfileId();
                     if (profileId != null) {
                         LedProfile profile = ledProfileDao.findById(profileId);
-                        calibration = calibrationFromProfile(plantId, profile);
-                    }
-                    if (calibration == null) {
-                        calibration = plantCalibrationDao.getForPlant(plantId);
+                        calibration = LedProfileCalibration.forProfile(profile, legacy);
+                    } else if (legacy != null) {
+                        calibration = LedProfileCalibration.fromLegacy(legacy);
                     }
                 }
-                PlantCalibration finalCalibration = calibration;
+                LedProfileCalibration finalCalibration = calibration;
                 if (callback != null) {
                     mainHandler.post(() -> callback.accept(finalCalibration));
                 }
@@ -450,7 +445,6 @@ public class PlantRepository implements CareRecommendationDelegate {
                     profile.setCalibrationFactors(factors);
                     ledProfileDao.update(profile);
                     ledProfileAssociationDao.upsert(new LedProfileAssociation(plantId, profileId));
-                    plantCalibrationDao.deleteForPlant(plantId);
                     return;
                 } else {
                     ledProfileAssociationDao.deleteByPlantId(plantId);
@@ -466,14 +460,27 @@ public class PlantRepository implements CareRecommendationDelegate {
     /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer)} instead. */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
-        getLedCalibrationForPlant(plantId, callback, null);
+        getPlantCalibration(plantId, callback, null);
     }
 
     /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer, Consumer)} instead. */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
                                     Consumer<Exception> errorCallback) {
-        getLedCalibrationForPlant(plantId, callback, errorCallback);
+        getLedCalibrationForPlant(plantId, calibration -> {
+            if (callback == null) {
+                return;
+            }
+            PlantCalibration legacy = null;
+            if (calibration != null && calibration.hasCalibrationValues()) {
+                Float ambient = calibration.getAmbientFactor();
+                Float camera = calibration.getCameraFactor();
+                if (ambient != null && camera != null) {
+                    legacy = new PlantCalibration(plantId, ambient, camera);
+                }
+            }
+            callback.accept(legacy);
+        }, errorCallback);
     }
 
     /** @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable)} instead. */
@@ -488,29 +495,6 @@ public class PlantRepository implements CareRecommendationDelegate {
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback, Consumer<Exception> errorCallback) {
         saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, errorCallback);
-    }
-
-    @Nullable
-    private PlantCalibration calibrationFromProfile(long plantId, @Nullable LedProfile profile) {
-        if (profile == null) {
-            return null;
-        }
-        Map<String, Float> factors = profile.getCalibrationFactors();
-        Float ambient = factors.get(LedProfile.CALIBRATION_KEY_AMBIENT);
-        Float camera = factors.get(LedProfile.CALIBRATION_KEY_CAMERA);
-        if (ambient == null || camera == null) {
-            return null;
-        }
-        return new PlantCalibration(plantId, ambient, camera);
-    }
-
-    private void persistCalibrationFallback(long plantId, @Nullable LedProfile profile) {
-        PlantCalibration fallback = calibrationFromProfile(plantId, profile);
-        if (fallback == null) {
-            plantCalibrationDao.deleteForPlant(plantId);
-        } else {
-            plantCalibrationDao.insertOrUpdate(fallback);
-        }
     }
 
     private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {

@@ -313,12 +313,19 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         }
         if (selectedPlantId != -1) {
             repository.getLedCalibrationForPlant(selectedPlantId, calibration -> {
+                presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
+                presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
                 if (calibration != null) {
-                    presenter.setCalibrationFactor(calibration.getAmbientFactor());
-                    presenter.setCameraCalibrationFactor(calibration.getCameraFactor());
-                } else {
-                    presenter.setCalibrationFactor(DEFAULT_CALIBRATION);
-                    presenter.setCameraCalibrationFactor(DEFAULT_CALIBRATION);
+                    Float ambient = calibration.getAmbientFactor();
+                    Float camera = calibration.getCameraFactor();
+                    if (ambient != null) {
+                        presenter.setCalibrationFactor(ambient);
+                    }
+                    if (camera != null) {
+                        presenter.setCameraCalibrationFactor(camera);
+                    } else if (ambient != null) {
+                        presenter.setCameraCalibrationFactor(ambient);
+                    }
                 }
             }, e -> {
                 presenter.setCalibrationFactor(DEFAULT_CALIBRATION);

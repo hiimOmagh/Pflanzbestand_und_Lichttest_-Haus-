@@ -15,10 +15,12 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
 
 /**
  * Tests for LightMeasurementFragment ensuring preferences are validated.
@@ -58,6 +60,24 @@ public class LightMeasurementFragmentTest {
         CountDownLatch plantLatch = new CountDownLatch(1);
         repo.insert(plant, plantLatch::countDown);
         awaitLatch(plantLatch);
+
+        LedProfile profile = new LedProfile();
+        profile.setName("FragmentProfile");
+        profile.setCalibrationFactors(new HashMap<>());
+
+        final LedProfile[] stored = new LedProfile[1];
+        CountDownLatch profileLatch = new CountDownLatch(1);
+        repo.createLedProfile(profile, created -> {
+            stored[0] = created;
+            profileLatch.countDown();
+        }, e -> fail("Profile creation failed"));
+        awaitLatch(profileLatch);
+        assertNotNull(stored[0]);
+
+        CountDownLatch assignLatch = new CountDownLatch(1);
+        repo.assignLedProfileToPlant(plant.getId(), stored[0].getId(), assignLatch::countDown,
+            e -> fail("Assignment failed"));
+        awaitLatch(assignLatch);
 
         CountDownLatch saveLatch = new CountDownLatch(1);
         repo.saveLedCalibrationForPlant(plant.getId(), 0.05f, 0.07f, saveLatch::countDown);

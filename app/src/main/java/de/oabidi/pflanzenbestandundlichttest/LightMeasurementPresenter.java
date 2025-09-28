@@ -185,11 +185,18 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         Plant selectedPlant = plants.get(index);
         long plantId = selectedPlant.getId();
         plantRepository.getLedCalibrationForPlant(plantId, calibration -> {
+            applyDefaultCalibration();
             if (calibration != null) {
-                setCalibrationFactor(calibration.getAmbientFactor());
-                setCameraCalibrationFactor(calibration.getCameraFactor());
-            } else {
-                applyDefaultCalibration();
+                Float ambient = calibration.getAmbientFactor();
+                Float camera = calibration.getCameraFactor();
+                if (ambient != null) {
+                    setCalibrationFactor(ambient);
+                }
+                if (camera != null) {
+                    setCameraCalibrationFactor(camera);
+                } else if (ambient != null) {
+                    setCameraCalibrationFactor(ambient);
+                }
             }
         }, e -> {
             applyDefaultCalibration();

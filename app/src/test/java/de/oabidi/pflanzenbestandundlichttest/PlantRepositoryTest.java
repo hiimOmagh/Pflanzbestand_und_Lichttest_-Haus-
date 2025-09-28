@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.oabidi.pflanzenbestandundlichttest.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.data.LedProfile;
-import de.oabidi.pflanzenbestandundlichttest.data.PlantCalibration;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
 
 /**
  * Unit tests for {@link PlantRepository} verifying basic CRUD operations and
@@ -651,27 +651,49 @@ public class PlantRepositoryTest {
         awaitLatch(plantLatch);
 
         CountDownLatch missingLatch = new CountDownLatch(1);
-        final PlantCalibration[] initial = new PlantCalibration[1];
+        LedProfile profile = new LedProfile();
+        profile.setName("Grow Light");
+        profile.setCalibrationFactors(new HashMap<>());
+
+        final LedProfile[] storedProfile = new LedProfile[1];
+        CountDownLatch profileLatch = new CountDownLatch(1);
+        repository.createLedProfile(profile, created -> {
+            storedProfile[0] = created;
+            profileLatch.countDown();
+        }, e -> fail("Profile creation failed"));
+        awaitLatch(profileLatch);
+        assertNotNull(storedProfile[0]);
+
+        CountDownLatch assignLatch = new CountDownLatch(1);
+        repository.assignLedProfileToPlant(plant.getId(), storedProfile[0].getId(), assignLatch::countDown,
+            e -> fail("Assignment failed"));
+        awaitLatch(assignLatch);
+
+        final LedProfileCalibration[] initial = new LedProfileCalibration[1];
         repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             initial[0] = calibration;
             missingLatch.countDown();
         });
         awaitLatch(missingLatch);
-        assertNull(initial[0]);
+        assertNotNull(initial[0]);
+        assertTrue(initial[0].hasAssignedProfile());
+        assertFalse(initial[0].hasCalibrationValues());
+
 
         CountDownLatch saveLatch = new CountDownLatch(1);
         repository.saveLedCalibrationForPlant(plant.getId(), 0.02f, 0.03f, saveLatch::countDown);
         awaitLatch(saveLatch);
 
         CountDownLatch loadLatch = new CountDownLatch(1);
-        final PlantCalibration[] holder = new PlantCalibration[1];
+        final LedProfileCalibration[] holder = new LedProfileCalibration[1];
         repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             holder[0] = calibration;
             loadLatch.countDown();
         });
         awaitLatch(loadLatch);
         assertNotNull(holder[0]);
-        assertEquals(plant.getId(), holder[0].getPlantId());
+        assertTrue(holder[0].hasAssignedProfile());
+        assertTrue(holder[0].hasCalibrationValues());
         assertEquals(0.02f, holder[0].getAmbientFactor(), 0.0001f);
         assertEquals(0.03f, holder[0].getCameraFactor(), 0.0001f);
 
@@ -680,7 +702,7 @@ public class PlantRepositoryTest {
         awaitLatch(updateLatch);
 
         CountDownLatch reloadLatch = new CountDownLatch(1);
-        final PlantCalibration[] updated = new PlantCalibration[1];
+        final LedProfileCalibration[] updated = new LedProfileCalibration[1];
         repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             updated[0] = calibration;
             reloadLatch.countDown();
@@ -722,7 +744,7 @@ public class PlantRepositoryTest {
         awaitLatch(assignLatch);
 
         CountDownLatch calibrationLatch = new CountDownLatch(1);
-        final PlantCalibration[] fromProfile = new PlantCalibration[1];
+        final LedProfileCalibration[] fromProfile = new LedProfileCalibration[1];
         repository.getLedCalibrationForPlant(plant.getId(), calibration -> {
             fromProfile[0] = calibration;
             calibrationLatch.countDown();
@@ -730,6 +752,7 @@ public class PlantRepositoryTest {
         awaitLatch(calibrationLatch);
 
         assertNotNull(fromProfile[0]);
+        assertTrue(fromProfile[0].hasAssignedProfile());
         assertEquals(0.04f, fromProfile[0].getAmbientFactor(), 0.0001f);
         assertEquals(0.05f, fromProfile[0].getCameraFactor(), 0.0001f);
     }

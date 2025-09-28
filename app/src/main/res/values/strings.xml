@@ -275,6 +275,7 @@
     <string name="label_known_ppfd">Known PPFD:</string>
     <string name="label_ambient_factor">Ambient factor:</string>
     <string name="label_camera_factor">Camera factor:</string>
+    <string name="calibration_missing_profile_warning">Assign an LED profile to this plant so calibration factors follow the correct lighting setup.</string>
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
     <string name="action_add_photo">Add Photo</string>

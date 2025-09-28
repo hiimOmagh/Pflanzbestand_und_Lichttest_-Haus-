@@ -20,6 +20,7 @@ import de.oabidi.pflanzenbestandundlichttest.common.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.data.LedProfileCalibration;
 
 /**
  * Fragment allowing users to calibrate the light sensor by entering a known PPFD
@@ -36,6 +37,9 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
     private long plantId = -1L;
     private PlantRepository repository;
     private static final float DEFAULT_CALIBRATION = 0.0185f;
+    @Nullable
+    private LedProfileCalibration currentCalibration;
+    private boolean profileWarningShown;
 
     public static CalibrationFragment newInstance(long plantId) {
         CalibrationFragment fragment = new CalibrationFragment();
@@ -80,6 +84,9 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
             if (plantId == -1L) {
                 Toast.makeText(requireContext(), R.string.error_select_plant, Toast.LENGTH_SHORT).show();
                 return;
+            }
+            if (currentCalibration == null || !currentCalibration.hasAssignedProfile()) {
+                maybeShowMissingProfileWarning();
             }
             String ppfdText = ppfdInput.getText().toString().trim();
             float ambient;
@@ -188,15 +195,34 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
             if (!isAdded()) {
                 return;
             }
-            if (calibration != null) {
-                ambientFactorInput.setText(formatFactor(calibration.getAmbientFactor()));
-                cameraFactorInput.setText(formatFactor(calibration.getCameraFactor()));
+            currentCalibration = calibration;
+            if (calibration != null && calibration.hasCalibrationValues()) {
+                Float ambient = calibration.getAmbientFactor();
+                Float camera = calibration.getCameraFactor();
+                if (ambient != null) {
+                    ambientFactorInput.setText(formatFactor(ambient));
+                }
+                if (camera != null) {
+                    cameraFactorInput.setText(formatFactor(camera));
+                }
+            }
+            if (calibration == null || !calibration.hasAssignedProfile()) {
+                maybeShowMissingProfileWarning();
             }
         }, e -> {
             if (isAdded()) {
                 Toast.makeText(requireContext(), R.string.error_database, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void maybeShowMissingProfileWarning() {
+        if (profileWarningShown || !isAdded()) {
+            return;
+        }
+        profileWarningShown = true;
+        Toast.makeText(requireContext(), R.string.calibration_missing_profile_warning,
+            Toast.LENGTH_LONG).show();
     }
 
     private String formatFactor(float value) {
