@@ -3,6 +3,7 @@ package de.oabidi.pflanzenbestandundlichttest;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -25,6 +26,17 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
     private static final int MIN_IO_THREAD_COUNT = 2;
     private PlantRepository repository;
     private ExecutorService ioExecutor;
+
+    /**
+     * Returns the {@link PlantApp} instance associated with the given context.
+     */
+    public static PlantApp from(Context context) {
+        Context appContext = context.getApplicationContext();
+        if (appContext instanceof PlantApp) {
+            return (PlantApp) appContext;
+        }
+        throw new IllegalStateException("Application context is not PlantApp");
+    }
 
     @Override
     public void onCreate() {
@@ -54,7 +66,9 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
         return repository;
     }
 
-    /** Returns the shared executor used by import/export components. */
+    /**
+     * Returns the shared executor used by import/export components.
+     */
     @Override
     public synchronized ExecutorService getIoExecutor() {
         if (ioExecutor == null || ioExecutor.isShutdown()) {
@@ -63,7 +77,9 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
         return ioExecutor;
     }
 
-    /** Shuts down the shared executor service. */
+    /**
+     * Shuts down the shared executor service.
+     */
     public synchronized void shutdownIoExecutor() {
         if (ioExecutor != null) {
             ioExecutor.shutdown();
@@ -90,14 +106,5 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
     public void onTerminate() {
         super.onTerminate();
         shutdownIoExecutor();
-    }
-
-    /** Returns the {@link PlantApp} instance associated with the given context. */
-    public static PlantApp from(Context context) {
-        Context appContext = context.getApplicationContext();
-        if (appContext instanceof PlantApp) {
-            return (PlantApp) appContext;
-        }
-        throw new IllegalStateException("Application context is not PlantApp");
     }
 }

@@ -17,8 +17,8 @@ import androidx.core.app.NotificationManagerCompat;
 
 import java.util.List;
 
-import de.oabidi.pflanzenbestandundlichttest.MainActivity;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.R;
 
 /**
@@ -100,7 +100,9 @@ public class ProactiveAlertNotifier {
         manager.createNotificationChannel(channel);
     }
 
-    /** Callback used for instrumentation tests. */
+    /**
+     * Callback used for instrumentation tests.
+     */
     public interface Callback {
         void onNotificationDispatched(ProactiveAlert alert);
     }

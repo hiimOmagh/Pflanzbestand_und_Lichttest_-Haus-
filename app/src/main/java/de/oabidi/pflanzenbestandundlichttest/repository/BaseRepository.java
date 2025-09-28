@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
 
 /**
  * Base class providing asynchronous execution helpers for repositories.

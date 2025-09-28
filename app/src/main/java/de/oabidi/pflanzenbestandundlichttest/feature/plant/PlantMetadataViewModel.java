@@ -10,74 +10,6 @@ import java.util.List;
  * Immutable view model describing species metadata for presentation in the detail screen.
  */
 public class PlantMetadataViewModel {
-    /** Represents optional watering guidance. */
-    public static class WateringInfo {
-        @Nullable
-        private final String frequency;
-        @Nullable
-        private final String soilType;
-        @Nullable
-        private final String tolerance;
-
-        public WateringInfo(@Nullable String frequency,
-                            @Nullable String soilType,
-                            @Nullable String tolerance) {
-            this.frequency = emptyToNull(frequency);
-            this.soilType = emptyToNull(soilType);
-            this.tolerance = emptyToNull(tolerance);
-        }
-
-        @Nullable
-        public String getFrequency() {
-            return frequency;
-        }
-
-        @Nullable
-        public String getSoilType() {
-            return soilType;
-        }
-
-        @Nullable
-        public String getTolerance() {
-            return tolerance;
-        }
-
-        private static String emptyToNull(@Nullable String value) {
-            if (value == null) {
-                return null;
-            }
-            String trimmed = value.trim();
-            return trimmed.isEmpty() ? null : trimmed;
-        }
-    }
-
-    /** Represents a numeric range for temperature or humidity. */
-    public static class RangeInfo {
-        @Nullable
-        private final Float min;
-        @Nullable
-        private final Float max;
-
-        public RangeInfo(@Nullable Float min, @Nullable Float max) {
-            this.min = min;
-            this.max = max;
-        }
-
-        @Nullable
-        public Float getMin() {
-            return min;
-        }
-
-        @Nullable
-        public Float getMax() {
-            return max;
-        }
-
-        public boolean hasValues() {
-            return min != null || max != null;
-        }
-    }
-
     @Nullable
     private final WateringInfo wateringInfo;
     @Nullable
@@ -87,7 +19,6 @@ public class PlantMetadataViewModel {
     @Nullable
     private final Boolean toxicToPets;
     private final List<String> careTips;
-
     public PlantMetadataViewModel(@Nullable WateringInfo wateringInfo,
                                   @Nullable RangeInfo temperatureRange,
                                   @Nullable RangeInfo humidityRange,
@@ -126,5 +57,77 @@ public class PlantMetadataViewModel {
 
     public List<String> getCareTips() {
         return careTips;
+    }
+
+    /**
+     * Represents optional watering guidance.
+     */
+    public static class WateringInfo {
+        @Nullable
+        private final String frequency;
+        @Nullable
+        private final String soilType;
+        @Nullable
+        private final String tolerance;
+
+        public WateringInfo(@Nullable String frequency,
+                            @Nullable String soilType,
+                            @Nullable String tolerance) {
+            this.frequency = emptyToNull(frequency);
+            this.soilType = emptyToNull(soilType);
+            this.tolerance = emptyToNull(tolerance);
+        }
+
+        private static String emptyToNull(@Nullable String value) {
+            if (value == null) {
+                return null;
+            }
+            String trimmed = value.trim();
+            return trimmed.isEmpty() ? null : trimmed;
+        }
+
+        @Nullable
+        public String getFrequency() {
+            return frequency;
+        }
+
+        @Nullable
+        public String getSoilType() {
+            return soilType;
+        }
+
+        @Nullable
+        public String getTolerance() {
+            return tolerance;
+        }
+    }
+
+    /**
+     * Represents a numeric range for temperature or humidity.
+     */
+    public static class RangeInfo {
+        @Nullable
+        private final Float min;
+        @Nullable
+        private final Float max;
+
+        public RangeInfo(@Nullable Float min, @Nullable Float max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        @Nullable
+        public Float getMin() {
+            return min;
+        }
+
+        @Nullable
+        public Float getMax() {
+            return max;
+        }
+
+        public boolean hasValues() {
+            return min != null || max != null;
+        }
     }
 }

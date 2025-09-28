@@ -27,7 +27,9 @@ import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
-/** Dialog fragment for creating or editing {@link LedProfile} entries. */
+/**
+ * Dialog fragment for creating or editing {@link LedProfile} entries.
+ */
 public class LedProfileEditorFragment extends DialogFragment implements LedProfileScheduleAdapter.OnEntriesChangedListener {
 
     private static final String ARG_ID = "arg_id";
@@ -86,6 +88,30 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
             fragment.setArguments(args);
         }
         return fragment;
+    }
+
+    private static String safeTrim(@Nullable CharSequence cs) {
+        if (cs == null) {
+            return null;
+        }
+        String trimmed = cs.toString().trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    @Nullable
+    private static Float parseFloat(@Nullable CharSequence cs) {
+        if (cs == null) {
+            return null;
+        }
+        String trimmed = cs.toString().trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        try {
+            return Float.parseFloat(trimmed);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public void setRepository(PlantRepository repository) {
@@ -281,30 +307,6 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
     public void onEntriesChanged() {
         entriesValid = true;
         updatePositiveButtonState();
-    }
-
-    private static String safeTrim(@Nullable CharSequence cs) {
-        if (cs == null) {
-            return null;
-        }
-        String trimmed = cs.toString().trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    @Nullable
-    private static Float parseFloat(@Nullable CharSequence cs) {
-        if (cs == null) {
-            return null;
-        }
-        String trimmed = cs.toString().trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        try {
-            return Float.parseFloat(trimmed);
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private static final class PlantRepositoryProvider {

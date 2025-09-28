@@ -25,6 +25,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 /**
  * Espresso test covering add, edit, and delete operations for species targets.
  */

@@ -25,6 +25,9 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+
 /**
  * Instrumented tests verifying reminder scheduling and rescheduling behavior.
  */

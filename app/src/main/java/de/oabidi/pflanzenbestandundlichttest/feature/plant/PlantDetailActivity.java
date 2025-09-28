@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -50,15 +51,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
-import de.oabidi.pflanzenbestandundlichttest.LightSensorHelper;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightSensorHelper;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.common.location.LocationProvider;
 import de.oabidi.pflanzenbestandundlichttest.common.sensor.CameraLumaMonitor;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
@@ -97,7 +96,8 @@ public class PlantDetailActivity extends AppCompatActivity
     private static final float LUX_HIGH_THRESHOLD = 1000f;
     private static final float LUMA_MEDIUM_THRESHOLD = 90f;
     private static final float LUMA_HIGH_THRESHOLD = 170f;
-
+    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
+    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
     private PlantDetailPresenter presenter;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String> cameraPermissionLauncher;
@@ -197,8 +197,6 @@ public class PlantDetailActivity extends AppCompatActivity
     private String speciesKey;
     private boolean metadataViewsReady;
     private LocationProvider locationProvider;
-    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
-    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -887,12 +885,6 @@ public class PlantDetailActivity extends AppCompatActivity
         }
     }
 
-    private enum LightBand {
-        LOW,
-        MEDIUM,
-        HIGH
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -1192,5 +1184,11 @@ public class PlantDetailActivity extends AppCompatActivity
             return getString(R.string.metadata_care_tips_fallback);
         }
         return builder.toString();
+    }
+
+    private enum LightBand {
+        LOW,
+        MEDIUM,
+        HIGH
     }
 }

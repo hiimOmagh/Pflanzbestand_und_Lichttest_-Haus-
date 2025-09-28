@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 
 import java.io.File;
 
-/** Utility methods for working with {@link File} instances. */
+/**
+ * Utility methods for working with {@link File} instances.
+ */
 public final class FileUtils {
     private FileUtils() {
         // Utility class

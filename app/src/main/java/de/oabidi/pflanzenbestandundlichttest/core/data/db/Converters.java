@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.db;
 
 import android.net.Uri;
 
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 public class Converters {
     @TypeConverter

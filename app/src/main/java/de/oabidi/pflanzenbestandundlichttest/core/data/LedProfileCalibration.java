@@ -31,7 +31,9 @@ public final class LedProfileCalibration {
         this.legacyFallback = legacyFallback;
     }
 
-    /** Returns a DTO populated from the provided LED profile and optional legacy calibration. */
+    /**
+     * Returns a DTO populated from the provided LED profile and optional legacy calibration.
+     */
     public static LedProfileCalibration forProfile(@Nullable LedProfile profile,
                                                    @Nullable PlantCalibration legacy) {
         if (profile == null) {
@@ -53,7 +55,9 @@ public final class LedProfileCalibration {
         return new LedProfileCalibration(profile.getId(), profile.getName(), null, null, false);
     }
 
-    /** Returns a DTO representing calibration data from a legacy per-plant row. */
+    /**
+     * Returns a DTO representing calibration data from a legacy per-plant row.
+     */
     public static LedProfileCalibration fromLegacy(@Nullable PlantCalibration legacy) {
         if (legacy == null) {
             return empty();
@@ -61,46 +65,62 @@ public final class LedProfileCalibration {
         return new LedProfileCalibration(null, null, legacy.getAmbientFactor(), legacy.getCameraFactor(), true);
     }
 
-    /** Returns an empty DTO with no calibration data. */
+    /**
+     * Returns an empty DTO with no calibration data.
+     */
     public static LedProfileCalibration empty() {
         return new LedProfileCalibration(null, null, null, null, false);
     }
 
-    /** Returns the identifier of the LED profile providing calibration values, if any. */
+    /**
+     * Returns the identifier of the LED profile providing calibration values, if any.
+     */
     @Nullable
     public Long getProfileId() {
         return profileId;
     }
 
-    /** Returns the human-readable LED profile name, if any. */
+    /**
+     * Returns the human-readable LED profile name, if any.
+     */
     @Nullable
     public String getProfileName() {
         return profileName;
     }
 
-    /** Returns the calibration factor for ambient light, if available. */
+    /**
+     * Returns the calibration factor for ambient light, if available.
+     */
     @Nullable
     public Float getAmbientFactor() {
         return ambientFactor;
     }
 
-    /** Returns the calibration factor for camera-derived readings, if available. */
+    /**
+     * Returns the calibration factor for camera-derived readings, if available.
+     */
     @Nullable
     public Float getCameraFactor() {
         return cameraFactor;
     }
 
-    /** Returns whether the values originate from a legacy per-plant calibration row. */
+    /**
+     * Returns whether the values originate from a legacy per-plant calibration row.
+     */
     public boolean isLegacyFallback() {
         return legacyFallback;
     }
 
-    /** Returns whether a LED profile is assigned to the plant. */
+    /**
+     * Returns whether a LED profile is assigned to the plant.
+     */
     public boolean hasAssignedProfile() {
         return profileId != null;
     }
 
-    /** Returns true when both calibration factors are populated. */
+    /**
+     * Returns true when both calibration factors are populated.
+     */
     public boolean hasCalibrationValues() {
         return ambientFactor != null && cameraFactor != null;
     }

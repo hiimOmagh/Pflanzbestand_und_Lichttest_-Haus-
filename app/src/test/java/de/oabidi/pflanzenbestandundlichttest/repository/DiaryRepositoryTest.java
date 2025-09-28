@@ -17,8 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.DiaryDao;
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 
 @RunWith(RobolectricTestRunner.class)
 public class DiaryRepositoryTest extends RepositoryTestBase {

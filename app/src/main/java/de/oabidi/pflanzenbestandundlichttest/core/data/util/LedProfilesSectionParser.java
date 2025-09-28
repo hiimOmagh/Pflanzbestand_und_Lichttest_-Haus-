@@ -6,7 +6,9 @@ import androidx.annotation.VisibleForTesting;
 import java.io.IOException;
 import java.util.List;
 
-/** Parses the LedProfiles section from an import CSV. */
+/**
+ * Parses the LedProfiles section from an import CSV.
+ */
 @VisibleForTesting
 class LedProfilesSectionParser implements ImportManager.SectionParser {
     @NonNull

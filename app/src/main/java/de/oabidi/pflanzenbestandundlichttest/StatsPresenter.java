@@ -8,26 +8,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 
-/** Presenter for loading statistics data. */
+/**
+ * Presenter for loading statistics data.
+ */
 public class StatsPresenter {
-    public interface View {
-        void showPlants(List<Plant> plants);
-        void showMeasurements(Map<Long, List<Measurement>> data);
-        void showDiaryCounts(String text);
-        void showDli(String text);
-        void showError(String message);
-    }
-
+    private static final int DLI_DAYS = 7;
     private final View view;
     private final PlantRepository repository;
     private final MeasurementRepository measurementRepository;
     private final DiaryRepository diaryRepository;
     private final Context context;
-    private static final int DLI_DAYS = 7;
-
     public StatsPresenter(View view, PlantRepository repository, Context context) {
         this.view = view;
         this.repository = repository;
@@ -36,13 +32,17 @@ public class StatsPresenter {
         this.context = context.getApplicationContext();
     }
 
-    /** Load all plants and pass them to the view. */
+    /**
+     * Load all plants and pass them to the view.
+     */
     public void loadPlants() {
         repository.getAllPlants(view::showPlants,
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
-    /** Load measurement and diary data for the given plants. */
+    /**
+     * Load measurement and diary data for the given plants.
+     */
     public void loadDataForPlants(List<Long> plantIds) {
         if (plantIds.isEmpty()) {
             view.showMeasurements(null);
@@ -126,5 +126,17 @@ public class StatsPresenter {
             waterLabel, water,
             fertilizeLabel, fertilize,
             pruneLabel, prune);
+    }
+
+    public interface View {
+        void showPlants(List<Plant> plants);
+
+        void showMeasurements(Map<Long, List<Measurement>> data);
+
+        void showDiaryCounts(String text);
+
+        void showDli(String text);
+
+        void showError(String message);
     }
 }

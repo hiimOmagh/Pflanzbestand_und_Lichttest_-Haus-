@@ -248,20 +248,26 @@ public class LineChartView extends View {
         }
     }
 
-    /** Returns the number of rendered series. */
+    /**
+     * Returns the number of rendered series.
+     */
     @VisibleForTesting
     public int getSeriesCount() {
         return seriesValues.size();
     }
 
-    /** Returns the timestamps currently used by the chart. */
+    /**
+     * Returns the timestamps currently used by the chart.
+     */
     @NonNull
     @VisibleForTesting
     public List<Long> getTimestamps() {
         return new ArrayList<>(timestamps);
     }
 
-    /** Represents a single series composed of timestamp-value pairs. */
+    /**
+     * Represents a single series composed of timestamp-value pairs.
+     */
     public static class LineSeries {
         private final String label;
         private final List<Point> points;
@@ -282,7 +288,9 @@ public class LineChartView extends View {
         }
     }
 
-    /** Represents a single data point for a series. */
+    /**
+     * Represents a single data point for a series.
+     */
     public static class Point {
         private final long timestamp;
         private final float value;

@@ -29,15 +29,15 @@ public enum ProactiveAlertTrigger {
         this.id = id;
     }
 
-    public String getId() {
-        return id;
-    }
-
     @Nullable
     public static ProactiveAlertTrigger fromRecommendationId(String recommendationId) {
         if (recommendationId == null) {
             return null;
         }
         return BY_ID.get(recommendationId);
+    }
+
+    public String getId() {
+        return id;
     }
 }

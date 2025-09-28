@@ -33,30 +33,6 @@ public class BackupScheduler extends BroadcastReceiver {
         this.repository = repository;
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        PendingResult result = goAsync();
-        File dir = context.getExternalFilesDir(null);
-        if (dir != null) {
-            cleanupOldBackups(dir);
-            String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
-                .format(new Date());
-            File out = new File(dir, "backup-" + timestamp + ".json.zip");
-            Uri uri = Uri.fromFile(out);
-            PlantRepository repo = repository != null
-                ? repository
-                : RepositoryProvider.getRepository(context);
-            Context appContext = context.getApplicationContext();
-            if (!(appContext instanceof ExecutorProvider)) {
-                throw new IllegalStateException("Application context does not implement ExecutorProvider");
-            }
-            ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
-            new ExportManager(context, repo, executor).exportJson(uri, success -> result.finish());
-        } else {
-            result.finish();
-        }
-    }
-
     private static void cleanupOldBackups(File dir) {
         File[] backups = dir.listFiles((d, name) -> name.startsWith("backup-") && name.endsWith(".zip"));
         if (backups == null) return;
@@ -101,5 +77,29 @@ public class BackupScheduler extends BroadcastReceiver {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        PendingResult result = goAsync();
+        File dir = context.getExternalFilesDir(null);
+        if (dir != null) {
+            cleanupOldBackups(dir);
+            String timestamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US)
+                .format(new Date());
+            File out = new File(dir, "backup-" + timestamp + ".json.zip");
+            Uri uri = Uri.fromFile(out);
+            PlantRepository repo = repository != null
+                ? repository
+                : RepositoryProvider.getRepository(context);
+            Context appContext = context.getApplicationContext();
+            if (!(appContext instanceof ExecutorProvider)) {
+                throw new IllegalStateException("Application context does not implement ExecutorProvider");
+            }
+            ExecutorService executor = ((ExecutorProvider) appContext).getIoExecutor();
+            new ExportManager(context, repo, executor).exportJson(uri, success -> result.finish());
+        } else {
+            result.finish();
+        }
     }
 }

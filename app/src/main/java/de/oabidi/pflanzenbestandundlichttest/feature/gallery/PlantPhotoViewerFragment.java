@@ -21,6 +21,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.github.chrisbanes.photoview.PhotoView;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -44,6 +45,27 @@ public class PlantPhotoViewerFragment extends Fragment {
     private static final String ARG_PLANT_NAME = "arg_plant_name";
     private static final String ARG_CUSTOM_URIS = "arg_custom_uris";
     private static final String ARG_CUSTOM_TITLE = "arg_custom_title";
+    private PlantRepository repository;
+    private PlantPhotoLoader photoLoader;
+    private ViewPager2 pager;
+    private PhotoPagerAdapter pagerAdapter;
+    private long plantId;
+    private long initialPhotoId;
+    @Nullable
+    private String plantName;
+    private boolean useCustomUris;
+    @Nullable
+    private ArrayList<String> customUris;
+    @Nullable
+    private String customTitle;
+    private boolean initialPositionApplied;
+    private boolean refreshRequested;
+    private int currentIndex;
+    private ViewPager2.OnPageChangeCallback pageChangeCallback;
+    private ItemTouchHelper swipeToDeleteHelper;
+    private ItemTouchHelper.SimpleCallback swipeCallback;
+    @Nullable
+    private PendingDeletion pendingDeletion;
 
     public static void show(@NonNull FragmentManager manager, long plantId, long initialPhotoId,
                             @Nullable String plantName) {
@@ -74,28 +96,6 @@ public class PlantPhotoViewerFragment extends Fragment {
             .addToBackStack(TAG)
             .commit();
     }
-
-    private PlantRepository repository;
-    private PlantPhotoLoader photoLoader;
-    private ViewPager2 pager;
-    private PhotoPagerAdapter pagerAdapter;
-    private long plantId;
-    private long initialPhotoId;
-    @Nullable
-    private String plantName;
-    private boolean useCustomUris;
-    @Nullable
-    private ArrayList<String> customUris;
-    @Nullable
-    private String customTitle;
-    private boolean initialPositionApplied;
-    private boolean refreshRequested;
-    private int currentIndex;
-    private ViewPager2.OnPageChangeCallback pageChangeCallback;
-    private ItemTouchHelper swipeToDeleteHelper;
-    private ItemTouchHelper.SimpleCallback swipeCallback;
-    @Nullable
-    private PendingDeletion pendingDeletion;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -425,6 +425,15 @@ public class PlantPhotoViewerFragment extends Fragment {
         return pendingDeletion;
     }
 
+    private void closeSelf() {
+        if (refreshRequested) {
+            Bundle result = new Bundle();
+            result.putBoolean(EXTRA_REFRESH_GALLERY, true);
+            getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
+        }
+        getParentFragmentManager().popBackStack(TAG, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+    }
+
     static final class PendingDeletion {
         final PlantPhoto photo;
         final int position;
@@ -436,15 +445,6 @@ public class PlantPhotoViewerFragment extends Fragment {
             this.position = position;
             this.snackbar = snackbar;
         }
-    }
-
-    private void closeSelf() {
-        if (refreshRequested) {
-            Bundle result = new Bundle();
-            result.putBoolean(EXTRA_REFRESH_GALLERY, true);
-            getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
-        }
-        getParentFragmentManager().popBackStack(TAG, FragmentManager.POP_BACK_STACK_INCLUSIVE);
     }
 
     private static class PhotoPagerAdapter extends RecyclerView.Adapter<PhotoPagerAdapter.ViewHolder> {

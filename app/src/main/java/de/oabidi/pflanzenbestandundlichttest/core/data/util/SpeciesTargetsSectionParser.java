@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.LightMath;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
-import de.oabidi.pflanzenbestandundlichttest.Converters;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.Converters;
 
 class SpeciesTargetsSectionParser implements SectionParser {
     private static final int LEGACY_EXPANDED_COLUMNS = 15;

@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
@@ -25,21 +26,15 @@ import de.oabidi.pflanzenbestandundlichttest.analytics.CalibrationAnalytics;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightSensorHelper;
 
 /**
  * Fragment guiding users through the LED calibration workflow using a step-by-step wizard.
  */
 public class CalibrationFragment extends Fragment implements LightSensorHelper.OnLuxChangedListener {
 
-    private enum Step {
-        INSTRUCTIONS,
-        CAPTURE,
-        ENTRY,
-        CONFIRM
-    }
-
     private static final float DEFAULT_CALIBRATION = 0.0185f;
-
+    private static final float DEFAULT_CALIBRATION = 0.0185f;
     private ViewFlipper stepFlipper;
     private TextView stepIndicatorView;
     private TextView stepTitleView;
@@ -59,14 +54,11 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private LightSensorHelper lightSensorHelper;
     private PlantRepository repository;
-    private static final float DEFAULT_CALIBRATION = 0.0185f;
     @Nullable
     private LedProfileCalibration currentCalibration;
-
     private Step currentStep = Step.INSTRUCTIONS;
     private boolean stepInitialized;
     private boolean saving;
-
     private float lastLux;
     @Nullable
     private Float capturedLux;
@@ -659,5 +651,12 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private String formatFactor(float value) {
         return String.format(Locale.US, "%.4f", value);
+    }
+
+    private enum Step {
+        INSTRUCTIONS,
+        CAPTURE,
+        ENTRY,
+        CONFIRM
     }
 }

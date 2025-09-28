@@ -20,8 +20,9 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.DiaryDao;
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntryFts;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntryFts;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 
 /**

@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 
 /**
  * Evaluates environment readings and diary activity to derive proactive alerts.

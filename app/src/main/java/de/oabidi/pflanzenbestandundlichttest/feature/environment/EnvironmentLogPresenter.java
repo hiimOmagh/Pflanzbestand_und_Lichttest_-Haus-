@@ -30,13 +30,13 @@ public class EnvironmentLogPresenter {
     private final EnvironmentRepository environmentRepository;
     private final long plantId;
     private final Context context;
+    private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
     @Nullable
     private EnvironmentEntry editingEntry;
     @Nullable
     private String pendingPhotoUri;
     @Nullable
     private String editingOriginalPhotoUri;
-    private final DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
     public EnvironmentLogPresenter(@NonNull EnvironmentLogView view, @NonNull EnvironmentRepository environmentRepository,
                                    long plantId, @NonNull Context context) {
@@ -46,7 +46,9 @@ public class EnvironmentLogPresenter {
         this.context = context.getApplicationContext();
     }
 
-    /** Loads all environment entries for the current plant. */
+    /**
+     * Loads all environment entries for the current plant.
+     */
     public void loadEntries() {
         if (plantId <= 0) {
             view.showEmptyState(true);
@@ -74,7 +76,9 @@ public class EnvironmentLogPresenter {
         });
     }
 
-    /** Handles form submission either inserting a new entry or updating the current one. */
+    /**
+     * Handles form submission either inserting a new entry or updating the current one.
+     */
     public void onSubmit(EnvironmentLogFormData data) {
         boolean hasValues = data != null && data.hasAnyValue();
         if (!hasValues && TextUtils.isEmpty(pendingPhotoUri)) {
@@ -123,7 +127,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    /** Triggered when the user chooses an entry to edit. */
+    /**
+     * Triggered when the user chooses an entry to edit.
+     */
     public void onEntrySelected(EnvironmentLogItem item) {
         if (item == null) {
             return;
@@ -136,7 +142,9 @@ public class EnvironmentLogPresenter {
         view.showEditingState(true);
     }
 
-    /** Cancels the current edit flow. */
+    /**
+     * Cancels the current edit flow.
+     */
     public void onCancelEdit() {
         editingEntry = null;
         pendingPhotoUri = null;
@@ -146,19 +154,25 @@ public class EnvironmentLogPresenter {
         view.showEditingState(false);
     }
 
-    /** Registers a newly selected photo for the current form. */
+    /**
+     * Registers a newly selected photo for the current form.
+     */
     public void onPhotoSelected(@NonNull String uri) {
         pendingPhotoUri = uri;
         view.showPhotoPreview(uri);
     }
 
-    /** Clears any pending photo from the form. */
+    /**
+     * Clears any pending photo from the form.
+     */
     public void onPhotoRemoved() {
         pendingPhotoUri = null;
         view.showPhotoPreview(null);
     }
 
-    /** Restores the pending photo after configuration changes. */
+    /**
+     * Restores the pending photo after configuration changes.
+     */
     public void restorePendingPhoto(@Nullable String uri) {
         pendingPhotoUri = TextUtils.isEmpty(uri) ? null : uri;
         if (editingEntry == null) {
@@ -167,7 +181,9 @@ public class EnvironmentLogPresenter {
         view.showPhotoPreview(pendingPhotoUri);
     }
 
-    /** Deletes the given entry. */
+    /**
+     * Deletes the given entry.
+     */
     public void onDeleteEntry(EnvironmentLogItem item) {
         if (item == null) {
             return;
@@ -365,6 +381,11 @@ public class EnvironmentLogPresenter {
         return highlights;
     }
 
+    private interface ValueExtractor {
+        @Nullable
+        Float extract(EnvironmentEntry entry);
+    }
+
     private static class MetricSpec {
         final String label;
         final ValueExtractor extractor;
@@ -375,12 +396,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    private interface ValueExtractor {
-        @Nullable
-        Float extract(EnvironmentEntry entry);
-    }
-
-    /** Representation of chart data to be consumed by the view layer. */
+    /**
+     * Representation of chart data to be consumed by the view layer.
+     */
     public static class ChartData {
         private final List<ChartSeries> series;
 
@@ -393,7 +411,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    /** Single series of chart data points. */
+    /**
+     * Single series of chart data points.
+     */
     public static class ChartSeries {
         private final String label;
         private final List<ChartPoint> points;
@@ -412,7 +432,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    /** Individual point within a chart series. */
+    /**
+     * Individual point within a chart series.
+     */
     public static class ChartPoint {
         private final long timestamp;
         private final float value;
@@ -431,7 +453,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    /** Representation of an entry adapted for the RecyclerView. */
+    /**
+     * Representation of an entry adapted for the RecyclerView.
+     */
     public static class EnvironmentLogItem {
         private final EnvironmentEntry entry;
         private final String timestampText;
@@ -473,7 +497,9 @@ public class EnvironmentLogPresenter {
         }
     }
 
-    /** Highlight representing a logged photo for quick browsing. */
+    /**
+     * Highlight representing a logged photo for quick browsing.
+     */
     public static class PhotoHighlight {
         private final long entryId;
         private final long timestamp;

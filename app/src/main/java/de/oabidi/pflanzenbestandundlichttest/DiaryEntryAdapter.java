@@ -17,31 +17,13 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+
 /**
  * RecyclerView adapter displaying diary entries with click and long-click
  * callbacks.
  */
 public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter.ViewHolder> {
-
-    /** Listener invoked when a diary entry is tapped. */
-    public interface OnEntryClickListener {
-        void onEntryClick(DiaryEntry entry);
-    }
-
-    /** Listener invoked when a diary entry is long-pressed. */
-    public interface OnEntryLongClickListener {
-        void onEntryLongClick(DiaryEntry entry);
-    }
-
-    private final OnEntryClickListener clickListener;
-    private final OnEntryLongClickListener longClickListener;
-
-    public DiaryEntryAdapter(OnEntryClickListener clickListener,
-                             OnEntryLongClickListener longClickListener) {
-        super(DIFF_CALLBACK);
-        this.clickListener = clickListener;
-        this.longClickListener = longClickListener;
-    }
 
     private static final DiffUtil.ItemCallback<DiaryEntry> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<DiaryEntry>() {
@@ -61,6 +43,14 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
                     && Objects.equals(oldItem.getPhotoUri(), newItem.getPhotoUri());
             }
         };
+    private final OnEntryClickListener clickListener;
+    private final OnEntryLongClickListener longClickListener;
+    public DiaryEntryAdapter(OnEntryClickListener clickListener,
+                             OnEntryLongClickListener longClickListener) {
+        super(DIFF_CALLBACK);
+        this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
+    }
 
     @NonNull
     @Override
@@ -76,6 +66,20 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
         holder.bind(entry, clickListener, longClickListener);
     }
 
+    /**
+     * Listener invoked when a diary entry is tapped.
+     */
+    public interface OnEntryClickListener {
+        void onEntryClick(DiaryEntry entry);
+    }
+
+    /**
+     * Listener invoked when a diary entry is long-pressed.
+     */
+    public interface OnEntryLongClickListener {
+        void onEntryLongClick(DiaryEntry entry);
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
         private final ImageView photoView;
@@ -85,6 +89,19 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
             super(itemView);
             textView = itemView.findViewById(R.id.diary_entry_text);
             photoView = itemView.findViewById(R.id.diary_entry_photo);
+        }
+
+        private static String labelFromCode(android.content.Context context, String code) {
+            switch (code) {
+                case DiaryEntry.TYPE_WATER:
+                    return context.getString(R.string.diary_type_water);
+                case DiaryEntry.TYPE_FERTILIZE:
+                    return context.getString(R.string.diary_type_fertilize);
+                case DiaryEntry.TYPE_PRUNE:
+                    return context.getString(R.string.diary_type_prune);
+                default:
+                    return code;
+            }
         }
 
         void bind(DiaryEntry entry, OnEntryClickListener clickListener,
@@ -120,19 +137,6 @@ public class DiaryEntryAdapter extends ListAdapter<DiaryEntry, DiaryEntryAdapter
                 longClickListener.onEntryLongClick(entry);
                 return true;
             });
-        }
-
-        private static String labelFromCode(android.content.Context context, String code) {
-            switch (code) {
-                case DiaryEntry.TYPE_WATER:
-                    return context.getString(R.string.diary_type_water);
-                case DiaryEntry.TYPE_FERTILIZE:
-                    return context.getString(R.string.diary_type_fertilize);
-                case DiaryEntry.TYPE_PRUNE:
-                    return context.getString(R.string.diary_type_prune);
-                default:
-                    return code;
-            }
         }
     }
 }

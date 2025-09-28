@@ -13,10 +13,9 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhotoDao;
-import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 
 /**
  * Repository handling plant gallery operations.

@@ -32,9 +32,11 @@ Instrumentation tests require a connected Android device or emulator. They can b
 ```
 
 This command runs the full Android test suite, including the light measurement scenario covered by
-`LightMeasurementInstrumentedTest`, the reminder scheduling checks in `ReminderInstrumentedTest`, the
+`LightMeasurementInstrumentedTest`, the reminder scheduling checks in `ReminderInstrumentedTest`,
+the
 widget update validation in `ReminderWidgetInstrumentedTest`, the round-trip backup verification in
-`DataRoundTripInstrumentedTest`, and the DLI/PPFD chart validation in `StatsFragmentInstrumentedTest`.
+`DataRoundTripInstrumentedTest`, and the DLI/PPFD chart validation in
+`StatsFragmentInstrumentedTest`.
 
 To execute only the statistics fragment test, run:
 
@@ -109,7 +111,8 @@ On first launch the app seeds the database with common species light requirement
 ## Localization
 
 The project currently provides English, German, Spanish, and French translations. French strings
-were contributed by the community. To add another language, copy `app/src/main/res/values/strings.xml`
+were contributed by the community. To add another language, copy
+`app/src/main/res/values/strings.xml`
 into a new `values-xx` directory, translate all strings, and open a pull request.
 
 ## Repository threading

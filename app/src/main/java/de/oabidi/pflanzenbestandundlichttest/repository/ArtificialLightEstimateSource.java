@@ -14,7 +14,9 @@ public interface ArtificialLightEstimateSource {
     @NonNull
     ArtificialLightEstimate estimate(long plantId);
 
-    /** Value object describing artificial light metrics. */
+    /**
+     * Value object describing artificial light metrics.
+     */
     final class ArtificialLightEstimate {
         @Nullable
         private final Float dli;
@@ -26,25 +28,33 @@ public interface ArtificialLightEstimateSource {
             this.hours = hours;
         }
 
-        /** Returns the estimated artificial daily light integral, if available. */
-        @Nullable
-        public Float getDli() {
-            return dli;
-        }
-
-        /** Returns the weighted photon hours emitted by the artificial lighting schedule. */
-        @Nullable
-        public Float getHours() {
-            return hours;
-        }
-
-        /** Convenience factory returning an empty estimate. */
+        /**
+         * Convenience factory returning an empty estimate.
+         */
         @NonNull
         public static ArtificialLightEstimate empty() {
             return new ArtificialLightEstimate(null, null);
         }
 
-        /** Indicates whether the estimate contains meaningful values. */
+        /**
+         * Returns the estimated artificial daily light integral, if available.
+         */
+        @Nullable
+        public Float getDli() {
+            return dli;
+        }
+
+        /**
+         * Returns the weighted photon hours emitted by the artificial lighting schedule.
+         */
+        @Nullable
+        public Float getHours() {
+            return hours;
+        }
+
+        /**
+         * Indicates whether the estimate contains meaningful values.
+         */
         public boolean hasValues() {
             return dli != null || hours != null;
         }

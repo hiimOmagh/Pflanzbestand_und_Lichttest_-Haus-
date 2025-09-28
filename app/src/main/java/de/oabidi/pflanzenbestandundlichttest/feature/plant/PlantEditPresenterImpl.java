@@ -1,13 +1,14 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Context;
 import android.net.Uri;
 
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 
 /**
@@ -22,6 +23,10 @@ public class PlantEditPresenterImpl implements PlantEditPresenter {
         this.view = view;
         this.repository = repository;
         this.context = context.getApplicationContext();
+    }
+
+    private static String emptyToNull(String s) {
+        return s == null || s.isEmpty() ? null : s;
     }
 
     @Override
@@ -79,10 +84,6 @@ public class PlantEditPresenterImpl implements PlantEditPresenter {
                 view.showLedProfiles(profiles, null);
             }
         }, e -> view.showError(context.getString(R.string.error_database)));
-    }
-
-    private static String emptyToNull(String s) {
-        return s == null || s.isEmpty() ? null : s;
     }
 
     private void handleLedProfileAssignment(Plant plant, Runnable onComplete,

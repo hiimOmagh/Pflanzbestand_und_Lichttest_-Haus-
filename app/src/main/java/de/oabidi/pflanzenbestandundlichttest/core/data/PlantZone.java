@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey;
 
 import java.util.Locale;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * Room entity storing metadata about a plant's zone and its orientation.
@@ -40,7 +40,9 @@ public class PlantZone {
     private long createdAt;
     private long updatedAt;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public PlantZone() {
     }
 
@@ -55,6 +57,40 @@ public class PlantZone {
         setNotes(notes);
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    /**
+     * Normalises the provided value to a supported orientation code.
+     *
+     * @param value user supplied orientation, may be {@code null}
+     * @return canonical orientation code or {@code null} if none matches
+     */
+    @Nullable
+    public static String normalizeOrientation(@Nullable String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        String upper = trimmed.toUpperCase(Locale.US);
+        switch (upper) {
+            case ORIENTATION_NORTH:
+            case "NORTH":
+                return ORIENTATION_NORTH;
+            case ORIENTATION_SOUTH:
+            case "SOUTH":
+                return ORIENTATION_SOUTH;
+            case ORIENTATION_EAST:
+            case "EAST":
+                return ORIENTATION_EAST;
+            case ORIENTATION_WEST:
+            case "WEST":
+                return ORIENTATION_WEST;
+            default:
+                return null;
+        }
     }
 
     public long getId() {
@@ -114,39 +150,5 @@ public class PlantZone {
 
     public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    /**
-     * Normalises the provided value to a supported orientation code.
-     *
-     * @param value user supplied orientation, may be {@code null}
-     * @return canonical orientation code or {@code null} if none matches
-     */
-    @Nullable
-    public static String normalizeOrientation(@Nullable String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        if (trimmed.isEmpty()) {
-            return null;
-        }
-        String upper = trimmed.toUpperCase(Locale.US);
-        switch (upper) {
-            case ORIENTATION_NORTH:
-            case "NORTH":
-                return ORIENTATION_NORTH;
-            case ORIENTATION_SOUTH:
-            case "SOUTH":
-                return ORIENTATION_SOUTH;
-            case ORIENTATION_EAST:
-            case "EAST":
-                return ORIENTATION_EAST;
-            case ORIENTATION_WEST:
-            case "WEST":
-                return ORIENTATION_WEST;
-            default:
-                return null;
-        }
     }
 }

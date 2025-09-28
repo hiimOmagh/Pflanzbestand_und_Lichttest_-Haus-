@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTargetDao;
 
 /**
  * Repository providing species target persistence APIs.

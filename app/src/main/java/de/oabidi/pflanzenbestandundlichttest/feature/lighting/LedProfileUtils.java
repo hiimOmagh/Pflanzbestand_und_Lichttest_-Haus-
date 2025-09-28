@@ -123,7 +123,7 @@ public final class LedProfileUtils {
      * integral calculations. When a calibration factor is missing or invalid the helper falls back
      * to a conservative full-power PPFD value so callers still receive an estimate.
      *
-     * @param schedule list of schedule entries describing LED operation
+     * @param schedule           list of schedule entries describing LED operation
      * @param calibrationFactors calibration map keyed by {@link LedProfile#CALIBRATION_KEY_AMBIENT}
      *                           and {@link LedProfile#CALIBRATION_KEY_CAMERA}
      * @return aggregated artificial light estimate
@@ -165,7 +165,9 @@ public final class LedProfileUtils {
         }
     }
 
-    /** Value object describing schedule-derived light information. */
+    /**
+     * Value object describing schedule-derived light information.
+     */
     public static final class ArtificialLightEstimate {
         private final float photonHours;
         private final float ambientDli;
@@ -182,27 +184,37 @@ public final class LedProfileUtils {
             this.cameraUsedFallback = cameraUsedFallback;
         }
 
-        /** Returns the total weighted photon-hours for the schedule. */
+        /**
+         * Returns the total weighted photon-hours for the schedule.
+         */
         public float getPhotonHours() {
             return photonHours;
         }
 
-        /** Returns the ambient-sensor-based artificial DLI estimate. */
+        /**
+         * Returns the ambient-sensor-based artificial DLI estimate.
+         */
         public float getAmbientDli() {
             return ambientDli;
         }
 
-        /** Returns whether the ambient estimate relied on the fallback PPFD value. */
+        /**
+         * Returns whether the ambient estimate relied on the fallback PPFD value.
+         */
         public boolean isAmbientUsingFallback() {
             return ambientUsedFallback;
         }
 
-        /** Returns the camera-based artificial DLI estimate. */
+        /**
+         * Returns the camera-based artificial DLI estimate.
+         */
         public float getCameraDli() {
             return cameraDli;
         }
 
-        /** Returns whether the camera estimate relied on the fallback PPFD value. */
+        /**
+         * Returns whether the camera estimate relied on the fallback PPFD value.
+         */
         public boolean isCameraUsingFallback() {
             return cameraUsedFallback;
         }

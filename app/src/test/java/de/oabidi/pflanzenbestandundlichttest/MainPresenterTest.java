@@ -16,6 +16,11 @@ import org.robolectric.RobolectricTestRunner;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainPresenter;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainPresenterImpl;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainView;
 
 /**
  * Unit tests for {@link MainPresenterImpl} verifying navigation and onboarding logic.
@@ -145,6 +150,7 @@ public class MainPresenterTest {
         @Override
         public void showExportFormatChooser(ExportManager.Format currentFormat) {
         }
+
         @Override
         public void launchImport(String[] mimeTypes) {
         }

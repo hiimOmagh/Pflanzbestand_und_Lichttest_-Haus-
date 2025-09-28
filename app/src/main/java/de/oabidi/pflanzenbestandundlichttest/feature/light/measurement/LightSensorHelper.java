@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.light.measurement;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -18,25 +18,15 @@ import java.util.Deque;
  * reported to the listener.</p>
  */
 public class LightSensorHelper implements SensorEventListener {
-    public interface OnLuxChangedListener {
-        /**
-         * Called when a new light sensor reading is available.
-         *
-         * @param rawLux the latest raw lux value reported by the sensor
-         * @param avgLux the moving average of recent lux readings including this one
-         */
-        void onLuxChanged(float rawLux, float avgLux);
-    }
-
-    /** Maximum number of samples to include in the moving average. */
+    /**
+     * Maximum number of samples to include in the moving average.
+     */
     private final int maxSamples;
-
     private final SensorManager sensorManager;
     private final Sensor lightSensor;
     private final OnLuxChangedListener listener;
     private final Deque<Float> recentLuxSamples = new ArrayDeque<>();
     private float luxSum = 0f;
-
     /**
      * Creates a new helper using the default sample size of 10 readings.
      */
@@ -61,12 +51,16 @@ public class LightSensorHelper implements SensorEventListener {
         this.maxSamples = sampleSize;
     }
 
-    /** Check whether a light sensor is available. */
+    /**
+     * Check whether a light sensor is available.
+     */
     public boolean hasLightSensor() {
         return lightSensor != null;
     }
 
-    /** Start listening to the light sensor. */
+    /**
+     * Start listening to the light sensor.
+     */
     public void start() {
         if (sensorManager != null && lightSensor != null) {
             // Clear buffered samples so old values don't skew new sessions
@@ -76,7 +70,9 @@ public class LightSensorHelper implements SensorEventListener {
         }
     }
 
-    /** Stop listening to the light sensor. */
+    /**
+     * Stop listening to the light sensor.
+     */
     public void stop() {
         if (sensorManager != null && lightSensor != null) {
             sensorManager.unregisterListener(this);
@@ -106,5 +102,15 @@ public class LightSensorHelper implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         // No-op
+    }
+
+    public interface OnLuxChangedListener {
+        /**
+         * Called when a new light sensor reading is available.
+         *
+         * @param rawLux the latest raw lux value reported by the sensor
+         * @param avgLux the moving average of recent lux readings including this one
+         */
+        void onLuxChanged(float rawLux, float avgLux);
     }
 }

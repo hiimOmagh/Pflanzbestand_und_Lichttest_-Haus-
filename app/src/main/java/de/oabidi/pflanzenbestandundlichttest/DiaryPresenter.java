@@ -4,21 +4,18 @@ import android.content.Context;
 
 import java.util.List;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 
-/** Presenter for managing diary entries. */
+/**
+ * Presenter for managing diary entries.
+ */
 public class DiaryPresenter {
-    public interface View {
-        void showEntries(List<DiaryEntry> entries);
-        void showError(String message);
-    }
-
     private final View view;
     private final DiaryRepository diaryRepository;
     private final long plantId;
     private final Context context;
     private String query = "";
-
     public DiaryPresenter(View view, DiaryRepository diaryRepository, long plantId, Context context) {
         this.view = view;
         this.diaryRepository = diaryRepository;
@@ -26,26 +23,34 @@ public class DiaryPresenter {
         this.context = context.getApplicationContext();
     }
 
-    /** Load entries matching the given search query. */
+    /**
+     * Load entries matching the given search query.
+     */
     public void loadEntries(String query) {
         this.query = query != null ? query : "";
         diaryRepository.searchDiaryEntries(plantId, this.query, view::showEntries,
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
-    /** Insert a new diary entry and refresh the list. */
+    /**
+     * Insert a new diary entry and refresh the list.
+     */
     public void insertEntry(DiaryEntry entry) {
         diaryRepository.insertDiaryEntry(entry, this::reload,
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
-    /** Update an existing entry and refresh. */
+    /**
+     * Update an existing entry and refresh.
+     */
     public void updateEntry(DiaryEntry entry) {
         diaryRepository.updateDiaryEntry(entry, this::reload,
             e -> view.showError(context.getString(R.string.error_database)));
     }
 
-    /** Delete an entry and run the provided callback after completion. */
+    /**
+     * Delete an entry and run the provided callback after completion.
+     */
     public void deleteEntry(DiaryEntry entry, Runnable afterDelete) {
         diaryRepository.deleteDiaryEntry(entry, () -> {
             reload();
@@ -57,5 +62,11 @@ public class DiaryPresenter {
 
     private void reload() {
         loadEntries(query);
+    }
+
+    public interface View {
+        void showEntries(List<DiaryEntry> entries);
+
+        void showError(String message);
     }
 }

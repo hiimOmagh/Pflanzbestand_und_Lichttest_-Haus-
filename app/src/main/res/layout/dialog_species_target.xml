@@ -9,17 +9,17 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/hint_species_key">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_species_key"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
-    </com.google.android.material.textfield.TextInputLayout>
+            android:hint="@string/hint_species_key">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_species_key"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/label_seedling"

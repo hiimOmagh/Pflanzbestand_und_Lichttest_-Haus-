@@ -40,6 +40,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.nio.charset.StandardCharsets;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
 

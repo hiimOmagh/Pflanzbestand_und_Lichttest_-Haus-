@@ -21,6 +21,7 @@ import java.util.List;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.Severity;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Unit tests covering the {@link CareRecommendationEngine} scenarios for care tips.

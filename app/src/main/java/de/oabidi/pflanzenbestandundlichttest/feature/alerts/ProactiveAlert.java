@@ -2,40 +2,18 @@ package de.oabidi.pflanzenbestandundlichttest.feature.alerts;
 
 import androidx.annotation.NonNull;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 
 /**
  * Value object describing a proactive alert for a specific plant.
  */
 public class ProactiveAlert {
-    public enum Severity {
-        INFO,
-        WARNING,
-        CRITICAL;
-
-        public static Severity fromCareSeverity(
-            de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.Severity severity) {
-            if (severity == null) {
-                return INFO;
-            }
-            switch (severity) {
-                case CRITICAL:
-                    return CRITICAL;
-                case WARNING:
-                    return WARNING;
-                default:
-                    return INFO;
-            }
-        }
-    }
-
     private final Plant plant;
     private final ProactiveAlertTrigger trigger;
     private final Severity severity;
     private final String message;
     private final long createdAt;
-
     public ProactiveAlert(@NonNull Plant plant,
                           @NonNull ProactiveAlertTrigger trigger,
                           @NonNull Severity severity,
@@ -70,5 +48,26 @@ public class ProactiveAlert {
 
     public ProactiveAlertLog toLog() {
         return new ProactiveAlertLog(plant.getId(), trigger.getId(), severity.name(), message, createdAt);
+    }
+
+    public enum Severity {
+        INFO,
+        WARNING,
+        CRITICAL;
+
+        public static Severity fromCareSeverity(
+            de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.Severity severity) {
+            if (severity == null) {
+                return INFO;
+            }
+            switch (severity) {
+                case CRITICAL:
+                    return CRITICAL;
+                case WARNING:
+                    return WARNING;
+                default:
+                    return INFO;
+            }
+        }
     }
 }

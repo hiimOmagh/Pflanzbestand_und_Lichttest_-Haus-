@@ -26,6 +26,12 @@ import de.oabidi.pflanzenbestandundlichttest.core.ui.LineChartView;
 @Config(application = TestExecutorApp.class)
 public class EnvironmentLogFragmentTest {
 
+    private static void setField(Object target, String name, Object value) throws Exception {
+        Field field = EnvironmentLogFragment.class.getDeclaredField(name);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
+
     @Test
     public void showGrowthChart_togglesChartVisibility() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
@@ -77,11 +83,5 @@ public class EnvironmentLogFragmentTest {
 
         assertEquals(View.GONE, chart.getVisibility());
         assertEquals(View.VISIBLE, empty.getVisibility());
-    }
-
-    private static void setField(Object target, String name, Object value) throws Exception {
-        Field field = EnvironmentLogFragment.class.getDeclaredField(name);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 }

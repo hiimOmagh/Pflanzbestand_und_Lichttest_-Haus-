@@ -33,8 +33,6 @@ public class PlantDetailPresenter {
     private final PlantRepository repository;
     private final Handler mainHandler;
     private final List<CareRecommendation> currentRecommendations = new ArrayList<>();
-    private boolean careListenerRegistered;
-
     private final PlantRepository.CareRecommendationListener careRecommendationListener =
         new PlantRepository.CareRecommendationListener() {
             @Override
@@ -53,6 +51,7 @@ public class PlantDetailPresenter {
                 runOnViewThread(PlantDetailPresenter.this::handleCareRecommendationError);
             }
         };
+    private boolean careListenerRegistered;
 
     public PlantDetailPresenter(PlantDetailView view, long plantId, ExportManager exportManager,
                                 PlantRepository repository) {
@@ -83,17 +82,23 @@ public class PlantDetailPresenter {
         return epoch == 0 ? view.getUnknownDateText() : dateFormat.format(new Date(epoch));
     }
 
-    /** Handles diary button clicks. */
+    /**
+     * Handles diary button clicks.
+     */
     public void onDiaryClicked() {
         view.navigateToDiary(plantId);
     }
 
-    /** Handles environment log button clicks. */
+    /**
+     * Handles environment log button clicks.
+     */
     public void onEnvironmentLogClicked() {
         view.navigateToEnvironmentLog(plantId);
     }
 
-    /** Loads the current care recommendations. */
+    /**
+     * Loads the current care recommendations.
+     */
     public void loadCareRecommendations() {
         if (plantId <= 0) {
             runOnViewThread(() -> {
@@ -109,7 +114,9 @@ public class PlantDetailPresenter {
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
 
-    /** Loads the latest light summary for the current plant. */
+    /**
+     * Loads the latest light summary for the current plant.
+     */
     public void loadLatestLightSummary() {
         if (plantId <= 0) {
             runOnViewThread(() -> view.showLightSummary(new LightSummary(null, null, null, null)));
@@ -128,7 +135,9 @@ public class PlantDetailPresenter {
         }), error -> runOnViewThread(() -> view.showLightSummary(new LightSummary(null, null, null, null))));
     }
 
-    /** Loads metadata associated with the supplied species key. */
+    /**
+     * Loads metadata associated with the supplied species key.
+     */
     public void loadSpeciesMetadata(@Nullable String speciesKey) {
         String normalized = speciesKey != null ? speciesKey.trim() : null;
         if (normalized == null || normalized.isEmpty()) {
@@ -146,7 +155,9 @@ public class PlantDetailPresenter {
             error -> runOnViewThread(() -> view.showSpeciesMetadataUnavailable(view.getSpeciesMetadataUnavailableText())));
     }
 
-    /** Dismisses a recommendation so it will no longer be shown. */
+    /**
+     * Dismisses a recommendation so it will no longer be shown.
+     */
     public void dismissRecommendation(String recommendationId) {
         if (recommendationId == null || recommendationId.isEmpty()) {
             runOnViewThread(this::handleCareRecommendationError);
@@ -157,7 +168,9 @@ public class PlantDetailPresenter {
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
 
-    /** Initiates the export flow. */
+    /**
+     * Initiates the export flow.
+     */
     public void onExportRequested() {
         view.launchExport();
     }
@@ -181,7 +194,9 @@ public class PlantDetailPresenter {
         });
     }
 
-    /** Cleans up resources when the presenter is destroyed. */
+    /**
+     * Cleans up resources when the presenter is destroyed.
+     */
     public void onDestroy() {
         if (careListenerRegistered) {
             repository.unregisterCareRecommendationListener(plantId, careRecommendationListener);

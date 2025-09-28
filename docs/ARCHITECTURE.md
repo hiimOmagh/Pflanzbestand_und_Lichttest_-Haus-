@@ -4,18 +4,22 @@ This document captures the current high-level structure of the app, the MVP rela
 screens, and the data pipelines that feed Room and background work.
 
 ## Module layout
+
 - `app` – Android application module containing Activities, Fragments, presenters, Room database,
   background workers, and instrumentation tests.
 
 ## MVP overview
 
-Each screen is implemented as a Fragment (or the hosting `MainActivity`) paired with a presenter that
+Each screen is implemented as a Fragment (or the hosting `MainActivity`) paired with a presenter
+that
 owns the business logic. Presenters communicate exclusively with `PlantRepository`, which exposes
 asynchronous APIs backed by Room DAOs. Notable pairings include:
 
 - `MainActivity` orchestrated by `MainPresenterImpl` for navigation, import/export, and permissions.
-- `PlantListFragment` using `PlantListPresenter` to load plants, handle search, and react to actions.
-- `PlantDetailActivity` exposing plant insights through `PlantDetailPresenter`, which also listens for
+- `PlantListFragment` using `PlantListPresenter` to load plants, handle search, and react to
+  actions.
+- `PlantDetailActivity` exposing plant insights through `PlantDetailPresenter`, which also listens
+  for
   care recommendation refreshes.
 - `LightMeasurementFragment` collaborating with `LightMeasurementPresenter` for sensor capture,
   calibration, and measurement storage.
@@ -43,7 +47,8 @@ flowchart LR
     CalibrationFragment -->|save factors| PlantRepository --> PlantCalibrationDao
 ```
 
-The presenter smooths readings from both the ambient light sensor and the camera luma monitor, applies
+The presenter smooths readings from both the ambient light sensor and the camera luma monitor,
+applies
 per-plant calibration factors, and emits PPFD/DLI values to the fragment. The calibration fragment
 lets the user persist ambient and camera factors, which are stored in the `PlantCalibration` Room
 entity and fed back into future measurements.
@@ -120,11 +125,13 @@ throughout the import.
 
 ## Background work and scheduling
 
-Reminder notifications are routed through `ReminderScheduler`. On Android 12+ the scheduler delegates
+Reminder notifications are routed through `ReminderScheduler`. On Android 12+ the scheduler
+delegates
 future triggers to `ReminderWorkManager`, which configures unique `WorkManager` jobs that invoke
 `ReminderWorker` when alarms should fire. On earlier API levels the scheduler falls back to
 `AlarmManager`, keeping the WorkManager code path ready once WorkManager is available on the device.
-Whenever reminders are created, updated, or cancelled the scheduler broadcasts a widget update so the
+Whenever reminders are created, updated, or cancelled the scheduler broadcasts a widget update so
+the
 home-screen quick actions reflect the latest state.
 
 ## Calibration storage
@@ -138,16 +145,19 @@ profile association and current factors, enabling callers to surface missing-pro
 still honoring legacy data. These helpers are used by both `LightMeasurementPresenter` (to refresh
 factors when the user selects a plant) and `CalibrationFragment` (to persist user-entered values).
 Backups export the profile calibration data via the `LedProfiles` CSV section and `ledProfiles` JSON
-array, restoring LED profile records before any measurements are processed so dependent calculations use
+array, restoring LED profile records before any measurements are processed so dependent calculations
+use
 the correct factors.
 
 ## Resource and code conventions
 
 - Layout files follow `fragment_<feature>.xml` and `activity_<screen>.xml` naming.
-- Strings, IDs, and drawables are prefixed with their feature area (e.g. `measurement_*`, `diary_*`).
+- Strings, IDs, and drawables are prefixed with their feature area (e.g. `measurement_*`,
+  `diary_*`).
 - Java code adheres to the Android Open Source Project style guide; fragments end in `Fragment`,
   presenters end in `Presenter`, and DAO interfaces live alongside their entities.
-- Use `TODO(name):` comments for follow-up work and keep indentation at 4 spaces with UTF-8 encoding.
+- Use `TODO(name):` comments for follow-up work and keep indentation at 4 spaces with UTF-8
+  encoding.
 
 ## Environment tab integration example
 

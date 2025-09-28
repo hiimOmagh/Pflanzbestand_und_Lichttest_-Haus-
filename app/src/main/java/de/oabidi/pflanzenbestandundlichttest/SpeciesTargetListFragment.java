@@ -1,6 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.appcompat.app.AlertDialog;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -41,6 +44,90 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         SpeciesTargetListFragment fragment = new SpeciesTargetListFragment();
         fragment.repository = repository;
         return fragment;
+    }
+
+    static boolean isInputValid(String key, StageFields... stages) {
+        if (key.trim().isEmpty()) {
+            return false;
+        }
+        boolean hasStage = false;
+        for (StageFields fields : stages) {
+            ValidationResult result = validateStage(fields, false);
+            if (!result.valid) {
+                return false;
+            }
+            hasStage |= result.hasValues;
+        }
+        return hasStage;
+    }
+
+    private static String emptyToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private static ValidationResult validateStage(StageFields fields, boolean showErrors) {
+        boolean valid = true;
+        boolean hasValues = false;
+
+        ValidationResult ppfd = validateRange(fields.ppfdMin, fields.ppfdMax, showErrors);
+        valid &= ppfd.valid;
+        hasValues |= ppfd.hasValues;
+
+        ValidationResult dli = validateRange(fields.dliMin, fields.dliMax, showErrors);
+        valid &= dli.valid;
+        hasValues |= dli.hasValues;
+
+        return new ValidationResult(valid, hasValues);
+    }
+
+    private static ValidationResult validateRange(EditText minField, EditText maxField, boolean showErrors) {
+        String minText = minField.getText().toString().trim();
+        String maxText = maxField.getText().toString().trim();
+        boolean hasMin = !minText.isEmpty();
+        boolean hasMax = !maxText.isEmpty();
+        if (!hasMin && !hasMax) {
+            if (showErrors) {
+                minField.setError(null);
+                maxField.setError(null);
+            }
+            return new ValidationResult(true, false);
+        }
+        if (!hasMin || !hasMax) {
+            if (showErrors) {
+                String error = minField.getContext().getString(R.string.error_required);
+                if (!hasMin) {
+                    minField.setError(error);
+                }
+                if (!hasMax) {
+                    maxField.setError(error);
+                }
+            }
+            return new ValidationResult(false, false);
+        }
+        try {
+            float min = Float.parseFloat(minText);
+            float max = Float.parseFloat(maxText);
+            if (min >= max) {
+                if (showErrors) {
+                    String error = minField.getContext().getString(R.string.error_ppfd_range);
+                    minField.setError(error);
+                    maxField.setError(error);
+                }
+                return new ValidationResult(false, true);
+            }
+        } catch (NumberFormatException e) {
+            if (showErrors) {
+                String error = minField.getContext().getString(R.string.error_positive_number);
+                minField.setError(error);
+                maxField.setError(error);
+            }
+            return new ValidationResult(false, false);
+        }
+        if (showErrors) {
+            minField.setError(null);
+            maxField.setError(null);
+        }
+        return new ValidationResult(true, true);
     }
 
     @Nullable
@@ -74,7 +161,10 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
 
     private void loadTargets() {
         repository.getAllSpeciesTargets(targets -> adapter.submitList(new ArrayList<>(targets)),
-            e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+            e -> {
+                if (isAdded())
+                    Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+            });
     }
 
     private void showDialog(@Nullable SpeciesTarget target) {
@@ -213,7 +303,10 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     List<String> careTips = parseCareTipsInput(careTipsEdit.getText().toString());
                     newTarget.setCareTips(careTips.isEmpty() ? null : careTips);
                     repository.insertSpeciesTarget(newTarget, this::loadTargets,
-                        e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+                        e -> {
+                            if (isAdded())
+                                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                        });
                     dialog.dismiss();
                 }
             });
@@ -227,21 +320,6 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         });
 
         dialog.show();
-    }
-
-    static boolean isInputValid(String key, StageFields... stages) {
-        if (key.trim().isEmpty()) {
-            return false;
-        }
-        boolean hasStage = false;
-        for (StageFields fields : stages) {
-            ValidationResult result = validateStage(fields, false);
-            if (!result.valid) {
-                return false;
-            }
-            hasStage |= result.hasValues;
-        }
-        return hasStage;
     }
 
     private boolean validateInputs(EditText keyEdit, StageFields... stages) {
@@ -340,73 +418,24 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         }
     }
 
-    private static String emptyToNull(String value) {
-        return value == null || value.trim().isEmpty() ? null : value.trim();
+    @Override
+    public void onTargetClick(SpeciesTarget target) {
+        showDialog(target);
     }
 
-    private static ValidationResult validateStage(StageFields fields, boolean showErrors) {
-        boolean valid = true;
-        boolean hasValues = false;
-
-        ValidationResult ppfd = validateRange(fields.ppfdMin, fields.ppfdMax, showErrors);
-        valid &= ppfd.valid;
-        hasValues |= ppfd.hasValues;
-
-        ValidationResult dli = validateRange(fields.dliMin, fields.dliMax, showErrors);
-        valid &= dli.valid;
-        hasValues |= dli.hasValues;
-
-        return new ValidationResult(valid, hasValues);
-    }
-
-    private static ValidationResult validateRange(EditText minField, EditText maxField, boolean showErrors) {
-        String minText = minField.getText().toString().trim();
-        String maxText = maxField.getText().toString().trim();
-        boolean hasMin = !minText.isEmpty();
-        boolean hasMax = !maxText.isEmpty();
-        if (!hasMin && !hasMax) {
-            if (showErrors) {
-                minField.setError(null);
-                maxField.setError(null);
-            }
-            return new ValidationResult(true, false);
-        }
-        if (!hasMin || !hasMax) {
-            if (showErrors) {
-                String error = minField.getContext().getString(R.string.error_required);
-                if (!hasMin) {
-                    minField.setError(error);
-                }
-                if (!hasMax) {
-                    maxField.setError(error);
-                }
-            }
-            return new ValidationResult(false, false);
-        }
-        try {
-            float min = Float.parseFloat(minText);
-            float max = Float.parseFloat(maxText);
-            if (min >= max) {
-                if (showErrors) {
-                    String error = minField.getContext().getString(R.string.error_ppfd_range);
-                    minField.setError(error);
-                    maxField.setError(error);
-                }
-                return new ValidationResult(false, true);
-            }
-        } catch (NumberFormatException e) {
-            if (showErrors) {
-                String error = minField.getContext().getString(R.string.error_positive_number);
-                minField.setError(error);
-                maxField.setError(error);
-            }
-            return new ValidationResult(false, false);
-        }
-        if (showErrors) {
-            minField.setError(null);
-            maxField.setError(null);
-        }
-        return new ValidationResult(true, true);
+    @Override
+    public void onTargetLongClick(SpeciesTarget target) {
+        new MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.action_delete_target)
+            .setMessage(R.string.confirm_delete_target)
+            .setPositiveButton(android.R.string.ok, (d, which) ->
+                repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets,
+                    e -> {
+                        if (isAdded())
+                            Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                    }))
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
     }
 
     private static class StageFields {
@@ -459,22 +488,5 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         public void afterTextChanged(Editable s) {
             onChange.run();
         }
-    }
-
-    @Override
-    public void onTargetClick(SpeciesTarget target) {
-        showDialog(target);
-    }
-
-    @Override
-    public void onTargetLongClick(SpeciesTarget target) {
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.action_delete_target)
-            .setMessage(R.string.confirm_delete_target)
-            .setPositiveButton(android.R.string.ok, (d, which) ->
-                repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets,
-                    e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); }))
-            .setNegativeButton(android.R.string.cancel, null)
-            .show();
     }
 }

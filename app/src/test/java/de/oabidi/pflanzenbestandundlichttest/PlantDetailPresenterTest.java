@@ -24,10 +24,11 @@ import org.robolectric.Shadows;
 import java.util.List;
 import java.util.Arrays;
 
-import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.BulkReadDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Unit tests for {@link PlantDetailPresenter} verifying export handling and
@@ -36,10 +37,10 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class PlantDetailPresenterTest {
+    private final Uri dummyUri = Uri.parse("file://test");
     private FakeView view;
     private Context context;
     private PlantRepository repository;
-    private final Uri dummyUri = Uri.parse("file://test");
 
     @Before
     public void setUp() {

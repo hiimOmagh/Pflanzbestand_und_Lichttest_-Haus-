@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementPresenter;
 
 /**
  * Tests for LightMeasurementFragment ensuring preferences are validated.

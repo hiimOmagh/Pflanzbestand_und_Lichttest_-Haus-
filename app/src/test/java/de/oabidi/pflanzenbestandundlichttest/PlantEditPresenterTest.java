@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+
 /**
  * Unit tests for {@link PlantEditPresenterImpl} verifying validation and persistence behaviour.
  */
@@ -60,11 +62,11 @@ public class PlantEditPresenterTest {
     }
 
     private static class FakeView implements PlantEditView {
-        String name = "";
         final String species = null;
         final String location = null;
         final String notes = null;
         final long acquired = 123L;
+        String name = "";
         Uri photo;
         long id;
         boolean nameErrorShown;

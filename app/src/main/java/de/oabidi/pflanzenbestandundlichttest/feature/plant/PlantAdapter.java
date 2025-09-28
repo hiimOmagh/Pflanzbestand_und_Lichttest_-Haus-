@@ -1,7 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +22,23 @@ import java.util.Objects;
  */
 public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolder> {
 
-    public interface OnPlantClickListener {
-        void onPlantClick(Plant plant);
-        void onPlantLongClick(Plant plant);
-    }
+    private static final DiffUtil.ItemCallback<Plant> DIFF_CALLBACK =
+        new DiffUtil.ItemCallback<Plant>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
+                return oldItem.getId() == newItem.getId();
+            }
 
+            @Override
+            public boolean areContentsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
+                return Objects.equals(oldItem.getName(), newItem.getName())
+                    && Objects.equals(oldItem.getDescription(), newItem.getDescription())
+                    && Objects.equals(oldItem.getSpecies(), newItem.getSpecies())
+                    && Objects.equals(oldItem.getLocationHint(), newItem.getLocationHint())
+                    && oldItem.getAcquiredAtEpoch() == newItem.getAcquiredAtEpoch()
+                    && Objects.equals(oldItem.getPhotoUri(), newItem.getPhotoUri());
+            }
+        };
     private final OnPlantClickListener listener;
 
     public PlantAdapter(OnPlantClickListener listener) {
@@ -60,23 +73,11 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
         holder.bind(plant, listener);
     }
 
-    private static final DiffUtil.ItemCallback<Plant> DIFF_CALLBACK =
-        new DiffUtil.ItemCallback<Plant>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
-                return oldItem.getId() == newItem.getId();
-            }
+    public interface OnPlantClickListener {
+        void onPlantClick(Plant plant);
 
-            @Override
-            public boolean areContentsTheSame(@NonNull Plant oldItem, @NonNull Plant newItem) {
-                return Objects.equals(oldItem.getName(), newItem.getName())
-                    && Objects.equals(oldItem.getDescription(), newItem.getDescription())
-                    && Objects.equals(oldItem.getSpecies(), newItem.getSpecies())
-                    && Objects.equals(oldItem.getLocationHint(), newItem.getLocationHint())
-                    && oldItem.getAcquiredAtEpoch() == newItem.getAcquiredAtEpoch()
-                    && Objects.equals(oldItem.getPhotoUri(), newItem.getPhotoUri());
-            }
-        };
+        void onPlantLongClick(Plant plant);
+    }
 
     static class PlantViewHolder extends RecyclerView.ViewHolder {
         private final TextView nameView;

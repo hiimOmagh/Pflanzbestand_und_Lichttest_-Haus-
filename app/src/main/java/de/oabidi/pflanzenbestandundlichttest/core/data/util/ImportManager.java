@@ -12,7 +12,6 @@ import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.JsonReader;
 import android.util.JsonToken;
@@ -51,24 +50,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
 
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
-import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderScheduler;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
-import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
-import de.oabidi.pflanzenbestandundlichttest.PlantApp;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileAssociation;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
-import de.oabidi.pflanzenbestandundlichttest.core.data.util.FileUtils;
 
 /**
  * Manager responsible for importing measurements and diary entries from a CSV file.
@@ -94,6 +90,11 @@ public class ImportManager {
         this(context, resolveExecutor(context));
     }
 
+    public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
+        this.context = context.getApplicationContext();
+        this.executor = executor;
+    }
+
     @NonNull
     private static ExecutorService resolveExecutor(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
@@ -101,11 +102,6 @@ public class ImportManager {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
         return ((ExecutorProvider) appContext).getIoExecutor();
-    }
-
-    public ImportManager(@NonNull Context context, @NonNull ExecutorService executor) {
-        this.context = context.getApplicationContext();
-        this.executor = executor;
     }
 
     /**
@@ -251,14 +247,14 @@ public class ImportManager {
                                     zis.closeEntry();
                                     tracker.update(countingIs.getCount());
                                     continue;
-                            }
-                            if (zipEntry.isDirectory()) {
-                                if (!outFile.isDirectory() && !outFile.mkdirs()) {
-                                    Log.w(TAG, "Failed to create directory for zip entry: " + entryName);
+                                }
+                                if (zipEntry.isDirectory()) {
+                                    if (!outFile.isDirectory() && !outFile.mkdirs()) {
+                                        Log.w(TAG, "Failed to create directory for zip entry: " + entryName);
                                     }
-                                zis.closeEntry();
-                                tracker.update(countingIs.getCount());
-                                continue;
+                                    zis.closeEntry();
+                                    tracker.update(countingIs.getCount());
+                                    continue;
                                 }
                                 File parent = outFile.getParentFile();
                                 if (parent != null && !parent.exists() && !parent.mkdirs()) {
@@ -1320,16 +1316,6 @@ public class ImportManager {
         }
     }
 
-    private static final class ParseResult {
-        final boolean imported;
-        final int workUnits;
-
-        ParseResult(boolean imported, int workUnits) {
-            this.imported = imported;
-            this.workUnits = workUnits;
-        }
-    }
-
     private void applySectionProgress(@NonNull ParseResult result,
                                       @NonNull AtomicInteger totalSteps,
                                       @NonNull AtomicInteger progress,
@@ -1345,7 +1331,7 @@ public class ImportManager {
     private ParseResult parseJsonPlantsArray(JsonReader reader, Mode mode, File baseDir,
                                              Map<Long, Long> plantIdMap, Map<Long, Long> ledProfileIdMap,
                                              List<ImportWarning> warnings,
-                                         List<Uri> restoredUris, PlantDatabase db) throws IOException {
+                                             List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1413,8 +1399,8 @@ public class ImportManager {
     }
 
     private ParseResult parseJsonPlantPhotosArray(JsonReader reader, Mode mode, File baseDir,
-                                              Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
-                                              List<Uri> restoredUris, PlantDatabase db) throws IOException {
+                                                  Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
+                                                  List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1696,9 +1682,9 @@ public class ImportManager {
     }
 
     private ParseResult parseJsonDiaryEntriesArray(JsonReader reader, Mode mode, File baseDir,
-                                               Map<Long, Long> plantIdMap,
-                                               List<ImportWarning> warnings,
-                                               List<Uri> restoredUris, PlantDatabase db) throws IOException {
+                                                   Map<Long, Long> plantIdMap,
+                                                   List<ImportWarning> warnings,
+                                                   List<Uri> restoredUris, PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1757,9 +1743,9 @@ public class ImportManager {
     }
 
     private ParseResult parseJsonRemindersArray(JsonReader reader, Mode mode,
-                                            Map<Long, Long> plantIdMap,
-                                            List<ImportWarning> warnings,
-                                            PlantDatabase db) throws IOException {
+                                                Map<Long, Long> plantIdMap,
+                                                List<ImportWarning> warnings,
+                                                PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -1863,7 +1849,7 @@ public class ImportManager {
     }
 
     private ParseResult parseJsonSpeciesTargetsArray(JsonReader reader, List<ImportWarning> warnings,
-                                                 PlantDatabase db) throws IOException {
+                                                     PlantDatabase db) throws IOException {
         boolean imported = false;
         reader.beginArray();
         int index = 1;
@@ -2418,6 +2404,12 @@ public class ImportManager {
         }
     }
 
+    private enum ArchiveKind {
+        ZIP,
+        JSON_ZIP,
+        JSON_STREAM
+    }
+
     /**
      * Callback used to signal completion of the import operation.
      */
@@ -2433,23 +2425,6 @@ public class ImportManager {
         void onProgress(int current, int total);
     }
 
-    private enum ArchiveKind {
-        ZIP,
-        JSON_ZIP,
-        JSON_STREAM
-    }
-
-    private static final class ProcessResult {
-        final boolean success;
-        @Nullable
-        final ImportError error;
-
-        ProcessResult(boolean success, @Nullable ImportError error) {
-            this.success = success;
-            this.error = error;
-        }
-    }
-
     @VisibleForTesting
     public interface SectionParser {
         @NonNull
@@ -2461,6 +2436,27 @@ public class ImportManager {
 
         boolean parseSection(@NonNull SectionChunk chunk,
                              @NonNull SectionContext context) throws IOException;
+    }
+
+    private static final class ParseResult {
+        final boolean imported;
+        final int workUnits;
+
+        ParseResult(boolean imported, int workUnits) {
+            this.imported = imported;
+            this.workUnits = workUnits;
+        }
+    }
+
+    private static final class ProcessResult {
+        final boolean success;
+        @Nullable
+        final ImportError error;
+
+        ProcessResult(boolean success, @Nullable ImportError error) {
+            this.success = success;
+            this.error = error;
+        }
     }
 
     /**

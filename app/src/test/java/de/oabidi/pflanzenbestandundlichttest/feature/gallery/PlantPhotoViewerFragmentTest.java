@@ -228,14 +228,14 @@ public class PlantPhotoViewerFragmentTest {
         c1.size = 1f;
 
         MotionEvent down = MotionEvent.obtain(downTime, downTime, MotionEvent.ACTION_DOWN, 1,
-            new MotionEvent.PointerProperties[] {p0}, new MotionEvent.PointerCoords[] {c0},
+            new MotionEvent.PointerProperties[]{p0}, new MotionEvent.PointerCoords[]{c0},
             0, 0, 1f, 1f, 0, 0, 0, 0);
         photoView.dispatchTouchEvent(down);
 
         MotionEvent pointerDown = MotionEvent.obtain(downTime, downTime + 10,
             MotionEvent.ACTION_POINTER_DOWN | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), 2,
-            new MotionEvent.PointerProperties[] {p0, p1},
-            new MotionEvent.PointerCoords[] {c0, c1}, 0, 0, 1f, 1f, 0, 0, 0, 0);
+            new MotionEvent.PointerProperties[]{p0, p1},
+            new MotionEvent.PointerCoords[]{c0, c1}, 0, 0, 1f, 1f, 0, 0, 0, 0);
         photoView.dispatchTouchEvent(pointerDown);
 
         MotionEvent.PointerCoords c0Move = new MotionEvent.PointerCoords();
@@ -249,18 +249,18 @@ public class PlantPhotoViewerFragmentTest {
         c1Move.pressure = 1f;
         c1Move.size = 1f;
         MotionEvent move = MotionEvent.obtain(downTime, downTime + 40, MotionEvent.ACTION_MOVE, 2,
-            new MotionEvent.PointerProperties[] {p0, p1},
-            new MotionEvent.PointerCoords[] {c0Move, c1Move}, 0, 0, 1f, 1f, 0, 0, 0, 0);
+            new MotionEvent.PointerProperties[]{p0, p1},
+            new MotionEvent.PointerCoords[]{c0Move, c1Move}, 0, 0, 1f, 1f, 0, 0, 0, 0);
         photoView.dispatchTouchEvent(move);
 
         MotionEvent pointerUp = MotionEvent.obtain(downTime, downTime + 60,
             MotionEvent.ACTION_POINTER_UP | (1 << MotionEvent.ACTION_POINTER_INDEX_SHIFT), 2,
-            new MotionEvent.PointerProperties[] {p0, p1},
-            new MotionEvent.PointerCoords[] {c0Move, c1Move}, 0, 0, 1f, 1f, 0, 0, 0, 0);
+            new MotionEvent.PointerProperties[]{p0, p1},
+            new MotionEvent.PointerCoords[]{c0Move, c1Move}, 0, 0, 1f, 1f, 0, 0, 0, 0);
         photoView.dispatchTouchEvent(pointerUp);
 
         MotionEvent up = MotionEvent.obtain(downTime, downTime + 80, MotionEvent.ACTION_UP, 1,
-            new MotionEvent.PointerProperties[] {p0}, new MotionEvent.PointerCoords[] {c0Move},
+            new MotionEvent.PointerProperties[]{p0}, new MotionEvent.PointerCoords[]{c0Move},
             0, 0, 1f, 1f, 0, 0, 0, 0);
         photoView.dispatchTouchEvent(up);
 

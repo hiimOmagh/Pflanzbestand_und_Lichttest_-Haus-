@@ -18,16 +18,13 @@ import java.util.List;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
-/** Adapter for editing {@link LedProfile.ScheduleEntry} rows. */
+/**
+ * Adapter for editing {@link LedProfile.ScheduleEntry} rows.
+ */
 class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleAdapter.EntryViewHolder> {
-
-    interface OnEntriesChangedListener {
-        void onEntriesChanged();
-    }
 
     private final List<LedProfile.ScheduleEntry> entries = new ArrayList<>();
     private final OnEntriesChangedListener listener;
-
     LedProfileScheduleAdapter(OnEntriesChangedListener listener) {
         this.listener = listener;
     }
@@ -48,21 +45,6 @@ class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleA
     @Override
     public int getItemCount() {
         return entries.size();
-    }
-
-    void setEntries(List<LedProfile.ScheduleEntry> newEntries) {
-        entries.clear();
-        if (newEntries != null) {
-            for (LedProfile.ScheduleEntry entry : newEntries) {
-                LedProfile.ScheduleEntry copy = new LedProfile.ScheduleEntry();
-                copy.setStartTime(entry.getStartTime());
-                copy.setEndTime(entry.getEndTime());
-                copy.setIntensityPercent(entry.getIntensityPercent());
-                entries.add(copy);
-            }
-        }
-        notifyDataSetChanged();
-        notifyChanged();
     }
 
     void addEntry() {
@@ -93,9 +75,38 @@ class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleA
         return copy;
     }
 
+    void setEntries(List<LedProfile.ScheduleEntry> newEntries) {
+        entries.clear();
+        if (newEntries != null) {
+            for (LedProfile.ScheduleEntry entry : newEntries) {
+                LedProfile.ScheduleEntry copy = new LedProfile.ScheduleEntry();
+                copy.setStartTime(entry.getStartTime());
+                copy.setEndTime(entry.getEndTime());
+                copy.setIntensityPercent(entry.getIntensityPercent());
+                entries.add(copy);
+            }
+        }
+        notifyDataSetChanged();
+        notifyChanged();
+    }
+
     private void notifyChanged() {
         if (listener != null) {
             listener.onEntriesChanged();
+        }
+    }
+
+    interface OnEntriesChangedListener {
+        void onEntriesChanged();
+    }
+
+    private abstract static class SimpleTextWatcher implements TextWatcher {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
     }
 
@@ -174,16 +185,6 @@ class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleA
             } else {
                 editText.setText(value);
             }
-        }
-    }
-
-    private abstract static class SimpleTextWatcher implements TextWatcher {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
         }
     }
 }

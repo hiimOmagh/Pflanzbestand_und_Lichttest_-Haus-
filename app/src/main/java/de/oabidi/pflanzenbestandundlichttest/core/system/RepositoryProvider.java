@@ -17,43 +17,6 @@ import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
  */
 public interface RepositoryProvider {
     /**
-     * Returns the shared {@link PlantRepository} instance for the application.
-     */
-    PlantRepository getRepository();
-
-    default MeasurementRepository getMeasurementRepository() {
-        return getRepository().measurementRepository();
-    }
-
-    default DiaryRepository getDiaryRepository() {
-        return getRepository().diaryRepository();
-    }
-
-    default EnvironmentRepository getEnvironmentRepository() {
-        return getRepository().environmentRepository();
-    }
-
-    default ReminderRepository getReminderRepository() {
-        return getRepository().reminderRepository();
-    }
-
-    default SpeciesRepository getSpeciesRepository() {
-        return getRepository().speciesRepository();
-    }
-
-    default GalleryRepository getGalleryRepository() {
-        return getRepository().galleryRepository();
-    }
-
-    default ProactiveAlertRepository getAlertRepository() {
-        return getRepository().alertRepository();
-    }
-
-    default NaturalLightRepository getNaturalLightRepository() {
-        return getRepository().naturalLightRepository();
-    }
-
-    /**
      * Convenience method returning the repository associated with the given context.
      *
      * @param context any context whose application implements {@link RepositoryProvider}
@@ -98,5 +61,42 @@ public interface RepositoryProvider {
 
     static NaturalLightRepository getNaturalLightRepository(Context context) {
         return getRepository(context).naturalLightRepository();
+    }
+
+    /**
+     * Returns the shared {@link PlantRepository} instance for the application.
+     */
+    PlantRepository getRepository();
+
+    default MeasurementRepository getMeasurementRepository() {
+        return getRepository().measurementRepository();
+    }
+
+    default DiaryRepository getDiaryRepository() {
+        return getRepository().diaryRepository();
+    }
+
+    default EnvironmentRepository getEnvironmentRepository() {
+        return getRepository().environmentRepository();
+    }
+
+    default ReminderRepository getReminderRepository() {
+        return getRepository().reminderRepository();
+    }
+
+    default SpeciesRepository getSpeciesRepository() {
+        return getRepository().speciesRepository();
+    }
+
+    default GalleryRepository getGalleryRepository() {
+        return getRepository().galleryRepository();
+    }
+
+    default ProactiveAlertRepository getAlertRepository() {
+        return getRepository().alertRepository();
+    }
+
+    default NaturalLightRepository getNaturalLightRepository() {
+        return getRepository().naturalLightRepository();
     }
 }

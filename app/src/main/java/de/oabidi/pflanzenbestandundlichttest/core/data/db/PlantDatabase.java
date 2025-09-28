@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.db;
 
 import android.content.Context;
 import android.util.Log;
@@ -26,6 +26,16 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntryFts;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.MeasurementDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantFts;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTargetDao;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntryDao;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
@@ -306,7 +316,9 @@ public abstract class PlantDatabase extends RoomDatabase {
     }
 
     public abstract PlantDao plantDao();
+
     public abstract LedProfileDao ledProfileDao();
+
     public abstract LedProfileAssociationDao ledProfileAssociationDao();
 
     /**
@@ -331,6 +343,7 @@ public abstract class PlantDatabase extends RoomDatabase {
     public abstract BulkReadDao bulkDao();
 
     public abstract PlantZoneDao plantZoneDao();
+
     public abstract NaturalLightEstimateDao naturalLightEstimateDao();
 
     public abstract PlantPhotoDao plantPhotoDao();

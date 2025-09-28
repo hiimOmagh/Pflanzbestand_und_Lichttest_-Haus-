@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ public class OnboardingFragment extends Fragment {
         fragment.repository = repository;
         return fragment;
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -75,6 +77,7 @@ public class OnboardingFragment extends Fragment {
 
     private static class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.VH> {
         private final int[] texts;
+
         OnboardingAdapter(int[] texts) {
             this.texts = texts;
         }
@@ -99,6 +102,7 @@ public class OnboardingFragment extends Fragment {
 
         static class VH extends RecyclerView.ViewHolder {
             final TextView text;
+
             VH(View itemView) {
                 super(itemView);
                 text = itemView.findViewById(R.id.onboarding_text);

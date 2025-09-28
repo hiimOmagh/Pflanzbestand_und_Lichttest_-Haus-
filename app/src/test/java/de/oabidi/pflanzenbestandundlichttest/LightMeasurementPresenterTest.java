@@ -24,18 +24,52 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.LightMath;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementPresenter;
 import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 
-/** Tests for {@link LightMeasurementPresenter} artificial light projections. */
+/**
+ * Tests for {@link LightMeasurementPresenter} artificial light projections.
+ */
 @RunWith(RobolectricTestRunner.class)
 @Config(application = LightMeasurementPresenterTest.TestApp.class)
 public class LightMeasurementPresenterTest {
 
     private Context context;
+
+    private static List<Plant> singlePlantList(long id) {
+        Plant plant = new Plant("Test", null, null, null, System.currentTimeMillis(), null);
+        plant.setId(id);
+        List<Plant> plants = new ArrayList<>();
+        plants.add(plant);
+        return plants;
+    }
+
+    private static LedProfile createProfile(Float ambient, Float camera, LedProfile.ScheduleEntry entry) {
+        LedProfile profile = new LedProfile();
+        profile.setId(1L);
+        profile.setName("Profile");
+        Map<String, Float> factors = new HashMap<>();
+        if (ambient != null) {
+            factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, ambient);
+        }
+        if (camera != null) {
+            factors.put(LedProfile.CALIBRATION_KEY_CAMERA, camera);
+        }
+        profile.setCalibrationFactors(factors);
+        List<LedProfile.ScheduleEntry> schedule = new ArrayList<>();
+        schedule.add(entry);
+        profile.setSchedule(schedule);
+        return profile;
+    }
+
+    private static LedProfile.ScheduleEntry scheduleEntry(String start, String end, int intensity) {
+        return new LedProfile.ScheduleEntry(start, end, intensity);
+    }
 
     @Before
     public void setUp() {
@@ -108,36 +142,6 @@ public class LightMeasurementPresenterTest {
         float expectedFallbackDli = LightMath.dliFromPpfd(200f, photonHours);
         assertEquals(expectedFallbackDli, projection.getAmbientDli(), 0.0001f);
         assertEquals(expectedFallbackDli, projection.getCameraDli(), 0.0001f);
-    }
-
-    private static List<Plant> singlePlantList(long id) {
-        Plant plant = new Plant("Test", null, null, null, System.currentTimeMillis(), null);
-        plant.setId(id);
-        List<Plant> plants = new ArrayList<>();
-        plants.add(plant);
-        return plants;
-    }
-
-    private static LedProfile createProfile(Float ambient, Float camera, LedProfile.ScheduleEntry entry) {
-        LedProfile profile = new LedProfile();
-        profile.setId(1L);
-        profile.setName("Profile");
-        Map<String, Float> factors = new HashMap<>();
-        if (ambient != null) {
-            factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, ambient);
-        }
-        if (camera != null) {
-            factors.put(LedProfile.CALIBRATION_KEY_CAMERA, camera);
-        }
-        profile.setCalibrationFactors(factors);
-        List<LedProfile.ScheduleEntry> schedule = new ArrayList<>();
-        schedule.add(entry);
-        profile.setSchedule(schedule);
-        return profile;
-    }
-
-    private static LedProfile.ScheduleEntry scheduleEntry(String start, String end, int intensity) {
-        return new LedProfile.ScheduleEntry(start, end, intensity);
     }
 
     private static class RecordingView implements LightMeasurementPresenter.View {

@@ -24,7 +24,9 @@ import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 
-/** Displays the list of LED lighting profiles. */
+/**
+ * Displays the list of LED lighting profiles.
+ */
 public class LedProfileListFragment extends Fragment implements LedProfileAdapter.OnProfileClickListener {
 
     public static final String RESULT_KEY_PROFILES_UPDATED = "led_profiles_updated";

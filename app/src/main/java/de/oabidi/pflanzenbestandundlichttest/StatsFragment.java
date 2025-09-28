@@ -1,6 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -11,6 +13,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.text.TextUtils;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import androidx.annotation.NonNull;
@@ -26,13 +29,13 @@ import java.util.Map;
 import java.util.HashMap;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.BarChartView;
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.MeasurementListFragment;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
 
 /**
  * Displays simple statistics such as recent PPFD and DLI measurements for a plant.
  */
 public class StatsFragment extends Fragment implements StatsPresenter.View {
+    private final List<Long> selectedPlantIds = new ArrayList<>();
     private PlantRepository repository;
     private StatsPresenter presenter;
     private TextView diaryCountsView;
@@ -40,7 +43,6 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
     private Button plantSelectorButton;
     private BarChartView chart;
     private List<Plant> plants;
-    private final List<Long> selectedPlantIds = new ArrayList<>();
     private View viewMeasurementsButton;
     private TextView placeholderView;
     private SharedPreferences preferences;

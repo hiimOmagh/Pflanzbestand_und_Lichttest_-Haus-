@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.core.system.reminder;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,18 +21,6 @@ import java.util.Locale;
  * RecyclerView adapter displaying scheduled reminders.
  */
 public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewHolder> {
-    /** Listener invoked when a reminder is tapped. */
-    public interface OnReminderClickListener {
-        void onReminderClick(Reminder reminder);
-    }
-
-    private final OnReminderClickListener clickListener;
-
-    public ReminderAdapter(OnReminderClickListener clickListener) {
-        super(DIFF_CALLBACK);
-        this.clickListener = clickListener;
-    }
-
     private static final DiffUtil.ItemCallback<Reminder> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<Reminder>() {
             @Override
@@ -45,6 +34,12 @@ public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewH
                     && oldItem.getMessage().equals(newItem.getMessage());
             }
         };
+    private final OnReminderClickListener clickListener;
+
+    public ReminderAdapter(OnReminderClickListener clickListener) {
+        super(DIFF_CALLBACK);
+        this.clickListener = clickListener;
+    }
 
     @NonNull
     @Override
@@ -58,6 +53,13 @@ public class ReminderAdapter extends ListAdapter<Reminder, ReminderAdapter.ViewH
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Reminder reminder = getItem(position);
         holder.bind(reminder, clickListener);
+    }
+
+    /**
+     * Listener invoked when a reminder is tapped.
+     */
+    public interface OnReminderClickListener {
+        void onReminderClick(Reminder reminder);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

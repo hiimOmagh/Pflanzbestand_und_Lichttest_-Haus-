@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.plant;
 
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -122,7 +122,9 @@ public interface MeasurementDao {
     @Query("SELECT id, plantId, timeEpoch, luxAvg, ppfd, dli, note FROM Measurement WHERE plantId = :plantId")
     List<Measurement> getAllForPlant(long plantId);
 
-    /** Simple container for PPFD sum and day count results. */
+    /**
+     * Simple container for PPFD sum and day count results.
+     */
     class SumAndDays {
         public Float sum;
         public int days;

@@ -20,6 +20,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 /**
  * Instrumentation tests validating that species metadata is rendered on the detail screen.
  */

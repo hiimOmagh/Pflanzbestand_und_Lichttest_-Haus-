@@ -34,6 +34,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfileCalibration;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * Unit tests for {@link PlantRepository} verifying basic CRUD operations and

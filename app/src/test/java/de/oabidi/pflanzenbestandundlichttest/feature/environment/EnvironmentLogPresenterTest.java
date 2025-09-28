@@ -35,6 +35,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -44,6 +45,18 @@ import org.mockito.Mockito;
 @RunWith(RobolectricTestRunner.class)
 @Config(application = TestExecutorApp.class)
 public class EnvironmentLogPresenterTest {
+
+    private static EnvironmentEntry buildEntry(long plantId, long timestamp, Float temperature,
+                                               Float humidity, Float height, Float width) {
+        EnvironmentEntry entry = new EnvironmentEntry();
+        entry.setPlantId(plantId);
+        entry.setTimestamp(timestamp);
+        entry.setTemperature(temperature);
+        entry.setHumidity(humidity);
+        entry.setHeight(height);
+        entry.setWidth(width);
+        return entry;
+    }
 
     @Test
     public void loadEntries_producesSortedChartSeries() {
@@ -180,18 +193,6 @@ public class EnvironmentLogPresenterTest {
         verify(view).clearForm();
     }
 
-    private static EnvironmentEntry buildEntry(long plantId, long timestamp, Float temperature,
-                                               Float humidity, Float height, Float width) {
-        EnvironmentEntry entry = new EnvironmentEntry();
-        entry.setPlantId(plantId);
-        entry.setTimestamp(timestamp);
-        entry.setTemperature(temperature);
-        entry.setHumidity(humidity);
-        entry.setHeight(height);
-        entry.setWidth(width);
-        return entry;
-    }
-
     private static class StubRepository extends EnvironmentRepository {
         private final List<EnvironmentEntry> entries;
 
@@ -251,7 +252,8 @@ public class EnvironmentLogPresenterTest {
     private static class NoOpCareDelegate implements CareRecommendationDelegate {
         @Override
         public Runnable refreshCareRecommendationsAsync(long plantId) {
-            return () -> { };
+            return () -> {
+            };
         }
     }
 

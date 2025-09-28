@@ -16,13 +16,27 @@ import java.util.Objects;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 
-/** RecyclerView adapter for displaying {@link LedProfile} entries. */
+/**
+ * RecyclerView adapter for displaying {@link LedProfile} entries.
+ */
 class LedProfileAdapter extends ListAdapter<LedProfile, LedProfileAdapter.ProfileViewHolder> {
 
-    interface OnProfileClickListener {
-        void onProfileClick(LedProfile profile);
-    }
+    private static final DiffUtil.ItemCallback<LedProfile> DIFF_CALLBACK =
+        new DiffUtil.ItemCallback<LedProfile>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull LedProfile oldItem, @NonNull LedProfile newItem) {
+                return oldItem.getId() == newItem.getId();
+            }
 
+            @Override
+            public boolean areContentsTheSame(@NonNull LedProfile oldItem, @NonNull LedProfile newItem) {
+                return Objects.equals(oldItem.getName(), newItem.getName())
+                    && Objects.equals(oldItem.getType(), newItem.getType())
+                    && Objects.equals(oldItem.getMountingDistanceCm(), newItem.getMountingDistanceCm())
+                    && Objects.equals(oldItem.getCalibrationFactors(), newItem.getCalibrationFactors())
+                    && Objects.equals(oldItem.getSchedule(), newItem.getSchedule());
+            }
+        };
     private final OnProfileClickListener listener;
 
     LedProfileAdapter(OnProfileClickListener listener) {
@@ -44,22 +58,9 @@ class LedProfileAdapter extends ListAdapter<LedProfile, LedProfileAdapter.Profil
         holder.bind(profile, listener);
     }
 
-    private static final DiffUtil.ItemCallback<LedProfile> DIFF_CALLBACK =
-        new DiffUtil.ItemCallback<LedProfile>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull LedProfile oldItem, @NonNull LedProfile newItem) {
-                return oldItem.getId() == newItem.getId();
-            }
-
-            @Override
-            public boolean areContentsTheSame(@NonNull LedProfile oldItem, @NonNull LedProfile newItem) {
-                return Objects.equals(oldItem.getName(), newItem.getName())
-                    && Objects.equals(oldItem.getType(), newItem.getType())
-                    && Objects.equals(oldItem.getMountingDistanceCm(), newItem.getMountingDistanceCm())
-                    && Objects.equals(oldItem.getCalibrationFactors(), newItem.getCalibrationFactors())
-                    && Objects.equals(oldItem.getSchedule(), newItem.getSchedule());
-            }
-        };
+    interface OnProfileClickListener {
+        void onProfileClick(LedProfile profile);
+    }
 
     static final class ProfileViewHolder extends RecyclerView.ViewHolder {
         private final TextView nameView;

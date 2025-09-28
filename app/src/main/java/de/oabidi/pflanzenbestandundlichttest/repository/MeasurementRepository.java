@@ -14,16 +14,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import de.oabidi.pflanzenbestandundlichttest.LightMath;
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.MeasurementDao;
-import de.oabidi.pflanzenbestandundlichttest.Plant;
-import de.oabidi.pflanzenbestandundlichttest.PlantDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.MeasurementDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantDao;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderDao;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderScheduler;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTargetDao;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 /**

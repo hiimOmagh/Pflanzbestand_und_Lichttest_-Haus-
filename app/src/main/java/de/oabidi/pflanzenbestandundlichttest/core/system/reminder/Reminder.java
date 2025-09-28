@@ -7,7 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * Room entity representing a scheduled reminder notification.
@@ -28,7 +28,9 @@ public class Reminder {
     private long plantId;
     private String message;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public Reminder() {
     }
 

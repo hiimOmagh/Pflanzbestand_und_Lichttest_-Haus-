@@ -25,6 +25,10 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.allOf;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementPresenter;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 /**
  * Instrumented test ensuring a light measurement is saved and appears in stats.
  */

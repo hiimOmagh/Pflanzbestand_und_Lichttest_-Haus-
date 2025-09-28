@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.plant;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -32,7 +32,9 @@ public class Measurement {
     private Float dli;
     private String note;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public Measurement() {
     }
 

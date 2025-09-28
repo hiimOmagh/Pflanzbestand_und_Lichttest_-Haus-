@@ -2,7 +2,6 @@ package de.oabidi.pflanzenbestandundlichttest;
 
 import android.app.Application;
 import android.appwidget.AppWidgetManager;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Looper;
 import android.view.View;
@@ -23,6 +22,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
+
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
 
 /**
  * Instrumented tests for {@link ReminderWidgetProvider}.

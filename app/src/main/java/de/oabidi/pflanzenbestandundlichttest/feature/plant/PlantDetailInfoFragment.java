@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
+
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 
 /**
@@ -27,8 +29,132 @@ public class PlantDetailInfoFragment extends Fragment {
     private static final String ARG_SPECIES = "arg_species";
     private static final String ARG_LOCATION = "arg_location";
     private static final String ARG_ACQUIRED = "arg_acquired";
+    @Nullable
+    private Callbacks callbacks;
 
-    /** Callback interface implemented by {@link PlantDetailActivity}. */
+    /**
+     * Creates a new instance configured with the provided details.
+     */
+    public static PlantDetailInfoFragment newInstance(@NonNull String name,
+                                                      @NonNull String description,
+                                                      @NonNull String species,
+                                                      @NonNull String location,
+                                                      @NonNull String acquiredAt) {
+        PlantDetailInfoFragment fragment = new PlantDetailInfoFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_NAME, name);
+        args.putString(ARG_DESCRIPTION, description);
+        args.putString(ARG_SPECIES, species);
+        args.putString(ARG_LOCATION, location);
+        args.putString(ARG_ACQUIRED, acquiredAt);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof Callbacks) {
+            callbacks = (Callbacks) context;
+        } else {
+            throw new IllegalStateException("Host activity must implement Callbacks");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        callbacks = null;
+        super.onDetach();
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_plant_detail_info, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        InsetsUtils.applySystemWindowInsetsPadding(view, false, false, false, true);
+
+        TextView nameView = view.findViewById(R.id.detail_name);
+        TextView descriptionView = view.findViewById(R.id.detail_description);
+        TextView speciesView = view.findViewById(R.id.detail_species);
+        TextView locationView = view.findViewById(R.id.detail_location_hint);
+        TextView acquiredView = view.findViewById(R.id.detail_acquired_at);
+
+        Bundle args = getArguments();
+        if (args != null) {
+            nameView.setText(args.getString(ARG_NAME, ""));
+            descriptionView.setText(args.getString(ARG_DESCRIPTION, ""));
+            speciesView.setText(args.getString(ARG_SPECIES, ""));
+            locationView.setText(args.getString(ARG_LOCATION, ""));
+            acquiredView.setText(args.getString(ARG_ACQUIRED, ""));
+        }
+
+        Button diaryButton = view.findViewById(R.id.detail_diary);
+        if (diaryButton != null) {
+            diaryButton.setOnClickListener(v -> {
+                if (callbacks != null) {
+                    callbacks.onDiaryButtonClicked();
+                }
+            });
+        }
+
+        Button environmentButton = view.findViewById(R.id.detail_environment_log);
+        if (environmentButton != null) {
+            environmentButton.setOnClickListener(v -> {
+                if (callbacks != null) {
+                    callbacks.onEnvironmentLogButtonClicked();
+                }
+            });
+        }
+
+        if (callbacks != null) {
+            callbacks.onDetailInfoViewsReady(new DetailViews(
+                view.findViewById(R.id.detail_ambient_value),
+                view.findViewById(R.id.detail_ambient_band),
+                view.findViewById(R.id.detail_camera_value),
+                view.findViewById(R.id.detail_camera_band),
+                view.findViewById(R.id.detail_ambient_column),
+                view.findViewById(R.id.detail_light_meter_spacer),
+                view.findViewById(R.id.detail_care_card),
+                view.findViewById(R.id.detail_care_list),
+                view.findViewById(R.id.detail_care_loading),
+                view.findViewById(R.id.detail_care_empty),
+                view.findViewById(R.id.detail_species_metadata_card),
+                view.findViewById(R.id.detail_light_card),
+                view.findViewById(R.id.detail_watering_section),
+                view.findViewById(R.id.detail_watering_frequency),
+                view.findViewById(R.id.detail_watering_soil),
+                view.findViewById(R.id.detail_watering_tolerance),
+                view.findViewById(R.id.detail_temperature_section),
+                view.findViewById(R.id.detail_temperature_range),
+                view.findViewById(R.id.detail_humidity_section),
+                view.findViewById(R.id.detail_humidity_range),
+                view.findViewById(R.id.detail_toxicity_section),
+                view.findViewById(R.id.detail_toxicity_text),
+                view.findViewById(R.id.detail_care_tips_section),
+                view.findViewById(R.id.detail_care_tips_text),
+                view.findViewById(R.id.detail_metadata_unavailable),
+                view.findViewById(R.id.detail_light_natural_value),
+                view.findViewById(R.id.detail_light_natural_timestamp),
+                view.findViewById(R.id.detail_light_artificial_value),
+                view.findViewById(R.id.detail_light_artificial_timestamp),
+                view.findViewById(R.id.detail_watering_icon),
+                view.findViewById(R.id.detail_temperature_icon),
+                view.findViewById(R.id.detail_humidity_icon),
+                view.findViewById(R.id.detail_toxicity_icon),
+                view.findViewById(R.id.detail_care_tips_icon)
+            ));
+        }
+    }
+
+    /**
+     * Callback interface implemented by {@link PlantDetailActivity}.
+     */
     public interface Callbacks {
         void onDetailInfoViewsReady(@NonNull DetailViews views);
 
@@ -37,7 +163,9 @@ public class PlantDetailInfoFragment extends Fragment {
         void onEnvironmentLogButtonClicked();
     }
 
-    /** Convenience holder for the light meter views used by the activity. */
+    /**
+     * Convenience holder for the light meter views used by the activity.
+     */
     public static class DetailViews {
         @Nullable
         public final TextView ambientValueView;
@@ -178,127 +306,6 @@ public class PlantDetailInfoFragment extends Fragment {
             this.humidityIconView = humidityIconView;
             this.toxicityIconView = toxicityIconView;
             this.careTipsIconView = careTipsIconView;
-        }
-    }
-
-    @Nullable
-    private Callbacks callbacks;
-
-    /** Creates a new instance configured with the provided details. */
-    public static PlantDetailInfoFragment newInstance(@NonNull String name,
-                                                      @NonNull String description,
-                                                      @NonNull String species,
-                                                      @NonNull String location,
-                                                      @NonNull String acquiredAt) {
-        PlantDetailInfoFragment fragment = new PlantDetailInfoFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_NAME, name);
-        args.putString(ARG_DESCRIPTION, description);
-        args.putString(ARG_SPECIES, species);
-        args.putString(ARG_LOCATION, location);
-        args.putString(ARG_ACQUIRED, acquiredAt);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        if (context instanceof Callbacks) {
-            callbacks = (Callbacks) context;
-        } else {
-            throw new IllegalStateException("Host activity must implement Callbacks");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        callbacks = null;
-        super.onDetach();
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_plant_detail_info, container, false);
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        InsetsUtils.applySystemWindowInsetsPadding(view, false, false, false, true);
-
-        TextView nameView = view.findViewById(R.id.detail_name);
-        TextView descriptionView = view.findViewById(R.id.detail_description);
-        TextView speciesView = view.findViewById(R.id.detail_species);
-        TextView locationView = view.findViewById(R.id.detail_location_hint);
-        TextView acquiredView = view.findViewById(R.id.detail_acquired_at);
-
-        Bundle args = getArguments();
-        if (args != null) {
-            nameView.setText(args.getString(ARG_NAME, ""));
-            descriptionView.setText(args.getString(ARG_DESCRIPTION, ""));
-            speciesView.setText(args.getString(ARG_SPECIES, ""));
-            locationView.setText(args.getString(ARG_LOCATION, ""));
-            acquiredView.setText(args.getString(ARG_ACQUIRED, ""));
-        }
-
-        Button diaryButton = view.findViewById(R.id.detail_diary);
-        if (diaryButton != null) {
-            diaryButton.setOnClickListener(v -> {
-                if (callbacks != null) {
-                    callbacks.onDiaryButtonClicked();
-                }
-            });
-        }
-
-        Button environmentButton = view.findViewById(R.id.detail_environment_log);
-        if (environmentButton != null) {
-            environmentButton.setOnClickListener(v -> {
-                if (callbacks != null) {
-                    callbacks.onEnvironmentLogButtonClicked();
-                }
-            });
-        }
-
-        if (callbacks != null) {
-            callbacks.onDetailInfoViewsReady(new DetailViews(
-                view.findViewById(R.id.detail_ambient_value),
-                view.findViewById(R.id.detail_ambient_band),
-                view.findViewById(R.id.detail_camera_value),
-                view.findViewById(R.id.detail_camera_band),
-                view.findViewById(R.id.detail_ambient_column),
-                view.findViewById(R.id.detail_light_meter_spacer),
-                view.findViewById(R.id.detail_care_card),
-                view.findViewById(R.id.detail_care_list),
-                view.findViewById(R.id.detail_care_loading),
-                view.findViewById(R.id.detail_care_empty),
-                view.findViewById(R.id.detail_species_metadata_card),
-                view.findViewById(R.id.detail_light_card),
-                view.findViewById(R.id.detail_watering_section),
-                view.findViewById(R.id.detail_watering_frequency),
-                view.findViewById(R.id.detail_watering_soil),
-                view.findViewById(R.id.detail_watering_tolerance),
-                view.findViewById(R.id.detail_temperature_section),
-                view.findViewById(R.id.detail_temperature_range),
-                view.findViewById(R.id.detail_humidity_section),
-                view.findViewById(R.id.detail_humidity_range),
-                view.findViewById(R.id.detail_toxicity_section),
-                view.findViewById(R.id.detail_toxicity_text),
-                view.findViewById(R.id.detail_care_tips_section),
-                view.findViewById(R.id.detail_care_tips_text),
-                view.findViewById(R.id.detail_metadata_unavailable),
-                view.findViewById(R.id.detail_light_natural_value),
-                view.findViewById(R.id.detail_light_natural_timestamp),
-                view.findViewById(R.id.detail_light_artificial_value),
-                view.findViewById(R.id.detail_light_artificial_timestamp),
-                view.findViewById(R.id.detail_watering_icon),
-                view.findViewById(R.id.detail_temperature_icon),
-                view.findViewById(R.id.detail_humidity_icon),
-                view.findViewById(R.id.detail_toxicity_icon),
-                view.findViewById(R.id.detail_care_tips_icon)
-            ));
         }
     }
 }

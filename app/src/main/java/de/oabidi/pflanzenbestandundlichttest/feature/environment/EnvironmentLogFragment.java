@@ -55,7 +55,8 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     public static final String EXTRA_ENTRY_ID = "entry_id";
     private static final String ARG_PLANT_ID = "plantId";
     private static final String STATE_PHOTO_URI = "state_photo_uri";
-
+    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
+    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
     private long plantId;
     @Nullable
     private PlantRepository repository;
@@ -65,7 +66,6 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     private EnvironmentLogPresenter presenter;
     @Nullable
     private EnvironmentLogAdapter adapter;
-
     @Nullable
     private TextInputLayout temperatureLayout;
     @Nullable
@@ -130,10 +130,10 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     private Uri currentPhotoUri;
     private boolean awaitingCaptureResult;
     private boolean captureResultDelivered;
-    private final NumberFormat naturalDliFormat = NumberFormat.getNumberInstance();
-    private final DateFormat naturalDliDateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT);
 
-    /** Displays the fragment inside the provided container. */
+    /**
+     * Displays the fragment inside the provided container.
+     */
     public static void show(@NonNull FragmentManager fragmentManager, int containerId, long plantId) {
         fragmentManager.beginTransaction()
             .setReorderingAllowed(true)
@@ -142,7 +142,9 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
             .commit();
     }
 
-    /** Creates a new instance configured for the supplied plant. */
+    /**
+     * Creates a new instance configured for the supplied plant.
+     */
     public static EnvironmentLogFragment newInstance(long plantId) {
         EnvironmentLogFragment fragment = new EnvironmentLogFragment();
         Bundle args = new Bundle();

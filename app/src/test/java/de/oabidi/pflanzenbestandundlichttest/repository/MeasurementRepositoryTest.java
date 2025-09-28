@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-    import android.content.SharedPreferences;
+import android.content.SharedPreferences;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,11 +20,11 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
-import de.oabidi.pflanzenbestandundlichttest.MeasurementDao;
-import de.oabidi.pflanzenbestandundlichttest.PlantDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.MeasurementDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantDao;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderDao;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTargetDao;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 
 @RunWith(RobolectricTestRunner.class)

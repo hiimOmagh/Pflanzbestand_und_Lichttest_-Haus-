@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget.FloatRange;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget.FloatRange;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 
 /**
@@ -247,17 +247,9 @@ public class CareRecommendationEngine {
         return newest.value - oldest.value;
     }
 
-    private static final class Sample {
-        final float value;
-        final long timestamp;
-
-        Sample(float value, long timestamp) {
-            this.value = value;
-            this.timestamp = timestamp;
-        }
-    }
-
-    /** Severity levels for recommendations. */
+    /**
+     * Severity levels for recommendations.
+     */
     public enum Severity {
         INFO(R.drawable.ic_care_trending_up),
         WARNING(R.drawable.ic_care_water_drop),
@@ -273,6 +265,16 @@ public class CareRecommendationEngine {
         @DrawableRes
         public int getDefaultIconResId() {
             return defaultIconResId;
+        }
+    }
+
+    private static final class Sample {
+        final float value;
+        final long timestamp;
+
+        Sample(float value, long timestamp) {
+            this.value = value;
+            this.timestamp = timestamp;
         }
     }
 
@@ -306,7 +308,9 @@ public class CareRecommendationEngine {
             this.message = message;
         }
 
-        /** Creates a recommendation backed by a string resource. */
+        /**
+         * Creates a recommendation backed by a string resource.
+         */
         @NonNull
         public static CareRecommendation createWithResource(@NonNull String id,
                                                             @NonNull Severity severity,
@@ -318,7 +322,9 @@ public class CareRecommendationEngine {
                 args != null && args.length > 0 ? args : null, null);
         }
 
-        /** Creates a recommendation with a pre-built message. */
+        /**
+         * Creates a recommendation with a pre-built message.
+         */
         @NonNull
         public static CareRecommendation createWithMessage(@NonNull String id,
                                                            @NonNull Severity severity,

@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.plant;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
@@ -31,7 +31,9 @@ public class DiaryEntry {
     private String note;
     private String photoUri;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public DiaryEntry() {
     }
 

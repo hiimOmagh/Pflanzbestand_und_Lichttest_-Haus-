@@ -22,13 +22,19 @@ import java.util.Set;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import de.oabidi.pflanzenbestandundlichttest.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
 import de.oabidi.pflanzenbestandundlichttest.R;
 
 /**
  * Very small custom view drawing a bar chart for PPFD values of measurements.
  */
 public class BarChartView extends View {
+    private static final int[] SERIES_COLORS = {
+        R.color.chartSeries1,
+        R.color.chartSeries2,
+        R.color.chartSeries3,
+        R.color.chartSeries4
+    };
     private final List<List<Float>> seriesValues = new ArrayList<>();
     private final List<String> seriesLabels = new ArrayList<>();
     private final List<Paint> seriesPaints = new ArrayList<>();
@@ -36,12 +42,6 @@ public class BarChartView extends View {
     private final Paint axisPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private float maxValue = 0f;
-    private static final int[] SERIES_COLORS = {
-        R.color.chartSeries1,
-        R.color.chartSeries2,
-        R.color.chartSeries3,
-        R.color.chartSeries4
-    };
 
     public BarChartView(Context context) {
         super(context);

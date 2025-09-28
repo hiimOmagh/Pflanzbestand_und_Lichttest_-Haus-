@@ -487,4 +487,7 @@
         <item quantity="one">1 schedule entry</item>
         <item quantity="other">%d schedule entries</item>
     </plurals>
+    <string name="label_known_ppfd">Known PPFD:</string>
+    <string name="label_ambient_factor">Ambient Factor:</string>
+    <string name="label_camera_factor">Camera Factor:</string>
 </resources>

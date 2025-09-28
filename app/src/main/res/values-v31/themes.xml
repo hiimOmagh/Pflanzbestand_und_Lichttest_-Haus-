@@ -2,5 +2,6 @@
 <resources>
     <!-- Dynamic color theme for Android 12 and above -->
     <style name="Theme.Pflanzenbestand.Dynamic" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar" />
+
     <style name="Theme.Pflanzenbestand" parent="Theme.Pflanzenbestand.Dynamic" />
 </resources>

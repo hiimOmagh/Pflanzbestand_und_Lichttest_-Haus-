@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.plant;
 
 import androidx.room.Dao;
 import androidx.room.Insert;

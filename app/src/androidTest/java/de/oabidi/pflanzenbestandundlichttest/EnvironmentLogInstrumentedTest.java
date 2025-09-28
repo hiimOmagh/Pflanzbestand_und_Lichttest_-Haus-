@@ -32,6 +32,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
 import static androidx.test.espresso.matcher.ViewMatchers.Visibility;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 /**
  * Instrumented test verifying environment logging and care recommendations integration.
  */

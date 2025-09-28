@@ -17,17 +17,25 @@ import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
  * Schedules reminder alarms using the {@link AlarmManager}.
  */
 public class ReminderScheduler {
-    /** Action used for reminder broadcasts. */
+    /**
+     * Action used for reminder broadcasts.
+     */
     public static final String ACTION_SHOW_REMINDER =
         "de.oabidi.pflanzenbestandundlichttest.action.SHOW_REMINDER";
 
-    /** Extra containing the message to display in the notification. */
+    /**
+     * Extra containing the message to display in the notification.
+     */
     public static final String EXTRA_MESSAGE = "extra_message";
 
-    /** Extra containing the reminder database identifier. */
+    /**
+     * Extra containing the reminder database identifier.
+     */
     public static final String EXTRA_ID = "extra_id";
 
-    /** Extra containing the associated plant identifier. */
+    /**
+     * Extra containing the associated plant identifier.
+     */
     public static final String EXTRA_PLANT_ID = "extra_plant_id";
 
     private ReminderScheduler() {

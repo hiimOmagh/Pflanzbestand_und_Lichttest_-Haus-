@@ -24,6 +24,10 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
 
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Tests DLI alert notifications are triggered when measurements stay

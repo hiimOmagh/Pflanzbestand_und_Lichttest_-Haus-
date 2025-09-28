@@ -8,7 +8,8 @@ platform's exact alarm policies.
 
 * **Android 12+ (API 31+)** – `ReminderScheduler` routes all requests through
   `ReminderWorkManager`, which uses WorkManager to enqueue one-time workers. When the app has the
-  special `SCHEDULE_EXACT_ALARM` permission, the worker requests an exact run time so it fires at the
+  special `SCHEDULE_EXACT_ALARM` permission, the worker requests an exact run time so it fires at
+  the
   user-selected minute. If the permission is unavailable, the job is marked expedited when the
   reminder is due immediately and otherwise runs as the next best effort window permitted by the OS.
 * **Android 11 and lower** – the scheduler continues to delegate to `AlarmManager` using
@@ -23,7 +24,8 @@ home-screen widgets remain in sync.
   revoke it during battery optimisations; `ReminderScheduler` automatically adapts without crashing
   and the app surfaces a Settings shortcut so users can re-enable it.
 * `POST_NOTIFICATIONS` (Android 13+) remains a runtime permission. When the user denies it the
-  `ReminderReceiver` queues the missed reminder and reschedules it for the next day, ensuring the task
+  `ReminderReceiver` queues the missed reminder and reschedules it for the next day, ensuring the
+  task
   is not forgotten.
 * `RECEIVE_BOOT_COMPLETED` lets the app reschedule any outstanding reminders after a reboot.
 

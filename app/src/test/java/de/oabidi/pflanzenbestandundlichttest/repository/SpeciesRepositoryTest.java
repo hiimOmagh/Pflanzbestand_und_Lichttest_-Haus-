@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTargetDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTargetDao;
 
 @RunWith(RobolectricTestRunner.class)
 public class SpeciesRepositoryTest extends RepositoryTestBase {

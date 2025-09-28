@@ -10,10 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.ProactiveAlertLog;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
@@ -69,7 +70,7 @@ public class ProactiveAlertManager {
                                                    @Nullable PlantProfile profile,
                                                    @Nullable List<EnvironmentEntry> entries) {
         List<ProactiveAlert> resolved = new ArrayList<>();
-        de.oabidi.pflanzenbestandundlichttest.DiaryEntry latestDiary =
+        DiaryEntry latestDiary =
             diaryRepository.getLatestDiaryEntrySync(plant.getId());
         List<ProactiveAlert> evaluations = evaluator.evaluate(plant, profile, entries, latestDiary,
             context.getResources());

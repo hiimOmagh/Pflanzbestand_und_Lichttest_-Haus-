@@ -65,8 +65,8 @@
                 android:id="@+id/input_zone_notes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minLines="2"
-                android:gravity="top" />
+                android:gravity="top"
+                android:minLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -78,9 +78,9 @@
                 android:id="@+id/input_led_profile"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none"
+                android:clickable="true"
                 android:focusable="true"
-                android:clickable="true" />
+                android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -92,8 +92,8 @@
                 android:id="@+id/input_acquired"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusable="true"
                 android:clickable="true"
+                android:focusable="true"
                 android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -106,8 +106,8 @@
                 android:id="@+id/input_notes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minLines="3"
-                android:gravity="top" />
+                android:gravity="top"
+                android:minLines="3" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <ImageView

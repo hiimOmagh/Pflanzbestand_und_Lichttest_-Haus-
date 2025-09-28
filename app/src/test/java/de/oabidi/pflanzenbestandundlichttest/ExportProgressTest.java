@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainPresenterImpl;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainView;
+
 /**
  * Verifies that export progress updates are forwarded to the view.
  */

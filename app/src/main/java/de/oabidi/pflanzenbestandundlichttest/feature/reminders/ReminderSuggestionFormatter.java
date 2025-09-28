@@ -7,10 +7,10 @@ import androidx.annotation.Nullable;
 
 import java.util.Locale;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Formats {@link SmartReminderEngine.Suggestion} instances for presentation to the user.

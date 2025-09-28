@@ -28,7 +28,7 @@ import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
 
-import de.oabidi.pflanzenbestandundlichttest.BulkReadDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
@@ -50,22 +50,6 @@ public class ExportManager {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor;
 
-    /** Supported export formats. */
-    public enum Format {
-        CSV,
-        JSON
-    }
-
-    /** Callback used to signal completion of the export operation. */
-    public interface Callback {
-        void onComplete(boolean success);
-    }
-
-    /** Callback used to report incremental progress. */
-    public interface ProgressCallback {
-        void onProgress(int current, int total);
-    }
-
     public ExportManager(@NonNull Context context, @NonNull PlantRepository repository) {
         this(context, repository, requireExecutor(context));
     }
@@ -83,6 +67,29 @@ public class ExportManager {
             throw new IllegalStateException("Application context does not implement ExecutorProvider");
         }
         return ((ExecutorProvider) appContext).getIoExecutor();
+    }
+
+    private static String escape(String value) {
+        if (value == null) {
+            return "";
+        }
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"")) {
+            escaped = "\"" + escaped + "\"";
+        }
+        return escaped;
+    }
+
+    private static String formatFloat(@Nullable Float value) {
+        return value != null ? Float.toString(value) : "";
+    }
+
+    private static String formatBoolean(@Nullable Boolean value) {
+        return value != null ? Boolean.toString(value) : "";
+    }
+
+    private static boolean isNullOrEmpty(@Nullable String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     public void export(@NonNull Uri uri, @NonNull Callback callback) {
@@ -285,7 +292,7 @@ public class ExportManager {
                 SpeciesTarget.WateringInfo watering = t.getWateringInfo();
                 SpeciesTarget.FloatRange temperature = t.getTemperatureRange();
                 SpeciesTarget.FloatRange humidity = t.getHumidityRange();
-                String[] columns = new String[] {
+                String[] columns = new String[]{
                     escape(t.getSpeciesKey()),
                     escape(t.getCommonName()),
                     escape(t.getScientificName()),
@@ -605,7 +612,7 @@ public class ExportManager {
 
     private String buildEnvironmentEntryCsvRow(File tempDir, EnvironmentEntry entry) throws IOException {
         String photoName = copyEnvironmentPhoto(tempDir, entry);
-        String[] columns = new String[] {
+        String[] columns = new String[]{
             Long.toString(entry.getId()),
             Long.toString(entry.getPlantId()),
             Long.toString(entry.getTimestamp()),
@@ -763,27 +770,26 @@ public class ExportManager {
         }
     }
 
-    private static String escape(String value) {
-        if (value == null) {
-            return "";
-        }
-        String escaped = value.replace("\"", "\"\"");
-        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"")) {
-            escaped = "\"" + escaped + "\"";
-        }
-        return escaped;
+    /**
+     * Supported export formats.
+     */
+    public enum Format {
+        CSV,
+        JSON
     }
 
-    private static String formatFloat(@Nullable Float value) {
-        return value != null ? Float.toString(value) : "";
+    /**
+     * Callback used to signal completion of the export operation.
+     */
+    public interface Callback {
+        void onComplete(boolean success);
     }
 
-    private static String formatBoolean(@Nullable Boolean value) {
-        return value != null ? Boolean.toString(value) : "";
-    }
-
-    private static boolean isNullOrEmpty(@Nullable String value) {
-        return value == null || value.trim().isEmpty();
+    /**
+     * Callback used to report incremental progress.
+     */
+    public interface ProgressCallback {
+        void onProgress(int current, int total);
     }
 
     private static class ExportData {

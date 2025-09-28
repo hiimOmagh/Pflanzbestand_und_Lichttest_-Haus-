@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.core.data.plant;
 
 import android.net.Uri;
 
@@ -40,12 +40,12 @@ public class Plant {
     /**
      * Constructs a plant with the provided attributes.
      *
-     * @param name           human readable name of the plant, must not be {@code null}
-     * @param description    optional description, may be {@code null}
-     * @param species        optional species information, may be {@code null}
-     * @param locationHint   optional location hint, may be {@code null}
+     * @param name            human readable name of the plant, must not be {@code null}
+     * @param description     optional description, may be {@code null}
+     * @param species         optional species information, may be {@code null}
+     * @param locationHint    optional location hint, may be {@code null}
      * @param acquiredAtEpoch acquisition time in milliseconds since the Unix epoch
-     * @param photoUri       optional reference to a photo, may be {@code null}
+     * @param photoUri        optional reference to a photo, may be {@code null}
      */
     @Ignore
     public Plant(@NonNull String name, String description, String species, String locationHint, long acquiredAtEpoch, Uri photoUri) {

@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-import de.oabidi.pflanzenbestandundlichttest.DiaryDao;
-import de.oabidi.pflanzenbestandundlichttest.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 
 /**

@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.main;
 
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +24,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
@@ -32,11 +35,15 @@ import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
  * Activity hosting the main navigation of the app.
  */
 public class MainActivity extends AppCompatActivity implements MainView {
-    /** Intent extra to navigate directly to the measurement screen. */
+    /**
+     * Intent extra to navigate directly to the measurement screen.
+     */
     public static final String EXTRA_NAVIGATE_MEASURE =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_MEASURE";
 
-    /** Intent extra to open the diary screen for logging tasks. */
+    /**
+     * Intent extra to open the diary screen for logging tasks.
+     */
     public static final String EXTRA_NAVIGATE_DIARY =
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_DIARY";
 
@@ -46,6 +53,27 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private ActivityResultLauncher<String[]> importLauncher;
     private MainPresenter presenter;
     private LinearProgressIndicator exportProgressBar;
+
+    /**
+     * Creates an intent pre-filled with the given plant's details.
+     *
+     * @param context the context used to create the intent
+     * @param plant   the plant whose details should be shown
+     * @return an intent for {@link PlantDetailActivity}
+     */
+    public static Intent createPlantDetailIntent(Context context,
+                                                 Plant plant) {
+        Intent intent = new Intent(context, PlantDetailActivity.class);
+        intent.putExtra("plantId", plant.getId());
+        intent.putExtra("name", plant.getName());
+        intent.putExtra("description", plant.getDescription());
+        intent.putExtra("species", plant.getSpecies());
+        intent.putExtra("locationHint", plant.getLocationHint());
+        intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
+        String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
+        intent.putExtra("photoUri", photo);
+        return intent;
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -126,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
     public void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
+
     @Override
     public void showLongToast(int messageResId) {
         Toast.makeText(this, messageResId, Toast.LENGTH_LONG).show();
@@ -197,26 +226,5 @@ public class MainActivity extends AppCompatActivity implements MainView {
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
             .show();
-    }
-
-    /**
-     * Creates an intent pre-filled with the given plant's details.
-     *
-     * @param context the context used to create the intent
-     * @param plant   the plant whose details should be shown
-     * @return an intent for {@link PlantDetailActivity}
-     */
-    public static Intent createPlantDetailIntent(Context context,
-                                                 Plant plant) {
-        Intent intent = new Intent(context, PlantDetailActivity.class);
-        intent.putExtra("plantId", plant.getId());
-        intent.putExtra("name", plant.getName());
-        intent.putExtra("description", plant.getDescription());
-        intent.putExtra("species", plant.getSpecies());
-        intent.putExtra("locationHint", plant.getLocationHint());
-        intent.putExtra("acquiredAtEpoch", plant.getAcquiredAtEpoch());
-        String photo = plant.getPhotoUri() != null ? plant.getPhotoUri().toString() : "";
-        intent.putExtra("photoUri", photo);
-        return intent;
     }
 }

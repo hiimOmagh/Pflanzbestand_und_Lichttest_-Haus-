@@ -3,66 +3,66 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditTextPreference
+        android:inputType="numberDecimal"
+        app:defaultValue="0.0185"
         app:key="calibration_factor"
         app:title="@string/pref_calibration_factor"
-        app:defaultValue="0.0185"
-        app:useSimpleSummaryProvider="true"
-        android:inputType="numberDecimal" />
+        app:useSimpleSummaryProvider="true" />
 
     <EditTextPreference
+        android:inputType="number"
+        app:defaultValue="10"
         app:key="sample_size"
         app:title="@string/pref_sample_size"
-        app:defaultValue="10"
-        app:useSimpleSummaryProvider="true"
-        android:inputType="number" />
+        app:useSimpleSummaryProvider="true" />
 
     <EditTextPreference
-        app:key="light_hours"
-        app:title="@string/pref_light_hours"
-        app:summary="@string/pref_light_hours_summary"
-        app:defaultValue="12"
-        app:useSimpleSummaryProvider="true"
+        android:hint="@string/hint_number"
         android:inputType="number"
-        android:hint="@string/hint_number" />
+        app:defaultValue="12"
+        app:key="light_hours"
+        app:summary="@string/pref_light_hours_summary"
+        app:title="@string/pref_light_hours"
+        app:useSimpleSummaryProvider="true" />
 
     <SwitchPreferenceCompat
-        app:key="dli_alerts_enabled"
-        app:title="@string/pref_dli_alerts"
         app:defaultValue="false"
-        app:summary="@string/pref_dli_alerts_summary" />
+        app:key="dli_alerts_enabled"
+        app:summary="@string/pref_dli_alerts_summary"
+        app:title="@string/pref_dli_alerts" />
 
     <SwitchPreferenceCompat
-        app:key="proactive_alerts_enabled"
-        app:title="@string/pref_proactive_alerts"
         app:defaultValue="true"
-        app:summary="@string/pref_proactive_alerts_summary" />
+        app:key="proactive_alerts_enabled"
+        app:summary="@string/pref_proactive_alerts_summary"
+        app:title="@string/pref_proactive_alerts" />
 
     <Preference
+        app:dependency="proactive_alerts_enabled"
         app:key="alert_history"
-        app:title="@string/pref_alert_history"
         app:summary="@string/pref_alert_history_summary"
-        app:dependency="proactive_alerts_enabled" />
+        app:title="@string/pref_alert_history" />
 
     <EditTextPreference
-        app:key="dli_alert_threshold"
-        app:title="@string/pref_dli_alert_threshold"
-        app:defaultValue="3"
-        app:useSimpleSummaryProvider="true"
-        app:dependency="dli_alerts_enabled"
         android:inputType="number"
-        app:summary="@string/pref_dli_alert_threshold_summary" />
+        app:defaultValue="3"
+        app:dependency="dli_alerts_enabled"
+        app:key="dli_alert_threshold"
+        app:summary="@string/pref_dli_alert_threshold_summary"
+        app:title="@string/pref_dli_alert_threshold"
+        app:useSimpleSummaryProvider="true" />
 
     <SwitchPreferenceCompat
-        app:key="auto_backup"
-        app:title="@string/pref_auto_backup"
         app:defaultValue="false"
-        app:summary="@string/pref_auto_backup_summary" />
+        app:key="auto_backup"
+        app:summary="@string/pref_auto_backup_summary"
+        app:title="@string/pref_auto_backup" />
 
     <ListPreference
-        app:key="theme"
-        app:title="@string/pref_theme"
+        app:defaultValue="system"
         app:entries="@array/theme_entries"
         app:entryValues="@array/theme_values"
-        app:defaultValue="system" />
+        app:key="theme"
+        app:title="@string/pref_theme" />
 
 </PreferenceScreen>

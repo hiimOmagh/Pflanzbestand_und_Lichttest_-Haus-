@@ -1,6 +1,13 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.light.measurement;
 
+import de.oabidi.pflanzenbestandundlichttest.CalibrationFragment;
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -44,8 +51,8 @@ import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
  * Fragment responsible for displaying live light measurements.
  */
 public class LightMeasurementFragment extends Fragment implements LightMeasurementPresenter.View {
+    private static final float DEFAULT_CALIBRATION = 0.0185f;
     private PlantRepository repository;
-
     private TextView luxRawView;
     private TextView luxView;
     private TextView ppfdView;
@@ -80,7 +87,6 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private boolean cameraPermissionDenied;
     private boolean cameraUnavailable;
     private boolean updatingStageSelection;
-    private static final float DEFAULT_CALIBRATION = 0.0185f;
 
     public static LightMeasurementFragment newInstance(PlantRepository repository) {
         LightMeasurementFragment fragment = new LightMeasurementFragment();
@@ -225,7 +231,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         });
 
         calibrateButton.setOnClickListener(v -> navigateToCalibration());
-        
+
         saveMeasurementButton.setOnClickListener(v -> {
             if (selectedPlantId != -1) {
                 Measurement m = new Measurement(selectedPlantId, System.currentTimeMillis(), lastLux, lastPpfd, lastDli, null);

@@ -14,8 +14,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-/** Tests for {@link LedProfileUtils}. */
+/**
+ * Tests for {@link LedProfileUtils}.
+ */
 public class LedProfileUtilsTest {
+
+    private static LedProfile.ScheduleEntry entry(String start, String end, int intensity) {
+        return new LedProfile.ScheduleEntry(start, end, intensity);
+    }
 
     @Test
     public void computeWeightedPhotonHours_emptyScheduleReturnsZero() {
@@ -77,9 +83,5 @@ public class LedProfileUtilsTest {
         assertEquals(LightMath.dliFromPpfd(200f, expectedPhotonHours), estimate.getCameraDli(), 0.0001f);
         assertTrue(estimate.isAmbientUsingFallback());
         assertTrue(estimate.isCameraUsingFallback());
-    }
-
-    private static LedProfile.ScheduleEntry entry(String start, String end, int intensity) {
-        return new LedProfile.ScheduleEntry(start, end, intensity);
     }
 }

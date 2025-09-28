@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Calculates smart reminder intervals based on species metadata and recent environment readings.
@@ -34,85 +34,6 @@ public class SmartReminderEngine {
         "(?:every|per)?\\s*(\\d+)(?:\\s*[-to]+\\s*(\\d+))?\\s*(day|days|week|weeks|month|months)",
         Pattern.CASE_INSENSITIVE
     );
-
-    public enum BaselineSource {
-        SPECIES_FREQUENCY,
-        SPECIES_TOLERANCE,
-        CATEGORY,
-        DEFAULT
-    }
-
-    public enum EnvironmentSignal {
-        DRY,
-        WET,
-        BALANCED,
-        NO_DATA
-    }
-
-    /**
-     * Result of the smart reminder calculation.
-     */
-    public static final class Suggestion {
-        private final int baselineDays;
-        private final int suggestedDays;
-        private final int adjustmentDays;
-        @NonNull
-        private final BaselineSource baselineSource;
-        @NonNull
-        private final EnvironmentSignal environmentSignal;
-        @Nullable
-        private final Float averageSoilMoisture;
-        @Nullable
-        private final Float latestSoilMoisture;
-
-        Suggestion(int baselineDays,
-                   int suggestedDays,
-                   int adjustmentDays,
-                   @NonNull BaselineSource baselineSource,
-                   @NonNull EnvironmentSignal environmentSignal,
-                   @Nullable Float averageSoilMoisture,
-                   @Nullable Float latestSoilMoisture) {
-            this.baselineDays = baselineDays;
-            this.suggestedDays = suggestedDays;
-            this.adjustmentDays = adjustmentDays;
-            this.baselineSource = baselineSource;
-            this.environmentSignal = environmentSignal;
-            this.averageSoilMoisture = averageSoilMoisture;
-            this.latestSoilMoisture = latestSoilMoisture;
-        }
-
-        public int getBaselineDays() {
-            return baselineDays;
-        }
-
-        public int getSuggestedDays() {
-            return suggestedDays;
-        }
-
-        public int getAdjustmentDays() {
-            return adjustmentDays;
-        }
-
-        @NonNull
-        public BaselineSource getBaselineSource() {
-            return baselineSource;
-        }
-
-        @NonNull
-        public EnvironmentSignal getEnvironmentSignal() {
-            return environmentSignal;
-        }
-
-        @Nullable
-        public Float getAverageSoilMoisture() {
-            return averageSoilMoisture;
-        }
-
-        @Nullable
-        public Float getLatestSoilMoisture() {
-            return latestSoilMoisture;
-        }
-    }
 
     /**
      * Generates a reminder suggestion for the provided plant profile and environment readings.
@@ -391,5 +312,84 @@ public class SmartReminderEngine {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    public enum BaselineSource {
+        SPECIES_FREQUENCY,
+        SPECIES_TOLERANCE,
+        CATEGORY,
+        DEFAULT
+    }
+
+    public enum EnvironmentSignal {
+        DRY,
+        WET,
+        BALANCED,
+        NO_DATA
+    }
+
+    /**
+     * Result of the smart reminder calculation.
+     */
+    public static final class Suggestion {
+        private final int baselineDays;
+        private final int suggestedDays;
+        private final int adjustmentDays;
+        @NonNull
+        private final BaselineSource baselineSource;
+        @NonNull
+        private final EnvironmentSignal environmentSignal;
+        @Nullable
+        private final Float averageSoilMoisture;
+        @Nullable
+        private final Float latestSoilMoisture;
+
+        Suggestion(int baselineDays,
+                   int suggestedDays,
+                   int adjustmentDays,
+                   @NonNull BaselineSource baselineSource,
+                   @NonNull EnvironmentSignal environmentSignal,
+                   @Nullable Float averageSoilMoisture,
+                   @Nullable Float latestSoilMoisture) {
+            this.baselineDays = baselineDays;
+            this.suggestedDays = suggestedDays;
+            this.adjustmentDays = adjustmentDays;
+            this.baselineSource = baselineSource;
+            this.environmentSignal = environmentSignal;
+            this.averageSoilMoisture = averageSoilMoisture;
+            this.latestSoilMoisture = latestSoilMoisture;
+        }
+
+        public int getBaselineDays() {
+            return baselineDays;
+        }
+
+        public int getSuggestedDays() {
+            return suggestedDays;
+        }
+
+        public int getAdjustmentDays() {
+            return adjustmentDays;
+        }
+
+        @NonNull
+        public BaselineSource getBaselineSource() {
+            return baselineSource;
+        }
+
+        @NonNull
+        public EnvironmentSignal getEnvironmentSignal() {
+            return environmentSignal;
+        }
+
+        @Nullable
+        public Float getAverageSoilMoisture() {
+            return averageSoilMoisture;
+        }
+
+        @Nullable
+        public Float getLatestSoilMoisture() {
+            return latestSoilMoisture;
+        }
     }
 }

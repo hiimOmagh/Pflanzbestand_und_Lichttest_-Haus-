@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -19,7 +20,9 @@ import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -32,7 +35,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
@@ -47,6 +50,24 @@ import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileListFrag
 public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantClickListener, PlantListPresenter.View {
     private PlantRepository repository;
     private PlantListPresenter presenter;
+    private final ActivityResultLauncher<String> exportLauncher =
+        registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
+            if (uri != null) {
+                presenter.startExport(uri);
+            } else if (isAdded()) {
+                Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
+            }
+        });
+    private final ActivityResultLauncher<String[]> importLauncher =
+        registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+            if (uri != null) {
+                if (isAdded()) {
+                    showImportChoiceDialog(uri);
+                }
+            } else if (isAdded()) {
+                Toast.makeText(requireContext(), R.string.import_failure, Toast.LENGTH_SHORT).show();
+            }
+        });
     private PlantAdapter adapter;
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
@@ -91,26 +112,6 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             progressBar.setProgress(0);
         }
     }
-    
-    private final ActivityResultLauncher<String> exportLauncher =
-        registerForActivityResult(new ActivityResultContracts.CreateDocument("application/zip"), uri -> {
-            if (uri != null) {
-                presenter.startExport(uri);
-            } else if (isAdded()) {
-                Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
-            }
-        });
-
-    private final ActivityResultLauncher<String[]> importLauncher =
-        registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
-            if (uri != null) {
-                if (isAdded()) {
-                    showImportChoiceDialog(uri);
-                }
-            } else if (isAdded()) {
-                Toast.makeText(requireContext(), R.string.import_failure, Toast.LENGTH_SHORT).show();
-            }
-        });
 
     @Override
     public void requestExport(String fileName) {

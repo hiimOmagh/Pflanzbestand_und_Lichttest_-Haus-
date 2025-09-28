@@ -14,6 +14,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 @RunWith(RobolectricTestRunner.class)
 public class MainActivityInflationTest {
     @Test

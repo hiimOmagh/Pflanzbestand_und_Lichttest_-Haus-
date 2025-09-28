@@ -26,6 +26,8 @@ import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static org.hamcrest.Matchers.not;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+
 /**
  * Instrumented tests covering basic plant CRUD operations and diary entries.
  */

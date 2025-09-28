@@ -56,7 +56,8 @@ public class GalleryRepositoryTest extends RepositoryTestBase {
     public void addPlantPhoto_withNullSourceReportsError() throws Exception {
         AtomicReference<Exception> error = new AtomicReference<>();
 
-        repository.addPlantPhoto(1L, null, photo -> { }, e -> {
+        repository.addPlantPhoto(1L, null, photo -> {
+        }, e -> {
             error.set(e);
         });
 

@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.main;
 
 import android.Manifest;
 import android.content.Context;
@@ -11,7 +11,16 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
+
+import de.oabidi.pflanzenbestandundlichttest.DiaryFragment;
+import de.oabidi.pflanzenbestandundlichttest.OnboardingFragment;
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.StatsFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
+import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderListFragment;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantListFragment;
 
 import java.util.concurrent.ExecutorService;
 

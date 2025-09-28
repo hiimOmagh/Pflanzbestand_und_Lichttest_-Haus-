@@ -49,6 +49,21 @@ public class PlantPhotoLoader {
         };
     }
 
+    private static int calculateSampleSize(@NonNull BitmapFactory.Options options) {
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > PlantPhotoLoader.MAX_TEXTURE_SIZE || width > PlantPhotoLoader.MAX_TEXTURE_SIZE) {
+            int halfHeight = height / 2;
+            int halfWidth = width / 2;
+            while ((halfHeight / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE
+                && (halfWidth / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE) {
+                inSampleSize *= 2;
+            }
+        }
+        return Math.max(1, inSampleSize);
+    }
+
     /**
      * Loads the provided photo asynchronously into the given target view.
      */
@@ -128,20 +143,5 @@ public class PlantPhotoLoader {
         } catch (IOException | SecurityException e) {
             return null;
         }
-    }
-
-    private static int calculateSampleSize(@NonNull BitmapFactory.Options options) {
-        int height = options.outHeight;
-        int width = options.outWidth;
-        int inSampleSize = 1;
-        if (height > PlantPhotoLoader.MAX_TEXTURE_SIZE || width > PlantPhotoLoader.MAX_TEXTURE_SIZE) {
-            int halfHeight = height / 2;
-            int halfWidth = width / 2;
-            while ((halfHeight / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE
-                && (halfWidth / inSampleSize) >= PlantPhotoLoader.MAX_TEXTURE_SIZE) {
-                inSampleSize *= 2;
-            }
-        }
-        return Math.max(1, inSampleSize);
     }
 }

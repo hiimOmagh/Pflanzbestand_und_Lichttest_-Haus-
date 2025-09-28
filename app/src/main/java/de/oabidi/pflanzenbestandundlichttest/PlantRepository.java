@@ -13,6 +13,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import de.oabidi.pflanzenbestandundlichttest.CareRecommendationEngine.CareRecommendation;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.BulkReadDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.MeasurementDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.PlantDao;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.Reminder;
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
@@ -68,6 +76,10 @@ import java.util.regex.Pattern;
  * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository implements CareRecommendationDelegate {
+    private static final String TAG = "PlantRepository";
+    private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
+    private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
+    private static final int CARE_RECOMMENDATION_ENTRY_LIMIT = 30;
     private final PlantDao plantDao;
     private final PlantCalibrationDao plantCalibrationDao;
     private final LedProfileDao ledProfileDao;
@@ -90,19 +102,6 @@ public class PlantRepository implements CareRecommendationDelegate {
     private final SmartReminderEngine smartReminderEngine = new SmartReminderEngine();
     private final ReminderSuggestionFormatter reminderSuggestionFormatter;
     private final ConcurrentHashMap<Long, CopyOnWriteArrayList<CareRecommendationListener>> careRecommendationListeners = new ConcurrentHashMap<>();
-    private static final String TAG = "PlantRepository";
-    private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
-    private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
-    private static final int CARE_RECOMMENDATION_ENTRY_LIMIT = 30;
-
-    // Helper method to get ExecutorService and perform checks
-    private static ExecutorService getExecutorFromProvider(Context originalContext) {
-        Context appContext = originalContext.getApplicationContext();
-        if (!(appContext instanceof ExecutorProvider)) {
-            throw new IllegalStateException("Application context does not implement ExecutorProvider");
-        }
-        return ((ExecutorProvider) appContext).getIoExecutor();
-    }
 
     /**
      * Creates a new repository instance.
@@ -146,6 +145,15 @@ public class PlantRepository implements CareRecommendationDelegate {
         reminderSuggestionFormatter = new ReminderSuggestionFormatter(this.context.getResources());
     }
 
+    // Helper method to get ExecutorService and perform checks
+    private static ExecutorService getExecutorFromProvider(Context originalContext) {
+        Context appContext = originalContext.getApplicationContext();
+        if (!(appContext instanceof ExecutorProvider)) {
+            throw new IllegalStateException("Application context does not implement ExecutorProvider");
+        }
+        return ((ExecutorProvider) appContext).getIoExecutor();
+    }
+
     public MeasurementRepository measurementRepository() {
         return measurementRepository;
     }
@@ -178,7 +186,9 @@ public class PlantRepository implements CareRecommendationDelegate {
         return naturalLightRepository;
     }
 
-    /** Records the last known coarse/fine location for later background usage. */
+    /**
+     * Records the last known coarse/fine location for later background usage.
+     */
     public void updateLastKnownLocation(double latitude, double longitude, float accuracy, long timestamp) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putLong(SettingsKeys.KEY_LAST_KNOWN_LATITUDE, Double.doubleToRawLongBits(latitude));
@@ -188,7 +198,9 @@ public class PlantRepository implements CareRecommendationDelegate {
         editor.apply();
     }
 
-    /** Returns the most recent location fix recorded by {@link #updateLastKnownLocation}. */
+    /**
+     * Returns the most recent location fix recorded by {@link #updateLastKnownLocation}.
+     */
     @Nullable
     public LastKnownLocation getLastKnownLocation() {
         if (!sharedPreferences.contains(SettingsKeys.KEY_LAST_KNOWN_LATITUDE)
@@ -205,70 +217,53 @@ public class PlantRepository implements CareRecommendationDelegate {
         return new LastKnownLocation(latitude, longitude, accuracy, timestamp);
     }
 
-    /** Lightweight holder describing a cached location fix. */
-    public static final class LastKnownLocation {
-        private final double latitude;
-        private final double longitude;
-        private final float accuracy;
-        private final long timestamp;
-
-        LastKnownLocation(double latitude, double longitude, float accuracy, long timestamp) {
-            this.latitude = latitude;
-            this.longitude = longitude;
-            this.accuracy = accuracy;
-            this.timestamp = timestamp;
-        }
-
-        public double getLatitude() {
-            return latitude;
-        }
-
-        public double getLongitude() {
-            return longitude;
-        }
-
-        public float getAccuracy() {
-            return accuracy;
-        }
-
-        public long getTimestamp() {
-            return timestamp;
-        }
-    }
-
-    /** Exposes bulk read operations for export and import managers. */
+    /**
+     * Exposes bulk read operations for export and import managers.
+     */
     public BulkReadDao bulkDao() {
         return bulkDao;
     }
 
-    /** Returns all LED profiles stored in the database. */
+    /**
+     * Returns all LED profiles stored in the database.
+     */
     public void getLedProfiles(Consumer<List<LedProfile>> callback) {
         getLedProfiles(callback, null);
     }
 
-    /** Returns all LED profiles stored in the database. */
+    /**
+     * Returns all LED profiles stored in the database.
+     */
     public void getLedProfiles(Consumer<List<LedProfile>> callback,
                                Consumer<Exception> errorCallback) {
         queryAsync(() -> ledProfileDao.getAll(), callback, errorCallback);
     }
 
-    /** Loads a single LED profile by its identifier. */
+    /**
+     * Loads a single LED profile by its identifier.
+     */
     public void getLedProfile(long profileId, Consumer<LedProfile> callback) {
         getLedProfile(profileId, callback, null);
     }
 
-    /** Loads a single LED profile by its identifier. */
+    /**
+     * Loads a single LED profile by its identifier.
+     */
     public void getLedProfile(long profileId, Consumer<LedProfile> callback,
                               Consumer<Exception> errorCallback) {
         queryAsync(() -> ledProfileDao.findById(profileId), callback, errorCallback);
     }
 
-    /** Persists a new LED profile and emits the stored instance including its identifier. */
+    /**
+     * Persists a new LED profile and emits the stored instance including its identifier.
+     */
     public void createLedProfile(LedProfile profile, Consumer<LedProfile> callback) {
         createLedProfile(profile, callback, null);
     }
 
-    /** Persists a new LED profile and emits the stored instance including its identifier. */
+    /**
+     * Persists a new LED profile and emits the stored instance including its identifier.
+     */
     public void createLedProfile(LedProfile profile, Consumer<LedProfile> callback,
                                  Consumer<Exception> errorCallback) {
         Runnable completion = callback == null ? null : () -> callback.accept(profile);
@@ -278,23 +273,31 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, completion, errorCallback);
     }
 
-    /** Updates an existing LED profile. */
+    /**
+     * Updates an existing LED profile.
+     */
     public void updateLedProfile(LedProfile profile, Runnable callback) {
         updateLedProfile(profile, callback, null);
     }
 
-    /** Updates an existing LED profile. */
+    /**
+     * Updates an existing LED profile.
+     */
     public void updateLedProfile(LedProfile profile, Runnable callback,
                                  Consumer<Exception> errorCallback) {
         runAsync(() -> ledProfileDao.update(profile), callback, errorCallback);
     }
 
-    /** Deletes the provided LED profile and detaches it from any assigned plants. */
+    /**
+     * Deletes the provided LED profile and detaches it from any assigned plants.
+     */
     public void deleteLedProfile(LedProfile profile, Runnable callback) {
         deleteLedProfile(profile, callback, null);
     }
 
-    /** Deletes the provided LED profile and detaches it from any assigned plants. */
+    /**
+     * Deletes the provided LED profile and detaches it from any assigned plants.
+     */
     public void deleteLedProfile(LedProfile profile, Runnable callback,
                                  Consumer<Exception> errorCallback) {
         runAsync(() -> {
@@ -314,12 +317,16 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, callback, errorCallback);
     }
 
-    /** Assigns the provided LED profile to the given plant. */
+    /**
+     * Assigns the provided LED profile to the given plant.
+     */
     public void assignLedProfileToPlant(long plantId, long profileId, Runnable callback) {
         assignLedProfileToPlant(plantId, profileId, callback, null);
     }
 
-    /** Assigns the provided LED profile to the given plant. */
+    /**
+     * Assigns the provided LED profile to the given plant.
+     */
     public void assignLedProfileToPlant(long plantId, long profileId, Runnable callback,
                                         Consumer<Exception> errorCallback) {
         runAsync(() -> {
@@ -337,12 +344,16 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, callback, errorCallback);
     }
 
-    /** Removes any LED profile assignment from the specified plant. */
+    /**
+     * Removes any LED profile assignment from the specified plant.
+     */
     public void unassignLedProfileFromPlant(long plantId, Runnable callback) {
         unassignLedProfileFromPlant(plantId, callback, null);
     }
 
-    /** Removes any LED profile assignment from the specified plant. */
+    /**
+     * Removes any LED profile assignment from the specified plant.
+     */
     public void unassignLedProfileFromPlant(long plantId, Runnable callback,
                                             Consumer<Exception> errorCallback) {
         runAsync(() -> {
@@ -357,12 +368,16 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, callback, errorCallback);
     }
 
-    /** Returns the LED profile currently assigned to the specified plant, if any. */
+    /**
+     * Returns the LED profile currently assigned to the specified plant, if any.
+     */
     public void getLedProfileForPlant(long plantId, Consumer<LedProfile> callback) {
         getLedProfileForPlant(plantId, callback, null);
     }
 
-    /** Returns the LED profile currently assigned to the specified plant, if any. */
+    /**
+     * Returns the LED profile currently assigned to the specified plant, if any.
+     */
     public void getLedProfileForPlant(long plantId, Consumer<LedProfile> callback,
                                       Consumer<Exception> errorCallback) {
         PlantDatabase.databaseWriteExecutor.execute(() -> {
@@ -427,13 +442,17 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
-    /** Stores calibration factors for the specified plant respecting LED profile assignments. */
+    /**
+     * Stores calibration factors for the specified plant respecting LED profile assignments.
+     */
     public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
                                            Runnable callback) {
         saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
     }
 
-    /** Stores calibration factors for the specified plant respecting LED profile assignments. */
+    /**
+     * Stores calibration factors for the specified plant respecting LED profile assignments.
+     */
     public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
                                            Runnable callback, Consumer<Exception> errorCallback) {
         runAsync(() -> {
@@ -463,13 +482,17 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, callback, errorCallback);
     }
 
-    /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer)} instead. */
+    /**
+     * @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer)} instead.
+     */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
         getPlantCalibration(plantId, callback, null);
     }
 
-    /** @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer, Consumer)} instead. */
+    /**
+     * @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer, Consumer)} instead.
+     */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
                                     Consumer<Exception> errorCallback) {
@@ -489,14 +512,18 @@ public class PlantRepository implements CareRecommendationDelegate {
         }, errorCallback);
     }
 
-    /** @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable)} instead. */
+    /**
+     * @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable)} instead.
+     */
     @Deprecated
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback) {
         saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
     }
 
-    /** @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable, Consumer)} instead. */
+    /**
+     * @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable, Consumer)} instead.
+     */
     @Deprecated
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback, Consumer<Exception> errorCallback) {
@@ -703,11 +730,11 @@ public class PlantRepository implements CareRecommendationDelegate {
         return SettingsKeys.KEY_DISMISSED_CARE_RECOMMENDATIONS + "_" + plantId;
     }
 
-    // ... (rest of the class remains the same) ...
-
     public void getAllPlants(Consumer<List<Plant>> callback) {
         getAllPlants(callback, null);
     }
+
+    // ... (rest of the class remains the same) ...
 
     public List<Plant> getAllPlantsSync() {
         return plantDao.getAll();
@@ -982,7 +1009,9 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
-    /** Registers a listener that will receive recommendation updates for the given plant. */
+    /**
+     * Registers a listener that will receive recommendation updates for the given plant.
+     */
     public void registerCareRecommendationListener(long plantId, CareRecommendationListener listener) {
         if (listener == null) {
             return;
@@ -992,7 +1021,9 @@ public class PlantRepository implements CareRecommendationDelegate {
             .addIfAbsent(listener);
     }
 
-    /** Unregisters a previously registered care recommendation listener. */
+    /**
+     * Unregisters a previously registered care recommendation listener.
+     */
     public void unregisterCareRecommendationListener(long plantId, CareRecommendationListener listener) {
         if (listener == null) {
             return;
@@ -1006,12 +1037,16 @@ public class PlantRepository implements CareRecommendationDelegate {
         }
     }
 
-    /** Marks a recommendation as dismissed for the supplied plant. */
+    /**
+     * Marks a recommendation as dismissed for the supplied plant.
+     */
     public void dismissCareRecommendation(long plantId, String recommendationId) {
         dismissCareRecommendation(plantId, recommendationId, null, null);
     }
 
-    /** Marks a recommendation as dismissed for the supplied plant. */
+    /**
+     * Marks a recommendation as dismissed for the supplied plant.
+     */
     public void dismissCareRecommendation(long plantId, String recommendationId,
                                           @Nullable Runnable callback,
                                           @Nullable Consumer<Exception> errorCallback) {
@@ -1025,12 +1060,16 @@ public class PlantRepository implements CareRecommendationDelegate {
             careRecommendationRefreshSupplier(plantId), callback, errorCallback);
     }
 
-    /** Removes a dismissal marker for the supplied recommendation. */
+    /**
+     * Removes a dismissal marker for the supplied recommendation.
+     */
     public void restoreCareRecommendation(long plantId, String recommendationId) {
         restoreCareRecommendation(plantId, recommendationId, null, null);
     }
 
-    /** Removes a dismissal marker for the supplied recommendation. */
+    /**
+     * Removes a dismissal marker for the supplied recommendation.
+     */
     public void restoreCareRecommendation(long plantId, String recommendationId,
                                           @Nullable Runnable callback,
                                           @Nullable Consumer<Exception> errorCallback) {
@@ -1387,12 +1426,51 @@ public class PlantRepository implements CareRecommendationDelegate {
         diaryRepository.searchDiaryEntries(plantId, query, callback, errorCallback);
     }
 
-    /** Listener receiving automatic care recommendation updates. */
+    /**
+     * Listener receiving automatic care recommendation updates.
+     */
     public interface CareRecommendationListener {
-        /** Invoked when a new list of care recommendations is available. */
+        /**
+         * Invoked when a new list of care recommendations is available.
+         */
         void onCareRecommendationsUpdated(long plantId, List<CareRecommendation> recommendations);
 
-        /** Invoked when the recommendation engine encounters an error. */
+        /**
+         * Invoked when the recommendation engine encounters an error.
+         */
         void onCareRecommendationsError(long plantId, Exception exception);
+    }
+
+    /**
+     * Lightweight holder describing a cached location fix.
+     */
+    public static final class LastKnownLocation {
+        private final double latitude;
+        private final double longitude;
+        private final float accuracy;
+        private final long timestamp;
+
+        LastKnownLocation(double latitude, double longitude, float accuracy, long timestamp) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.accuracy = accuracy;
+            this.timestamp = timestamp;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public float getAccuracy() {
+            return accuracy;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
     }
 }

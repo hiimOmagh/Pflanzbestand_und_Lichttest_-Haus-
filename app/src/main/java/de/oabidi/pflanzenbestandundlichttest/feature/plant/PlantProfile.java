@@ -7,10 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget.FloatRange;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget.StageTarget;
-import de.oabidi.pflanzenbestandundlichttest.SpeciesTarget.WateringInfo;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 
 /**
  * Immutable snapshot of a {@link SpeciesTarget} with all nested structures fully populated.

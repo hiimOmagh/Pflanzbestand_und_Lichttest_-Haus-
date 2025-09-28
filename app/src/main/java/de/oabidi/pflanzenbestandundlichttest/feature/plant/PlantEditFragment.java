@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Intent;
 import android.app.DatePickerDialog;
 import android.net.Uri;
@@ -31,7 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
@@ -57,7 +58,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private static final String ARG_ZONE_NOTES = "zone_notes";
     private static final String ARG_LED_PROFILE_ID = "led_profile_id";
     private static final String STATE_LED_PROFILE_ID = "state_led_profile_id";
-
+    private final List<LedProfile> ledProfiles = new ArrayList<>();
     private TextInputEditText nameInput;
     private TextInputEditText speciesInput;
     private TextInputEditText locationInput;
@@ -67,18 +68,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
     private TextInputEditText zoneNotesInput;
     private MaterialAutoCompleteTextView ledProfileInput;
     private ImageView photoView;
-
     private Uri photoUri;
-    private long acquiredEpoch = System.currentTimeMillis();
-    private PlantEditPresenter presenter;
-    private PlantRepository repository;
-    private String[] zoneOrientationValues;
-    private String[] zoneOrientationLabels;
-    private final List<LedProfile> ledProfiles = new ArrayList<>();
-    private ArrayAdapter<String> ledProfileAdapter;
-    @Nullable
-    private Long selectedLedProfileId;
-
     private final ActivityResultLauncher<String> photoPicker =
         registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
             if (uri != null) {
@@ -88,6 +78,14 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
                 photoView.setImageURI(uri);
             }
         });
+    private long acquiredEpoch = System.currentTimeMillis();
+    private PlantEditPresenter presenter;
+    private PlantRepository repository;
+    private String[] zoneOrientationValues;
+    private String[] zoneOrientationLabels;
+    private ArrayAdapter<String> ledProfileAdapter;
+    @Nullable
+    private Long selectedLedProfileId;
 
     public static PlantEditFragment newInstance(@Nullable Plant plant, PlantRepository repository) {
         PlantEditFragment fragment = new PlantEditFragment();
@@ -109,6 +107,16 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             fragment.setArguments(args);
         }
         return fragment;
+    }
+
+    private static String getText(TextInputEditText editText) {
+        CharSequence cs = editText.getText();
+        return cs != null ? cs.toString().trim() : "";
+    }
+
+    private static String getAutoCompleteText(MaterialAutoCompleteTextView view) {
+        CharSequence cs = view.getText();
+        return cs != null ? cs.toString().trim() : "";
     }
 
     @Override
@@ -242,11 +250,6 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         presenter.loadLedProfiles();
     }
 
-    private static String getText(TextInputEditText editText) {
-        CharSequence cs = editText.getText();
-        return cs != null ? cs.toString().trim() : "";
-    }
-
     private void showDatePicker() {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(acquiredEpoch);
@@ -271,6 +274,7 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         FragmentManager manager = getParentFragmentManager();
         PlantPhotoCaptureFragment.show(manager, android.R.id.content);
     }
+
     @Override
     public String getName() {
         return getText(nameInput);
@@ -480,10 +484,5 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
             }
         }
         return -1;
-    }
-
-    private static String getAutoCompleteText(MaterialAutoCompleteTextView view) {
-        CharSequence cs = view.getText();
-        return cs != null ? cs.toString().trim() : "";
     }
 }

@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+
 /**
  * Tests for {@link StatsPresenter} verifying that the injected repository is used.
  */

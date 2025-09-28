@@ -19,12 +19,6 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.PlantPhoto;
  */
 public class PlantPhotoAdapter extends ListAdapter<PlantPhoto, PlantPhotoAdapter.ViewHolder> {
 
-    public interface Callbacks {
-        void onPhotoClicked(@NonNull PlantPhoto photo);
-
-        void onPhotoLongClicked(@NonNull PlantPhoto photo);
-    }
-
     private static final DiffUtil.ItemCallback<PlantPhoto> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<PlantPhoto>() {
             @Override
@@ -39,10 +33,8 @@ public class PlantPhotoAdapter extends ListAdapter<PlantPhoto, PlantPhotoAdapter
                     && oldItem.getUri().equals(newItem.getUri());
             }
         };
-
     private final PlantPhotoLoader loader;
     private final Callbacks callbacks;
-
     public PlantPhotoAdapter(@NonNull PlantPhotoLoader loader, @NonNull Callbacks callbacks) {
         super(DIFF_CALLBACK);
         setHasStableIds(true);
@@ -74,6 +66,12 @@ public class PlantPhotoAdapter extends ListAdapter<PlantPhoto, PlantPhotoAdapter
     public void onViewRecycled(@NonNull ViewHolder holder) {
         super.onViewRecycled(holder);
         holder.recycle();
+    }
+
+    public interface Callbacks {
+        void onPhotoClicked(@NonNull PlantPhoto photo);
+
+        void onPhotoLongClicked(@NonNull PlantPhoto photo);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

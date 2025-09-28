@@ -15,6 +15,9 @@ import org.robolectric.annotation.Config;
 
 import java.util.concurrent.Future;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.db.PlantDatabase;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+
 /**
  * Tests confirming that the database resets instead of performing incremental migrations.
  */

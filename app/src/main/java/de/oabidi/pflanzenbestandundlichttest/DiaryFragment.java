@@ -1,6 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,7 +18,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.appcompat.widget.SearchView;
+
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,6 +36,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+
 import android.widget.Toast;
 
 import de.oabidi.pflanzenbestandundlichttest.core.system.reminder.ReminderSuggestion;
@@ -217,6 +222,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
 
         loadEntries();
     }
+
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.diary_menu, menu);

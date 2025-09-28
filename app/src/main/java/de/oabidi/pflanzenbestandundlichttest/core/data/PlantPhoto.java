@@ -7,7 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * Room entity representing an additional photo that is associated with a {@link Plant}.
@@ -29,7 +29,9 @@ public class PlantPhoto {
     private String uri;
     private long createdAt;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public PlantPhoto() {
         this.uri = "";
     }

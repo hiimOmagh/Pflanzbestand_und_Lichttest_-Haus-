@@ -19,6 +19,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightSensorHelper;
+
 /**
  * Tests for {@link LightSensorHelper} verifying moving averages and buffer resets.
  */

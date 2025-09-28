@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import com.google.android.material.imageview.ShapeableImageView;
 
 /**
@@ -19,25 +20,6 @@ import com.google.android.material.imageview.ShapeableImageView;
  */
 public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.EnvironmentLogItem,
     EnvironmentLogAdapter.ViewHolder> {
-
-    /** Callbacks for item interactions. */
-    public interface Callbacks {
-        /** Invoked when the user taps an item to edit it. */
-        void onEdit(EnvironmentLogPresenter.EnvironmentLogItem item);
-
-        /** Invoked when the user requests to delete an item. */
-        void onDelete(EnvironmentLogPresenter.EnvironmentLogItem item);
-
-        /** Invoked when the user taps the photo preview. */
-        void onPhotoClicked(EnvironmentLogPresenter.EnvironmentLogItem item);
-    }
-
-    private final Callbacks callbacks;
-
-    public EnvironmentLogAdapter(@NonNull Callbacks callbacks) {
-        super(DIFF_CALLBACK);
-        this.callbacks = callbacks;
-    }
 
     private static final DiffUtil.ItemCallback<EnvironmentLogPresenter.EnvironmentLogItem> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<EnvironmentLogPresenter.EnvironmentLogItem>() {
@@ -61,6 +43,12 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
                     && photosEqual;
             }
         };
+    private final Callbacks callbacks;
+
+    public EnvironmentLogAdapter(@NonNull Callbacks callbacks) {
+        super(DIFF_CALLBACK);
+        this.callbacks = callbacks;
+    }
 
     @NonNull
     @Override
@@ -74,6 +62,26 @@ public class EnvironmentLogAdapter extends ListAdapter<EnvironmentLogPresenter.E
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         EnvironmentLogPresenter.EnvironmentLogItem item = getItem(position);
         holder.bind(item, callbacks);
+    }
+
+    /**
+     * Callbacks for item interactions.
+     */
+    public interface Callbacks {
+        /**
+         * Invoked when the user taps an item to edit it.
+         */
+        void onEdit(EnvironmentLogPresenter.EnvironmentLogItem item);
+
+        /**
+         * Invoked when the user requests to delete an item.
+         */
+        void onDelete(EnvironmentLogPresenter.EnvironmentLogItem item);
+
+        /**
+         * Invoked when the user taps the photo preview.
+         */
+        void onPhotoClicked(EnvironmentLogPresenter.EnvironmentLogItem item);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.light.measurement;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -9,7 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.oabidi.pflanzenbestandundlichttest.LightMath;
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LedProfile;
@@ -20,64 +26,13 @@ import de.oabidi.pflanzenbestandundlichttest.feature.lighting.LedProfileUtils;
  * Presenter handling light sensor measurements and related calculations.
  */
 public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChangedListener {
-    public interface View {
-        void showLightData(@Nullable LightReading ambient, @Nullable LightReading camera);
-        void showRangeStatus(String status);
-        void showPlants(List<Plant> plants);
-        void showError(String message);
-        void showSelectedStage(SpeciesTarget.GrowthStage stage);
-        void showArtificialLightProjection(ArtificialLightProjection projection);
-    }
-
     private static final float DEFAULT_CALIBRATION = 0.0185f;
-
-    public static final class LightReading {
-        public enum Source {
-            AMBIENT,
-            CAMERA
-        }
-
-        private final Source source;
-        private final float raw;
-        private final float value;
-        private final float ppfd;
-        private final float dli;
-
-        public LightReading(Source source, float raw, float value, float ppfd, float dli) {
-            this.source = source;
-            this.raw = raw;
-            this.value = value;
-            this.ppfd = ppfd;
-            this.dli = dli;
-        }
-
-        public Source getSource() {
-            return source;
-        }
-
-        public float getRaw() {
-            return raw;
-        }
-
-        public float getValue() {
-            return value;
-        }
-
-        public float getPpfd() {
-            return ppfd;
-        }
-
-        public float getDli() {
-            return dli;
-        }
-    }
-
     private final View view;
     private final Context context;
-    private LightSensorHelper lightSensorHelper;
     private final PlantRepository plantRepository;
     private final MeasurementRepository measurementRepository;
     private final SpeciesRepository speciesRepository;
+    private LightSensorHelper lightSensorHelper;
     private List<Plant> plants;
     private SpeciesTarget speciesTarget;
     private SpeciesTarget.GrowthStage activeStage = SpeciesTarget.GrowthStage.VEGETATIVE;
@@ -92,19 +47,16 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
     private float cameraCalibrationFactor;
     private int sampleSize;
     private boolean sensing = false;
-
     private float lightHours = 12f;
     @Nullable
     private LightReading ambientReading;
     @Nullable
     private LightReading cameraReading;
-
     public LightMeasurementPresenter(View view, PlantRepository plantRepository, Context context,
                                      float calibrationFactor, int sampleSize) {
         this(view, plantRepository, plantRepository.measurementRepository(),
             plantRepository.speciesRepository(), context, calibrationFactor, sampleSize);
     }
-
     public LightMeasurementPresenter(View view, PlantRepository plantRepository,
                                      MeasurementRepository measurementRepository,
                                      SpeciesRepository speciesRepository,
@@ -279,6 +231,10 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         dispatchReadings();
     }
 
+    public SpeciesTarget.GrowthStage getActiveStage() {
+        return activeStage;
+    }
+
     public void setActiveStage(SpeciesTarget.GrowthStage stage) {
         if (stage == null) {
             return;
@@ -291,10 +247,6 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         if (ambientReading != null) {
             view.showRangeStatus(buildRangeStatus(ambientReading.getPpfd(), ambientReading.getDli()));
         }
-    }
-
-    public SpeciesTarget.GrowthStage getActiveStage() {
-        return activeStage;
     }
 
     private String buildRangeStatus(float ppfd, float dli) {
@@ -403,6 +355,60 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
             estimate.getCameraDli(),
             estimate.isCameraUsingFallback()
         ));
+    }
+
+    public interface View {
+        void showLightData(@Nullable LightReading ambient, @Nullable LightReading camera);
+
+        void showRangeStatus(String status);
+
+        void showPlants(List<Plant> plants);
+
+        void showError(String message);
+
+        void showSelectedStage(SpeciesTarget.GrowthStage stage);
+
+        void showArtificialLightProjection(ArtificialLightProjection projection);
+    }
+
+    public static final class LightReading {
+        private final Source source;
+        private final float raw;
+        private final float value;
+        private final float ppfd;
+        private final float dli;
+        public LightReading(Source source, float raw, float value, float ppfd, float dli) {
+            this.source = source;
+            this.raw = raw;
+            this.value = value;
+            this.ppfd = ppfd;
+            this.dli = dli;
+        }
+
+        public Source getSource() {
+            return source;
+        }
+
+        public float getRaw() {
+            return raw;
+        }
+
+        public float getValue() {
+            return value;
+        }
+
+        public float getPpfd() {
+            return ppfd;
+        }
+
+        public float getDli() {
+            return dli;
+        }
+
+        public enum Source {
+            AMBIENT,
+            CAMERA
+        }
     }
 
     public static final class ArtificialLightProjection {

@@ -13,30 +13,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.DateFormat;
 import java.util.Date;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+
 /**
  * RecyclerView adapter displaying recent light measurements.
  */
 public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdapter.ViewHolder> {
-    /** Listener invoked when a measurement is clicked. */
-    public interface OnMeasurementClickListener {
-        void onMeasurementClick(Measurement measurement);
-    }
-
-    /** Listener invoked when a measurement is long-pressed. */
-    public interface OnMeasurementLongClickListener {
-        void onMeasurementLongClick(Measurement measurement);
-    }
-
-    private final OnMeasurementClickListener clickListener;
-    private final OnMeasurementLongClickListener longClickListener;
-
-    public MeasurementAdapter(OnMeasurementClickListener clickListener,
-                              OnMeasurementLongClickListener longClickListener) {
-        super(DIFF_CALLBACK);
-        this.clickListener = clickListener;
-        this.longClickListener = longClickListener;
-    }
-
     private static final DiffUtil.ItemCallback<Measurement> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<Measurement>() {
             @Override
@@ -59,6 +41,14 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
                     || (oldItem.getNote() != null && newItem.getNote() != null && oldItem.getNote().equals(newItem.getNote())));
             }
         };
+    private final OnMeasurementClickListener clickListener;
+    private final OnMeasurementLongClickListener longClickListener;
+    public MeasurementAdapter(OnMeasurementClickListener clickListener,
+                              OnMeasurementLongClickListener longClickListener) {
+        super(DIFF_CALLBACK);
+        this.clickListener = clickListener;
+        this.longClickListener = longClickListener;
+    }
 
     @NonNull
     @Override
@@ -98,6 +88,20 @@ public class MeasurementAdapter extends ListAdapter<Measurement, MeasurementAdap
             }
             return true;
         });
+    }
+
+    /**
+     * Listener invoked when a measurement is clicked.
+     */
+    public interface OnMeasurementClickListener {
+        void onMeasurementClick(Measurement measurement);
+    }
+
+    /**
+     * Listener invoked when a measurement is long-pressed.
+     */
+    public interface OnMeasurementLongClickListener {
+        void onMeasurementLongClick(Measurement measurement);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

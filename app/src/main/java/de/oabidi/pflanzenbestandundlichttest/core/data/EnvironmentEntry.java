@@ -7,7 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 
 /**
  * Room entity capturing periodic environment measurements for a {@link Plant}.
@@ -50,7 +50,9 @@ public class EnvironmentEntry {
     @Nullable
     private String photoUri;
 
-    /** Default constructor required by Room. */
+    /**
+     * Default constructor required by Room.
+     */
     public EnvironmentEntry() {
     }
 

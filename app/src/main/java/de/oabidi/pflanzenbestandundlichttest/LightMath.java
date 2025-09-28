@@ -12,16 +12,11 @@ public class LightMath {
 
     private static final float PAR_MOL_PER_MJ = 2.02f;
 
-    public enum RangeStatus {
-        LOW,
-        OK,
-        HIGH
-    }
     /**
      * Convert a lux measurement to PPFD using a calibration factor.
      *
      * @param lux measured illuminance
-     * @param k calibration factor (µmol·m−2·s−1 per lux)
+     * @param k   calibration factor (µmol·m−2·s−1 per lux)
      * @return photosynthetic photon flux density in µmol·m⁻²·s⁻¹
      */
     public static float ppfdFromLux(float lux, float k) {
@@ -31,7 +26,7 @@ public class LightMath {
     /**
      * Calculate daily light integral from PPFD and light hours.
      *
-     * @param ppfd photosynthetic photon flux density in µmol·m⁻²·s⁻¹
+     * @param ppfd  photosynthetic photon flux density in µmol·m⁻²·s⁻¹
      * @param hours hours of light per day
      * @return daily light integral in mol·m⁻²·day⁻¹
      */
@@ -123,5 +118,11 @@ public class LightMath {
         } else {
             return RangeStatus.OK;
         }
+    }
+
+    public enum RangeStatus {
+        LOW,
+        OK,
+        HIGH
     }
 }

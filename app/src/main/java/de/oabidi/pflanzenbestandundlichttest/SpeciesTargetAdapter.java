@@ -13,16 +13,29 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Locale;
 import java.util.Objects;
 
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
+
 /**
  * RecyclerView adapter for displaying {@link SpeciesTarget} entries.
  */
 public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTargetAdapter.TargetViewHolder> {
 
-    public interface OnTargetClickListener {
-        void onTargetClick(SpeciesTarget target);
-        void onTargetLongClick(SpeciesTarget target);
-    }
+    private static final DiffUtil.ItemCallback<SpeciesTarget> DIFF_CALLBACK =
+        new DiffUtil.ItemCallback<SpeciesTarget>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
+                return Objects.equals(oldItem.getSpeciesKey(), newItem.getSpeciesKey());
+            }
 
+            @Override
+            public boolean areContentsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
+                return Objects.equals(oldItem.getTolerance(), newItem.getTolerance())
+                    && Objects.equals(oldItem.getSource(), newItem.getSource())
+                    && Objects.equals(oldItem.getSeedlingStage(), newItem.getSeedlingStage())
+                    && Objects.equals(oldItem.getVegetativeStage(), newItem.getVegetativeStage())
+                    && Objects.equals(oldItem.getFlowerStage(), newItem.getFlowerStage());
+            }
+        };
     private final OnTargetClickListener listener;
 
     public SpeciesTargetAdapter(OnTargetClickListener listener) {
@@ -43,22 +56,11 @@ public class SpeciesTargetAdapter extends ListAdapter<SpeciesTarget, SpeciesTarg
         holder.bind(target, listener);
     }
 
-    private static final DiffUtil.ItemCallback<SpeciesTarget> DIFF_CALLBACK =
-        new DiffUtil.ItemCallback<SpeciesTarget>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
-                return Objects.equals(oldItem.getSpeciesKey(), newItem.getSpeciesKey());
-            }
+    public interface OnTargetClickListener {
+        void onTargetClick(SpeciesTarget target);
 
-            @Override
-            public boolean areContentsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
-                return Objects.equals(oldItem.getTolerance(), newItem.getTolerance())
-                    && Objects.equals(oldItem.getSource(), newItem.getSource())
-                    && Objects.equals(oldItem.getSeedlingStage(), newItem.getSeedlingStage())
-                    && Objects.equals(oldItem.getVegetativeStage(), newItem.getVegetativeStage())
-                    && Objects.equals(oldItem.getFlowerStage(), newItem.getFlowerStage());
-            }
-        };
+        void onTargetLongClick(SpeciesTarget target);
+    }
 
     static class TargetViewHolder extends RecyclerView.ViewHolder {
         private final TextView speciesView;

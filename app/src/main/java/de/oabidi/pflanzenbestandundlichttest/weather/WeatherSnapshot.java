@@ -23,12 +23,16 @@ public final class WeatherSnapshot {
         return date;
     }
 
-    /** Short-wave radiation sum in MJ/m² for the given day. */
+    /**
+     * Short-wave radiation sum in MJ/m² for the given day.
+     */
     public float getShortwaveRadiationMj() {
         return shortwaveRadiationMj;
     }
 
-    /** Mean cloud cover percentage for the day. */
+    /**
+     * Mean cloud cover percentage for the day.
+     */
     public float getMeanCloudCover() {
         return meanCloudCover;
     }

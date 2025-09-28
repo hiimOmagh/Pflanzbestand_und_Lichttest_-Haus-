@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Context;
 import android.net.Uri;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 
 import androidx.annotation.Nullable;
 
-import de.oabidi.pflanzenbestandundlichttest.Plant;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.core.data.util.ImportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExecutorProvider;
@@ -19,28 +20,11 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
  * Presenter responsible for loading and modifying the list of plants.
  */
 public class PlantListPresenter {
-    public interface View {
-        void showPlants(List<Plant> plants);
-        void showSearchResults(List<Plant> plants);
-        void showError(String message);
-        void showProgress();
-        void hideProgress();
-        void requestExport(String fileName);
-        void requestImport();
-        void onExportProgress(int current, int total);
-        void onExportResult(boolean success, Uri uri);
-        void onImportProgress(int current, int total);
-        void onImportResult(boolean success, @Nullable ImportManager.ImportError error,
-                            List<ImportManager.ImportWarning> warnings,
-                            @Nullable String message);
-    }
-
     private final View view;
     private final PlantRepository repository;
     private final Context context;
     private final ExportManager exportManager;
     private final ImportManager importManager;
-
     public PlantListPresenter(View view, PlantRepository repository, Context context) {
         this(view, repository, ensureAppContext(context),
             createExportManager(context, repository),
@@ -140,5 +124,31 @@ public class PlantListPresenter {
             repository.searchPlants(query, view::showSearchResults,
                 e -> view.showError(context.getString(R.string.error_database)));
         }
+    }
+
+    public interface View {
+        void showPlants(List<Plant> plants);
+
+        void showSearchResults(List<Plant> plants);
+
+        void showError(String message);
+
+        void showProgress();
+
+        void hideProgress();
+
+        void requestExport(String fileName);
+
+        void requestImport();
+
+        void onExportProgress(int current, int total);
+
+        void onExportResult(boolean success, Uri uri);
+
+        void onImportProgress(int current, int total);
+
+        void onImportResult(boolean success, @Nullable ImportManager.ImportError error,
+                            List<ImportManager.ImportWarning> warnings,
+                            @Nullable String message);
     }
 }

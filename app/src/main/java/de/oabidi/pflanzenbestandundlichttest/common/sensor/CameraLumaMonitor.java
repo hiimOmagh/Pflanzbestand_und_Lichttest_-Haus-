@@ -12,18 +12,11 @@ import java.nio.ByteBuffer;
  */
 public final class CameraLumaMonitor implements ImageAnalysis.Analyzer {
     private static final float DEFAULT_SMOOTHING_ALPHA = 0.15f;
-
-    /** Callback receiving raw and smoothed luma values. */
-    public interface Listener {
-        void onLumaUpdated(float rawLuma, float smoothedLuma);
-    }
-
     @Nullable
     private final Listener listener;
     private final float smoothingAlpha;
     private final Object lock = new Object();
     private float smoothedLuma = Float.NaN;
-
     public CameraLumaMonitor(@NonNull Listener listener) {
         this(listener, DEFAULT_SMOOTHING_ALPHA);
     }
@@ -36,7 +29,9 @@ public final class CameraLumaMonitor implements ImageAnalysis.Analyzer {
         this.smoothingAlpha = smoothingAlpha;
     }
 
-    /** Clears the internal smoothed state so the next reading starts fresh. */
+    /**
+     * Clears the internal smoothed state so the next reading starts fresh.
+     */
     public void reset() {
         synchronized (lock) {
             smoothedLuma = Float.NaN;
@@ -77,5 +72,12 @@ public final class CameraLumaMonitor implements ImageAnalysis.Analyzer {
         } finally {
             image.close();
         }
+    }
+
+    /**
+     * Callback receiving raw and smoothed luma values.
+     */
+    public interface Listener {
+        void onLumaUpdated(float rawLuma, float smoothedLuma);
     }
 }

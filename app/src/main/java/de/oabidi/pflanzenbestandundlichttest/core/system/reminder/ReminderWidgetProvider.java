@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.core.system.reminder;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -12,9 +13,7 @@ import android.net.Uri;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import java.util.List;
-
-import de.oabidi.pflanzenbestandundlichttest.MainActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 
@@ -30,11 +29,13 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
 
     private ReminderRepository reminderRepository;
 
-    public ReminderWidgetProvider() { }
+    public ReminderWidgetProvider() {
+    }
 
     public ReminderWidgetProvider(ReminderRepository reminderRepository) {
         this.reminderRepository = reminderRepository;
     }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
@@ -48,6 +49,7 @@ public class ReminderWidgetProvider extends AppWidgetProvider {
             onUpdate(context, manager, appWidgetIds);
         }
     }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {

@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +13,9 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -137,7 +140,10 @@ public class MeasurementListFragment extends Fragment {
         }
         if (filterSpinner == null) {
             measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
-                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+                e -> {
+                    if (isAdded())
+                        Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                });
             return;
         }
 
@@ -146,14 +152,23 @@ public class MeasurementListFragment extends Fragment {
         if (position == FILTER_LAST_7_DAYS) {
             long since = now - 7L * 24 * 60 * 60 * 1000;
             measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
-                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+                e -> {
+                    if (isAdded())
+                        Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                });
         } else if (position == FILTER_LAST_30_DAYS) {
             long since = now - 30L * 24 * 60 * 60 * 1000;
             measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
-                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+                e -> {
+                    if (isAdded())
+                        Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                });
         } else {
             measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
-                e -> { if (isAdded()) Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show(); });
+                e -> {
+                    if (isAdded())
+                        Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                });
         }
     }
 }

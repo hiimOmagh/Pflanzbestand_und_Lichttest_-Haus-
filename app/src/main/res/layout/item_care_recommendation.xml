@@ -19,12 +19,12 @@
         android:id="@+id/care_recommendation_icon"
         android:layout_width="@dimen/care_recommendation_icon_size"
         android:layout_height="@dimen/care_recommendation_icon_size"
+        android:layout_marginEnd="@dimen/care_card_content_spacing"
         android:contentDescription="@null"
         android:scaleType="centerInside"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/care_recommendation_strip"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginEnd="@dimen/care_card_content_spacing"
         tools:src="@drawable/ic_care_temperature" />
 
     <TextView

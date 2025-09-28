@@ -1,4 +1,4 @@
-package de.oabidi.pflanzenbestandundlichttest;
+package de.oabidi.pflanzenbestandundlichttest.feature.main;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -12,27 +12,43 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
  * Presenter contract for main screen orchestration.
  */
 public interface MainPresenter {
-    /** Initialise the presenter. */
+    /**
+     * Initialise the presenter.
+     */
     void onCreate(@Nullable Bundle savedInstanceState, Intent intent);
 
-    /** Handle a new intent delivered to the activity. */
+    /**
+     * Handle a new intent delivered to the activity.
+     */
     void onNewIntent(Intent intent);
 
-    /** Callback for notification permission results. */
+    /**
+     * Callback for notification permission results.
+     */
     void onNotificationPermissionResult(boolean granted);
 
-    /** Handle export result from the document picker. */
+    /**
+     * Handle export result from the document picker.
+     */
     void handleExportResult(@Nullable Uri uri);
 
-    /** Handle import result from the document picker. */
+    /**
+     * Handle import result from the document picker.
+     */
     void handleImportResult(@Nullable Uri uri);
 
-    /** Respond to options menu item selection. */
+    /**
+     * Respond to options menu item selection.
+     */
     boolean onOptionsItemSelected(int id);
 
-    /** Respond to bottom navigation item selections. */
+    /**
+     * Respond to bottom navigation item selections.
+     */
     boolean onNavigationItemSelected(int itemId);
 
-    /** Persist the user's export format choice and start the export flow. */
+    /**
+     * Persist the user's export format choice and start the export flow.
+     */
     void onExportFormatChosen(ExportManager.Format format);
 }

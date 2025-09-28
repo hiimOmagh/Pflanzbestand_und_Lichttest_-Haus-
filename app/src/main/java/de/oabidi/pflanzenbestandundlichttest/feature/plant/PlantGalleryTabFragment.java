@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.plant;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -21,13 +22,6 @@ import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
  * Fragment hosting the plant photo gallery content.
  */
 public class PlantGalleryTabFragment extends Fragment {
-    /** Callback interface implemented by {@link PlantDetailActivity}. */
-    public interface Callbacks {
-        void onGalleryViewsReady(@NonNull RecyclerView photoGrid,
-                                 @NonNull View emptyView,
-                                 @NonNull MaterialButton addPhotoButton);
-    }
-
     @Nullable
     private Callbacks callbacks;
 
@@ -70,5 +64,14 @@ public class PlantGalleryTabFragment extends Fragment {
         if (callbacks != null && photoGrid != null && emptyView != null && addPhotoButton != null) {
             callbacks.onGalleryViewsReady(photoGrid, emptyView, addPhotoButton);
         }
+    }
+
+    /**
+     * Callback interface implemented by {@link PlantDetailActivity}.
+     */
+    public interface Callbacks {
+        void onGalleryViewsReady(@NonNull RecyclerView photoGrid,
+                                 @NonNull View emptyView,
+                                 @NonNull MaterialButton addPhotoButton);
     }
 }

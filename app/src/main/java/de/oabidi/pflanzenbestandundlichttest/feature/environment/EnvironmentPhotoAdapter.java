@@ -21,10 +21,6 @@ import de.oabidi.pflanzenbestandundlichttest.R;
 class EnvironmentPhotoAdapter extends ListAdapter<EnvironmentLogPresenter.PhotoHighlight,
     EnvironmentPhotoAdapter.ViewHolder> {
 
-    interface Callback {
-        void onPhotoClicked(@NonNull String uri);
-    }
-
     private static final DiffUtil.ItemCallback<EnvironmentLogPresenter.PhotoHighlight> DIFF_CALLBACK =
         new DiffUtil.ItemCallback<EnvironmentLogPresenter.PhotoHighlight>() {
             @Override
@@ -41,7 +37,6 @@ class EnvironmentPhotoAdapter extends ListAdapter<EnvironmentLogPresenter.PhotoH
                     && oldItem.getLabel().equals(newItem.getLabel());
             }
         };
-
     @NonNull
     private final Callback callback;
 
@@ -65,6 +60,10 @@ class EnvironmentPhotoAdapter extends ListAdapter<EnvironmentLogPresenter.PhotoH
 
     void submit(java.util.List<EnvironmentLogPresenter.PhotoHighlight> items) {
         submitList(items == null ? java.util.Collections.emptyList() : new java.util.ArrayList<>(items));
+    }
+
+    interface Callback {
+        void onPhotoClicked(@NonNull String uri);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
