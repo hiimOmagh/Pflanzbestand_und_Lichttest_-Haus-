@@ -128,7 +128,7 @@
     <string name="action_save_plant">Guardar</string>
     <string name="error_required">Obligatorio</string>
     <string name="error_ppfd_range">El mínimo debe ser menor que el máximo</string>
-    <string name="calibration_instructions">Coloque el sensor bajo una iluminación conocida, introduzca el PPFD y luego confirme.</string>
+    <string name="calibration_instructions">Siga los pasos guiados para capturar un valor de lux, introducir el PPFD de su medidor de referencia y revisar los factores de calibración antes de guardarlos.</string>
     <string name="label_known_ppfd">PPFD conocido:</string>
     <string name="label_ambient_factor">Factor ambiental:</string>
     <string name="label_camera_factor">Factor de cámara:</string>

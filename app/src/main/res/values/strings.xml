@@ -271,11 +271,48 @@
     <string name="action_save_plant">Save</string>
     <string name="error_required">Required</string>
     <string name="error_ppfd_range">Min must be less than max</string>
-    <string name="calibration_instructions">Place the sensor under known lighting, enter the PPFD, then confirm.</string>
-    <string name="label_known_ppfd">Known PPFD:</string>
-    <string name="label_ambient_factor">Ambient factor:</string>
-    <string name="label_camera_factor">Camera factor:</string>
+    <string name="calibration_step_indicator">Step %1$d of %2$d</string>
+    <string name="calibration_step_title_instructions">Review setup</string>
+    <string name="calibration_step_title_capture">Capture lux</string>
+    <string name="calibration_step_title_entry">Enter reference</string>
+    <string name="calibration_step_title_confirm">Confirm factors</string>
+    <string name="calibration_instructions">Follow the guided steps to capture a lux reading, enter the PPFD from your reference meter, and review the calibration factors before saving.</string>
+    <string name="calibration_step_instructions_toast">Review the calibration instructions.</string>
+    <string name="calibration_step_capture_toast">Capture a stable lux sample.</string>
+    <string name="calibration_step_entry_toast">Enter the reference PPFD and adjust factors.</string>
+    <string name="calibration_step_confirm_toast">Confirm and save your calibration.</string>
+    <string name="calibration_capture_current_lux_placeholder">Live lux: —</string>
+    <string name="calibration_capture_current_lux" translatable="false">Live lux: %.1f lx</string>
+    <string name="calibration_capture_hint">Hold your device under the light you want to calibrate. Wait until the lux value stabilises before recording it.</string>
+    <string name="calibration_capture_button">Use current lux</string>
+    <string name="calibration_capture_saved_placeholder">No lux sample captured yet.</string>
+    <string name="calibration_capture_saved_lux" translatable="false">Captured lux: %.1f lx</string>
+    <string name="calibration_capture_required">Capture a lux sample before continuing.</string>
+    <string name="calibration_capture_toast" translatable="false">Captured %.1f lx</string>
+    <string name="calibration_reference_label">Known PPFD (µmol/m²/s)</string>
+    <string name="calibration_reference_hint">Enter the PPFD from your reference meter</string>
+    <string name="calibration_reference_error">Enter a positive PPFD value.</string>
+    <string name="calibration_ambient_placeholder">Ambient factor will appear after capturing lux and PPFD.</string>
+    <string name="calibration_ambient_result" translatable="false">Ambient factor: %.4f</string>
+    <string name="calibration_camera_label">Camera factor</string>
+    <string name="calibration_camera_hint">Defaults to the ambient factor if left blank</string>
+    <string name="calibration_camera_error">Enter a positive camera factor.</string>
+    <string name="calibration_back_button">Back</string>
+    <string name="calibration_next_button">Next</string>
+    <string name="calibration_finish_button">Finish</string>
+    <string name="calibration_summary_profile_assigned">Saving to LED profile: %1$s</string>
+    <string name="calibration_summary_profile_missing">No LED profile assigned. Factors will be stored for this plant only.</string>
+    <string name="calibration_summary_ambient" translatable="false">Ambient factor: %.4f</string>
+    <string name="calibration_summary_ambient_placeholder">Ambient factor will be calculated once lux and PPFD are provided.</string>
+    <string name="calibration_summary_camera" translatable="false">Camera factor: %.4f</string>
+    <string name="calibration_summary_camera_placeholder">Camera factor will appear when a valid value is entered.</string>
+    <string name="calibration_missing_profile_banner">No LED profile assigned</string>
+    <string name="calibration_profile_loading">Loading LED profile…</string>
+    <string name="calibration_profile_summary">LED profile: %1$s</string>
+    <string name="calibration_missing_profile_summary">Assign an LED profile so these calibration factors follow your lighting setup.</string>
+    <string name="calibration_profile_unknown">Unknown profile</string>
     <string name="calibration_missing_profile_warning">Assign an LED profile to this plant so calibration factors follow the correct lighting setup.</string>
+    <string name="calibration_complete_toast">Calibration saved.</string>
     <string name="action_calibrate">Confirm</string>
     <string name="menu_calibrate">Calibrate</string>
     <string name="action_add_photo">Add Photo</string>

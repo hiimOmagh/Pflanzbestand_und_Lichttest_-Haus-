@@ -16,8 +16,9 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/input_profile_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="#546E7A" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -28,8 +29,9 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/input_profile_type"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColorHint="#546E7A" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
@@ -40,10 +42,11 @@
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/input_profile_distance"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:hint="@string/hint_number"
                 android:inputType="numberDecimal"
-                android:hint="@string/hint_number" />
+                android:textColorHint="#546E7A" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -68,9 +71,10 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/input_calibration_ambient"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
+                    android:inputType="numberDecimal"
+                    android:textColorHint="#546E7A" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Space
@@ -85,9 +89,10 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/input_calibration_camera"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
+                    android:inputType="numberDecimal"
+                    android:textColorHint="#546E7A" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 

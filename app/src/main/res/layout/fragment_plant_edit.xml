@@ -51,9 +51,9 @@
                 android:id="@+id/input_zone_orientation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="none"
+                android:clickable="true"
                 android:focusable="true"
-                android:clickable="true" />
+                android:inputType="none" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
