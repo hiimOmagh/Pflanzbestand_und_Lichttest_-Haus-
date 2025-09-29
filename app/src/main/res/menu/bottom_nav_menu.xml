@@ -5,6 +5,10 @@
         android:icon="@drawable/ic_home"
         android:title="@string/title_plants" />
     <item
+        android:id="@+id/nav_species_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/title_species_search" />
+    <item
         android:id="@+id/nav_measure"
         android:icon="@drawable/ic_light"
         android:title="@string/title_measure" />

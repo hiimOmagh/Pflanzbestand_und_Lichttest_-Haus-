@@ -109,6 +109,7 @@
     <string name="hint_care_tips">Care tips (one per line)</string>
     <string name="label_toxicity">Toxicity</string>
     <string name="title_plants">Plants</string>
+    <string name="title_species_search">Species search</string>
     <string name="title_measure">Measure</string>
     <string name="title_diary">Diary</string>
     <string name="title_reminders">Reminders</string>

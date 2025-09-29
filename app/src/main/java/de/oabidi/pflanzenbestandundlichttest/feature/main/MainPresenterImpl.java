@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.DiaryFragment;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
+import de.oabidi.pflanzenbestandundlichttest.feature.plant.SpeciesSearchFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.StatsFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.light.measurement.LightMeasurementFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.settings.SettingsFragment;
@@ -151,6 +152,8 @@ public class MainPresenterImpl implements MainPresenter {
         Fragment fragment;
         if (itemId == R.id.nav_plants) {
             fragment = PlantListFragment.newInstance(repository);
+        } else if (itemId == R.id.nav_species_search) {
+            fragment = SpeciesSearchFragment.newInstance();
         } else if (itemId == R.id.nav_measure) {
             fragment = LightMeasurementFragment.newInstance(repository);
         } else if (itemId == R.id.nav_diary) {

@@ -188,6 +188,17 @@ public class MainActivity extends AppCompatActivity implements MainView {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
+        if (bottomNavigationView != null
+            && bottomNavigationView.getSelectedItemId() == R.id.nav_species_search) {
+            bottomNavigationView.setSelectedItemId(R.id.nav_plants);
+            return;
+        }
+        super.onBackPressed();
+    }
+
     // MainView implementation
     @Override
     public void navigateToFragment(Fragment fragment, boolean addToBackStack) {

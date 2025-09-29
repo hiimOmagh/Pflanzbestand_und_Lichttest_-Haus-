@@ -58,6 +58,7 @@
     <string name="hint_ppfd_max">PPFD máx</string>
     <string name="label_toxicity">Toxicidad</string>
     <string name="title_plants">Plantas</string>
+    <string name="title_species_search">Búsqueda de especies</string>
     <string name="title_measure">Medir</string>
     <string name="title_diary">Diario</string>
     <string name="title_reminders">Recordatorios</string>
