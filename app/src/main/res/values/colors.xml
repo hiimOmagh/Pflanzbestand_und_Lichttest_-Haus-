@@ -4,10 +4,12 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Light theme colors -->
-    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorPrimary">#2E7D32</color>
     <color name="colorOnPrimary">#FFFFFFFF</color>
     <color name="colorSecondary">#8BC34A</color>
     <color name="colorOnSecondary">#FF000000</color>
+    <color name="colorSecondaryContainer">#C8E6C9</color>
+    <color name="colorOnSecondaryContainer">#1B5E20</color>
     <color name="chartBar">#4CAF50</color>
     <color name="chartAxis">#FF000000</color>
     <color name="chartSeries1">#4CAF50</color>

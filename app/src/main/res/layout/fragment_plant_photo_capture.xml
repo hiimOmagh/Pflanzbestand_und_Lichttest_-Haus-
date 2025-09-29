@@ -22,21 +22,19 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_capture"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.FilledButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/action_capture_photo"
-            android:textColor="#1976D2" />
+            android:text="@string/action_capture_photo" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_close"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="@style/Widget.Material3.Button.FilledTonalButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="16dp"
-        android:text="@string/action_close_camera"
-        android:textColor="#1976D2" />
+        android:text="@string/action_close_camera" />
 
 </FrameLayout>
