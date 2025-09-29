@@ -290,21 +290,33 @@ public class PlantDetailActivity extends AppCompatActivity
         String locationText = presenter.getTextOrFallback(locationHint);
         String acquiredText = presenter.formatAcquiredAt(acquiredAtEpoch);
 
-        pagerAdapter = new PlantDetailPagerAdapter(this, plantId,
+        pagerAdapter = new PlantDetailPagerAdapter(this, plantId, repository,
             nameText, descriptionText, speciesText, locationText, acquiredText);
         detailViewPager.setAdapter(pagerAdapter);
         detailViewPager.setOffscreenPageLimit(pagerAdapter.getItemCount());
+        detailTabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
         new TabLayoutMediator(detailTabLayout, detailViewPager, (tab, position) -> {
             switch (position) {
+                case PlantDetailPagerAdapter.POSITION_MEASUREMENTS:
+                    tab.setText(R.string.plant_detail_tab_measurements);
+                    tab.setContentDescription(R.string.plant_detail_tab_measurements);
+                    break;
+                case PlantDetailPagerAdapter.POSITION_REMINDERS:
+                    tab.setText(R.string.plant_detail_tab_reminders);
+                    tab.setContentDescription(R.string.plant_detail_tab_reminders);
+                    break;
                 case PlantDetailPagerAdapter.POSITION_GALLERY:
                     tab.setText(R.string.plant_detail_tab_gallery);
+                    tab.setContentDescription(R.string.plant_detail_tab_gallery);
                     break;
                 case PlantDetailPagerAdapter.POSITION_ENVIRONMENT:
                     tab.setText(R.string.plant_detail_tab_environment);
+                    tab.setContentDescription(R.string.plant_detail_tab_environment);
                     break;
                 case PlantDetailPagerAdapter.POSITION_DETAILS:
                 default:
                     tab.setText(R.string.plant_detail_tab_details);
+                    tab.setContentDescription(R.string.plant_detail_tab_details);
                     break;
             }
         }).attach();

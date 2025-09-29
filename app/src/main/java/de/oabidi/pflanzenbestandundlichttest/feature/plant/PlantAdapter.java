@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.card.MaterialCardView;
+
 import java.util.Objects;
 
 /**
@@ -80,11 +82,14 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
     }
 
     static class PlantViewHolder extends RecyclerView.ViewHolder {
+        private final MaterialCardView cardView;
         private final TextView nameView;
 
         PlantViewHolder(View itemView) {
             super(itemView);
-            nameView = itemView.findViewById(R.id.plant_name);
+            cardView = (MaterialCardView) itemView;
+            cardView.setCheckable(true);
+            nameView = cardView.findViewById(R.id.plant_name);
         }
 
         /**
@@ -95,9 +100,11 @@ public class PlantAdapter extends ListAdapter<Plant, PlantAdapter.PlantViewHolde
          */
         void bind(Plant plant, OnPlantClickListener listener) {
             nameView.setText(plant.getName());
-            itemView.setContentDescription(plant.getName());
-            itemView.setOnClickListener(v -> listener.onPlantClick(plant));
-            itemView.setOnLongClickListener(v -> {
+            cardView.setContentDescription(plant.getName());
+            cardView.setChecked(false);
+            cardView.setOnClickListener(v -> listener.onPlantClick(plant));
+            cardView.setOnLongClickListener(v -> {
+                cardView.toggle();
                 listener.onPlantLongClick(plant);
                 return true;
             });

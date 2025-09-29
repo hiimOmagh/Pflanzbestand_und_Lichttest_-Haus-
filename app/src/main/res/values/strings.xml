@@ -151,6 +151,8 @@
     <string name="plant_detail_tab_details">Details</string>
     <string name="plant_detail_tab_gallery">Gallery</string>
     <string name="plant_detail_tab_environment">Environment</string>
+    <string name="plant_detail_tab_measurements">Measurements</string>
+    <string name="plant_detail_tab_reminders">Reminders</string>
     <string name="metadata_card_title">Species insights</string>
     <string name="metadata_section_watering">Watering</string>
     <string name="metadata_section_temperature">Temperature</string>

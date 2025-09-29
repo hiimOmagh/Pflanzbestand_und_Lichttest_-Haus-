@@ -4,12 +4,16 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Light theme colors -->
-    <color name="colorPrimary">#2E7D32</color>
+    <color name="colorPrimary">#3F8057</color>
     <color name="colorOnPrimary">#FFFFFFFF</color>
-    <color name="colorSecondary">#8BC34A</color>
-    <color name="colorOnSecondary">#FF000000</color>
-    <color name="colorSecondaryContainer">#C8E6C9</color>
-    <color name="colorOnSecondaryContainer">#1B5E20</color>
+    <color name="colorSecondary">#D8CEC2</color>
+    <color name="colorOnSecondary">#2E261F</color>
+    <color name="colorSecondaryContainer">#F5EFE7</color>
+    <color name="colorOnSecondaryContainer">#413528</color>
+    <color name="colorTertiary">#436F7F</color>
+    <color name="colorOnTertiary">#FFFFFFFF</color>
+    <color name="colorSurfaceVariant">#E7DED2</color>
+    <color name="colorOnSurfaceVariant">#49403A</color>
     <color name="chartBar">#4CAF50</color>
     <color name="chartAxis">#FF000000</color>
     <color name="chartSeries1">#4CAF50</color>

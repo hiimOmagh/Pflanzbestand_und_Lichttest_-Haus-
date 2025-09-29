@@ -280,6 +280,8 @@
     <string name="plant_detail_tab_details">Détails</string>
     <string name="plant_detail_tab_gallery">Galerie</string>
     <string name="plant_detail_tab_environment">Environnement</string>
+    <string name="plant_detail_tab_measurements">Mesures</string>
+    <string name="plant_detail_tab_reminders">Rappels</string>
     <string name="metadata_tooltip_care_tips">Vue d’ensemble des conseils d’entretien</string>
     <string name="environment_log_temperature_hint">Température (°C)</string>
     <string name="environment_log_humidity_hint">Humidité (%)</string>

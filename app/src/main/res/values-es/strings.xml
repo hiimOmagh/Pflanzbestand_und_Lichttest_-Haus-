@@ -279,6 +279,8 @@
     <string name="plant_detail_tab_details">Detalles</string>
     <string name="plant_detail_tab_gallery">Galería</string>
     <string name="plant_detail_tab_environment">Entorno</string>
+    <string name="plant_detail_tab_measurements">Mediciones</string>
+    <string name="plant_detail_tab_reminders">Recordatorios</string>
     <string name="metadata_tooltip_care_tips">Resumen de consejos de cuidado</string>
     <string name="environment_log_temperature_hint">Temperatura (°C)</string>
     <string name="environment_log_humidity_hint">Humedad (%)</string>
