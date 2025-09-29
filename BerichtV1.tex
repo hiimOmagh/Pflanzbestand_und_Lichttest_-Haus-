@@ -84,11 +84,11 @@ Damit wird sowohl die Organisation des Pflanzenbestands erleichtert als auch die
 Die App konzentriert sich auf die Kernfunktionen Pflanzenverwaltung und Lichtmessung. Funktionen wie automatische Bewässerungssteuerung, cloudbasierte Synchronisation oder KI-gestützte Pflanzenerkennung sind nicht Bestandteil dieser Version, können jedoch als zukünftige Erweiterungen betrachtet werden.
 
 \section{Relevanz}
-Die Arbeit ist im Kontext des Moduls Mobile Computing relevant, da sie verschiedene Aspekte moderner Android-Entwicklung vereint: Sensoransteuerung, Datenhaltung mit Room, Export von Informationen sowie benutzerfreundliche Oberflächen \cite{google2024room,google2024workmanager,google2024camerax,google2024material}.
+Die Arbeit ist im Kontext des Moduls Mobile Computing relevant, da sie verschiedene Aspekte moderner Android-Entwicklung vereint: Sensoransteuerung, Datenhaltung mit Room, Export von Informationen sowie benutzerfreundliche Oberflächen.
 Praktisch bietet die App einen Mehrwert für Hobbygärtner, Studierende und Interessierte, die ihre Pflanzenpflege datenbasiert verbessern möchten.
 
+
 \chapter{Theoretische Begründung (Review)}
-In diesem Kapitel werden die wissenschaftlichen und technischen Grundlagen beschrieben, die der App zugrunde liegen. Die einschlägige Literatur zeigt, wie stark Pflanzengesundheit und Ertrag von Kennzahlen wie photosynthetisch aktiver Strahlung, PPFD und Tageslichtintegral abhängen \cite{gavhane2023dli,xu2021nasturtium,ke2023tomato,yamashita2019ppfd}. Für praxisnahe Umsetzungen sind zudem belastbare Umrechnungen zwischen Lux-, PPFD- und DLI-Werten erforderlich \cite{wikipedia2024dli,hlg2024ppfd}:
 
 Die Photosyntheseleistung von Zimmerpflanzen hängt wesentlich von der photosynthetisch aktiven Strahlung (Photosynthetically Active Radiation, PAR) ab, die das Spektrum von 400 bis 700 nm umfasst und den Anteil des Sonnenlichts beschreibt, der von Chlorophyll absorbiert wird \cite{McCree1972}. Der photosynthetische Photonenfluss (Photosynthetic Photon Flux Density, PPFD) quantifiziert die Anzahl der innerhalb dieses Spektrums auftreffenden Photonen pro Flächeneinheit und Zeit (µmol m$^{-2}$ s$^{-1}$) und dient als zentrale Messgröße für die aktuelle Beleuchtungsintensität \cite{NelsonBugbee2015}. Ergänzend betrachtet das Tageslichtintegral (Daily Light Integral, DLI) die aufsummierte Photonenmenge über einen 24-Stunden-Zeitraum (mol m$^{-2}$ d$^{-1}$) und erlaubt Aussagen über die tägliche Lichtversorgung einer Pflanze, was insbesondere für die Bewertung von Innenraumstandorten relevant ist \cite{FaustLogan2018}.
 
@@ -98,35 +98,27 @@ Für die persistente Speicherung der erfassten Lichtmessungen und Pflanzeninform
 
 Die Gestaltung der Benutzeroberfläche orientiert sich am Material Design als etabliertem UX-Rahmenwerk von Google, das konsistente Interaktionsmuster, visuelle Hierarchien und Responsivität definiert \cite{MaterialDesign}. Die Anwendung dieser Gestaltungsprinzipien unterstützt eine intuitive Bedienbarkeit, erleichtert die Wiedererkennbarkeit von UI-Komponenten und trägt zur Erfüllung der didaktischen Anforderungen des Moduls im Bereich nutzerzentrierter mobiler Anwendungen bei.
 
-\chapter{Beschreibung der App}
 \section{Überblick}
-Die App verfolgt zwei Kernfunktionen: Verwaltung des Pflanzenbestands und Messung der Lichtintensität. Nutzerinnen und Nutzer legen zunächst eine Pflanze im digitalen Katalog an, erfassen zugehörige Stammdaten wie botanische Bezeichnung, Standort oder Erinnerungsnotizen und sichern die Information lokal. Anschließend initiiert die Anwendung einen geführten Lichttest, bei dem der Sensor kalibriert, die Messung gestartet und der Messwert unmittelbar der ausgewählten Pflanze zugeordnet wird. Abschließend bereitet die App die Messungen in tabellarischer Form sowie über Exportfunktionen auf, sodass Trends und Abweichungen analysiert und für Standortentscheidungen oder Pflegeanpassungen dokumentiert werden können.
-
-Nutzer können beliebig viele Pflanzen anlegen, bearbeiten und löschen. Für jede Pflanze lassen sich Name, Beschreibung, Art, Standorthinweis, Anschaffungsdatum sowie optional ein Foto speichern.
+Die App verfolgt zwei Kernfunktionen: Verwaltung des Pflanzenbestands und Messung der Lichtintensität. Nutzer können beliebig viele Pflanzen anlegen, bearbeiten und löschen. Für jede Pflanze lassen sich Name, Beschreibung, Art, Standorthinweis, Anschaffungsdatum sowie optional ein Foto speichern. 
 
 \section{Zielgruppe}
 \begin{itemize}
-    \item Hobbygärtner: profitieren von einer strukturierten Übersicht über ihren Bestand und erhalten nachvollziehbare Hinweise, ob ein Standort ausreichend Licht liefert.
-    \item Studierende und Forschende: nutzen die dokumentierten Messreihen, um Experimente zu Lichtbedarfen oder Pflegeintervallen methodisch auszuwerten.
-    \item Interessierte Laien: gewinnen einen niedrigschwelligen Einstieg in datengestützte Pflanzenpflege und lernen, Beobachtungen mit Messwerten zu verbinden.
+    \item Hobbygärtner
+    \item Studierende und Forschende
+    \item Interessierte Laien
 \end{itemize}
 
 \section{Hauptfunktionen}
 \begin{enumerate}
-    \item Pflanzenverwaltung (CRUD): Erfassung neuer Pflanzen über ein Formular mit Validierung, Bearbeiten bestehender Datensätze sowie Archivierung nicht mehr gepflegter Exemplare; sämtliche Änderungen werden in einer lokalen Room-Datenbank versioniert gespeichert.
-    \item Lichtmessung: Schrittweise Anleitung vom Start der Sensorik, über die Kalibrierung am Referenzpunkt, bis hin zur mehrsekündigen Messphase mit Mittelwertbildung; das Ergebnis wird automatisch der aktiven Pflanze zugeordnet und mit Zeitstempel abgelegt.
-    \item Exportfunktion: Generierung strukturierter CSV-Dateien, die Messungen, Pflegeereignisse und Standortinformationen bündeln, um weiterführende Analysen in Statistik- oder Tabellenkalkulationsprogrammen zu ermöglichen.
-    \item Benutzerfreundlichkeit: Konsistente Navigationskonzepte, Tooltips zu Fachbegriffen und farbliche Hervorhebungen kritischer Werte unterstützen auch unerfahrene Nutzende bei der Interpretation der Daten.
+    \item Pflanzenverwaltung (CRUD)
+    \item Lichtmessung
+    \item Exportfunktion
+    \item Benutzerfreundlichkeit
 \end{enumerate}
 
 \section{Screenshots}
-Die nachfolgende Abbildung zeigt die Startansicht mit der Pflanzenliste und aktuellen Lichtmesswerten.
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.45\textwidth]{docs/pflanzenliste.png}
-    \caption{App-Übersicht mit Filterchips, letzten Lichtmessungen und Navigationsleiste für den Pflanzenbestand.}
-\end{figure}
+% Beispiel:
+% \includegraphics[width=0.8\textwidth]{screenshot.png}
 
 \chapter{Architektur \& Codestruktur}
 \section{Projektstruktur (Stand: Final)}
@@ -398,7 +390,7 @@ if (historyPref != null) {
 \section{Diagramme}
 % UML-Klassendiagramm oder ER-Modell einfügen
 
-\usetikzlibrary{positioning, calc, shapes.geometric, arrows.meta}
+\usetikzlibrary{positioning}
 
 \tikzset{
   entity/.style={rectangle, draw=black, fill=blue!10, minimum width=2.5cm, minimum height=1cm, align=center},
@@ -410,11 +402,7 @@ if (historyPref != null) {
 \begin{tikzpicture}[
     entity/.style={rectangle, draw=black, fill=blue!10, minimum width=2.8cm, minimum height=1cm, align=center},
     assoc/.style={rectangle, draw=black, fill=gray!15, minimum width=2.8cm, minimum height=1cm, align=center},
-  relation/.style={->, thick},
-  actor/.style={draw, thick, rounded corners, fill=gray!15, align=center, minimum width=1.8cm, minimum height=1cm},
-  usecase/.style={draw, thick, ellipse, fill=green!10, minimum width=3.6cm, minimum height=1.5cm, align=center},
-  systemboundary/.style={draw, thick, rounded corners, minimum width=9cm, minimum height=6cm, inner sep=0.8cm},
-  package/.style={draw, thick, rounded corners, fill=blue!10, align=center, minimum width=3.4cm, minimum height=1.6cm}
+    relation/.style={-latex, thick}
 ]
 
 % Entities
@@ -436,3 +424,298 @@ if (historyPref != null) {
 % Relations (main)
 \draw[relation] (plant) -- (photo) node[midway,left] {1:n};
 \draw[relation] (plant) -- (measurement) node[midway,left] {1:n};
+\draw[relation] (plant) -- (diary) node[midway,right] {1:n};
+\draw[relation] (plant) -- (env) node[midway,above] {1:n};
+\draw[relation] (plant) -- (reminder) node[midway,left] {1:n};
+\draw[relation] (plant) -- (remindersug) node[midway,right] {1:1};
+\draw[relation] (plant) -- (zone) node[midway,above] {1:1};
+\draw[relation] (zone) -- (cal) node[midway,left] {1:1};
+\draw[relation] (zone) -- (natlight) node[midway,right] {1:n};
+\draw[relation] (plant) -- (species) node[midway,above] {n:1};
+
+% LED association
+\draw[relation] (plant) -- (assoc) node[midway,left] {n:m};
+\draw[relation] (led) -- (assoc) node[midway,right] {n:m};
+
+% Alerts
+\draw[relation] (plant) -- (alert) node[midway,left] {1:n};
+
+\end{tikzpicture}
+\caption{ER-Diagramm der Room-Datenbank mit Kardinalitäten}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    box/.style={rectangle, draw=black, thick, fill=blue!10, minimum width=6cm, minimum height=0.8cm},
+    line/.style={-latex, thick}
+]
+
+\node[box] (view) {View (Activities / Fragments)};
+\node[box, below=0.8cm of view] (presenter) {Presenter (PlantListPresenter, LightMeasurementPresenter, ...)};
+\node[box, below=0.8cm of presenter] (repo) {Repository Layer (PlantRepository, MeasurementRepository, ...)};
+\node[box, below=0.8cm of repo] (dao) {DAO Layer (PlantDao, MeasurementDao, ...)};
+\node[box, below=0.8cm of dao] (db) {Room Database (PlantDatabase)};
+
+\draw[line] (view.south) -- (presenter.north);
+\draw[line] (presenter.south) -- (repo.north);
+\draw[line] (repo.south) -- (dao.north);
+\draw[line] (dao.south) -- (db.north);
+
+\end{tikzpicture}
+\caption{MVP-Architektur der App}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\begin{sequencediagram}
+\newthread{u}{User}
+\newinst{v}{View (Fragment)}
+\newinst{p}{Presenter}
+\newinst{r}{Repository}
+\newinst{d}{DAO/DB}
+
+\begin{call}{u}{init screen}{v}{UI ready}
+\end{call}
+
+\begin{call}{v}{refreshPlants()}{p}{plant list}
+\end{call}
+
+\begin{call}{p}{getAllPlants()}{r}{plants}
+\end{call}
+
+\begin{call}{r}{query}{d}{results}
+\end{call}
+
+\begin{call}{u}{select plant}{v}{selection saved}
+\end{call}
+
+\begin{call}{v}{selectPlant()}{p}{ok}
+\end{call}
+
+\begin{call}{p}{fetch calibration}{r}{factors}
+\end{call}
+
+\begin{call}{u}{start sensing}{v}{lux values}
+\end{call}
+
+\begin{call}{v}{onLuxChanged()}{p}{ppfd/dli}
+\end{call}
+
+\begin{call}{p}{saveMeasurement()}{r}{}
+\end{call}
+
+\begin{call}{r}{insert}{d}{ok}
+\end{call}
+
+\begin{call}{v}{show success}{u}{toast}
+\end{call}
+
+\end{sequencediagram}
+\caption{Sequenzdiagramm für Lichtmessung}
+\end{figure}
+
+\chapter{Implementierung}
+
+\section{Entwicklungsumgebung}
+Die Entwicklung erfolgte mit Android Studio \textbf{Meerkat 2025.3.1} unter Windows 10. 
+Als Build-System kam \textbf{Gradle 8.13} mit Kotlin DSL zum Einsatz. 
+Zielplattform war Android ab API Level 24 (Android 7.0). 
+Die App wurde regelmäßig auf Emulatoren sowie auf einem Google Pixel 9a getestet.
+
+\section{Bibliotheken und Frameworks}
+Zur Realisierung der App wurden folgende Bibliotheken und Frameworks genutzt:
+\begin{itemize}
+    \item \textbf{Room Persistence Library} – für relationale Datenhaltung, Entities, DAOs und Migrations.
+    \item \textbf{WorkManager} – zur Ausführung von Hintergrundaufgaben wie Backups und Proactive Alerts.
+    \item \textbf{CameraX} – für Fotoaufnahmen sowie die Analyse von Preview-Frames zur Lichtmessung.
+    \item \textbf{Material Design Components} – für moderne UI-Elemente wie Buttons, Dialoge und Navigation.
+    \item \textbf{AndroidX Libraries} – Support für RecyclerView, ViewPager, Preferences u.\,a.
+    \item \textbf{Firebase Crashlytics} – zur automatischen Erfassung und Auswertung von App-Abstürzen und Fehlern.
+\end{itemize}
+
+\section{Kernfunktionen}
+Die wichtigsten Features wurden schrittweise implementiert:
+\begin{enumerate}
+    \item \textbf{Pflanzenverwaltung (CRUD)} – Anlage, Bearbeitung, Suche und Löschung von Pflanzen über \texttt{PlantRepository}.
+    \item \textbf{Lichtmessung} – Auslesen von Sensor- oder Kamera-Daten, Umrechnung in PPFD/DLI mit der Hilfsklasse \texttt{LightMath}.
+    \item \textbf{Tagebuch und Galerie} – Dokumentation mit Text und Fotos, Anzeige in übersichtlichen Listen.
+    \item \textbf{Umwelt-Logging} – manuelle Eingabe von Temperatur, Feuchtigkeit, Bodenfeuchte und Pflanzenhöhe.
+    \item \textbf{Erinnerungen} – Verwaltung über ReminderRepository, automatische Vorschläge via SmartReminderEngine.
+    \item \textbf{Proaktive Alerts} – Hintergrundprozesse prüfen regelmäßig Umweltdaten und warnen bei kritischen Werten.
+    \item \textbf{Backup und Export} – Export aller Daten als JSON/CSV, automatisierte Backups über WorkManager.
+\end{enumerate}
+
+\section{Herausforderungen \& Lösungen}
+Während der Entwicklung traten mehrere Herausforderungen auf:
+\begin{itemize}
+    \item \textbf{Komplexität der Datenhaltung} – Lösung: Einführung spezialisierter Repositories, um das überladene PlantRepository zu entlasten.
+    \item \textbf{Kamera- und Speicherzugriff} – Lösung: Nutzung von \texttt{CameraX} und Scoped Storage mit FileProvider.
+    \item \textbf{UI-Konsistenz} – Lösung: Vereinheitlichung durch Material Components (MaterialButton, TextInputLayout).
+    \item \textbf{Benachrichtigungen ab Android 13} – Lösung: Abfrage und Handling der \texttt{POST\_NOTIFICATIONS}-Berechtigung.
+    \item \textbf{Export/Import-Inkonsistenzen} – Lösung: JSON-Backups als zuverlässiger Standard, CSV nur als Zusatz.
+\end{itemize}
+
+
+\chapter{Projekt-Audit \& Analyse}
+
+\section{Allgemeiner Überblick}
+Die App \textit{Pflanzenbestand \& Lichttest} wurde als zentrale Plattform für die Verwaltung und Pflege von Zimmer- und Balkonpflanzen entwickelt. 
+Sie kombiniert Pflanzendatenbank, Sensorintegration (Lichtsensor/Kamera), Tagebuchführung, Umweltdatenerfassung und Erinnerungsfunktionen. 
+Damit bietet sie einen deutlichen Mehrwert gegenüber klassischen Notiz- oder Kalender-Apps.
+
+\section{Datenbank-Ebene}
+Die Datenbank umfasst 16 Entitäten, unter anderem \texttt{Plant}, \texttt{Measurement}, \texttt{DiaryEntry}, \texttt{EnvironmentEntry}, \texttt{Reminder} und \texttt{SpeciesTarget}. 
+Besonderheiten:
+\begin{itemize}
+    \item Kaskadierende Löschungen stellen sicher, dass beim Entfernen einer Pflanze auch alle abhängigen Messungen, Fotos und Erinnerungen entfernt werden.
+    \item Der Artenkatalog enthält Metadaten zu Wachstumsphasen, Lichtbedarf, Wasserbedarf, Temperatur- und Feuchtigkeitsbereichen sowie Toxizität.
+    \item LED-Profile erlauben die Kalibrierung künstlicher Beleuchtung und das Speichern von Zeitplänen.
+\end{itemize}
+\textbf{Schwäche:} CSV-Exporte sind unvollständig, da DLI und Notizen in Messungen nicht mitgespeichert werden. Zudem führen destruktive Migrationen zu Datenverlust bei Versionswechseln.
+
+\section{Architektur \& Repositories}
+Die App folgt einem MVP-Muster: 
+\begin{itemize}
+    \item Views (Activities/Fragments) leiten Benutzeraktionen an Presenter weiter.
+    \item Presenter greifen auf Repositories zu und erhalten asynchrone Ergebnisse.
+    \item Repositories kapseln Room-DAOs, Import/Export und Geschäftslogik.
+\end{itemize}
+\texttt{PlantRepository} übernimmt jedoch zu viele Verantwortlichkeiten (God Object), während spezialisierte Repositories wie \texttt{MeasurementRepository} oder \texttt{DiaryRepository} eine klarere Abgrenzung zeigen.  
+\textbf{Empfehlung:} Auslagerung von Kalibrierung, Reminder-Logik und Care-Alerts in eigene Services.
+
+\section{UI/UX Analyse}
+\begin{itemize}
+    \item \textbf{Stärken:} Nutzung von Material Design-Komponenten in Formularen und Dialogen; Tabs für Details, Galerie, Umwelt- und Tagebuchdaten.
+    \item \textbf{Verbesserungsfähig:} Uneinheitliche Verwendung von MaterialCards, fehlende Empty-States, harte Abstände statt konsistenter Margins.
+    \item \textbf{Fehlend:} Ein Onboarding-Tutorial für Erstnutzer, um komplexe Funktionen wie Kalibrierung oder Backups verständlich einzuführen.
+\end{itemize}
+
+\section{Hintergrundprozesse}
+\begin{itemize}
+    \item Erinnerungen werden mit \texttt{AlarmManager} und \texttt{WorkManager} zuverlässig geplant.
+    \item Proaktive Alerts werden alle 6 Stunden geprüft und im Fall von Abweichungen in den Umweltdaten angezeigt.
+    \item Backups erfolgen wöchentlich automatisch als ZIP/JSON und enthalten Fotos sowie Konfigurationsdaten.
+    \item Android-13-Berechtigungen (\texttt{POST\_NOTIFICATIONS}) werden korrekt abgefangen.
+\end{itemize}
+
+\section{Testing}
+Trotz Erwähnung im README sind im Projekt keine automatisierten Tests vorhanden. 
+Dadurch fehlen Regressionstests für Import/Export, Reminder-Scheduling oder Presenter-Logik. 
+Dies erschwert die langfristige Wartung.
+
+\section{Zusammenfassung der Stärken}
+\begin{itemize}
+    \item Umfassender Artenkatalog mit praxisrelevanten Daten (Licht, Wasser, Klima).
+    \item Integration von Sensoren und LED-Kalibrierung.
+    \item Kombination von Messungen, Tagebuch, Galerie und Erinnerungen in einer App.
+    \item Backup- und Import-/Exportfunktionen.
+\end{itemize}
+
+\section{Schwächen und Fehlstellen}
+\begin{itemize}
+    \item CSV-Export unvollständig (fehlende DLI/Notizen).
+    \item Reminder im Pflanzendetail nicht korrekt mit PlantID verknüpft.
+    \item Fehlende Testabdeckung.
+    \item Kein Sprachumschalter in den Einstellungen.
+\end{itemize}
+
+\section{Empfehlungen \& Ausblick}
+\begin{enumerate}
+    \item Vollständige Angleichung von Export/Import.
+    \item Repositories entkoppeln und \texttt{PlantRepository} verschlanken.
+    \item UI konsequent auf Material Design umstellen.
+    \item Onboarding/Tutorial für neue Nutzer einführen.
+    \item Reminder an Pflanzendetailansicht koppeln und mit Smart Suggestions kombinieren.
+    \item Teststrategie aufbauen (Unit- \& Instrumentation-Tests).
+    \item Mehrsprachigkeit im Settings-Menü ermöglichen.
+\end{enumerate}
+
+\chapter{Benutzer- \& Installationshinweise}
+\section{Installation}
+APK auf Gerät übertragen und installieren.
+
+\section{Mindestanforderungen}
+Android 7.0+, Kamera, Sensoren.
+
+\section{Kurzanleitung}
+Kurzanleitung zur Bedienung:
+\begin{enumerate}
+    \item Pflanze anlegen
+    \item Lichtmessung durchführen
+    \item Tagebucheintrag hinzufügen
+    \item Exportfunktion nutzen
+\end{enumerate}
+
+\chapter{Fazit \& Ausblick}
+
+\section{Zusammenfassung}
+Mit der App \textit{Pflanzenbestand \& Lichttest} wurde eine funktionsfähige mobile Anwendung entwickelt, die es ermöglicht,
+den eigenen Pflanzenbestand digital zu verwalten, Lichtmessungen durchzuführen und Pflegeinformationen zu dokumentieren. 
+Die Implementierung verbindet moderne Android-Technologien wie Room, CameraX, WorkManager und Material Design 
+mit praxisnahen Anwendungsfällen aus der Pflanzenpflege.  
+Darüber hinaus wurden durch die Integration von Erinnerungen, Umwelt-Logging und proaktiven Warnungen zusätzliche Mehrwerte geschaffen,
+die über eine einfache Verwaltungs-App hinausgehen.
+
+\section{Grenzen}
+Trotz der erreichten Ziele bestehen einige Einschränkungen:
+\begin{itemize}
+    \item Der CSV-Export ist derzeit nicht vollständig und vernachlässigt einzelne Messfelder (z.\,B. DLI, Notizen).
+    \item Erinnerungen sind im Detailkontext nicht immer korrekt mit einer spezifischen Pflanze verknüpft.
+    \item Eine mehrsprachige Bedienoberfläche ist noch nicht implementiert.
+    \item Automatisierte Tests fehlen, wodurch Regressionen schwerer erkennbar sind.
+    \item Die App arbeitet vollständig offline; Cloud-Synchronisation wurde bewusst nicht umgesetzt.
+\end{itemize}
+
+\section{Ausblick}
+Für zukünftige Versionen der App ergeben sich mehrere Verbesserungsmöglichkeiten:
+\begin{itemize}
+    \item \textbf{Vervollständigung von Export/Import}: Erweiterung der CSV-Funktionalität und Sicherstellung vollständiger Datenrückführbarkeit.
+    \item \textbf{Mehrsprachigkeit}: Integration eines Sprachumschalters in den Einstellungen, um internationale Nutzergruppen anzusprechen.
+    \item \textbf{Onboarding-Tutorial}: Einführung einer interaktiven Einführung für Erstnutzer zur besseren Bedienbarkeit.
+    \item \textbf{Erweiterte Sensorik}: Anbindung externer Sensoren (Bodenfeuchte, Temperatur, Luftqualität) zur automatischen Erfassung von Umweltdaten.
+    \item \textbf{Cloud-Synchronisation}: Nutzung von Diensten wie Firebase Realtime Database oder Firestore zur geräteübergreifenden Datensynchronisation.
+    \item \textbf{Automatisierte Tests}: Aufbau einer Teststrategie mit Unit- und Instrumentation-Tests für höhere Zuverlässigkeit.
+    \item \textbf{KI-gestützte Pflanzenerkennung}: Einsatz von Machine-Learning-Ansätzen, um Pflanzen automatisch zu identifizieren und Pflegehinweise zu generieren.
+\end{itemize}
+
+Insgesamt zeigt das Projekt, dass sich mit begrenztem Aufwand eine praxisnahe Mobile-Computing-Anwendung realisieren lässt, die reale Probleme adressiert und gleichzeitig die in der Vorlesung behandelten Konzepte praktisch umsetzt.
+
+\chapter{Quellenverzeichnis}
+
+\begin{itemize}
+    % --- Wissenschaftliche Grundlagen ---
+    \item ResearchGate: Determination of optimal daily light integral (DLI) for indoor cultivation of iceberg lettuce. \url{https://www.researchgate.net/publication/372137401_Determination_of_optimal_daily_light_integral_DLI_for_indoor_cultivation_of_iceberg_lettuce_in_an_indigenous_vertical_hydroponic_system}
+    \item PMC: Continuous Lighting and High Daily Light Integral Enhance Yield. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC8231634/}
+    \item Frontiers in Plant Science: Photosynthetic Photon Flux Density affects fruit biomass radiation-use efficiency in tomato. \url{https://www.frontiersin.org/articles/10.3389/fpls.2023.1076423/full}
+    \item MDPI Remote Sensing: Estimation of Global and Diffuse Photosynthetic Photon Flux Density under all sky conditions. \url{https://www.mdpi.com/2072-4292/11/8/932}
+    \item Wikipedia: Daily Light Integral (DLI). \url{https://en.wikipedia.org/wiki/Daily_light_integral}
+    \item Horticulture Lighting Group: Converting PPFD to DLI. \url{https://horticulturelightinggroup.ca/blogs/calculators/converting-ppfd-to-dli}
+
+    % --- Android & Libraries ---
+    \item Android Developers: Offizielle Dokumentation. \url{https://developer.android.com/docs}
+    \item Android Studio (IDE): Offizielle Seite. \url{https://developer.android.com/studio}
+    \item Gradle Build Tool: Offizielle Dokumentation. \url{https://gradle.org/docs/}
+    \item Room Persistence Library: Offizielle Doku. \url{https://developer.android.com/training/data-storage/room}
+    \item WorkManager: Hintergrundprozesse zuverlässig planen. \url{https://developer.android.com/topic/libraries/architecture/workmanager}
+    \item CameraX: Android Jetpack Bibliothek für Kamera-Integration. \url{https://developer.android.com/training/camerax}
+    \item Material Design 3 Guidelines. \url{https://m3.material.io/}
+    \item AndroidX Libraries: Übersicht. \url{https://developer.android.com/jetpack/androidx/releases}
+    \item Firebase (Realtime Database, optional). \url{https://firebase.google.com/docs}
+    
+    % --- Beispielprojekte & Repos ---
+    \item Android Codelab: Room With a View (Beispielprojekt). \url{https://github.com/android/codelab-android-room-with-a-view}
+    \item GitHub: Android CRUD Room MVP (alvareztech). \url{https://github.com/alvareztech/android-crud-room-mvp}
+    \item GitHub: Android MVP Clean Architecture (smarteist). \url{https://github.com/smarteist/Android-MVP-Clean-Architecture}
+    \item GitHub: MVP Android Template (gauravk95). \url{https://github.com/gauravk95/mvp-android-template}
+\end{itemize}
+
+\appendix
+\chapter{Anhang}
+\section{Weitere Codebeispiele}
+% \lstinputlisting[language=Java]{code/LightMath.java}
+
+\section{Weitere Screenshots}
+% \includegraphics[width=\textwidth]{screenshot2.png}
+
+\end{document}
