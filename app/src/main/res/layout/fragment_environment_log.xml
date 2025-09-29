@@ -150,9 +150,9 @@
                         android:layout_height="96dp"
                         android:contentDescription="@string/plant_photo_desc"
                         android:scaleType="centerInside"
-                        android:src="@android:drawable/ic_menu_gallery"
+                        android:src="@drawable/ic_photo"
                         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Material3.MediumComponent"
-                        tools:src="@android:drawable/ic_menu_camera" />
+                        tools:src="@drawable/ic_camera" />
 
                     <LinearLayout
                         android:layout_width="wrap_content"

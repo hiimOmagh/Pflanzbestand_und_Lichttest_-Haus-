@@ -24,7 +24,7 @@
             android:scaleType="centerCrop"
             android:visibility="gone"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Material3.MediumComponent"
-            tools:src="@android:drawable/ic_menu_camera"
+            tools:src="@drawable/ic_camera"
             tools:visibility="visible" />
 
         <LinearLayout

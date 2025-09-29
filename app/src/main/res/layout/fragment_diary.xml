@@ -28,6 +28,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="@string/action_add_diary_entry"
-        android:src="@android:drawable/ic_input_add" />
+        android:src="@drawable/ic_add" />
 
 </FrameLayout>
