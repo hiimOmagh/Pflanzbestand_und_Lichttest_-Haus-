@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
@@ -94,7 +94,7 @@ public class PlantDetailInfoFragment extends Fragment {
             acquiredView.setText(args.getString(ARG_ACQUIRED, ""));
         }
 
-        Button diaryButton = view.findViewById(R.id.detail_diary);
+        MaterialButton diaryButton = view.findViewById(R.id.detail_diary);
         if (diaryButton != null) {
             diaryButton.setOnClickListener(v -> {
                 if (callbacks != null) {
@@ -103,7 +103,7 @@ public class PlantDetailInfoFragment extends Fragment {
             });
         }
 
-        Button environmentButton = view.findViewById(R.id.detail_environment_log);
+        MaterialButton environmentButton = view.findViewById(R.id.detail_environment_log);
         if (environmentButton != null) {
             environmentButton.setOnClickListener(v -> {
                 if (callbacks != null) {

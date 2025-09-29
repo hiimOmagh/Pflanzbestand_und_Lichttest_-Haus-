@@ -532,21 +532,25 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/detail_environment_log"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:minHeight="48dp"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:text="@string/action_view_environment_log"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/detail_metadata_container"
             tools:text="Environment Log" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/detail_diary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:minHeight="48dp"
+            style="@style/Widget.Material3.Button.TonalButton"
             android:text="@string/action_view_diary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
