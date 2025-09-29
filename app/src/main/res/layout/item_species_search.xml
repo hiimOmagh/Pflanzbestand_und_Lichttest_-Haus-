@@ -56,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/species_search_icon_light"
-                android:text="\ud83c\udf1e"
+                android:text="@string/species_icon_light_symbol"
                 android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                 android:visibility="gone" />
 
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:contentDescription="@string/species_search_icon_watering"
-                android:text="\ud83d\udca7"
+                android:text="@string/species_icon_water_symbol"
                 android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                 android:visibility="gone" />
 
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:contentDescription="@string/species_search_unknown_toxicity_label"
-                android:text="\ud83d\udc3e"
+                android:text="@string/species_icon_pets_symbol"
                 android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                 android:visibility="gone" />
         </LinearLayout>

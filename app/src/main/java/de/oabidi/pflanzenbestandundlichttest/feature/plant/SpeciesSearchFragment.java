@@ -21,9 +21,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.search.SearchBar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -56,7 +55,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
     @Nullable
     private ProgressBar progressBar;
     @Nullable
-    private SearchBar searchBar;
+    private TextInputLayout searchInputLayout;
     @Nullable
     private EditText searchInput;
     @Nullable
@@ -86,12 +85,15 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
 
-        searchBar = view.findViewById(R.id.species_search_bar);
-        if (searchBar != null) {
-            searchInput = searchBar.getEditText();
-            InsetsUtils.applySystemWindowInsetsMargin(searchBar, false, true, false, false);
+        searchInputLayout = view.findViewById(R.id.species_search_bar);
+        if (searchInputLayout != null) {
+            searchInput = searchInputLayout.getEditText();
+            InsetsUtils.applySystemWindowInsetsMargin(searchInputLayout, false, true, false, false);
         } else {
             searchInput = null;
+        }
+        if (searchInput == null) {
+            searchInput = view.findViewById(R.id.species_search_input);
         }
         resultsView = view.findViewById(R.id.species_search_results);
         emptyStateView = view.findViewById(R.id.species_search_empty_state);
@@ -102,7 +104,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             resultsView.setLayoutManager(new LinearLayoutManager(context));
             resultsView.setClipToPadding(false);
             InsetsUtils.applySystemWindowInsetsPadding(resultsView, false, false, false, true);
-            adapter = new SpeciesSearchAdapter(this::showDetailDialog);
+            adapter = new SpeciesSearchAdapter(this, this::showDetailDialog);
             resultsView.setAdapter(adapter);
         }
 
@@ -110,13 +112,9 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             currentQuery = savedInstanceState.getString(STATE_QUERY, "");
         }
 
-        if (!currentQuery.isEmpty()) {
-            if (searchBar != null) {
-                searchBar.setText(currentQuery);
-            }
-            if (searchInput != null) {
-                searchInput.setSelection(currentQuery.length());
-            }
+        if (!currentQuery.isEmpty() && searchInput != null) {
+            searchInput.setText(currentQuery);
+            searchInput.setSelection(currentQuery.length());
         }
 
         speciesRepository = RepositoryProvider.getSpeciesRepository(requireContext());
@@ -161,7 +159,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         }
         searchWatcher = null;
         searchInput = null;
-        searchBar = null;
+        searchInputLayout = null;
 
         if (resultsView != null) {
             resultsView.setAdapter(null);
@@ -371,7 +369,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             .show();
     }
 
-    private boolean hasRange(@Nullable SpeciesTarget.FloatRange range) {
+    private static boolean hasRange(@Nullable SpeciesTarget.FloatRange range) {
         return range != null && (range.getMin() != null || range.getMax() != null);
     }
 
@@ -473,32 +471,37 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         }
         String stageName = getString(stageNameRes);
         if (hasPpfd && hasDli) {
+            SpeciesTarget.FloatRange nonNullPpfdRange = Objects.requireNonNull(ppfdRange);
+            SpeciesTarget.FloatRange nonNullDliRange = Objects.requireNonNull(dliRange);
             return getString(R.string.format_stage_range,
                 stageName,
-                formatRangeValue(ppfdRange != null ? ppfdRange.getMin() : null),
-                formatRangeValue(ppfdRange != null ? ppfdRange.getMax() : null),
-                formatRangeValue(dliRange != null ? dliRange.getMin() : null),
-                formatRangeValue(dliRange != null ? dliRange.getMax() : null));
+                formatRangeValue(nonNullPpfdRange.getMin()),
+                formatRangeValue(nonNullPpfdRange.getMax()),
+                formatRangeValue(nonNullDliRange.getMin()),
+                formatRangeValue(nonNullDliRange.getMax()));
         }
         if (hasPpfd) {
+            SpeciesTarget.FloatRange nonNullPpfdRange = Objects.requireNonNull(ppfdRange);
             return getString(R.string.format_stage_range_ppfd_only,
                 stageName,
-                formatRangeValue(ppfdRange != null ? ppfdRange.getMin() : null),
-                formatRangeValue(ppfdRange != null ? ppfdRange.getMax() : null));
+                formatRangeValue(nonNullPpfdRange.getMin()),
+                formatRangeValue(nonNullPpfdRange.getMax()));
         }
-        return getString(R.string.format_stage_range_dli_only,
+        SpeciesTarget.FloatRange nonNullDliRange = Objects.requireNonNull(dliRange);
+        getString(R.string.format_stage_range_dli_only,
             stageName,
-            formatRangeValue(dliRange != null ? dliRange.getMin() : null),
-            formatRangeValue(dliRange != null ? dliRange.getMax() : null));
+            formatRangeValue(nonNullDliRange.getMin()),
+            formatRangeValue(nonNullDliRange.getMax()));
+        return stageName;
     }
 
-    private boolean hasLightDetails(@NonNull SpeciesTarget target) {
+    private static boolean hasLightDetails(@NonNull SpeciesTarget target) {
         return hasStageLightInfo(target.getSeedlingStage())
             || hasStageLightInfo(target.getVegetativeStage())
             || hasStageLightInfo(target.getFlowerStage());
     }
 
-    private boolean hasStageLightInfo(@Nullable SpeciesTarget.StageTarget stage) {
+    private static boolean hasStageLightInfo(@Nullable SpeciesTarget.StageTarget stage) {
         return stage != null && (hasRange(stage.getPpfdRange()) || hasRange(stage.getDliRange()));
     }
 
@@ -518,8 +521,8 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         }
     }
 
-    private class SpeciesSearchAdapter extends ListAdapter<SpeciesTarget, SpeciesSearchAdapter.ResultViewHolder> {
-        private final DiffUtil.ItemCallback<SpeciesTarget> DIFF_CALLBACK =
+    private static class SpeciesSearchAdapter extends ListAdapter<SpeciesTarget, SpeciesSearchAdapter.ResultViewHolder> {
+        private static final DiffUtil.ItemCallback<SpeciesTarget> DIFF_CALLBACK =
             new DiffUtil.ItemCallback<SpeciesTarget>() {
                 @Override
                 public boolean areItemsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
@@ -530,7 +533,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                 public boolean areContentsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
                     return Objects.equals(oldItem.getCommonName(), newItem.getCommonName())
                         && Objects.equals(oldItem.getScientificName(), newItem.getScientificName())
-                        && oldItem.getCategory() == newItem.getCategory()
+                        && Objects.equals(oldItem.getCategory(), newItem.getCategory())
                         && Objects.equals(oldItem.getSeedlingStage(), newItem.getSeedlingStage())
                         && Objects.equals(oldItem.getVegetativeStage(), newItem.getVegetativeStage())
                         && Objects.equals(oldItem.getFlowerStage(), newItem.getFlowerStage())
@@ -540,11 +543,12 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                         && Objects.equals(oldItem.getToxicToPets(), newItem.getToxicToPets());
                 }
             };
-
+        private final SpeciesSearchFragment fragment;
         private final OnSpeciesClickListener listener;
 
-        SpeciesSearchAdapter(OnSpeciesClickListener listener) {
+        SpeciesSearchAdapter(@NonNull SpeciesSearchFragment fragment, OnSpeciesClickListener listener) {
             super(DIFF_CALLBACK);
+            this.fragment = Objects.requireNonNull(fragment);
             this.listener = Objects.requireNonNull(listener);
         }
 
@@ -559,7 +563,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         @Override
         public void onBindViewHolder(@NonNull ResultViewHolder holder, int position) {
             SpeciesTarget target = getItem(position);
-            bindItemView(holder, target);
+            fragment.bindItemView(holder, target);
         }
 
         class ResultViewHolder extends RecyclerView.ViewHolder {
@@ -609,7 +613,9 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                     petIconView.setVisibility(View.VISIBLE);
                     petIconView.setContentDescription(itemView.getContext().getString(
                         toxic ? R.string.species_search_toxic_label : R.string.species_search_non_toxic_label));
-                    int colorAttr = toxic ? com.google.android.material.R.attr.colorError : R.attr.colorSecondary;
+                    int colorAttr = toxic
+                        ? com.google.android.material.R.attr.colorError
+                        : com.google.android.material.R.attr.colorSecondary;
                     int tintColor = MaterialColors.getColor(petIconView, colorAttr);
                     petIconView.setTextColor(tintColor);
                 } else {

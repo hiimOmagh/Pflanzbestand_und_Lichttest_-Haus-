@@ -43,6 +43,9 @@
     <string name="menu_import_data">Import Data</string>
     <string name="menu_export_plant_data">Export Plant Data</string>
     <string name="menu_search">Search</string>
+    <string name="species_icon_light_symbol">🌞</string>
+    <string name="species_icon_water_symbol">💧</string>
+    <string name="species_icon_pets_symbol">🐾</string>
     <string name="species_search_icon_light">Light guidance available</string>
     <string name="species_detail_section_light">Light</string>
     <string name="species_detail_light_fallback">No light recommendations available.</string>
