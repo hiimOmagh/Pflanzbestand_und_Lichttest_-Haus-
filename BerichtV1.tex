@@ -407,12 +407,90 @@ if (historyPref != null) {
 \section{Diagramme}
 % UML-Klassendiagramm oder ER-Modell einfügen
 
-\usetikzlibrary{positioning}
+\usetikzlibrary{positioning, arrows.meta}
 
 \tikzset{
   entity/.style={rectangle, draw=black, fill=blue!10, minimum width=2.5cm, minimum height=1cm, align=center},
   relation/.style={->, thick}
 }
+
+Die Anwendungsfälle der App sind in Abbildung~\ref{fig:usecase-diagramm} zusammengefasst. Der Hauptnutzer \glqq Gärtner*in\grqq{} pflegt Pflanzenbestände, dokumentiert Messreihen und löst Lichttests aus, während der gekoppelte Smart-Sensor Messwerte liefert, die anschließend analysiert werden.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    node distance=1.2cm and 2.8cm,
+    actor/.style={rectangle, draw=black, thick, rounded corners, fill=green!15, align=center, minimum width=1.9cm, minimum height=0.9cm},
+    usecase/.style={ellipse, draw=black, thick, fill=blue!10, minimum width=3.8cm, minimum height=1.4cm, align=center}
+]
+
+\node[actor] (gardener) {Gärtner*in\\(Primärnutzer)};
+\node[usecase, right=of gardener] (manage) {Pflanzenbestand pflegen};
+\node[usecase, below=of manage] (measure) {Lichtmessung durchführen};
+\node[usecase, below=of measure] (history) {Messhistorie auswerten};
+\node[usecase, right=of measure] (advice) {Pflegehinweise erhalten};
+\node[actor, below=of history] (sensor) {Smart-Sensor\\(Lichtmessung)};
+
+\draw[-{Latex[length=3mm]}] (gardener.east) -- (manage.west);
+\draw[-{Latex[length=3mm]}] (gardener.east) -- (measure.west);
+\draw[-{Latex[length=3mm]}] (gardener.east) -- (history.west);
+\draw[-{Latex[length=3mm]}] (gardener.east) -- (advice.west);
+\draw[-{Latex[length=3mm]}] (sensor.east) -- (measure.west);
+\draw[-{Latex[length=3mm]}] (sensor.east) -- (history.west);
+
+\end{tikzpicture}
+\caption{Use-Case-Diagramm der Kernabläufe}
+\label{fig:usecase-diagramm}
+\end{figure}
+
+Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trennung von UI-Schichten, Domänenlogik und Datenhaltung. Abhängigkeiten führen ausschließlich von oben nach unten, sodass UI-Komponenten Presenter und Repositorys nutzen, während Sensor-Adapter Messdaten kapseln.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    node distance=1.2cm,
+    package/.style={rectangle, draw=black, thick, rounded corners, fill=orange!15, minimum width=5.6cm, minimum height=2.4cm, align=left, inner sep=6pt}
+]
+
+\node[package] (ui) {\textbf{ui}
+\begin{tabular}{@{}l@{}}
+- fragments\\
+- activities\\
+- viewmodels
+\end{tabular}};
+
+\node[package, below=of ui] (domain) {\textbf{domain}
+\begin{tabular}{@{}l@{}}
+- usecases\\
+- presenters\\
+- lightmath
+\end{tabular}};
+
+\node[package, below=of domain] (data) {\textbf{data}
+\begin{tabular}{@{}l@{}}
+- repositories\\
+- dao / database\\
+- entities
+\end{tabular}};
+
+\node[package, right=3.6cm of domain] (sensors) {\textbf{sensors}
+\begin{tabular}{@{}l@{}}
+- camerax adapters\\
+- lux converter\\
+- calibration sources
+\end{tabular}};
+
+\draw[-{Latex[length=3mm]}] (ui.south) -- (domain.north);
+\draw[-{Latex[length=3mm]}] (domain.south) -- (data.north);
+\draw[-{Latex[length=3mm]}] (domain.east) -- (sensors.west);
+\draw[-{Latex[length=3mm]}] (ui.east) -- (sensors.north);
+
+\end{tikzpicture}
+\caption{Package-Diagramm der App-Architektur}
+\label{fig:package-diagramm}
+\end{figure}
 
 \begin{figure}[h]
 \centering
