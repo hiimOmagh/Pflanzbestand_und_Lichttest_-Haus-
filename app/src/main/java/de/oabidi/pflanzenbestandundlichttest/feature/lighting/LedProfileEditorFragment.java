@@ -291,7 +291,7 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
             return;
         }
         Bundle result = new Bundle();
-        requireParentFragmentManager().setFragmentResult(LedProfileListFragment.RESULT_KEY_PROFILES_UPDATED, result);
+        getParentFragmentManager().setFragmentResult(LedProfileListFragment.RESULT_KEY_PROFILES_UPDATED, result);
         dismiss();
     }
 

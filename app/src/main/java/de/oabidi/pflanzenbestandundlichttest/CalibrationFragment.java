@@ -53,6 +53,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private LightSensorHelper lightSensorHelper;
     private PlantRepository repository;
+    private long plantId = -1L;
     @Nullable
     private LedProfileCalibration currentCalibration;
     private Step currentStep = Step.INSTRUCTIONS;

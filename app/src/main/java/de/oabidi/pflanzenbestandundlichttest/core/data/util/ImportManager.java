@@ -432,6 +432,7 @@ public class ImportManager {
                                    AtomicInteger totalSteps) throws IOException {
         PlantDatabase db = PlantDatabase.getDatabase(context);
         Map<Long, Long> plantIdMap = new HashMap<>();
+        Map<Long, Long> ledProfileIdMap = new HashMap<>();
         final boolean[] importedAny = {false};
         final NumberFormat nf = NumberFormat.getInstance(Locale.US);
         nf.setGroupingUsed(false);
@@ -1485,9 +1486,9 @@ public class ImportManager {
                             reader.beginObject();
                             while (reader.hasNext()) {
                                 String key = reader.nextName();
-                                Float value = readNullableFloat(reader);
-                                if (key != null && value != null) {
-                                    factors.put(key, value);
+                                Float factorValue = readNullableFloat(reader);
+                                if (key != null && factorValue != null) {
+                                    factors.put(key, factorValue);
                                 }
                             }
                             reader.endObject();
