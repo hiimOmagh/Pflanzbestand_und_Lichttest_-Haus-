@@ -128,14 +128,16 @@ Zur Veranschaulichung der wichtigsten Bedienabläufe zeigen die folgenden Abbild
     \includegraphics[width=0.85\textwidth]{docs/dashboard_uebersicht.png}
     \caption{Dashboard mit Pflanzenbestand, aktuellen Messwerten und Erinnerungen.}
 \end{figure}
-Die Startansicht bündelt Pflanzenstatus, Pflegetermine und Messhistorie in einer kompakten Übersicht, sodass Nutzerinnen und Nutzer auf einen Blick dringende Aufgaben erkennen. Die farbliche Hervorhebung der Messkarten erleichtert zudem die Priorisierung der nächsten Schritte.
+
+Die Startansicht bündelt Pflanzenstatus, Pflegetermine und Messhistorie in einer kompakten Übersicht, sodass Nutzerinnen und Nutzer auf einen Blick dringende Aufgaben erkennen. Über den dahinterliegenden \texttt{MainPresenterImpl} werden Datenströme aus \texttt{PlantRepository} und \texttt{MeasurementRepository} koordiniert, wodurch insbesondere der Pflegefortschritt der \texttt{Plant}-Entitäten im Dashboard priorisiert hervorgehoben werden kann.
 
 \begin{figure}[hbtp]
     \centering
     \includegraphics[width=0.85\textwidth]{docs/lichttest_dialog.png}
     \caption{Messdialog für den Lichttest mit Schritt-für-Schritt-Anleitung.}
 \end{figure}
-Im Messdialog führen Hinweise und Fortschrittsanzeige strukturiert durch Kalibrierung und Messung, wodurch Fehlbedienungen minimiert werden. Die unmittelbare Interpretation der Lux- bzw. PPFD-Werte unterstützt fundierte Entscheidungen zur Standortwahl der Pflanzen.
+
+Im Messdialog führen Hinweise und Fortschrittsanzeige strukturiert durch Kalibrierung und Messung, wodurch Fehlbedienungen minimiert werden. Der \texttt{LightMeasurementPresenter} verknüpft Messwerte des \texttt{LightSensorHelper} mit den Kalibrierfaktoren aus \texttt{PlantCalibration}, sodass resultierende \texttt{Measurement}-Datensätze unmittelbar einer Pflanze zugeordnet und zur Standortentscheidung wissenschaftlich fundiert interpretiert werden können.
 
 \chapter{Architektur \& Codestruktur}
 \section{Projektstruktur (Stand: Final)}
@@ -444,6 +446,8 @@ Die Anwendungsfälle der App sind in Abbildung~\ref{fig:usecase-diagramm} zusamm
 \label{fig:usecase-diagramm}
 \end{figure}
 
+Die in Abbildung~\ref{fig:usecase-diagramm} modellierten Abläufe verdeutlichen, dass der \texttt{PlantListPresenter} und der \texttt{LightMeasurementPresenter} als zentrale Koordinatoren zwischen UI und Fachlogik agieren. Während Erstgenannter CRUD-Operationen auf \texttt{Plant}-Entitäten orchestriert, vermittelt der Lichtmess-Use-Case Messanfragen an \texttt{MeasurementRepository} und \texttt{NaturalLightRepository}, sodass Sensorwerte kontextualisiert und direkt in Pflegestrategien überführt werden können.
+
 Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trennung von UI-Schichten, Domänenlogik und Datenhaltung. Abhängigkeiten führen ausschließlich von oben nach unten, sodass UI-Komponenten Presenter und Repositorys nutzen, während Sensor-Adapter Messdaten kapseln.
 
 \begin{figure}[h]
@@ -492,6 +496,8 @@ Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trenn
 \label{fig:package-diagramm}
 \end{figure}
 
+Das Paketdiagramm zeigt, wie die Presenter-Schicht strikt oberhalb der Domänen- und Datenspeicherpakete positioniert ist. Diese Schichtung ermöglicht es etwa dem \texttt{PlantDetailPresenter}, Berechnungen aus \texttt{LightMath} und Zugriffsfunktionen der \texttt{PlantRepository}-Fassade zu kombinieren, während Sensoradapter wie \texttt{LightSensorHelper} isoliert angebunden bleiben und damit testbare Schnittstellen liefern.
+
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
@@ -539,6 +545,8 @@ Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trenn
 \caption{ER-Diagramm der Room-Datenbank mit Kardinalitäten}
 \end{figure}
 
+Die Datenbankstruktur betont die Rolle der \texttt{Plant}-Entität als Aggregatwurzel, an die Messungen, Erinnerungen und Beleuchtungsprofile gebunden sind. Kardinalitäten wie die 1:n-Beziehung zwischen \texttt{Plant} und \texttt{Measurement} sichern Langzeitreihen, während die Kopplung von \texttt{PlantCalibration} und \texttt{NaturalLightEstimate} besondere Anforderungen der Lichtanalyse adressiert und somit präzise Empfehlungen für die Presenter-Schicht ermöglicht.
+
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[
@@ -560,6 +568,8 @@ Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trenn
 \end{tikzpicture}
 \caption{MVP-Architektur der App}
 \end{figure}
+
+Die MVP-Architektur hebt hervor, dass Views ausschließlich über Presenter wie \texttt{PlantListPresenter} oder \texttt{DiaryPresenter} mit den Repositories interagieren. Diese Entkopplung stellt sicher, dass Persistenzoperationen der \texttt{PlantRepository}- und \texttt{MeasurementRepository}-Schichten konsistent ausgeführt werden, während Validierungslogik und Statusverwaltung im Presenter verbleiben.
 
 \begin{figure}[h]
 \centering
@@ -609,6 +619,8 @@ Die Paketstruktur in Abbildung~\ref{fig:package-diagramm} verdeutlicht die Trenn
 \end{sequencediagram}
 \caption{Sequenzdiagramm für Lichtmessung}
 \end{figure}
+
+Die Sequenz illustriert, wie der \texttt{LightMeasurementPresenter} Ereignisse aus dem Fragment verarbeitet, Messwerte via \texttt{PlantRepository} persistiert und die Berechnungsschritte zur PPFD-Umrechnung kapselt. Insbesondere die Aufrufe \texttt{onLuxChanged()} und \texttt{saveMeasurement()} verdeutlichen die klare Verantwortungszuordnung zwischen UI, Presenter, Repository und den darunterliegenden DAOs.
 
 \chapter{Implementierung}
 
