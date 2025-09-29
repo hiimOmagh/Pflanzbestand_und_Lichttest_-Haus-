@@ -430,7 +430,7 @@
     <string name="artificial_ambient_dli_placeholder">Prognostizierter Umgebungs-DLI: —</string>
     <string name="artificial_camera_dli_placeholder">Prognostizierter Kamera-DLI: —</string>
     <string name="format_artificial_photon_hours">Prognostizierte Photonenstunden: %.1f h</string>
-    <string name="format_artificial_dli">Prognostizierter %1$s DLI: %.2f mol/m²/Tag%3$s</string>
+    <string name="format_artificial_dli">Prognostizierter %1$s DLI: %2$.2f mol/m²/Tag%3$s</string>
     <string name="artificial_label_ambient">Umgebung</string>
     <string name="artificial_label_camera">Kamera</string>
     <string name="calibration_step_indicator">Schritt %1$d von %2$d</string>

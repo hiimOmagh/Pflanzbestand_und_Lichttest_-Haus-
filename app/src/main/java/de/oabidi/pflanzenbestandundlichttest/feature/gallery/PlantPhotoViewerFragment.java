@@ -121,6 +121,7 @@ public class PlantPhotoViewerFragment extends Fragment {
         ExecutorService executor = ((ExecutorProvider) application).getIoExecutor();
         photoLoader = new PlantPhotoLoader(requireContext(), executor);
         pagerAdapter = new PhotoPagerAdapter(photoLoader);
+        pagerAdapter.setHasStableIds(true);
         if (!useCustomUris) {
             if (!(application instanceof RepositoryProvider)) {
                 throw new IllegalStateException("Application must provide repository");
@@ -141,7 +142,6 @@ public class PlantPhotoViewerFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         pager = view.findViewById(R.id.photo_pager);
         pager.setAdapter(pagerAdapter);
-        pagerAdapter.setHasStableIds(true);
         if (!useCustomUris) {
             RecyclerView pagerRecycler = (RecyclerView) pager.getChildAt(0);
             if (pagerRecycler != null) {

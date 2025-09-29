@@ -431,7 +431,7 @@
     <string name="artificial_ambient_dli_placeholder">DLI ambiant projeté : —</string>
     <string name="artificial_camera_dli_placeholder">DLI caméra projeté : —</string>
     <string name="format_artificial_photon_hours">Heures de photons projetées : %.1f h</string>
-    <string name="format_artificial_dli">DLI %1$s projeté : %.2f mol/m²/jour%3$s</string>
+    <string name="format_artificial_dli">DLI %1$s projeté : %2$.2f mol/m²/jour%3$s</string>
     <string name="artificial_label_ambient">ambiant</string>
     <string name="calibration_step_indicator">Étape %1$d sur %2$d</string>
     <string name="calibration_step_title_instructions">Vérifier la configuration</string>

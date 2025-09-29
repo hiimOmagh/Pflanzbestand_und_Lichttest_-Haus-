@@ -430,7 +430,7 @@
     <string name="artificial_ambient_dli_placeholder">DLI ambiental proyectado: —</string>
     <string name="artificial_camera_dli_placeholder">DLI de cámara proyectado: —</string>
     <string name="format_artificial_photon_hours">Horas de fotones proyectadas: %.1f h</string>
-    <string name="format_artificial_dli">DLI %1$s proyectado: %.2f mol/m²/día%3$s</string>
+    <string name="format_artificial_dli">DLI %1$s proyectado: %2$.2f mol/m²/día%3$s</string>
     <string name="artificial_label_ambient">ambiental</string>
     <string name="artificial_label_camera">cámara</string>
     <string name="calibration_step_indicator">Paso %1$d de %2$d</string>

@@ -84,7 +84,7 @@ import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
         ProactiveAlertLog.class,
         NaturalLightEstimate.class
     },
-    version = 1
+    version = 2
 )
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {

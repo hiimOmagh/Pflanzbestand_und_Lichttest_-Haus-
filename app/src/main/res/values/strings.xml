@@ -22,7 +22,7 @@
     <string name="artificial_ambient_dli_placeholder">Projected ambient DLI: —</string>
     <string name="artificial_camera_dli_placeholder">Projected camera DLI: —</string>
     <string name="format_artificial_photon_hours">Projected photon-hours: %.1f h</string>
-    <string name="format_artificial_dli">Projected %1$s DLI: %.2f mol/m²/day%3$s</string>
+    <string name="format_artificial_dli">Projected %1$s DLI: %2$.2f mol/m²/day%3$s</string>
     <string name="artificial_label_ambient">ambient</string>
     <string name="artificial_label_camera">camera</string>
     <string name="artificial_fallback_suffix"> (est.)</string>
