@@ -9,6 +9,9 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
+
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -92,6 +95,34 @@ public abstract class PlantDatabase extends RoomDatabase {
         Executors.newFixedThreadPool(NUMBER_OF_THREADS);
     private static volatile PlantDatabase INSTANCE;
 
+    public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `ProactiveAlertLog` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`plantId` INTEGER NOT NULL, " +
+                "`triggerId` TEXT NOT NULL, " +
+                "`severity` TEXT NOT NULL, " +
+                "`message` TEXT NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_ProactiveAlertLog_plantId_triggerId` " +
+                "ON `ProactiveAlertLog` (`plantId`, `triggerId`)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `NaturalLightEstimate` (" +
+                "`zoneId` INTEGER NOT NULL, " +
+                "`date` INTEGER NOT NULL, " +
+                "`daylightHours` REAL NOT NULL, " +
+                "`dli` REAL NOT NULL, " +
+                "`irradianceMj` REAL NOT NULL, " +
+                "`cloudCover` REAL NOT NULL, " +
+                "`createdAt` INTEGER NOT NULL DEFAULT 0, " +
+                "PRIMARY KEY(`zoneId`, `date`), " +
+                "FOREIGN KEY(`zoneId`) REFERENCES `PlantZone`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_NaturalLightEstimate_zoneId_date` " +
+                "ON `NaturalLightEstimate` (`zoneId`, `date`)");
+        }
+    };
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -99,8 +130,9 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        // Schema migrations are not maintained; always recreate the database
-                        // on upgrade or downgrade to keep the schema in sync with assets.
+                        .addMigrations(MIGRATION_1_2)
+                        // Fall back to destructive migrations when future schema diffs lack
+                        // explicit migration paths (e.g., during development builds).
                         .fallbackToDestructiveMigration()
                         .fallbackToDestructiveMigrationOnDowngrade()
                         .addCallback(new RoomDatabase.Callback() {
