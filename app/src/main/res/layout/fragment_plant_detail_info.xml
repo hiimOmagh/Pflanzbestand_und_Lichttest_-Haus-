@@ -27,15 +27,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingBottom="8dp"
-                android:textSize="24sp"
-                android:textStyle="bold"
+                android:textAppearance="@style/TextAppearance.PlantDetail.PrimaryName"
                 tools:text="Aloe Vera" />
 
             <TextView
                 android:id="@+id/detail_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 tools:text="Succulent that prefers bright indirect light." />
 
             <TextView
@@ -43,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
-                android:textSize="16sp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 tools:text="Aloe barbadensis" />
 
             <TextView
@@ -51,7 +50,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingTop="4dp"
-                android:textSize="16sp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 tools:text="South-facing window" />
 
             <TextView
@@ -59,7 +58,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingTop="4dp"
-                android:textSize="16sp"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 tools:text="Acquired Jan 5, 2024" />
 
             <TextView
@@ -68,8 +67,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="16dp"
                 android:text="@string/light_meter_title"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.PlantDetail.CardTitle" />
 
             <LinearLayout
                 android:id="@+id/detail_light_meter_container"
@@ -90,8 +88,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/light_meter_ambient_label"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle" />
 
                     <TextView
                         android:id="@+id/detail_ambient_value"
@@ -99,7 +96,7 @@
                         android:layout_height="wrap_content"
                         android:paddingTop="4dp"
                         android:text="@string/light_meter_lux_placeholder"
-                        android:textSize="16sp" />
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
 
                     <TextView
                         android:id="@+id/detail_ambient_band"
@@ -107,7 +104,7 @@
                         android:layout_height="wrap_content"
                         android:paddingTop="2dp"
                         android:text="@string/light_meter_band_placeholder"
-                        android:textSize="14sp" />
+                        android:textAppearance="?attr/textAppearanceBodySmall" />
                 </LinearLayout>
 
                 <Space
@@ -127,8 +124,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/light_meter_camera_label"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle" />
 
                     <TextView
                         android:id="@+id/detail_camera_value"
@@ -136,7 +132,7 @@
                         android:layout_height="wrap_content"
                         android:paddingTop="4dp"
                         android:text="@string/light_meter_camera_placeholder"
-                        android:textSize="16sp" />
+                        android:textAppearance="?attr/textAppearanceBodyMedium" />
 
                     <TextView
                         android:id="@+id/detail_camera_band"
@@ -144,7 +140,7 @@
                         android:layout_height="wrap_content"
                         android:paddingTop="2dp"
                         android:text="@string/light_meter_band_placeholder"
-                        android:textSize="14sp" />
+                        android:textAppearance="?attr/textAppearanceBodySmall" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -154,7 +150,7 @@
                 android:layout_height="wrap_content"
                 android:paddingTop="8dp"
                 android:text="@string/light_meter_ev100_note"
-                android:textSize="12sp" />
+                android:textAppearance="?attr/textAppearanceBodySmall" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/detail_light_card"
@@ -234,8 +230,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/metadata_card_title"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
+                        android:textAppearance="@style/TextAppearance.PlantDetail.CardTitle"
                         tools:text="Species insights" />
 
                     <LinearLayout
@@ -265,7 +260,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/metadata_section_watering"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle"
                                 tools:text="Watering" />
 
                             <TextView
@@ -273,6 +268,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingTop="4dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
                                 tools:text="Allow soil to dry" />
 
                             <TextView
@@ -281,6 +277,7 @@
                                 android:layout_height="wrap_content"
                                 android:paddingTop="2dp"
                                 android:visibility="gone"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
                                 tools:text="Preferred soil: Well-draining mix"
                                 tools:visibility="visible" />
 
@@ -290,6 +287,7 @@
                                 android:layout_height="wrap_content"
                                 android:paddingTop="2dp"
                                 android:visibility="gone"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
                                 tools:text="Tolerance: Moderate"
                                 tools:visibility="visible" />
                         </LinearLayout>
@@ -322,7 +320,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/metadata_section_temperature"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle"
                                 tools:text="Temperature" />
 
                             <TextView
@@ -330,6 +328,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingTop="4dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
                                 tools:text="18–29°C" />
                         </LinearLayout>
                     </LinearLayout>
@@ -361,7 +360,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/metadata_section_humidity"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle"
                                 tools:text="Humidity" />
 
                             <TextView
@@ -369,6 +368,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingTop="4dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
                                 tools:text="40–70%" />
                         </LinearLayout>
                     </LinearLayout>
@@ -400,7 +400,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/metadata_section_toxicity"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle"
                                 tools:text="Toxicity" />
 
                             <TextView
@@ -408,6 +408,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingTop="4dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
                                 tools:text="Toxic to pets" />
                         </LinearLayout>
                     </LinearLayout>
@@ -439,7 +440,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/metadata_section_care_tips"
-                                android:textStyle="bold"
+                                android:textAppearance="@style/TextAppearance.PlantDetail.SectionTitle"
                                 tools:text="Care tips" />
 
                             <TextView
@@ -447,6 +448,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:paddingTop="4dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
                                 tools:text="• Rotate weekly\n• Mist occasionally" />
                         </LinearLayout>
                     </LinearLayout>
@@ -484,8 +486,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/care_recommendations_title"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textAppearance="@style/TextAppearance.PlantDetail.CardTitle" />
 
                     <LinearLayout
                         android:id="@+id/detail_care_loading"
@@ -507,7 +508,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
                             android:text="@string/care_recommendations_loading"
-                            android:textSize="14sp" />
+                            android:textAppearance="?attr/textAppearanceBodySmall" />
                     </LinearLayout>
 
                     <TextView
@@ -516,7 +517,7 @@
                         android:layout_height="wrap_content"
                         android:paddingTop="@dimen/care_card_section_spacing"
                         android:text="@string/care_recommendations_empty"
-                        android:textSize="14sp"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
                         android:visibility="gone"
                         tools:visibility="gone" />
 
