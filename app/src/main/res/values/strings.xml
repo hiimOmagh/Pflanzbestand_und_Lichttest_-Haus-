@@ -43,6 +43,9 @@
     <string name="menu_import_data">Import Data</string>
     <string name="menu_export_plant_data">Export Plant Data</string>
     <string name="menu_search">Search</string>
+    <string name="species_search_hint">Search species</string>
+    <string name="species_search_empty_prompt">Start typing to find species.</string>
+    <string name="species_search_no_results">No species match your search.</string>
     <string name="hint_positive_number">Positive number</string>
     <string name="error_positive_number">Value must be greater than 0</string>
     <string name="measurement_save">Save</string>

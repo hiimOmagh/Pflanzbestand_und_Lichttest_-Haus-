@@ -7,12 +7,16 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -25,12 +29,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SearchView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +44,97 @@ import java.util.List;
 /**
  * Fragment displaying the list of PPFD targets per species.
  */
-public class SpeciesTargetListFragment extends Fragment implements SpeciesTargetAdapter.OnTargetClickListener {
+public class SpeciesTargetListFragment extends Fragment implements SpeciesTargetAdapter.OnTargetClickListener, SpeciesSearchView {
     private PlantRepository repository;
+    private SpeciesRepository speciesRepository;
     private SpeciesTargetAdapter adapter;
+    private RecyclerView recyclerView;
+    private View emptyStateView;
+    private View progressView;
+    private SpeciesSearchPresenter searchPresenter;
+    private String currentQuery = "";
 
     public static SpeciesTargetListFragment newInstance(PlantRepository repository) {
         SpeciesTargetListFragment fragment = new SpeciesTargetListFragment();
         fragment.repository = repository;
+        fragment.speciesRepository = repository.speciesRepository();
         return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.species_target_list_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search_species);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        if (searchView != null) {
+            searchView.setQueryHint(getString(R.string.species_search_hint));
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    handleSearchQuery(query);
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    handleSearchQuery(newText);
+                    return true;
+                }
+            });
+            searchView.setOnCloseListener(() -> {
+                if (!TextUtils.isEmpty(currentQuery)) {
+                    currentQuery = "";
+                    if (searchPresenter != null) {
+                        searchPresenter.onSearchQueryChanged(currentQuery);
+                    }
+                    loadTargets();
+                }
+                return false;
+            });
+        }
+        searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                currentQuery = "";
+                if (searchPresenter != null) {
+                    searchPresenter.onSearchQueryChanged(currentQuery);
+                }
+                loadTargets();
+                return true;
+            }
+        });
+    }
+
+    private void handleSearchQuery(@Nullable String query) {
+        String normalized = query == null ? "" : query.trim();
+        if (TextUtils.equals(currentQuery, normalized) && !normalized.isEmpty()) {
+            return;
+        }
+        currentQuery = normalized;
+        if (emptyStateView instanceof TextView && TextUtils.isEmpty(normalized)) {
+            ((TextView) emptyStateView).setText(getString(R.string.species_search_empty_prompt));
+        }
+        if (searchPresenter == null) {
+            return;
+        }
+        if (normalized.isEmpty()) {
+            searchPresenter.onSearchQueryChanged(normalized);
+            loadTargets();
+        } else {
+            searchPresenter.onSearchQueryChanged(normalized);
+        }
     }
 
     static boolean isInputValid(String key, StageFields... stages) {
@@ -142,12 +231,21 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (repository == null) {
-            repository = RepositoryProvider.getRepository(requireContext());
+        PlantRepository repo = repository;
+        if (repo == null) {
+            repo = RepositoryProvider.getRepository(requireContext());
+            repository = repo;
         }
+        SpeciesRepository speciesRepo = speciesRepository;
+        if (speciesRepo == null) {
+            speciesRepo = repo.speciesRepository();
+        }
+        speciesRepository = speciesRepo;
 
         InsetsUtils.requestApplyInsetsWhenAttached(view);
-        RecyclerView recyclerView = view.findViewById(R.id.target_list);
+        recyclerView = view.findViewById(R.id.target_list);
+        emptyStateView = view.findViewById(R.id.empty_state);
+        progressView = view.findViewById(R.id.search_progress);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setClipToPadding(false);
         InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
@@ -158,16 +256,119 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
         fab.setOnClickListener(v -> showDialog(null));
 
+        searchPresenter = new SpeciesSearchPresenterImpl(this, speciesRepo, requireContext());
+
         loadTargets();
     }
 
     private void loadTargets() {
-        repository.getAllSpeciesTargets(targets -> adapter.submitList(new ArrayList<>(targets)),
+        if (searchPresenter != null && !TextUtils.isEmpty(currentQuery)) {
+            searchPresenter.onSearchQueryChanged(currentQuery);
+            return;
+        }
+        repository.getAllSpeciesTargets(targets -> {
+                if (!isAdded()) {
+                    return;
+                }
+                hideLoading();
+                if (emptyStateView instanceof TextView) {
+                    ((TextView) emptyStateView).setText(getString(R.string.species_search_empty_prompt));
+                }
+                if (emptyStateView != null) {
+                    emptyStateView.setVisibility(View.GONE);
+                }
+                recyclerView.setVisibility(View.VISIBLE);
+                adapter.submitList(new ArrayList<>(targets));
+            },
             e -> {
-                if (isAdded())
-                    Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                if (isAdded()) {
+                    showError(getString(R.string.error_database));
+                }
             });
     }
+
+
+    @Override
+    public void showLoading() {
+        if (!isAdded() || progressView == null) {
+            return;
+        }
+        progressView.setVisibility(View.VISIBLE);
+        if (emptyStateView != null) {
+            emptyStateView.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void hideLoading() {
+        if (progressView != null) {
+            progressView.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void showResults(List<SpeciesTarget> results) {
+        if (!isAdded()) {
+            return;
+        }
+        hideLoading();
+        if (emptyStateView instanceof TextView) {
+            ((TextView) emptyStateView).setText(getString(R.string.species_search_empty_prompt));
+        }
+        if (emptyStateView != null) {
+            emptyStateView.setVisibility(View.GONE);
+        }
+        recyclerView.setVisibility(View.VISIBLE);
+        adapter.submitList(new ArrayList<>(results));
+    }
+
+    @Override
+    public void showEmptyState() {
+        if (!isAdded()) {
+            return;
+        }
+        hideLoading();
+        if (TextUtils.isEmpty(currentQuery)) {
+            if (emptyStateView instanceof TextView) {
+                ((TextView) emptyStateView).setText(getString(R.string.species_search_empty_prompt));
+            }
+            if (emptyStateView != null) {
+                emptyStateView.setVisibility(View.GONE);
+            }
+            recyclerView.setVisibility(View.VISIBLE);
+            return;
+        }
+        adapter.submitList(new ArrayList<>());
+        recyclerView.setVisibility(View.GONE);
+        if (emptyStateView instanceof TextView) {
+            ((TextView) emptyStateView).setText(getString(R.string.species_search_no_results));
+        }
+        if (emptyStateView != null) {
+            emptyStateView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void showError(String message) {
+        if (!isAdded()) {
+            return;
+        }
+        hideLoading();
+        Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (searchPresenter != null) {
+            searchPresenter.onDestroy();
+            searchPresenter = null;
+        }
+        recyclerView = null;
+        emptyStateView = null;
+        progressView = null;
+        super.onDestroyView();
+    }
+
 
     private void showDialog(@Nullable SpeciesTarget target) {
         LayoutInflater inflater = LayoutInflater.from(requireContext());
@@ -307,7 +508,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     repository.insertSpeciesTarget(newTarget, this::loadTargets,
                         e -> {
                             if (isAdded())
-                                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                                showError(getString(R.string.error_database));
                         });
                     dialog.dismiss();
                 }
@@ -434,7 +635,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                 repository.deleteSpeciesTarget(target.getSpeciesKey(), this::loadTargets,
                     e -> {
                         if (isAdded())
-                            Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                            showError(getString(R.string.error_database));
                     }))
             .setNegativeButton(android.R.string.cancel, null)
             .show();
