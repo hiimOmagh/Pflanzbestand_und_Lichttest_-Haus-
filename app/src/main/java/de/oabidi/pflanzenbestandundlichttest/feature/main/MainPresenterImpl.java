@@ -143,6 +143,9 @@ public class MainPresenterImpl implements MainPresenter {
         } else if (id == R.id.action_import_data) {
             view.launchImport(new String[]{"application/zip", "application/json"});
             return true;
+        } else if (id == R.id.action_settings) {
+            view.navigateToFragment(new SettingsFragment(), true);
+            return true;
         }
         return false;
     }
@@ -163,7 +166,7 @@ public class MainPresenterImpl implements MainPresenter {
         } else if (itemId == R.id.nav_stats) {
             fragment = StatsFragment.newInstance(repository);
         } else {
-            fragment = new SettingsFragment();
+            return false;
         }
         view.navigateToFragment(fragment, false);
         return true;

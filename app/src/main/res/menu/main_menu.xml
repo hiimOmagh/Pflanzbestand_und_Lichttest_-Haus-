@@ -27,5 +27,9 @@
         android:id="@+id/action_import_data"
         android:title="@string/menu_import_data"
         app:showAsAction="never" />
-
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/title_settings"
+        app:showAsAction="never" />
 </menu>
