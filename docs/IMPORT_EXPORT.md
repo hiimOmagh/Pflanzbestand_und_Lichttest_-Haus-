@@ -76,7 +76,7 @@ JSON exports write a single prettified file `data.json` with the following top-l
         ...
     ],
     "diaryEntries": [
-        ...
+        "..."
     ],
     "reminders": [
         "..."
