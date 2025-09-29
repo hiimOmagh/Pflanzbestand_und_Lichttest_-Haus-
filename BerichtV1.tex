@@ -625,43 +625,45 @@ Die Sequenz illustriert, wie der \texttt{LightMeasurementPresenter} Ereignisse a
 \chapter{Implementierung}
 
 \section{Entwicklungsumgebung}
-Die Entwicklung erfolgte mit Android Studio \textbf{Meerkat 2025.3.1} unter Windows 10. 
-Als Build-System kam \textbf{Gradle 8.13} mit Kotlin DSL zum Einsatz. 
-Zielplattform war Android ab API Level 24 (Android 7.0). 
-Die App wurde regelmäßig auf Emulatoren sowie auf einem Google Pixel 9a getestet.
+Die Entwicklung erfolgte mit Android Studio \textbf{Meerkat 2025.3.1} unter Windows 10 Pro (22H2) sowie stichprobenartig unter Ubuntu 22.04 LTS, um Build-Skripte plattformübergreifend zu verifizieren.
+Als Build-System kam \textbf{Gradle 8.13} mit Kotlin DSL und dem Android-Gradle-Plugin \textbf{8.7.2} zum Einsatz; zusätzlich wurde das Kotlin-Plugin \textbf{2.0.21} eingebunden, um Compose- und Coroutines-Features nutzen zu können.
+Die lokale Entwicklungsumgebung setzte auf Java 21 (Temurin JDK), während in der CI-Pipeline identische Tool-Versionen über Gradle Wrapper und Versionskataloge erzwungen wurden.
+Getestet wurde auf einem Pixel 9a mit Android 15 Beta sowie auf Emulatoren mit den Profilen \textit{Pixel 8 API 34} (Android 14) und \textit{Nexus 5X API 24} (Android 7.0) mit aktivierter GPU-Emulation und 2 GB RAM, um sowohl moderne als auch Legacy-Geräte abzudecken.
 
 \section{Bibliotheken und Frameworks}
 Zur Realisierung der App wurden folgende Bibliotheken und Frameworks genutzt:
 \begin{itemize}
-    \item \textbf{Room Persistence Library} – für relationale Datenhaltung, Entities, DAOs und Migrations.
-    \item \textbf{WorkManager} – zur Ausführung von Hintergrundaufgaben wie Backups und Proactive Alerts.
-    \item \textbf{CameraX} – für Fotoaufnahmen sowie die Analyse von Preview-Frames zur Lichtmessung.
-    \item \textbf{Material Design Components} – für moderne UI-Elemente wie Buttons, Dialoge und Navigation.
-    \item \textbf{AndroidX Libraries} – Support für RecyclerView, ViewPager, Preferences u.\,a.
-    \item \textbf{Firebase Crashlytics} – zur automatischen Erfassung und Auswertung von App-Abstürzen und Fehlern.
+    \item \textbf{Room Persistence Library} – für relationale Datenhaltung, Entities, DAOs und Migrations. Die Datenbank wird über \texttt{Room.databaseBuilder()} mit \texttt{fallbackToDestructiveMigrationOnDowngrade()} konfiguriert; inkrementelle Migrationen werden in \texttt{room-migrations.kt} hinterlegt und im Build via \texttt{kapt \{ arguments += \"room.incremental\" \}} aktiviert.
+    \item \textbf{WorkManager} – zur Ausführung von Hintergrundaufgaben wie Backups und Proactive Alerts. Initialisierung erfolgt in \texttt{PlantApp.onCreate()} mit einem benutzerdefinierten \texttt{Configuration.Provider}, um Logging und verzögertes Starten zu steuern.
+    \item \textbf{CameraX} – für Fotoaufnahmen sowie die Analyse von Preview-Frames zur Lichtmessung. Eine \texttt{ProcessCameraProvider}-Instanz wird lazy erstellt; Analyzer erhalten ein gemeinsam genutztes Executor-Service aus \texttt{CameraExecutorModule}.
+    \item \textbf{Material Design Components} – für moderne UI-Elemente wie Buttons, Dialoge und Navigation. Über das Theming in \texttt{themes.xml} werden Farb- und Typografie-Token gesetzt, zudem kommt \texttt{MaterialComponents.DayNight} als Basisthema zum Einsatz.
+    \item \textbf{AndroidX Libraries} – Support für RecyclerView, ViewPager, Preferences u.\,a. Versionen werden zentral über den \texttt{libs.versions.toml}-Katalog gepflegt, wodurch Updates konsistent ausgerollt werden können.
+    \item \textbf{Firebase Crashlytics} – zur automatischen Erfassung und Auswertung von App-Abstürzen und Fehlern. Die Integration erfolgt über das Gradle-Plugin \texttt{com.google.firebase.crashlytics}; in \texttt{PlantApp} wird \texttt{FirebaseApp.initializeApp()} aufgerufen und Crashlytics im Debug-Build mit \texttt{setCrashlyticsCollectionEnabled(false)} deaktiviert.
 \end{itemize}
 
 \section{Kernfunktionen}
 Die wichtigsten Features wurden schrittweise implementiert:
 \begin{enumerate}
-    \item \textbf{Pflanzenverwaltung (CRUD)} – Anlage, Bearbeitung, Suche und Löschung von Pflanzen über \texttt{PlantRepository}.
-    \item \textbf{Lichtmessung} – Auslesen von Sensor- oder Kamera-Daten, Umrechnung in PPFD/DLI mit der Hilfsklasse \texttt{LightMath}.
-    \item \textbf{Tagebuch und Galerie} – Dokumentation mit Text und Fotos, Anzeige in übersichtlichen Listen.
-    \item \textbf{Umwelt-Logging} – manuelle Eingabe von Temperatur, Feuchtigkeit, Bodenfeuchte und Pflanzenhöhe.
-    \item \textbf{Erinnerungen} – Verwaltung über ReminderRepository, automatische Vorschläge via SmartReminderEngine.
-    \item \textbf{Proaktive Alerts} – Hintergrundprozesse prüfen regelmäßig Umweltdaten und warnen bei kritischen Werten.
-    \item \textbf{Backup und Export} – Export aller Daten als JSON/CSV, automatisierte Backups über WorkManager.
+    \item \textbf{Pflanzenverwaltung (CRUD)} – Anlage, Bearbeitung, Suche und Löschung von Pflanzen über \texttt{PlantRepository}. Formulare validieren Pflichtfelder clientseitig und schreiben Transaktionen über \texttt{PlantDao.upsert()}.
+    \item \textbf{Lichtmessung} – Auslesen von Sensor- oder Kamera-Daten, Umrechnung in PPFD/DLI mit der Hilfsklasse \texttt{LightMath}. Die Sensorkalibrierung erfolgt über einen Wizard, der drei Referenzmessungen gegen einen PAR-Sensor ausliest und daraus einen Kalibrierfaktor in \texttt{calibration.json} persistiert.
+    \item \textbf{Tagebuch und Galerie} – Dokumentation mit Text und Fotos, Anzeige in übersichtlichen Listen. Fotos werden über MediaStore gespeichert und via \texttt{PhotoRepository} mit Lifecycle-aware Paging geladen.
+    \item \textbf{Umwelt-Logging} – manuelle Eingabe von Temperatur, Feuchtigkeit, Bodenfeuchte und Pflanzenhöhe. Erfasste Messpunkte werden mit Timestamps versehen und bilden die Basis für Trend-Analysen im Diagramm-Modul.
+    \item \textbf{Erinnerungen} – Verwaltung über ReminderRepository, automatische Vorschläge via SmartReminderEngine. Algorithmen berücksichtigen Pflanzenprofil, Standort und die zuletzt erfassten Messwerte.
+    \item \textbf{Proaktive Alerts} – Hintergrundprozesse prüfen regelmäßig Umweltdaten und warnen bei kritischen Werten. Alerts werden über \texttt{AlertWorker} generiert, der Sensordaten mit hinterlegten Species-Grenzwerten vergleicht.
+    \item \textbf{Backup und Export} – Export aller Daten als JSON/CSV, automatisierte Backups über WorkManager. Der Export-Workflow erzeugt temporäre Dateien im App-Scope, bündelt sie mittels Zip-Utility und teilt sie via \texttt{FileProvider}; Anwender können über einen Wizard den Speicherort wählen.
 \end{enumerate}
 
 \section{Herausforderungen \& Lösungen}
 Während der Entwicklung traten mehrere Herausforderungen auf:
 \begin{itemize}
-    \item \textbf{Komplexität der Datenhaltung} – Lösung: Einführung spezialisierter Repositories, um das überladene PlantRepository zu entlasten.
-    \item \textbf{Kamera- und Speicherzugriff} – Lösung: Nutzung von \texttt{CameraX} und Scoped Storage mit FileProvider.
-    \item \textbf{UI-Konsistenz} – Lösung: Vereinheitlichung durch Material Components (MaterialButton, TextInputLayout).
-    \item \textbf{Benachrichtigungen ab Android 13} – Lösung: Abfrage und Handling der \texttt{POST\_NOTIFICATIONS}-Berechtigung.
-    \item \textbf{Export/Import-Inkonsistenzen} – Lösung: JSON-Backups als zuverlässiger Standard, CSV nur als Zusatz.
+    \item \textbf{Komplexität der Datenhaltung} – Lösung: Einführung spezialisierter Repositories, um das überladene PlantRepository zu entlasten. Zusätzlich wurden Room-Migrationen automatisiert getestet, indem beim Start eines Debug-Builds \texttt{MigrationTestRunner} die Datenbank durch alle Versionen migriert.
+    \item \textbf{Sensor-Kalibrierung} – Problem: Rohdaten der Kamerasensorik unterschieden sich deutlich zwischen Geräten. Lösung: Kalibrier-Assistent mit Referenzmessungen, Speicherung der Korrekturfaktoren pro Gerätemodell und unit-getestete Umrechnungsformeln in \texttt{LightMathTest}.
+    \item \textbf{Kamera- und Speicherzugriff} – Lösung: Nutzung von \texttt{CameraX} und Scoped Storage mit FileProvider. Für ältere Geräte wurde eine eigene Permission-Fallback-Logik implementiert, die Nutzer sequenziell durch alle notwendigen Freigaben führt.
+    \item \textbf{Backup-/Export-Workflow} – Problem: Große Bilddateien führten zu Out-of-Memory-Fehlern. Lösung: Streaming-Export, der Medien in 5 MB-Chunks in das ZIP schreibt, sowie Fortschrittsanzeige über ForegroundService-Notification.
+    \item \textbf{UI-Konsistenz} – Lösung: Vereinheitlichung durch Material Components (MaterialButton, TextInputLayout) und Einführung eines Design-Tokensheets, das Abstände und Typografie zentral vorgibt.
+    \item \textbf{Benachrichtigungen ab Android 13} – Lösung: Abfrage und Handling der \texttt{POST\_NOTIFICATIONS}-Berechtigung über einen dedizierten Permission-Flow mit Onboarding-Screens.
 \end{itemize}
+
 
 
 \chapter{Projekt-Audit \& Analyse}
