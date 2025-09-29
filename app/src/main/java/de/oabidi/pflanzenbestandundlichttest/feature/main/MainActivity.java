@@ -26,7 +26,7 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.OnboardingActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingActivity;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;

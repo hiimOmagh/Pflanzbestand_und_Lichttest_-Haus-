@@ -42,7 +42,7 @@
             android:name=".feature.plant.PlantDetailActivity"
             android:exported="false" />
         <activity
-            android:name=".OnboardingActivity"
+            android:name=".feature.onboarding.OnboardingActivity"
             android:exported="false" />
         <activity
             android:name=".feature.main.MainActivity"

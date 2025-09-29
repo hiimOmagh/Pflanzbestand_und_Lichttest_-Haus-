@@ -217,9 +217,17 @@
     <string name="format_species_target">%1$s : %2$s - %3$s</string>
     <string name="format_reminder_item">%1$s - %2$s</string>
     <string name="menu_help">Aide</string>
+    <string name="onboarding_overview_description">Découvrez comment l’application aide à prendre soin de votre collection.</string>
+    <string name="onboarding_slide_welcome_title">Bienvenue</string>
+    <string name="onboarding_slide_plants_title">Organisez vos plantes</string>
+    <string name="onboarding_slide_measure_title">Mesurez la lumière avec précision</string>
+    <string name="onboarding_slide_diary_title">Consignez soins et croissance</string>
     <string name="onboarding_plant_setup">Ajoutez vos plantes et suivez-les.</string>
     <string name="onboarding_measurement">Mesurez les niveaux de lumière pour aider vos plantes à prospérer.</string>
     <string name="onboarding_diary">Enregistrez les activités d\'entretien dans le journal.</string>
+    <string name="onboarding_action_skip">Ignorer</string>
+    <string name="onboarding_action_next">Suivant</string>
+    <string name="onboarding_action_get_started">Los geht’s</string>
     <string name="action_done">Compris</string>
     <string name="action_capture_photo">Capturer une photo</string>
     <string name="action_close_camera">Fermer la caméra</string>
