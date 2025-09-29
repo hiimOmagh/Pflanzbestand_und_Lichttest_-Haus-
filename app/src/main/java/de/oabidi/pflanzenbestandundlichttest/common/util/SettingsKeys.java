@@ -41,6 +41,10 @@ public final class SettingsKeys {
      */
     public static final String KEY_HAS_ONBOARDED = "has_onboarded";
     /**
+     * Marks that the full onboarding experience has been completed at least once.
+     */
+    public static final String KEY_ONBOARDING_COMPLETE = "onboarding_complete";
+    /**
      * Enables weekly automatic backups.
      */
     public static final String KEY_AUTO_BACKUP = "auto_backup";

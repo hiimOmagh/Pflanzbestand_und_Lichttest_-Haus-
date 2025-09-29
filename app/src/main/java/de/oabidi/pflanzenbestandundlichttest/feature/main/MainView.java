@@ -75,4 +75,9 @@ public interface MainView {
      * Display summarized warnings after an import.
      */
     void showImportWarnings(String message);
+
+    /**
+     * Launch the onboarding experience.
+     */
+    void launchOnboarding();
 }

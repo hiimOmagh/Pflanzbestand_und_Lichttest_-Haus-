@@ -13,7 +13,6 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.DiaryFragment;
-import de.oabidi.pflanzenbestandundlichttest.OnboardingFragment;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.StatsFragment;
@@ -67,10 +66,7 @@ public class MainPresenterImpl implements MainPresenter {
         }
 
         if (savedInstanceState == null) {
-            boolean hasOnboarded = preferences.getBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false);
-            if (!hasOnboarded) {
-                view.navigateToFragment(OnboardingFragment.newInstance(repository), false);
-            } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_DIARY, false)) {
+            if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_DIARY, false)) {
                 view.selectNavigationItem(R.id.nav_diary);
             } else if (intent.getBooleanExtra(MainActivity.EXTRA_NAVIGATE_MEASURE, false)) {
                 view.selectNavigationItem(R.id.nav_measure);
@@ -138,7 +134,7 @@ public class MainPresenterImpl implements MainPresenter {
     @Override
     public boolean onOptionsItemSelected(int id) {
         if (id == R.id.action_help) {
-            view.navigateToFragment(OnboardingFragment.newInstance(repository), true);
+            view.launchOnboarding();
             return true;
         } else if (id == R.id.action_export_data) {
             view.showExportFormatChooser(preferredFormat);

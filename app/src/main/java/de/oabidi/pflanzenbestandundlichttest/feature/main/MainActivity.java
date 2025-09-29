@@ -2,6 +2,7 @@ package de.oabidi.pflanzenbestandundlichttest.feature.main;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,11 +26,13 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.OnboardingActivity;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantDetailActivity;
 
 /**
@@ -49,11 +52,15 @@ public class MainActivity extends AppCompatActivity implements MainView {
         "de.oabidi.pflanzenbestandundlichttest.NAVIGATE_DIARY";
 
     private PlantRepository repository;
+    private SharedPreferences preferences;
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
+    private ActivityResultLauncher<Intent> onboardingLauncher;
     private MainPresenter presenter;
     private LinearProgressIndicator exportProgressBar;
+    @Nullable
+    private Bundle pendingSavedInstanceState;
 
     /**
      * Creates an intent pre-filled with the given plant's details.
@@ -81,8 +88,9 @@ public class MainActivity extends AppCompatActivity implements MainView {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        pendingSavedInstanceState = savedInstanceState;
         repository = ((RepositoryProvider) getApplication()).getRepository();
-        presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
+        preferences = getSharedPreferences(SettingsKeys.PREFS_NAME, MODE_PRIVATE);
 
         MaterialToolbar toolbar = findViewById(R.id.top_app_bar);
         setSupportActionBar(toolbar);
@@ -97,29 +105,69 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
         exportLauncher = registerForActivityResult(
             new ActivityResultContracts.CreateDocument("application/zip"),
-            presenter::handleExportResult);
+            uri -> {
+                if (presenter != null) {
+                    presenter.handleExportResult(uri);
+                }
+            });
 
         importLauncher = registerForActivityResult(
             new ActivityResultContracts.OpenDocument(),
-            presenter::handleImportResult);
+            uri -> {
+                if (presenter != null) {
+                    presenter.handleImportResult(uri);
+                }
+            });
 
         notificationPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
-            presenter::onNotificationPermissionResult);
+            granted -> {
+                if (presenter != null) {
+                    presenter.onNotificationPermissionResult(granted);
+                }
+            });
+
+        onboardingLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
+                    initialisePresenterIfNeeded(pendingSavedInstanceState, getIntent());
+                } else if (result.getResultCode() != RESULT_OK) {
+                    finish();
+                }
+            });
 
         ViewCompat.requestApplyInsets(navHost);
-        bottomNavigationView.setOnItemSelectedListener(item ->
-            presenter.onNavigationItemSelected(item.getItemId()));
 
-        presenter.onCreate(savedInstanceState, getIntent());
+        if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
+            initialisePresenterIfNeeded(savedInstanceState, getIntent());
+        } else {
+            launchOnboarding();
+        }
 
+    }
+
+    private void initialisePresenterIfNeeded(@Nullable Bundle savedInstanceState, Intent intent) {
+        if (presenter == null) {
+            presenter = new MainPresenterImpl(this, getApplicationContext(), repository);
+            NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
+            bottomNavigationView.setOnItemSelectedListener(item ->
+                presenter.onNavigationItemSelected(item.getItemId()));
+            Bundle stateToUse = savedInstanceState != null ? savedInstanceState : pendingSavedInstanceState;
+            presenter.onCreate(stateToUse, intent);
+        } else if (intent != null) {
+            presenter.onNewIntent(intent);
+        }
+        pendingSavedInstanceState = null;
     }
 
     @Override
     protected void onNewIntent(@NonNull Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        presenter.onNewIntent(intent);
+        if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
+            initialisePresenterIfNeeded(null, intent);
+        }
     }
 
     @Override
@@ -130,8 +178,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return presenter.onOptionsItemSelected(item.getItemId())
-            || super.onOptionsItemSelected(item);
+        if (presenter != null && presenter.onOptionsItemSelected(item.getItemId())) {
+            return true;
+        }
+        if (presenter == null && item.getItemId() == R.id.action_help) {
+            launchOnboarding();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     // MainView implementation
@@ -227,5 +281,13 @@ public class MainActivity extends AppCompatActivity implements MainView {
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
             .show();
+    }
+
+    @Override
+    public void launchOnboarding() {
+        if (onboardingLauncher != null) {
+            Intent intent = new Intent(this, OnboardingActivity.class);
+            onboardingLauncher.launch(intent);
+        }
     }
 }

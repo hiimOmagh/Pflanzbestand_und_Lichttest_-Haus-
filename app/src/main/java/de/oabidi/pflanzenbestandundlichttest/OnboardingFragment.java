@@ -1,7 +1,9 @@
 package de.oabidi.pflanzenbestandundlichttest;
 
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
+import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -61,7 +63,16 @@ public class OnboardingFragment extends Fragment {
     private void finishOnboarding() {
         Context ctx = requireContext();
         SharedPreferences prefs = ctx.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putBoolean(SettingsKeys.KEY_HAS_ONBOARDED, true).apply();
+        prefs.edit()
+            .putBoolean(SettingsKeys.KEY_HAS_ONBOARDED, true)
+            .putBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, true)
+            .apply();
+        Activity activity = getActivity();
+        if (activity != null && activity.findViewById(R.id.bottom_nav) == null) {
+            activity.setResult(Activity.RESULT_OK);
+            activity.finish();
+            return;
+        }
         if (getParentFragmentManager().getBackStackEntryCount() > 0) {
             getParentFragmentManager().popBackStack();
         } else {
