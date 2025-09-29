@@ -63,6 +63,15 @@ public class SpeciesRepository extends BaseRepository {
         getAllSpeciesTargets(callback, null);
     }
 
+    public void searchSpecies(String query, Consumer<List<SpeciesTarget>> callback,
+                              @Nullable Consumer<Exception> errorCallback) {
+        queryAsync(() -> speciesTargetDao.searchSpeciesTargets(query), callback, errorCallback);
+    }
+
+    public void searchSpecies(String query, Consumer<List<SpeciesTarget>> callback) {
+        searchSpecies(query, callback, null);
+    }
+
     public void getPlantProfilesByCategory(SpeciesTarget.Category category, Consumer<List<PlantProfile>> callback,
                                            @Nullable Consumer<Exception> errorCallback) {
         queryAsync(() -> hydrateProfiles(speciesTargetDao.getByCategory(category)), callback, errorCallback);
