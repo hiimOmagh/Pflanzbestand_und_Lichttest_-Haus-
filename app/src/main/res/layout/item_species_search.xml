@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/plant_list_item_vertical_padding"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="@dimen/plant_list_item_corner_radius"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/plant_list_item_horizontal_padding"
+        android:paddingTop="@dimen/plant_list_item_vertical_padding"
+        android:paddingEnd="@dimen/plant_list_item_horizontal_padding"
+        android:paddingBottom="@dimen/plant_list_item_vertical_padding">
+
+        <TextView
+            android:id="@+id/species_common_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textStyle="bold"
+            android:importantForAccessibility="yes" />
+
+        <TextView
+            android:id="@+id/species_scientific_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:importantForAccessibility="yes" />
+
+        <TextView
+            android:id="@+id/species_category"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+            android:textStyle="bold"
+            android:importantForAccessibility="yes" />
+
+        <LinearLayout
+            android:id="@+id/species_attribute_icons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/species_icon_light"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/species_search_icon_light"
+                android:text="\ud83c\udf1e"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/species_icon_water"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/species_search_icon_watering"
+                android:text="\ud83d\udca7"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/species_icon_pets"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/species_search_unknown_toxicity_label"
+                android:text="\ud83d\udc3e"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:visibility="gone" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

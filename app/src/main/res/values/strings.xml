@@ -43,6 +43,10 @@
     <string name="menu_import_data">Import Data</string>
     <string name="menu_export_plant_data">Export Plant Data</string>
     <string name="menu_search">Search</string>
+    <string name="species_search_icon_light">Light guidance available</string>
+    <string name="species_detail_section_light">Light</string>
+    <string name="species_detail_light_fallback">No light recommendations available.</string>
+    <string name="species_detail_section_pet_safety">Pet safety</string>
     <string name="species_search_hint">Search species</string>
     <string name="species_search_empty_prompt">Start typing to find species.</string>
     <string name="species_search_no_results">No species match your search.</string>

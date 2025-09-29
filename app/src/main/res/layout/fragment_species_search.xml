@@ -1,39 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingBottom="0dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/species_search_input_layout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
-        android:layout_width="match_parent"
+    <com.google.android.material.search.SearchBar
+        android:id="@+id/species_search_bar"
+        style="@style/Widget.Material3.SearchBar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/plant_list_item_horizontal_padding"
+        android:layout_marginTop="@dimen/plant_list_item_vertical_padding"
+        android:layout_marginEnd="@dimen/plant_list_item_horizontal_padding"
+        android:contentDescription="@string/species_search_hint"
         android:hint="@string/species_search_hint"
-        app:endIconMode="clear_text">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/input_species_search"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionSearch"
-            android:inputType="text"
-            android:maxLines="1" />
-    </com.google.android.material.textfield.TextInputLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
-        android:layout_width="match_parent"
+        android:id="@+id/species_search_container"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="16dp">
+        android:layout_marginStart="@dimen/plant_list_item_horizontal_padding"
+        android:layout_marginTop="@dimen/plant_list_item_vertical_padding"
+        android:layout_marginEnd="@dimen/plant_list_item_horizontal_padding"
+        android:layout_marginBottom="@dimen/plant_list_item_vertical_padding"
+        android:paddingBottom="@dimen/plant_list_item_vertical_padding"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/species_search_bar">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/species_search_results"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:contentDescription="@string/species_search_hint"
+            android:paddingTop="@dimen/plant_list_item_vertical_padding"
+            android:paddingBottom="@dimen/plant_list_item_vertical_padding" />
 
         <TextView
             android:id="@+id/species_search_empty_state"
@@ -41,18 +48,16 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:padding="24dp"
+            android:padding="@dimen/plant_list_item_horizontal_padding"
             android:text="@string/species_search_empty_prompt"
-            android:visibility="visible" />
+            android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/species_search_progress"
-            style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone" />
-
     </FrameLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

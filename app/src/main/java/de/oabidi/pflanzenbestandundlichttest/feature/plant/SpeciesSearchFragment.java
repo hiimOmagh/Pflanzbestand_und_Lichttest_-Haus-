@@ -8,11 +8,13 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,12 +23,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.search.SearchBar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputEditText;
-
-import android.content.res.ColorStateList;
-import android.widget.ImageView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,7 +56,9 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
     @Nullable
     private ProgressBar progressBar;
     @Nullable
-    private TextInputEditText searchInput;
+    private SearchBar searchBar;
+    @Nullable
+    private EditText searchInput;
     @Nullable
     private TextWatcher searchWatcher;
     @Nullable
@@ -85,7 +86,13 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
 
-        searchInput = view.findViewById(R.id.input_species_search);
+        searchBar = view.findViewById(R.id.species_search_bar);
+        if (searchBar != null) {
+            searchInput = searchBar.getEditText();
+            InsetsUtils.applySystemWindowInsetsMargin(searchBar, false, true, false, false);
+        } else {
+            searchInput = null;
+        }
         resultsView = view.findViewById(R.id.species_search_results);
         emptyStateView = view.findViewById(R.id.species_search_empty_state);
         progressBar = view.findViewById(R.id.species_search_progress);
@@ -103,9 +110,13 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             currentQuery = savedInstanceState.getString(STATE_QUERY, "");
         }
 
-        if (searchInput != null && !currentQuery.isEmpty()) {
-            searchInput.setText(currentQuery);
-            searchInput.setSelection(currentQuery.length());
+        if (!currentQuery.isEmpty()) {
+            if (searchBar != null) {
+                searchBar.setText(currentQuery);
+            }
+            if (searchInput != null) {
+                searchInput.setSelection(currentQuery.length());
+            }
         }
 
         speciesRepository = RepositoryProvider.getSpeciesRepository(requireContext());
@@ -150,6 +161,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         }
         searchWatcher = null;
         searchInput = null;
+        searchBar = null;
 
         if (resultsView != null) {
             resultsView.setAdapter(null);
@@ -249,97 +261,114 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             : !TextUtils.isEmpty(target.getScientificName())
             ? target.getScientificName()
             : getString(R.string.species_search_detail_title_fallback);
-        String message = buildDetailMessage(target);
-        new MaterialAlertDialogBuilder(requireContext())
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok, null)
-            .show();
-    }
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View contentView = inflater.inflate(R.layout.dialog_species_detail, null);
 
-    @NonNull
-    private String buildDetailMessage(@NonNull SpeciesTarget target) {
-        StringBuilder builder = new StringBuilder();
-        if (!TextUtils.isEmpty(target.getScientificName())) {
-            builder.append(getString(R.string.species_search_scientific_label, target.getScientificName()));
-            builder.append('\n');
-        }
-        builder.append(getString(R.string.species_search_category_label, formatCategory(target.getCategory())));
+        TextView scientificNameView = contentView.findViewById(R.id.species_detail_scientific_name);
+        setTextOrHide(scientificNameView,
+            !TextUtils.isEmpty(target.getScientificName())
+                ? getString(R.string.species_search_scientific_label, target.getScientificName())
+                : null);
 
-        if (!TextUtils.isEmpty(target.getGrowthHabit())) {
-            builder.append('\n');
-            builder.append(getString(R.string.species_search_growth_habit, target.getGrowthHabit()));
-        }
+        TextView categoryView = contentView.findViewById(R.id.species_detail_category);
+        categoryView.setText(getString(R.string.species_search_category_label, formatCategory(target.getCategory())));
 
+        TextView growthHabitView = contentView.findViewById(R.id.species_detail_growth_habit);
+        setTextOrHide(growthHabitView,
+            !TextUtils.isEmpty(target.getGrowthHabit())
+                ? getString(R.string.species_search_growth_habit, target.getGrowthHabit())
+                : null);
+
+        TextView seedlingView = contentView.findViewById(R.id.species_detail_light_seedling);
+        TextView vegetativeView = contentView.findViewById(R.id.species_detail_light_vegetative);
+        TextView flowerView = contentView.findViewById(R.id.species_detail_light_flower);
+        TextView lightPlaceholder = contentView.findViewById(R.id.species_detail_light_placeholder);
+        boolean hasLight = bindStageDetail(seedlingView, target.getSeedlingStage(), R.string.label_stage_seedling)
+            | bindStageDetail(vegetativeView, target.getVegetativeStage(), R.string.label_stage_vegetative)
+            | bindStageDetail(flowerView, target.getFlowerStage(), R.string.label_stage_flower);
+        lightPlaceholder.setVisibility(hasLight ? View.GONE : View.VISIBLE);
+
+        TextView wateringScheduleView = contentView.findViewById(R.id.species_detail_watering_schedule);
+        TextView wateringSoilView = contentView.findViewById(R.id.species_detail_watering_soil);
+        TextView wateringToleranceView = contentView.findViewById(R.id.species_detail_watering_tolerance);
+        TextView wateringPlaceholder = contentView.findViewById(R.id.species_detail_watering_placeholder);
         SpeciesTarget.WateringInfo wateringInfo = target.getWateringInfo();
-        if (hasWateringInfo(wateringInfo)) {
-            builder.append('\n');
-            if (!TextUtils.isEmpty(wateringInfo.getFrequency())) {
-                builder.append('\n');
-                builder.append(getString(R.string.species_search_watering_label, wateringInfo.getFrequency()));
-            }
-            if (!TextUtils.isEmpty(wateringInfo.getSoilType())) {
-                builder.append('\n');
-                builder.append(getString(R.string.species_search_soil_label, wateringInfo.getSoilType()));
-            }
+        boolean hasWatering = false;
+        if (wateringInfo != null && !TextUtils.isEmpty(wateringInfo.getFrequency())) {
+            wateringScheduleView.setText(getString(R.string.species_search_watering_label, wateringInfo.getFrequency()));
+            wateringScheduleView.setVisibility(View.VISIBLE);
+            hasWatering = true;
+        } else {
+            wateringScheduleView.setVisibility(View.GONE);
         }
+        if (wateringInfo != null && !TextUtils.isEmpty(wateringInfo.getSoilType())) {
+            wateringSoilView.setText(getString(R.string.species_search_soil_label, wateringInfo.getSoilType()));
+            wateringSoilView.setVisibility(View.VISIBLE);
+            hasWatering = true;
+        } else {
+            wateringSoilView.setVisibility(View.GONE);
+        }
+        if (wateringInfo != null && !TextUtils.isEmpty(wateringInfo.getTolerance())) {
+            wateringToleranceView.setText(getString(R.string.metadata_watering_tolerance, wateringInfo.getTolerance()));
+            wateringToleranceView.setVisibility(View.VISIBLE);
+            hasWatering = true;
+        } else {
+            wateringToleranceView.setVisibility(View.GONE);
+        }
+        wateringPlaceholder.setVisibility(hasWatering ? View.GONE : View.VISIBLE);
 
+        TextView temperatureView = contentView.findViewById(R.id.species_detail_temperature_range);
         SpeciesTarget.FloatRange temperatureRange = target.getTemperatureRange();
         if (hasRange(temperatureRange)) {
-            builder.append('\n');
-            builder.append('\n');
-            builder.append(getString(R.string.species_search_temperature_label,
+            temperatureView.setText(getString(R.string.species_search_temperature_label,
                 formatRangeValue(temperatureRange.getMin()),
                 formatRangeValue(temperatureRange.getMax())));
+        } else {
+            temperatureView.setText(R.string.metadata_temperature_range_fallback);
         }
 
+        TextView humidityView = contentView.findViewById(R.id.species_detail_humidity_range);
         SpeciesTarget.FloatRange humidityRange = target.getHumidityRange();
         if (hasRange(humidityRange)) {
-            builder.append('\n');
-            builder.append(getString(R.string.species_search_humidity_label,
+            humidityView.setText(getString(R.string.species_search_humidity_label,
                 formatRangeValue(humidityRange.getMin()),
                 formatRangeValue(humidityRange.getMax())));
+        } else {
+            humidityView.setText(R.string.metadata_humidity_range_fallback);
         }
 
+        TextView petSafetyView = contentView.findViewById(R.id.species_detail_pet_safety);
         Boolean toxic = target.getToxicToPets();
         if (toxic != null) {
-            builder.append('\n');
-            builder.append('\n');
-            builder.append(getString(toxic ? R.string.species_search_toxic_label : R.string.species_search_non_toxic_label));
-        } else if (builder.length() > 0) {
-            builder.append('\n');
-            builder.append('\n');
-            builder.append(getString(R.string.species_search_unknown_toxicity_label));
+            petSafetyView.setText(getString(toxic
+                ? R.string.species_search_toxic_label
+                : R.string.species_search_non_toxic_label));
+        } else {
+            petSafetyView.setText(R.string.species_search_unknown_toxicity_label);
         }
 
-        List<String> careTips = target.getCareTips();
-        if (careTips != null && !careTips.isEmpty()) {
-            String tips = formatBulletedList(careTips);
-            if (!tips.isEmpty()) {
-                builder.append('\n');
-                builder.append('\n');
-                builder.append(getString(R.string.species_search_care_tips, tips));
-            }
+        TextView careTipsView = contentView.findViewById(R.id.species_detail_care_tips);
+        String careTips = formatBulletedList(target.getCareTips());
+        if (!TextUtils.isEmpty(careTips)) {
+            careTipsView.setText(careTips);
+        } else {
+            careTipsView.setText(R.string.metadata_care_tips_fallback);
         }
 
-        List<String> sources = target.getSources();
-        if (sources != null && !sources.isEmpty()) {
-            String formattedSources = formatBulletedList(sources);
-            if (!formattedSources.isEmpty()) {
-                builder.append('\n');
-                builder.append('\n');
-                builder.append(getString(R.string.species_search_sources, formattedSources));
-            }
+        TextView sourcesView = contentView.findViewById(R.id.species_detail_sources);
+        String sources = formatBulletedList(target.getSources());
+        if (!TextUtils.isEmpty(sources)) {
+            sourcesView.setText(getString(R.string.species_search_sources, "\n" + sources));
+            sourcesView.setVisibility(View.VISIBLE);
+        } else {
+            sourcesView.setVisibility(View.GONE);
         }
 
-        if (builder.length() == 0) {
-            builder.append(getString(R.string.species_search_detail_title_fallback));
-        }
-        return builder.toString();
-    }
-
-    private boolean hasWateringInfo(@Nullable SpeciesTarget.WateringInfo info) {
-        return info != null && (!TextUtils.isEmpty(info.getFrequency()) || !TextUtils.isEmpty(info.getSoilType()));
+        new MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setView(contentView)
+            .setPositiveButton(android.R.string.ok, null)
+            .show();
     }
 
     private boolean hasRange(@Nullable SpeciesTarget.FloatRange range) {
@@ -355,7 +384,10 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
     }
 
     @NonNull
-    private String formatBulletedList(@NonNull List<String> values) {
+    private String formatBulletedList(@Nullable List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return "";
+        }
         StringBuilder builder = new StringBuilder();
         for (String value : values) {
             if (value == null || value.trim().isEmpty()) {
@@ -404,41 +436,77 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         }
     }
 
-    private int resolveCategoryIcon(@Nullable SpeciesTarget.Category category) {
-        if (category == null) {
-            return R.drawable.ic_book;
+    private void setTextOrHide(@NonNull TextView view, @Nullable CharSequence text) {
+        if (TextUtils.isEmpty(text)) {
+            view.setVisibility(View.GONE);
+        } else {
+            view.setText(text);
+            view.setVisibility(View.VISIBLE);
         }
-        switch (category) {
-            case HOUSEPLANT:
-            case TREE:
-            case SHRUB:
-                return R.drawable.ic_home;
-            case HERB:
-            case VEGETABLE:
-                return R.drawable.ic_care_trending_up;
-            case FRUIT:
-                return R.drawable.ic_insights;
-            case FLOWER:
-                return R.drawable.ic_light;
-            case SUCCULENT:
-            case CACTUS:
-                return R.drawable.ic_care_humidity;
-            case FERN:
-            case GRASS:
-                return R.drawable.ic_care_water_drop;
-            case OTHER:
-            default:
-                return R.drawable.ic_book;
+    }
+
+    private boolean bindStageDetail(@NonNull TextView view,
+                                    @Nullable SpeciesTarget.StageTarget stage,
+                                    @StringRes int stageNameRes) {
+        String detail = formatStageDetail(stage, stageNameRes);
+        if (TextUtils.isEmpty(detail)) {
+            view.setVisibility(View.GONE);
+            return false;
         }
+        view.setText(detail);
+        view.setVisibility(View.VISIBLE);
+        return true;
+    }
+
+    @Nullable
+    private String formatStageDetail(@Nullable SpeciesTarget.StageTarget stage,
+                                     @StringRes int stageNameRes) {
+        if (stage == null) {
+            return null;
+        }
+        SpeciesTarget.FloatRange ppfdRange = stage.getPpfdRange();
+        SpeciesTarget.FloatRange dliRange = stage.getDliRange();
+        boolean hasPpfd = hasRange(ppfdRange);
+        boolean hasDli = hasRange(dliRange);
+        if (!hasPpfd && !hasDli) {
+            return null;
+        }
+        String stageName = getString(stageNameRes);
+        if (hasPpfd && hasDli) {
+            return getString(R.string.format_stage_range,
+                stageName,
+                formatRangeValue(ppfdRange != null ? ppfdRange.getMin() : null),
+                formatRangeValue(ppfdRange != null ? ppfdRange.getMax() : null),
+                formatRangeValue(dliRange != null ? dliRange.getMin() : null),
+                formatRangeValue(dliRange != null ? dliRange.getMax() : null));
+        }
+        if (hasPpfd) {
+            return getString(R.string.format_stage_range_ppfd_only,
+                stageName,
+                formatRangeValue(ppfdRange != null ? ppfdRange.getMin() : null),
+                formatRangeValue(ppfdRange != null ? ppfdRange.getMax() : null));
+        }
+        return getString(R.string.format_stage_range_dli_only,
+            stageName,
+            formatRangeValue(dliRange != null ? dliRange.getMin() : null),
+            formatRangeValue(dliRange != null ? dliRange.getMax() : null));
+    }
+
+    private boolean hasLightDetails(@NonNull SpeciesTarget target) {
+        return hasStageLightInfo(target.getSeedlingStage())
+            || hasStageLightInfo(target.getVegetativeStage())
+            || hasStageLightInfo(target.getFlowerStage());
+    }
+
+    private boolean hasStageLightInfo(@Nullable SpeciesTarget.StageTarget stage) {
+        return stage != null && (hasRange(stage.getPpfdRange()) || hasRange(stage.getDliRange()));
     }
 
     private void bindItemView(@NonNull SpeciesSearchAdapter.ResultViewHolder holder, @NonNull SpeciesTarget target) {
-        holder.bind(target,
-            formatCategory(target.getCategory()),
-            resolveCategoryIcon(target.getCategory()));
+        holder.bind(target, formatCategory(target.getCategory()));
     }
 
-    private abstract class SimpleTextWatcher implements TextWatcher {
+    private abstract static class SimpleTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             // no-op
@@ -463,6 +531,9 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                     return Objects.equals(oldItem.getCommonName(), newItem.getCommonName())
                         && Objects.equals(oldItem.getScientificName(), newItem.getScientificName())
                         && oldItem.getCategory() == newItem.getCategory()
+                        && Objects.equals(oldItem.getSeedlingStage(), newItem.getSeedlingStage())
+                        && Objects.equals(oldItem.getVegetativeStage(), newItem.getVegetativeStage())
+                        && Objects.equals(oldItem.getFlowerStage(), newItem.getFlowerStage())
                         && Objects.equals(oldItem.getWateringInfo(), newItem.getWateringInfo())
                         && Objects.equals(oldItem.getTemperatureRange(), newItem.getTemperatureRange())
                         && Objects.equals(oldItem.getHumidityRange(), newItem.getHumidityRange())
@@ -481,7 +552,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         @Override
         public ResultViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            View view = inflater.inflate(R.layout.item_species_search_result, parent, false);
+            View view = inflater.inflate(R.layout.item_species_search, parent, false);
             return new ResultViewHolder(view);
         }
 
@@ -494,26 +565,22 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
         class ResultViewHolder extends RecyclerView.ViewHolder {
             private final TextView commonNameView;
             private final TextView scientificNameView;
-            private final Chip categoryChip;
-            private final ImageView categoryIconView;
-            private final ImageView wateringIcon;
-            private final ImageView temperatureIcon;
-            private final ImageView humidityIcon;
-            private final ImageView toxicityIcon;
+            private final TextView categoryView;
+            private final TextView lightIconView;
+            private final TextView waterIconView;
+            private final TextView petIconView;
 
             ResultViewHolder(@NonNull View itemView) {
                 super(itemView);
                 commonNameView = itemView.findViewById(R.id.species_common_name);
                 scientificNameView = itemView.findViewById(R.id.species_scientific_name);
-                categoryChip = itemView.findViewById(R.id.species_category_chip);
-                categoryIconView = itemView.findViewById(R.id.species_category_icon);
-                wateringIcon = itemView.findViewById(R.id.species_icon_watering);
-                temperatureIcon = itemView.findViewById(R.id.species_icon_temperature);
-                humidityIcon = itemView.findViewById(R.id.species_icon_humidity);
-                toxicityIcon = itemView.findViewById(R.id.species_icon_toxicity);
+                categoryView = itemView.findViewById(R.id.species_category);
+                lightIconView = itemView.findViewById(R.id.species_icon_light);
+                waterIconView = itemView.findViewById(R.id.species_icon_water);
+                petIconView = itemView.findViewById(R.id.species_icon_pets);
             }
 
-            void bind(@NonNull SpeciesTarget target, @NonNull String categoryLabel, int categoryIconRes) {
+            void bind(@NonNull SpeciesTarget target, @NonNull String categoryLabel) {
                 String commonName = target.getCommonName();
                 if (TextUtils.isEmpty(commonName)) {
                     commonName = target.getSpeciesKey();
@@ -525,34 +592,29 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                     ? scientificName
                     : itemView.getContext().getString(R.string.species_search_unknown_scientific));
 
-                categoryChip.setText(categoryLabel);
-                categoryIconView.setImageResource(categoryIconRes);
+                categoryView.setText(categoryLabel);
+
+                boolean hasLight = hasLightDetails(target);
+                lightIconView.setVisibility(hasLight ? View.VISIBLE : View.GONE);
 
                 SpeciesTarget.WateringInfo watering = target.getWateringInfo();
                 boolean hasWatering = watering != null
-                    && (!TextUtils.isEmpty(watering.getFrequency()) || !TextUtils.isEmpty(watering.getSoilType()));
-                wateringIcon.setVisibility(hasWatering ? View.VISIBLE : View.GONE);
-
-                SpeciesTarget.FloatRange temperatureRange = target.getTemperatureRange();
-                boolean hasTemperature = hasRange(temperatureRange);
-                temperatureIcon.setVisibility(hasTemperature ? View.VISIBLE : View.GONE);
-
-                SpeciesTarget.FloatRange humidityRange = target.getHumidityRange();
-                boolean hasHumidity = hasRange(humidityRange);
-                humidityIcon.setVisibility(hasHumidity ? View.VISIBLE : View.GONE);
+                    && (!TextUtils.isEmpty(watering.getFrequency())
+                    || !TextUtils.isEmpty(watering.getSoilType())
+                    || !TextUtils.isEmpty(watering.getTolerance()));
+                waterIconView.setVisibility(hasWatering ? View.VISIBLE : View.GONE);
 
                 Boolean toxic = target.getToxicToPets();
                 if (toxic != null) {
-                    toxicityIcon.setVisibility(View.VISIBLE);
-                    int colorAttr = toxic
-                        ? com.google.android.material.R.attr.colorError
-                        : com.google.android.material.R.attr.colorSecondary;
-                    int tintColor = MaterialColors.getColor(itemView, colorAttr);
-                    toxicityIcon.setImageTintList(ColorStateList.valueOf(tintColor));
-                    toxicityIcon.setContentDescription(itemView.getContext().getString(
+                    petIconView.setVisibility(View.VISIBLE);
+                    petIconView.setContentDescription(itemView.getContext().getString(
                         toxic ? R.string.species_search_toxic_label : R.string.species_search_non_toxic_label));
+                    int colorAttr = toxic ? com.google.android.material.R.attr.colorError : R.attr.colorSecondary;
+                    int tintColor = MaterialColors.getColor(petIconView, colorAttr);
+                    petIconView.setTextColor(tintColor);
                 } else {
-                    toxicityIcon.setVisibility(View.GONE);
+                    petIconView.setVisibility(View.GONE);
+                    petIconView.setContentDescription(itemView.getContext().getString(R.string.species_search_unknown_toxicity_label));
                 }
 
                 itemView.setOnClickListener(v -> listener.onSpeciesClick(target));
@@ -563,4 +625,5 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
     private interface OnSpeciesClickListener {
         void onSpeciesClick(SpeciesTarget target);
     }
+
 }
