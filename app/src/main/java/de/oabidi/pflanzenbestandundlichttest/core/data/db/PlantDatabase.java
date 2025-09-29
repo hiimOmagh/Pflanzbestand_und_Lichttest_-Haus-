@@ -5,7 +5,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -116,20 +115,6 @@ public abstract class PlantDatabase extends RoomDatabase {
             }
         }
         return INSTANCE;
-    }
-
-    /**
-     * Clears the singleton database instance to allow fresh databases to be created during tests.
-     */
-    @VisibleForTesting
-    public static void resetInstanceForTesting(@NonNull Context context) {
-        synchronized (PlantDatabase.class) {
-            if (INSTANCE != null) {
-                INSTANCE.close();
-                INSTANCE = null;
-            }
-            context.getApplicationContext().deleteDatabase("plant_database");
-        }
     }
 
     private static void seedDatabase(Context context) {
