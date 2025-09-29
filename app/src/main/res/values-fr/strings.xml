@@ -434,7 +434,8 @@
     <string name="format_led_profile_type">Type : %1$s</string>
     <string name="format_led_profile_distance">Distance : %1$s cm</string>
     <plurals name="format_led_profile_schedule_count">
-        <item quantity="one">1 période</item>
+        <item quantity="one">%d période</item>
+        <item quantity="many">%d périodes</item>
         <item quantity="other">%d périodes</item>
     </plurals>
     <string name="artificial_photon_hours_placeholder">Heures de photons projetées : —</string>

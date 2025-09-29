@@ -13,7 +13,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,13 +20,13 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 import android.content.res.ColorStateList;
 import android.widget.ImageView;
-import android.util.TypedValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -439,7 +438,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
             resolveCategoryIcon(target.getCategory()));
     }
 
-    private abstract static class SimpleTextWatcher implements TextWatcher {
+    private abstract class SimpleTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             // no-op
@@ -545,8 +544,10 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                 Boolean toxic = target.getToxicToPets();
                 if (toxic != null) {
                     toxicityIcon.setVisibility(View.VISIBLE);
-                    int colorAttr = toxic ? com.google.android.material.R.attr.colorError : R.attr.colorSecondary;
-                    int tintColor = resolveThemeColor(itemView, colorAttr);
+                    int colorAttr = toxic
+                        ? com.google.android.material.R.attr.colorError
+                        : com.google.android.material.R.attr.colorSecondary;
+                    int tintColor = MaterialColors.getColor(itemView, colorAttr);
                     toxicityIcon.setImageTintList(ColorStateList.valueOf(tintColor));
                     toxicityIcon.setContentDescription(itemView.getContext().getString(
                         toxic ? R.string.species_search_toxic_label : R.string.species_search_non_toxic_label));
@@ -561,17 +562,5 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
 
     private interface OnSpeciesClickListener {
         void onSpeciesClick(SpeciesTarget target);
-    }
-
-    private int resolveThemeColor(@NonNull View view, int attrResId) {
-        Context context = view.getContext();
-        TypedValue typedValue = new TypedValue();
-        if (context.getTheme().resolveAttribute(attrResId, typedValue, true)) {
-            if (typedValue.resourceId != 0) {
-                return ContextCompat.getColor(context, typedValue.resourceId);
-            }
-            return typedValue.data;
-        }
-        return ContextCompat.getColor(context, android.R.color.black);
     }
 }
