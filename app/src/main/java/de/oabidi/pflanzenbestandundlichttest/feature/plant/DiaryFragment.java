@@ -14,11 +14,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.widget.SearchView;
@@ -38,6 +33,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
 
 import android.widget.Toast;
 
@@ -137,60 +135,55 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         listView.setClipToPadding(false);
         InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
 
-        Spinner filterSpinner = view.findViewById(R.id.diary_filter_spinner);
-        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.diary_filter_labels,
-            android.R.layout.simple_spinner_item);
-        filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        filterSpinner.setAdapter(filterAdapter);
-        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view1, int position, long id) {
-                String[] typeCodes = getResources().getStringArray(R.array.diary_filter_codes);
-                typeFilter = typeCodes[position];
-                loadEntries();
+        MaterialAutoCompleteTextView filterDropdown = view.findViewById(R.id.diary_filter_spinner);
+        String[] filterLabels = getResources().getStringArray(R.array.diary_filter_labels);
+        String[] filterCodes = getResources().getStringArray(R.array.diary_filter_codes);
+        filterDropdown.setSimpleItems(filterLabels);
+        int initialFilterIndex = 0;
+        for (int i = 0; i < filterCodes.length; i++) {
+            if (filterCodes[i].equals(typeFilter)) {
+                initialFilterIndex = i;
+                break;
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+        }
+        filterDropdown.setText(filterLabels[initialFilterIndex], false);
+        filterDropdown.setOnItemClickListener((parent, view1, position, id) -> {
+            typeFilter = filterCodes[position];
+            loadEntries();
         });
 
         adapter = new DiaryEntryAdapter(entry -> {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
-            Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
-            EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
-            Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
+            MaterialAutoCompleteTextView typeDropdown = dialogView.findViewById(R.id.diary_entry_type);
+            TextInputEditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+            MaterialButton photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
             final String[] photoUri = new String[]{entry.getPhotoUri()};
             photoButton.setOnClickListener(v2 -> {
                 photoPickedCallback = uri -> photoUri[0] = uri.toString();
                 photoPickerLauncher.launch("image/*");
             });
 
-            ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
-                requireContext(),
-                R.array.diary_entry_type_labels,
-                android.R.layout.simple_spinner_item);
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            typeSpinner.setAdapter(spinnerAdapter);
             String[] typeCodes = getResources().getStringArray(R.array.diary_entry_type_codes);
+            String[] typeLabels = getResources().getStringArray(R.array.diary_entry_type_labels);
+            typeDropdown.setSimpleItems(typeLabels);
+            final int[] selectedType = new int[]{0};
             for (int i = 0; i < typeCodes.length; i++) {
                 if (typeCodes[i].equals(entry.getType())) {
-                    typeSpinner.setSelection(i);
+                    selectedType[0] = i;
                     break;
                 }
             }
+            typeDropdown.setText(typeLabels[selectedType[0]], false);
+            typeDropdown.setOnItemClickListener((parent, view1, position, id) -> selectedType[0] = position);
             noteEdit.setText(entry.getNote());
 
             new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.action_edit_diary_entry)
                 .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    String[] typeCodes1 = getResources().getStringArray(R.array.diary_entry_type_codes);
-                    int pos = typeSpinner.getSelectedItemPosition();
-                    entry.setType(typeCodes1[pos]);
+                    int pos = resolveDropdownSelection(typeDropdown, typeLabels, selectedType[0]);
+                    entry.setType(typeCodes[pos]);
                     entry.setNote(noteEdit.getText().toString());
                     entry.setPhotoUri(photoUri[0]);
                     presenter.updateEntry(entry);
@@ -256,9 +249,9 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
 
         LayoutInflater inflater = LayoutInflater.from(requireContext());
         View dialogView = inflater.inflate(R.layout.dialog_diary_entry, null);
-        Spinner typeSpinner = dialogView.findViewById(R.id.diary_entry_type);
-        EditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
-        EditText remindEdit = dialogView.findViewById(R.id.diary_entry_remind_days);
+        MaterialAutoCompleteTextView typeDropdown = dialogView.findViewById(R.id.diary_entry_type);
+        TextInputEditText noteEdit = dialogView.findViewById(R.id.diary_entry_note);
+        TextInputEditText remindEdit = dialogView.findViewById(R.id.diary_entry_remind_days);
         TextView suggestionView = dialogView.findViewById(R.id.diary_entry_suggestion);
         suggestionView.setVisibility(View.GONE);
         AtomicBoolean userEdited = new AtomicBoolean(false);
@@ -279,27 +272,25 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                 }
             }
         });
-        Button photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
+        MaterialButton photoButton = dialogView.findViewById(R.id.diary_entry_add_photo);
         final String[] photoUri = new String[1];
         photoButton.setOnClickListener(v -> {
             photoPickedCallback = uri -> photoUri[0] = uri.toString();
             photoPickerLauncher.launch("image/*");
         });
 
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.diary_entry_type_labels,
-            android.R.layout.simple_spinner_item);
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        typeSpinner.setAdapter(spinnerAdapter);
+        String[] typeLabels = getResources().getStringArray(R.array.diary_entry_type_labels);
+        String[] typeCodes = getResources().getStringArray(R.array.diary_entry_type_codes);
+        typeDropdown.setSimpleItems(typeLabels);
+        final int[] selectedType = new int[]{0};
+        typeDropdown.setText(typeLabels[selectedType[0]], false);
+        typeDropdown.setOnItemClickListener((parent, view1, position, id) -> selectedType[0] = position);
 
         new MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.action_add_diary_entry)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                String[] typeCodes = getResources().getStringArray(R.array.diary_entry_type_codes);
-                String[] typeLabels = getResources().getStringArray(R.array.diary_entry_type_labels);
-                int pos = typeSpinner.getSelectedItemPosition();
+                int pos = resolveDropdownSelection(typeDropdown, typeLabels, selectedType[0]);
                 String type = typeCodes[pos];
                 String label = typeLabels[pos];
                 String note = noteEdit.getText().toString();
@@ -346,7 +337,7 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     }
 
     private void applyReminderSuggestion(TextView suggestionView,
-                                         EditText remindEdit,
+                                         TextInputEditText remindEdit,
                                          @Nullable ReminderSuggestion suggestion,
                                          AtomicBoolean suppressWatcher,
                                          AtomicBoolean userEdited) {
@@ -374,6 +365,19 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                 suppressWatcher.set(false);
             }
         }
+    }
+
+    private int resolveDropdownSelection(MaterialAutoCompleteTextView dropdown, String[] labels,
+                                         int fallbackIndex) {
+        CharSequence text = dropdown.getText();
+        if (text != null) {
+            for (int i = 0; i < labels.length; i++) {
+                if (labels[i].contentEquals(text)) {
+                    return i;
+                }
+            }
+        }
+        return fallbackIndex;
     }
 
     private void loadEntries() {

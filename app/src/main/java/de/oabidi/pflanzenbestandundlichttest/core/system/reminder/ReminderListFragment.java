@@ -9,11 +9,11 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -119,6 +119,10 @@ public class ReminderListFragment extends Fragment {
         });
         helper.attachToRecyclerView(recyclerView);
 
+        FloatingActionButton fab = view.findViewById(R.id.fab_add_reminder);
+        InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
+        fab.setOnClickListener(v -> showCreateDialog());
+
         loadReminders();
     }
 
@@ -134,51 +138,63 @@ public class ReminderListFragment extends Fragment {
     }
 
     private void showEditDialog(Reminder reminder) {
-        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_reminder, null);
-        EditText messageEdit = dialogView.findViewById(R.id.reminder_edit_message);
-        EditText dateEdit = dialogView.findViewById(R.id.reminder_edit_date);
-        messageEdit.setText(reminder.getMessage());
-        dateEdit.setText(df.format(new Date(reminder.getTriggerAt())));
+        showReminderDialog(reminder);
+    }
 
-        dateEdit.setInputType(InputType.TYPE_NULL);
-        dateEdit.setOnClickListener(v -> {
-            Calendar cal = Calendar.getInstance();
-            try {
-                cal.setTime(Objects.requireNonNull(df.parse(dateEdit.getText().toString())));
-            } catch (ParseException ignored) {
-            }
-            new DatePickerDialog(requireContext(), (view1, year, month, day) -> {
-                cal.set(Calendar.YEAR, year);
-                cal.set(Calendar.MONTH, month);
-                cal.set(Calendar.DAY_OF_MONTH, day);
-                new TimePickerDialog(requireContext(), (view2, hour, minute) -> {
-                    cal.set(Calendar.HOUR_OF_DAY, hour);
-                    cal.set(Calendar.MINUTE, minute);
-                    dateEdit.setText(df.format(cal.getTime()));
-                }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
-            }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
-        });
+    private void showCreateDialog() {
+        showReminderDialog(null);
+    }
+
+    private void showReminderDialog(@Nullable Reminder reminder) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_reminder, null);
+        TextInputEditText messageEdit = dialogView.findViewById(R.id.reminder_edit_message);
+        TextInputEditText dateEdit = dialogView.findViewById(R.id.reminder_edit_date);
+        Calendar cal = Calendar.getInstance();
+        if (reminder != null) {
+            messageEdit.setText(reminder.getMessage());
+            dateEdit.setText(df.format(new Date(reminder.getTriggerAt())));
+            cal.setTime(new Date(reminder.getTriggerAt()));
+        } else {
+            dateEdit.setText(df.format(cal.getTime()));
+        }
+
+        setupDateField(dateEdit, cal);
 
         AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.action_edit_reminder)
+            .setTitle(reminder != null ? R.string.action_edit_reminder : R.string.action_add_reminder)
             .setView(dialogView)
             .setPositiveButton(android.R.string.ok, null)
             .setNegativeButton(android.R.string.cancel, null)
             .create();
 
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            String message = messageEdit.getText().toString();
-            String dateStr = dateEdit.getText().toString();
+            String message = messageEdit.getText() != null ? messageEdit.getText().toString() : "";
+            String dateStr = dateEdit.getText() != null ? dateEdit.getText().toString() : "";
             try {
+                dateEdit.setError(null);
                 long triggerAt = Objects.requireNonNull(df.parse(dateStr)).getTime();
-                reminder.setMessage(message);
-                reminder.setTriggerAt(triggerAt);
-                ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
-                reminderRepository.updateReminder(reminder, this::loadReminders,
-                    e -> {
+                if (reminder != null) {
+                    reminder.setMessage(message);
+                    reminder.setTriggerAt(triggerAt);
+                    ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
+                    reminderRepository.updateReminder(reminder, this::loadReminders,
+                        e -> {
+                            if (isAdded())
+                                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+                        });
+                } else {
+                    Reminder newReminder = new Reminder(triggerAt, message, -1);
+                    reminderRepository.insertReminder(newReminder, () -> {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, newReminder.getId(), newReminder.getPlantId());
+                        loadReminders();
+                    }, e -> {
                         if (isAdded())
                             Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                     });
+                }
                 dialog.dismiss();
             } catch (ParseException e) {
                 dateEdit.setError(getString(R.string.error_invalid_date));
@@ -186,5 +202,32 @@ public class ReminderListFragment extends Fragment {
         }));
 
         dialog.show();
+    }
+
+    private void setupDateField(TextInputEditText dateEdit, Calendar cal) {
+        dateEdit.setInputType(InputType.TYPE_NULL);
+        dateEdit.setKeyListener(null);
+        dateEdit.setOnClickListener(v -> showDatePicker(dateEdit, cal));
+    }
+
+    private void showDatePicker(TextInputEditText dateEdit, Calendar cal) {
+        CharSequence currentText = dateEdit.getText();
+        if (currentText != null) {
+            try {
+                cal.setTime(Objects.requireNonNull(df.parse(currentText.toString())));
+            } catch (ParseException ignored) {
+            }
+        }
+        new DatePickerDialog(requireContext(), (view1, year, month, day) -> {
+            cal.set(Calendar.YEAR, year);
+            cal.set(Calendar.MONTH, month);
+            cal.set(Calendar.DAY_OF_MONTH, day);
+            new TimePickerDialog(requireContext(), (view2, hour, minute) -> {
+                cal.set(Calendar.HOUR_OF_DAY, hour);
+                cal.set(Calendar.MINUTE, minute);
+                dateEdit.setText(df.format(cal.getTime()));
+                dateEdit.setError(null);
+            }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
 }

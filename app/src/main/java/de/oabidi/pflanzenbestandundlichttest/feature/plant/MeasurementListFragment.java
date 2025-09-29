@@ -8,15 +8,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -41,7 +39,8 @@ public class MeasurementListFragment extends Fragment {
     private PlantRepository repository;
     private MeasurementRepository measurementRepository;
     private MeasurementAdapter adapter;
-    private Spinner filterSpinner;
+    private MaterialAutoCompleteTextView filterDropdown;
+    private int filterSelection = FILTER_ALL;
 
     /**
      * Creates a new instance showing measurements for the given plant.
@@ -86,22 +85,14 @@ public class MeasurementListFragment extends Fragment {
         listView.setLayoutManager(new LinearLayoutManager(requireContext()));
         listView.setClipToPadding(false);
         InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
-        filterSpinner = view.findViewById(R.id.measurement_filter_spinner);
-        ArrayAdapter<CharSequence> filterAdapter = ArrayAdapter.createFromResource(
-            requireContext(),
-            R.array.measurement_filter_options,
-            android.R.layout.simple_spinner_item);
-        filterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        filterSpinner.setAdapter(filterAdapter);
-        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view1, int position, long id) {
-                loadMeasurements();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+        filterDropdown = view.findViewById(R.id.measurement_filter_spinner);
+        String[] filterOptions = getResources().getStringArray(R.array.measurement_filter_options);
+        filterDropdown.setSimpleItems(filterOptions);
+        int initialSelection = Math.min(Math.max(filterSelection, 0), filterOptions.length - 1);
+        filterDropdown.setText(filterOptions[initialSelection], false);
+        filterDropdown.setOnItemClickListener((parent, view1, position, id) -> {
+            filterSelection = position;
+            loadMeasurements();
         });
         adapter = new MeasurementAdapter(measurement -> {
             EditText input = new EditText(requireContext());
@@ -140,7 +131,7 @@ public class MeasurementListFragment extends Fragment {
         if (plantId < 0) {
             return;
         }
-        if (filterSpinner == null) {
+        if (filterDropdown == null) {
             measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
                 e -> {
                     if (isAdded())
@@ -149,7 +140,7 @@ public class MeasurementListFragment extends Fragment {
             return;
         }
 
-        int position = filterSpinner.getSelectedItemPosition();
+        int position = filterSelection;
         long now = System.currentTimeMillis();
         if (position == FILTER_LAST_7_DAYS) {
             long since = now - 7L * 24 * 60 * 60 * 1000;
@@ -172,5 +163,11 @@ public class MeasurementListFragment extends Fragment {
                         Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                 });
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        filterDropdown = null;
     }
 }

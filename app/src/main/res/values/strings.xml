@@ -412,6 +412,7 @@
     <string name="range_ok">OK</string>
     <string name="range_high">High</string>
     <string name="action_edit_reminder">Edit Reminder</string>
+    <string name="action_add_reminder">Add Reminder</string>
     <string name="hint_reminder_message">Message</string>
     <string name="hint_reminder_time">Date (yyyy-MM-dd HH:mm)</string>
     <string name="reminder_suggestion_summary">Suggested: %1$d days</string>
