@@ -742,18 +742,29 @@ Dies erschwert die langfristige Wartung.
 
 \chapter{Benutzer- \& Installationshinweise}
 \section{Installation}
-APK auf Gerät übertragen und installieren.
+Die Installation der App erfolgt in wenigen Schritten, die eine sichere Bereitstellung auf dem Endgerät gewährleisten:
+\begin{enumerate}
+    \item \textbf{Download vorbereiten}: Laden Sie die signierte APK-Datei aus dem offiziellen Git-Release der Projektarbeit oder von der Hochschulseite herunter und übertragen Sie sie per USB, Airdrop-Alternative oder Cloudspeicher auf das Zielgerät.
+    \item \textbf{Unbekannte Quellen aktivieren}: Öffnen Sie die Android-Einstellungen und erlauben Sie dem verwendeten Dateimanager bzw. Browser temporär die Installation aus unbekannten Quellen. Unter aktuellen Android-Versionen erfolgt dies pro App im Menü \textit{Einstellungen \textrightarrow{} Sicherheit \textrightarrow{} Unbekannte Apps installieren}.
+    \item \textbf{Signatur prüfen}: Vor der Installation verifizieren Sie die Integrität der APK über den bereitgestellten SHA-256-Prüfsummenwert oder mittels Android Studio/\texttt{apksigner}. Stimmen Prüfsumme bzw. Signatur überein, kann die Installation über den Paket-Installer abgeschlossen werden.
+    \item \textbf{Nachbereitung}: Nach erfolgreicher Installation sollte die Zulassung unbekannter Quellen wieder deaktiviert werden, um die Gerätesicherheit zu erhöhen.
+\end{enumerate}
 
 \section{Mindestanforderungen}
-Android 7.0+, Kamera, Sensoren.
+Für einen stabilen Betrieb der Anwendung sind folgende Voraussetzungen zu erfüllen:
+\begin{itemize}
+    \item \textbf{Betriebssystem}: Android 8.0 (API-Level 26) oder neuer. Die App wurde zusätzlich auf Android 13 getestet und nutzt aktuelle Jetpack-Bibliotheken.
+    \item \textbf{Speicher}: Mindestens 150 MB freier Gerätespeicher für App, Datenbank und Medienanhänge sowie 2 GB Arbeitsspeicher für die Ausführung von Kamera- und Sensorfunktionen.
+    \item \textbf{Sensorik}: Integrierte Kamera mit Autofokus, Umgebungslichtsensor (Lux) und Beschleunigungssensor zur Lageerkennung während der Messung.
+\end{itemize}
 
 \section{Kurzanleitung}
-Kurzanleitung zur Bedienung:
+Der folgende Ablauf führt Schritt für Schritt durch die wichtigsten Funktionen der App und weist auf notwendige Berechtigungen hin:
 \begin{enumerate}
-    \item Pflanze anlegen
-    \item Lichtmessung durchführen
-    \item Tagebucheintrag hinzufügen
-    \item Exportfunktion nutzen
+    \item \textbf{Erststart \& Berechtigungen}: Starten Sie die App nach der Installation. Beim ersten Öffnen fordert sie die Berechtigungen für Kamera- und Lichtsensorzugriff an. Bestätigen Sie beide Anfragen, um Messungen durchführen zu können.
+    \item \textbf{Pflanze anlegen}: Wechseln Sie zum Pflanzenbereich und tippen Sie auf \textit{Neue Pflanze}. Hinterlegen Sie Art, Standortnotizen und optional ein Foto (erfordert Kamerazugriff oder Medienspeicherberechtigung) und speichern Sie den Eintrag.
+    \item \textbf{Lichtmessung durchführen}: Öffnen Sie die Detailansicht der soeben angelegten Pflanze und wählen Sie \textit{Lichttest starten}. Halten Sie das Gerät am Standort der Pflanze, folgen Sie der geführten Messung und speichern Sie das Ergebnis in der Historie.
+    \item \textbf{Backup erstellen}: Navigieren Sie in die Einstellungen und wählen Sie \textit{Backup/Export}. Erteilen Sie bei Bedarf die Speicherberechtigung, um ein verschlüsseltes Backup oder eine CSV-Datei auf dem Gerät bzw. in einem Cloudspeicher abzulegen.
 \end{enumerate}
 
 \chapter{Fazit \& Ausblick}
