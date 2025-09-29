@@ -24,6 +24,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
 import androidx.camera.core.CameraSelector;
@@ -39,6 +40,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -205,6 +207,16 @@ public class PlantDetailActivity extends AppCompatActivity
         // Allow the layout to extend into the system bar areas.
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_plant_detail);
+        MaterialToolbar toolbar = findViewById(R.id.detail_toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_24);
+            actionBar.setHomeActionContentDescription(R.string.content_description_navigate_up);
+        }
+        toolbar.setNavigationContentDescription(R.string.content_description_navigate_up);
+        toolbar.setNavigationOnClickListener(v -> finish());
         naturalDliFormat.setMinimumFractionDigits(1);
         naturalDliFormat.setMaximumFractionDigits(2);
 

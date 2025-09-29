@@ -490,4 +490,5 @@
     <string name="label_known_ppfd">Known PPFD:</string>
     <string name="label_ambient_factor">Ambient Factor:</string>
     <string name="label_camera_factor">Camera Factor:</string>
+    <string name="content_description_navigate_up">Navigate up</string>
 </resources>
