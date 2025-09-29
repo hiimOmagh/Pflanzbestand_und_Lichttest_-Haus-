@@ -23,4 +23,5 @@
     <color name="care_severity_info">#2196F3</color>
     <color name="care_severity_warning">#FF9800</color>
     <color name="care_severity_critical">#F44336</color>
+    <color name="colorError">#FF1200</color>
 </resources>
