@@ -87,6 +87,18 @@ public interface SpeciesTargetDao {
     List<SpeciesTarget> getWithUnknownToxicity();
 
     /**
+     * Search for species targets by matching the provided query against either the common or
+     * scientific name.
+     *
+     * @param query text to search for (case insensitive)
+     * @return list of matching profiles ordered alphabetically
+     */
+    @Query("SELECT * FROM SpeciesTarget WHERE (commonName LIKE '%' || :query || '%' COLLATE NOCASE"
+        + " OR scientificName LIKE '%' || :query || '%' COLLATE NOCASE) "
+        + "ORDER BY commonName COLLATE NOCASE, scientificName COLLATE NOCASE, speciesKey")
+    List<SpeciesTarget> searchSpeciesTargets(String query);
+
+    /**
      * Insert or replace a species target in the database.
      * *
      *
