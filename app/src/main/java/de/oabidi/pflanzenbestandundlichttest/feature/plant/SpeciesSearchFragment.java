@@ -523,7 +523,7 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
 
     private static class SpeciesSearchAdapter extends ListAdapter<SpeciesTarget, SpeciesSearchAdapter.ResultViewHolder> {
         private static final DiffUtil.ItemCallback<SpeciesTarget> DIFF_CALLBACK =
-            new DiffUtil.ItemCallback<SpeciesTarget>() {
+            new DiffUtil.ItemCallback<>() {
                 @Override
                 public boolean areItemsTheSame(@NonNull SpeciesTarget oldItem, @NonNull SpeciesTarget newItem) {
                     return Objects.equals(oldItem.getSpeciesKey(), newItem.getSpeciesKey());
@@ -614,8 +614,8 @@ public class SpeciesSearchFragment extends Fragment implements SpeciesSearchView
                     petIconView.setContentDescription(itemView.getContext().getString(
                         toxic ? R.string.species_search_toxic_label : R.string.species_search_non_toxic_label));
                     int colorAttr = toxic
-                        ? R.attr.colorError
-                        : R.attr.colorSecondary;
+                        ? com.google.android.material.R.attr.colorOnError
+                        : com.google.android.material.R.attr.colorSecondary;
                     int tintColor = MaterialColors.getColor(petIconView, colorAttr);
                     petIconView.setTextColor(tintColor);
                 } else {
