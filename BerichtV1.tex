@@ -1,0 +1,438 @@
+\documentclass[14pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{newunicodechar}
+\usepackage{pgf-umlsd}
+\usepackage{tikz}
+\usepackage{microtype}
+\newunicodechar{├}{|}
+\geometry{a4paper, margin=2.5cm}
+
+% Define code style
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=single,
+    tabsize=2,
+    showstringspaces=false
+}
+
+% Header & Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Mobile Computing SS 2025}
+\fancyhead[R]{Pflanzenbestand \& Lichttest}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+% ---------------- Title Page ----------------
+\begin{titlepage}
+    \centering
+    {\Large Hochschule Koblenz \par}
+    \vspace{3cm}
+    {\Huge \textbf{Pflanzenbestand \& Lichttest} \par}
+    \vspace{2cm}
+    {\Large Bericht zur Projektarbeit \par}
+    \vspace{3cm}
+    {\large Vorgelegt von: Omar Abidi, 538884 \par}
+    {\large Modul: Mobile Computing SS 2025 \par}
+    {\large Dozent: Prof. Kampmann \par}
+    \vfill
+    {\large Abgabetermin: 28.09.2025 \par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ---------------- Sections ----------------
+
+\chapter*{Selbstständigkeitserklärung}
+\addcontentsline{toc}{chapter}{Selbstständigkeitserklärung}
+Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig und ohne fremde Hilfe verfasst habe, keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe und die den benutzten Quellen wörtlich oder inhaltlich entnommenen Stellen als solche kenntlich gemacht habe. \\[1cm]
+Ort, Datum \hfill Unterschrift
+
+\chapter{Einleitung}
+\section{Motivation}
+Pflanzenpflege im Innenraum boomt. Ob im Studentenwohnheim, im städtischen Appartement oder im Büro – Zimmerpflanzen tragen zu einem angenehmen Raumklima und einer besseren Lebensqualität bei. Dennoch bleibt die erfolgreiche Pflege eine Herausforderung: Viele Pflanzen gedeihen nicht, weil Standort und Lichtverhältnisse nicht optimal sind. Hobbygärtner wissen selten, ob ihre Pflanzen genügend Licht erhalten oder welche Bedingungen am Standort herrschen.
+
+Mobile Endgeräte bieten hier einen innovativen Lösungsansatz: Moderne Smartphones verfügen über integrierte Sensoren wie Kamera, Lichtsensor und Beschleunigungssensor. Diese lassen sich für Messungen der Lichtintensität nutzen. Durch eine nutzerfreundliche App kann der Pflanzenbestand erfasst und gleichzeitig die Lichtversorgung gemessen werden. Die Motivation dieser Arbeit ist, eine einfach zu bedienende mobile Applikation zu entwickeln, welche die Pflanzenverwaltung und eine Lichtmessung kombiniert und Nutzer bei der Optimierung ihrer Pflanzenpflege unterstützt.
+
+\section{Zielsetzung}
+Ziel der App \textit{Pflanzenbestand \& Lichttest} ist es, Nutzern ein Werkzeug zur Verfügung zu stellen, mit dem sie:
+\begin{itemize}
+    \item ihren Pflanzenbestand digital erfassen,
+    \item Lichtmessungen durchführen und speichern,
+    \item Messwerte exportieren und langfristig analysieren können.
+\end{itemize}
+Damit wird sowohl die Organisation des Pflanzenbestands erleichtert als auch die Entscheidungsfindung über Standortwahl oder künstliche Beleuchtung unterstützt.
+
+\section{Abgrenzung}
+Die App konzentriert sich auf die Kernfunktionen Pflanzenverwaltung und Lichtmessung. Funktionen wie automatische Bewässerungssteuerung, cloudbasierte Synchronisation oder KI-gestützte Pflanzenerkennung sind nicht Bestandteil dieser Version, können jedoch als zukünftige Erweiterungen betrachtet werden.
+
+\section{Relevanz}
+Die Arbeit ist im Kontext des Moduls Mobile Computing relevant, da sie verschiedene Aspekte moderner Android-Entwicklung vereint: Sensoransteuerung, Datenhaltung mit Room, Export von Informationen sowie benutzerfreundliche Oberflächen \cite{google2024room,google2024workmanager,google2024camerax,google2024material}.
+Praktisch bietet die App einen Mehrwert für Hobbygärtner, Studierende und Interessierte, die ihre Pflanzenpflege datenbasiert verbessern möchten.
+
+\chapter{Theoretische Begründung (Review)}
+In diesem Kapitel werden die wissenschaftlichen und technischen Grundlagen beschrieben, die der App zugrunde liegen. Die einschlägige Literatur zeigt, wie stark Pflanzengesundheit und Ertrag von Kennzahlen wie photosynthetisch aktiver Strahlung, PPFD und Tageslichtintegral abhängen \cite{gavhane2023dli,xu2021nasturtium,ke2023tomato,yamashita2019ppfd}. Für praxisnahe Umsetzungen sind zudem belastbare Umrechnungen zwischen Lux-, PPFD- und DLI-Werten erforderlich \cite{wikipedia2024dli,hlg2024ppfd}:
+
+Die Photosyntheseleistung von Zimmerpflanzen hängt wesentlich von der photosynthetisch aktiven Strahlung (Photosynthetically Active Radiation, PAR) ab, die das Spektrum von 400 bis 700 nm umfasst und den Anteil des Sonnenlichts beschreibt, der von Chlorophyll absorbiert wird \cite{McCree1972}. Der photosynthetische Photonenfluss (Photosynthetic Photon Flux Density, PPFD) quantifiziert die Anzahl der innerhalb dieses Spektrums auftreffenden Photonen pro Flächeneinheit und Zeit (µmol m$^{-2}$ s$^{-1}$) und dient als zentrale Messgröße für die aktuelle Beleuchtungsintensität \cite{NelsonBugbee2015}. Ergänzend betrachtet das Tageslichtintegral (Daily Light Integral, DLI) die aufsummierte Photonenmenge über einen 24-Stunden-Zeitraum (mol m$^{-2}$ d$^{-1}$) und erlaubt Aussagen über die tägliche Lichtversorgung einer Pflanze, was insbesondere für die Bewertung von Innenraumstandorten relevant ist \cite{FaustLogan2018}.
+
+Mobile Sensoren eröffnen die Möglichkeit, PPFD- und DLI-Werte in situ zu erheben. Moderne Smartphones sind mit präzisen Lichtsensoren sowie Kameramodulen ausgestattet, deren Messdaten über geeignete Kalibrierungsverfahren für pflanzenphysiologische Analysen genutzt werden können \cite{Petersen2021}. Der Einsatz mobiler Sensorik erleichtert eine orts- und zeitnahe Dokumentation der Lichtverhältnisse, womit Nutzerinnen und Nutzer die Anpassung von Pflanzenstandorten und künstlichen Beleuchtungssystemen datengestützt vornehmen können.
+
+Für die persistente Speicherung der erfassten Lichtmessungen und Pflanzeninformationen ist ein robustes Datenhaltungskonzept erforderlich. Die Android Persistence Library Room bietet eine typisierte Abstraktionsschicht über SQLite, ermöglicht deklarative Datenmodelle sowie eine compile-time-Überprüfung von Abfragen und erfüllt damit die Anforderungen an Konsistenz und langfristige Nachvollziehbarkeit in mobilen Anwendungen \cite{AndroidRoom}. Durch Room lassen sich historische Messreihen, Kalibrierparameter und Pflanzennotizen zuverlässig lokal verfügbar machen, ohne auf eine permanente Netzwerkverbindung angewiesen zu sein.
+
+Die Gestaltung der Benutzeroberfläche orientiert sich am Material Design als etabliertem UX-Rahmenwerk von Google, das konsistente Interaktionsmuster, visuelle Hierarchien und Responsivität definiert \cite{MaterialDesign}. Die Anwendung dieser Gestaltungsprinzipien unterstützt eine intuitive Bedienbarkeit, erleichtert die Wiedererkennbarkeit von UI-Komponenten und trägt zur Erfüllung der didaktischen Anforderungen des Moduls im Bereich nutzerzentrierter mobiler Anwendungen bei.
+
+\chapter{Beschreibung der App}
+\section{Überblick}
+Die App verfolgt zwei Kernfunktionen: Verwaltung des Pflanzenbestands und Messung der Lichtintensität. Nutzerinnen und Nutzer legen zunächst eine Pflanze im digitalen Katalog an, erfassen zugehörige Stammdaten wie botanische Bezeichnung, Standort oder Erinnerungsnotizen und sichern die Information lokal. Anschließend initiiert die Anwendung einen geführten Lichttest, bei dem der Sensor kalibriert, die Messung gestartet und der Messwert unmittelbar der ausgewählten Pflanze zugeordnet wird. Abschließend bereitet die App die Messungen in tabellarischer Form sowie über Exportfunktionen auf, sodass Trends und Abweichungen analysiert und für Standortentscheidungen oder Pflegeanpassungen dokumentiert werden können.
+
+Nutzer können beliebig viele Pflanzen anlegen, bearbeiten und löschen. Für jede Pflanze lassen sich Name, Beschreibung, Art, Standorthinweis, Anschaffungsdatum sowie optional ein Foto speichern.
+
+\section{Zielgruppe}
+\begin{itemize}
+    \item Hobbygärtner: profitieren von einer strukturierten Übersicht über ihren Bestand und erhalten nachvollziehbare Hinweise, ob ein Standort ausreichend Licht liefert.
+    \item Studierende und Forschende: nutzen die dokumentierten Messreihen, um Experimente zu Lichtbedarfen oder Pflegeintervallen methodisch auszuwerten.
+    \item Interessierte Laien: gewinnen einen niedrigschwelligen Einstieg in datengestützte Pflanzenpflege und lernen, Beobachtungen mit Messwerten zu verbinden.
+\end{itemize}
+
+\section{Hauptfunktionen}
+\begin{enumerate}
+    \item Pflanzenverwaltung (CRUD): Erfassung neuer Pflanzen über ein Formular mit Validierung, Bearbeiten bestehender Datensätze sowie Archivierung nicht mehr gepflegter Exemplare; sämtliche Änderungen werden in einer lokalen Room-Datenbank versioniert gespeichert.
+    \item Lichtmessung: Schrittweise Anleitung vom Start der Sensorik, über die Kalibrierung am Referenzpunkt, bis hin zur mehrsekündigen Messphase mit Mittelwertbildung; das Ergebnis wird automatisch der aktiven Pflanze zugeordnet und mit Zeitstempel abgelegt.
+    \item Exportfunktion: Generierung strukturierter CSV-Dateien, die Messungen, Pflegeereignisse und Standortinformationen bündeln, um weiterführende Analysen in Statistik- oder Tabellenkalkulationsprogrammen zu ermöglichen.
+    \item Benutzerfreundlichkeit: Konsistente Navigationskonzepte, Tooltips zu Fachbegriffen und farbliche Hervorhebungen kritischer Werte unterstützen auch unerfahrene Nutzende bei der Interpretation der Daten.
+\end{enumerate}
+
+\section{Screenshots}
+Die nachfolgende Abbildung zeigt die Startansicht mit der Pflanzenliste und aktuellen Lichtmesswerten.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.45\textwidth]{docs/pflanzenliste.png}
+    \caption{App-Übersicht mit Filterchips, letzten Lichtmessungen und Navigationsleiste für den Pflanzenbestand.}
+\end{figure}
+
+\chapter{Architektur \& Codestruktur}
+\section{Projektstruktur (Stand: Final)}
+\begin{verbatim}
+app/src/main/
+├─ AndroidManifest.xml
+├─ assets/
+│  └─ targets.json
+├─ java/de/oabidi/pflanzenbestandundlichttest/
+│  ├─ PlantApp.java
+│  ├─ PlantRepository.java                 (Fassade über Teil-Repositories)
+│  ├─ core/
+│  │  ├─ data/
+│  │  │  ├─ db/
+│  │  │  │  └─ PlantDatabase.java
+│  │  │  ├─ dao/
+│  │  │  │  ├─ PlantDao.java, MeasurementDao.java, DiaryDao.java
+│  │  │  │  ├─ SpeciesTargetDao.java, ReminderDao.java, PlantPhotoDao.java
+│  │  │  │  └─ BulkReadDao.java
+│  │  │  ├─ plant/
+│  │  │  │  ├─ Plant.java, Measurement.java, DiaryEntry.java
+│  │  │  │  ├─ SpeciesTarget.java, PlantFts.java, DiaryEntryFts.java
+│  │  │  ├─ PlantPhoto.java, PlantZone.java, PlantCalibration.java
+│  │  │  ├─ EnvironmentEntry.java, NaturalLightEstimate.java
+│  │  │  ├─ LedProfile.java, LedProfileAssociation.java
+│  │  │  └─ ProactiveAlertLog.java
+│  │  ├─ system/
+│  │  │  ├─ ExportManager.java, BackupScheduler.java
+│  │  │  ├─ ReminderScheduler.java, ReminderReceiver.java, ReminderWorkManager.java
+│  │  │  └─ NotificationPermissionFallback.java
+│  │  └─ common/
+│  │     ├─ SettingsKeys.java, InsetsUtils.java, Converters.java
+│  │     └─ LightMath.java
+│  ├─ repository/
+│  │  ├─ MeasurementRepository.java, DiaryRepository.java
+│  │  ├─ EnvironmentRepository.java, ReminderRepository.java
+│  │  ├─ SpeciesRepository.java, GalleryRepository.java
+│  │  ├─ NaturalLightRepository.java
+│  │  └─ ProactiveAlertRepository.java
+│  └─ feature/
+│     ├─ main/
+│     │  ├─ MainActivity.java
+│     │  ├─ MainPresenter.java, MainPresenterImpl.java
+│     │  └─ PlantDetailPagerAdapter.java
+│     ├─ plant/
+│     │  ├─ PlantListFragment.java, PlantAdapter.java
+│     │  ├─ PlantListPresenter.java
+│     │  ├─ PlantDetailActivity.java, PlantDetailPresenter.java
+│     │  ├─ MeasurementListFragment.java
+│     │  ├─ DiaryFragment.java, DiaryPresenter.java
+│     │  ├─ SpeciesTargetListFragment.java, SpeciesTargetAdapter.java
+│     │  ├─ PlantPhotoCaptureFragment.java, PlantPhotoViewerFragment.java
+│     │  └─ PlantPhotoLoader.java
+│     ├─ environment/
+│     │  ├─ EnvironmentLogFragment.java, EnvironmentLogPresenter.java
+│     │  └─ (optional) Charts/Adapters
+│     ├─ alerts/
+│     │  ├─ AlertHistoryDialogFragment.java
+│     │  └─ ProactiveAlertWorkScheduler.java
+│     ├─ settings/
+│     │  └─ SettingsFragment.java
+│     └─ stats/
+│        ├─ StatsFragment.java, StatsPresenter.java
+│        └─ BarChartView.java
+└─ res/
+   ├─ layout/   (XML-Layouts)
+   ├─ menu/     (Menüs)
+   ├─ values/   (Strings, Themes, Colors)
+   ├─ xml/      (FileProvider, Preferences, Backup-Rules)
+   ├─ drawable/ └─ mipmap/
+\end{verbatim}
+
+\section{Wichtige Klassen (Auszüge)}
+Die folgenden kurzen Auszüge illustrieren den durchgängigen Fluss von \emph{Entity} über \emph{DAO} und \emph{Repository} bis zu \emph{Presenter} und \emph{Fragment}; ergänzt um typische \emph{Utility}- und \emph{Settings}-Logik. Es werden bewusst nur repräsentative Ausschnitte gezeigt.
+
+\subsection*{Entity / Data Model (PlantCalibration)}
+\begin{lstlisting}[language=Java, caption={Entity PlantCalibration.java (Auszug)}]
+@Entity(
+    tableName = "PlantCalibration",
+    foreignKeys = @ForeignKey(
+        entity = Plant.class,
+        parentColumns = "id",
+        childColumns = "plantId",
+        onDelete = ForeignKey.CASCADE
+    ),
+    indices = {@Index(value = "plantId", unique = true)}
+)
+public class PlantCalibration {
+    @PrimaryKey
+    @ColumnInfo(name = "plantId")
+    private long plantId;
+
+    @ColumnInfo(name = "ambientFactor")
+    private float ambientFactor;
+
+    @ColumnInfo(name = "cameraFactor")
+    private float cameraFactor;
+
+    public PlantCalibration(long plantId, float ambientFactor, float cameraFactor) {
+        this.plantId = plantId;
+        this.ambientFactor = ambientFactor;
+        this.cameraFactor = cameraFactor;
+    }
+
+    public long getPlantId() {
+        return plantId;
+    }
+}
+\end{lstlisting}
+
+\subsection*{DAO (PlantZoneDao)}
+\begin{lstlisting}[language=Java, caption={DAO PlantZoneDao.java (Auszug)}]
+@Dao
+public interface PlantZoneDao {
+    /** Returns the zone associated with the given plant or {@code null}. */
+    @Query("SELECT * FROM PlantZone WHERE plantId = :plantId LIMIT 1")
+    PlantZone getForPlant(long plantId);
+
+    /** Inserts a new zone record. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insert(PlantZone zone);
+
+    /** Updates an existing zone record. */
+    @Update
+    void update(PlantZone zone);
+
+    /** Removes the provided zone record. */
+    @Delete
+    void delete(PlantZone zone);
+}
+\end{lstlisting}
+
+\subsection*{Repository (MeasurementRepository)}
+\begin{lstlisting}[language=Java, caption={Repository MeasurementRepository.java (Auszug)}]
+public void insertMeasurement(Measurement measurement, Runnable callback,
+                              @Nullable Consumer<Exception> errorCallback) {
+    Objects.requireNonNull(measurement, "measurement");
+    AtomicReference<Runnable> postActionRef = new AtomicReference<>();
+    runAsync(() -> {
+        measurementDao.insert(measurement);
+        postActionRef.set(checkDliAlerts(measurement.getPlantId()));
+    }, postActionRef::get, callback, errorCallback);
+}
+
+public void insertMeasurement(Measurement measurement, Runnable callback) {
+    insertMeasurement(measurement, callback, null);
+}
+
+public void updateMeasurement(Measurement measurement, Runnable callback,
+                              @Nullable Consumer<Exception> errorCallback) {
+    Objects.requireNonNull(measurement, "measurement");
+    runAsync(() -> measurementDao.update(measurement), callback, errorCallback);
+}
+\end{lstlisting}
+
+\subsection*{Presenter (PlantListPresenter)}
+\begin{lstlisting}[language=Java, caption={Presenter PlantListPresenter.java (Auszug)}]
+public void refreshPlants() {
+    repository.getAllPlants(view::showPlants,
+        e -> view.showError(context.getString(R.string.error_database)));
+}
+
+public void insertPlant(Plant plant) {
+    repository.insert(plant, this::refreshPlants, e ->
+        view.showError(context.getString(R.string.error_database)));
+}
+
+public void updatePlant(Plant plant) {
+    repository.update(plant, this::refreshPlants, e ->
+        view.showError(context.getString(R.string.error_database)));
+}
+
+public void deletePlant(Plant plant) {
+    deletePlant(plant, null);
+}
+
+public void deletePlant(Plant plant, Runnable afterDelete) {
+    repository.delete(plant, () -> {
+        refreshPlants();
+        if (afterDelete != null) afterDelete.run();
+    }, e -> view.showError(context.getString(R.string.error_database)));
+}
+\end{lstlisting}
+
+\subsection*{Fragment / UI (PlantListFragment)}
+\begin{lstlisting}[language=Java, caption={Fragment PlantListFragment.java (Auszug)}]
+@Override
+public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    super.onViewCreated(view, savedInstanceState);
+    InsetsUtils.requestApplyInsetsWhenAttached(view);
+    RecyclerView recyclerView = view.findViewById(R.id.plant_list);
+    recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+    recyclerView.setClipToPadding(false);
+    InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
+    adapter = new PlantAdapter(this);
+    recyclerView.setAdapter(adapter);
+
+    Context context = requireContext().getApplicationContext();
+    PlantRepository repo = repository;
+    if (repo == null) {
+        repo = RepositoryProvider.getRepository(requireContext());
+        repository = repo;
+    }
+    if (!(context instanceof ExecutorProvider)) {
+        throw new IllegalStateException("Application context does not implement ExecutorProvider");
+    }
+    ExecutorService executor = ((ExecutorProvider) context).getIoExecutor();
+    ExportManager exportManager = new ExportManager(context, repo, executor);
+    ImportManager importManager = new ImportManager(context, executor);
+    presenter = new PlantListPresenter(this, repo, context, exportManager, importManager);
+    presenter.refreshPlants();
+
+    getParentFragmentManager().setFragmentResultListener(
+        PlantEditFragment.RESULT_KEY, this, (requestKey, bundle) -> presenter.refreshPlants());
+
+    setHasOptionsMenu(true);
+}
+\end{lstlisting}
+
+\subsection*{Utility (LightMath)}
+\begin{lstlisting}[language=Java, caption={Utility LightMath.java (Auszug)}]
+public static float ppfdFromLux(float lux, float k) {
+    return lux * k;
+}
+
+/** Calculate daily light integral from PPFD and light hours. */
+public static float dliFromPpfd(float ppfd, float hours) {
+    return ppfd * hours * 0.0036f;
+}
+
+/** Converts short-wave radiation energy (MJ/m²) into a DLI approximation. */
+public static float dliFromShortwaveRadiation(float shortwaveRadiationMj) {
+    return Math.max(0f, shortwaveRadiationMj) * PAR_MOL_PER_MJ;
+}
+\end{lstlisting}
+
+\subsection*{Settings (SettingsFragment)}
+\begin{lstlisting}[language=Java, caption={SettingsFragment.java (Auszug)}]
+SwitchPreferenceCompat backupPref = findPreference(SettingsKeys.KEY_AUTO_BACKUP);
+if (backupPref != null) {
+    backupPref.setOnPreferenceChangeListener((pref, newValue) -> {
+        boolean enabled = Boolean.TRUE.equals(newValue);
+        if (enabled) BackupScheduler.schedule(requireContext());
+        else BackupScheduler.cancel(requireContext());
+        return true;
+    });
+}
+
+SwitchPreferenceCompat alertsPref = findPreference(SettingsKeys.KEY_PROACTIVE_ALERTS_ENABLED);
+if (alertsPref != null) {
+    alertsPref.setOnPreferenceChangeListener((pref, newValue) -> {
+        boolean enabled = Boolean.TRUE.equals(newValue);
+        ProactiveAlertWorkScheduler.ensureScheduled(requireContext(), enabled);
+        return true;
+    });
+}
+
+Preference historyPref = findPreference("alert_history");
+if (historyPref != null) {
+    historyPref.setOnPreferenceClickListener(pref -> {
+        AlertHistoryDialogFragment.newInstance()
+            .show(getParentFragmentManager(), "alert_history");
+        return true;
+    });
+}
+\end{lstlisting}
+
+
+\section{Diagramme}
+% UML-Klassendiagramm oder ER-Modell einfügen
+
+\usetikzlibrary{positioning, calc, shapes.geometric, arrows.meta}
+
+\tikzset{
+  entity/.style={rectangle, draw=black, fill=blue!10, minimum width=2.5cm, minimum height=1cm, align=center},
+  relation/.style={->, thick}
+}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    entity/.style={rectangle, draw=black, fill=blue!10, minimum width=2.8cm, minimum height=1cm, align=center},
+    assoc/.style={rectangle, draw=black, fill=gray!15, minimum width=2.8cm, minimum height=1cm, align=center},
+  relation/.style={->, thick},
+  actor/.style={draw, thick, rounded corners, fill=gray!15, align=center, minimum width=1.8cm, minimum height=1cm},
+  usecase/.style={draw, thick, ellipse, fill=green!10, minimum width=3.6cm, minimum height=1.5cm, align=center},
+  systemboundary/.style={draw, thick, rounded corners, minimum width=9cm, minimum height=6cm, inner sep=0.8cm},
+  package/.style={draw, thick, rounded corners, fill=blue!10, align=center, minimum width=3.4cm, minimum height=1.6cm}
+]
+
+% Entities
+\node[entity] (plant) {Plant};
+\node[entity, below left=1.8cm and 3.2cm of plant] (photo) {PlantPhoto};
+\node[entity, below=1.8cm of plant] (measurement) {Measurement};
+\node[entity, below right=1.8cm and 3.2cm of plant] (diary) {DiaryEntry};
+\node[entity, right=5cm of plant] (env) {EnvironmentEntry};
+\node[entity, below=3.8cm of plant] (reminder) {Reminder};
+\node[entity, below=1.8cm of reminder] (remindersug) {ReminderSuggestion};
+\node[entity, left=5cm of reminder] (zone) {PlantZone};
+\node[entity, below=1.8cm of zone] (cal) {PlantCalibration};
+\node[entity, right=5cm of reminder] (species) {SpeciesTarget};
+\node[entity, right=5cm of env] (led) {LedProfile};
+\node[assoc, below=1.8cm of led] (assoc) {LedProfileAssociation};
+\node[entity, below=1.8cm of assoc] (natlight) {NaturalLightEstimate};
+\node[entity, below=1.8cm of natlight] (alert) {ProactiveAlertLog};
+
+% Relations (main)
+\draw[relation] (plant) -- (photo) node[midway,left] {1:n};
+\draw[relation] (plant) -- (measurement) node[midway,left] {1:n};
