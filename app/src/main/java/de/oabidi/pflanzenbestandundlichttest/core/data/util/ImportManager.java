@@ -49,6 +49,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.DiaryEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
@@ -81,6 +85,8 @@ public class ImportManager {
     private static final int ENVIRONMENT_ARTIFICIAL_HOURS_INDEX = 10;
     private static final int ENVIRONMENT_NOTES_INDEX = 11;
     private static final int ENVIRONMENT_PHOTO_INDEX = 12;
+    private static final DateTimeFormatter MEASUREMENT_DATE_FORMATTER =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private final Context context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor;
@@ -1112,67 +1118,178 @@ public class ImportManager {
                                  Map<Long, Long> plantIdMap, List<ImportWarning> warnings,
                                  int currentLine, NumberFormat nf,
                                  PlantDatabase db) {
-        if (parts.size() < 7) {
+        if (parts.isEmpty()) {
             Log.e(TAG, "Malformed measurement row: " + parts);
             warnings.add(new ImportWarning("measurements", currentLine, "malformed row"));
             return false;
         }
         try {
-            long plantId;
-            try {
-                plantId = Long.parseLong(parts.get(1));
-            } catch (NumberFormatException e) {
-                warnings.add(new ImportWarning("measurements", currentLine, "invalid plant id"));
-                return false;
-            }
-            if (mode == Mode.MERGE) {
-                Long mappedId = plantIdMap.get(plantId);
-                if (mappedId == null) {
-                    Log.w(TAG, "Skipping measurement for missing plant " + plantId);
-                    warnings.add(new ImportWarning("measurements", currentLine, "unknown plant"));
+            if (isLegacyMeasurementRow(parts)) {
+                if (parts.size() < 7) {
+                    Log.e(TAG, "Malformed measurement row: " + parts);
+                    warnings.add(new ImportWarning("measurements", currentLine, "malformed row"));
                     return false;
                 }
-                plantId = mappedId;
+                long plantId;
+                try {
+                    plantId = Long.parseLong(parts.get(1));
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("measurements", currentLine, "invalid plant id"));
+                    return false;
+                }
+                if (mode == Mode.MERGE) {
+                    Long mappedId = plantIdMap.get(plantId);
+                    if (mappedId == null) {
+                        Log.w(TAG, "Skipping measurement for missing plant " + plantId);
+                        warnings.add(new ImportWarning("measurements", currentLine, "unknown plant"));
+                        return false;
+                    }
+                    plantId = mappedId;
+                }
+                long timeEpoch;
+                try {
+                    timeEpoch = Long.parseLong(parts.get(2));
+                } catch (NumberFormatException e) {
+                    warnings.add(new ImportWarning("measurements", currentLine, "invalid timestamp"));
+                    return false;
+                }
+                float luxAvg;
+                try {
+                    luxAvg = Objects.requireNonNull(nf.parse(parts.get(3))).floatValue();
+                } catch (Exception e) {
+                    warnings.add(new ImportWarning("measurements", currentLine, "invalid lux value"));
+                    return false;
+                }
+                Float ppfd = null;
+                if (!parts.get(4).isEmpty()) {
+                    try {
+                        ppfd = Objects.requireNonNull(nf.parse(parts.get(4))).floatValue();
+                    } catch (Exception e) {
+                        warnings.add(new ImportWarning("measurements", currentLine, "invalid PPFD value"));
+                        return false;
+                    }
+                }
+                Float dli = null;
+                if (!parts.get(5).isEmpty()) {
+                    try {
+                        dli = Objects.requireNonNull(nf.parse(parts.get(5))).floatValue();
+                    } catch (Exception e) {
+                        warnings.add(new ImportWarning("measurements", currentLine, "invalid DLI value"));
+                        return false;
+                    }
+                }
+                String note = parts.get(6).isEmpty() ? null : parts.get(6);
+                Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli, note);
+                db.measurementDao().insert(m);
+                return true;
             }
+
+            if (parts.size() < 3) {
+                Log.e(TAG, "Malformed measurement row: " + parts);
+                warnings.add(new ImportWarning("measurements", currentLine, "malformed row"));
+                return false;
+            }
+
+            Long resolvedPlantId = resolveMeasurementPlantId(mode, plantIdMap, db);
+            if (resolvedPlantId == null) {
+                Log.w(TAG, "Unable to resolve plant for measurement row: " + parts);
+                warnings.add(new ImportWarning("measurements", currentLine, "unknown plant"));
+                return false;
+            }
+            long plantId = resolvedPlantId;
+
+            String dateValue = parts.get(0) != null ? parts.get(0).trim() : "";
             long timeEpoch;
             try {
-                timeEpoch = Long.parseLong(parts.get(2));
-            } catch (NumberFormatException e) {
+                LocalDateTime localDateTime = LocalDateTime.parse(dateValue, MEASUREMENT_DATE_FORMATTER);
+                timeEpoch = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            } catch (DateTimeParseException e) {
                 warnings.add(new ImportWarning("measurements", currentLine, "invalid timestamp"));
                 return false;
             }
+
+            String luxRaw = parts.get(1) != null ? parts.get(1).trim() : "";
             float luxAvg;
             try {
-                luxAvg = Objects.requireNonNull(nf.parse(parts.get(3))).floatValue();
+                luxAvg = Objects.requireNonNull(nf.parse(luxRaw)).floatValue();
             } catch (Exception e) {
                 warnings.add(new ImportWarning("measurements", currentLine, "invalid lux value"));
                 return false;
             }
+
+            String ppfdRaw = parts.get(2) != null ? parts.get(2).trim() : "";
             Float ppfd = null;
-            if (!parts.get(4).isEmpty()) {
+            if (!ppfdRaw.isEmpty()) {
                 try {
-                    ppfd = Objects.requireNonNull(nf.parse(parts.get(4))).floatValue();
+                    ppfd = Objects.requireNonNull(nf.parse(ppfdRaw)).floatValue();
                 } catch (Exception e) {
                     warnings.add(new ImportWarning("measurements", currentLine, "invalid PPFD value"));
                     return false;
                 }
             }
-            Float dli = null;
-            if (!parts.get(5).isEmpty()) {
-                try {
-                    dli = Objects.requireNonNull(nf.parse(parts.get(5))).floatValue();
-                } catch (Exception e) {
-                    warnings.add(new ImportWarning("measurements", currentLine, "invalid DLI value"));
-                    return false;
+
+            Float dli = 0f;
+            if (parts.size() > 3) {
+                String dliRaw = parts.get(3) != null ? parts.get(3).trim() : "";
+                if (!dliRaw.isEmpty()) {
+                    try {
+                        dli = Objects.requireNonNull(nf.parse(dliRaw)).floatValue();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Invalid DLI value in measurement row: " + parts, e);
+                        warnings.add(new ImportWarning("measurements", currentLine, "invalid DLI value"));
+                        dli = 0f;
+                    }
                 }
             }
-            String note = parts.get(6).isEmpty() ? null : parts.get(6);
+
+            String note = null;
+            if (parts.size() > 4) {
+                String noteRaw = parts.get(4);
+                if (noteRaw != null) {
+                    String trimmed = noteRaw.trim();
+                    note = trimmed.isEmpty() ? null : trimmed;
+                }
+            }
+
             Measurement m = new Measurement(plantId, timeEpoch, luxAvg, ppfd, dli, note);
             db.measurementDao().insert(m);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Malformed measurement row: " + parts, e);
             warnings.add(new ImportWarning("measurements", currentLine, "malformed row"));
+            return false;
+        }
+    }
+
+    @Nullable
+    private Long resolveMeasurementPlantId(Mode mode, Map<Long, Long> plantIdMap, PlantDatabase db) {
+        if (!plantIdMap.isEmpty()) {
+            if (plantIdMap.size() == 1) {
+                return plantIdMap.values().iterator().next();
+            }
+            return null;
+        }
+        if (mode == Mode.REPLACE) {
+            List<Plant> plants = db.plantDao().getAll();
+            if (plants.size() == 1) {
+                return plants.get(0).getId();
+            }
+        }
+        return null;
+    }
+
+    private boolean isLegacyMeasurementRow(List<String> parts) {
+        if (parts.isEmpty()) {
+            return false;
+        }
+        String first = parts.get(0);
+        if (first == null) {
+            return false;
+        }
+        try {
+            Long.parseLong(first.trim());
+            return true;
+        } catch (NumberFormatException e) {
             return false;
         }
     }
