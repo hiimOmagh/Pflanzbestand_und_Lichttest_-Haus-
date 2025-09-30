@@ -85,7 +85,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     @Nullable
     private TextView editingLabel;
     @Nullable
-    private TextView emptyView;
+    private View emptyView;
     @Nullable
     private LineChartView overviewChartView;
     @Nullable
@@ -260,7 +260,7 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         saveButton = view.findViewById(R.id.environment_save_button);
         cancelButton = view.findViewById(R.id.environment_cancel_button);
         editingLabel = view.findViewById(R.id.environment_editing_label);
-        emptyView = view.findViewById(R.id.environment_log_empty);
+        emptyView = view.findViewById(R.id.environment_log_empty_state);
         overviewChartView = view.findViewById(R.id.environment_chart_overview);
         overviewChartEmptyView = view.findViewById(R.id.environment_chart_overview_empty);
         trendsChartView = view.findViewById(R.id.environment_chart_trends);
@@ -454,8 +454,12 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
         if (adapter != null) {
             adapter.submitList(items);
         }
+        boolean hasItems = items != null && !items.isEmpty();
         if (listView != null) {
-            listView.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
+            listView.setVisibility(hasItems ? View.VISIBLE : View.GONE);
+        }
+        if (emptyView != null) {
+            emptyView.setVisibility(hasItems ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -463,6 +467,9 @@ public class EnvironmentLogFragment extends Fragment implements EnvironmentLogVi
     public void showEmptyState(boolean isEmpty) {
         if (emptyView != null) {
             emptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+        }
+        if (listView != null) {
+            listView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         }
     }
 
