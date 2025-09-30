@@ -162,7 +162,10 @@ public class MainPresenterImpl implements MainPresenter {
         } else if (itemId == R.id.nav_diary) {
             fragment = DiaryFragment.newInstance(repository, -1);
         } else if (itemId == R.id.nav_reminders) {
-            fragment = ReminderListFragment.newInstance(repository);
+            long selectedPlantId = preferences != null
+                ? preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1)
+                : -1;
+            fragment = ReminderListFragment.newInstance(selectedPlantId, repository);
         } else if (itemId == R.id.nav_stats) {
             fragment = StatsFragment.newInstance(repository);
         } else {
