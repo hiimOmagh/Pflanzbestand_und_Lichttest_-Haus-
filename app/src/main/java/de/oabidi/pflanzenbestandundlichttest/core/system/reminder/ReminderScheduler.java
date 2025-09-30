@@ -62,9 +62,13 @@ public class ReminderScheduler {
         }
         long triggerAt = System.currentTimeMillis() + days * AlarmManager.INTERVAL_DAY;
         Reminder reminder = new Reminder(triggerAt, message, plantId);
-        repository.insertReminder(reminder,
+        boolean accepted = repository.insertReminder(reminder,
             () -> scheduleReminderAt(context, triggerAt, message, reminder.getId(), plantId),
             errorCallback);
+        if (!accepted) {
+            Log.w("ReminderScheduler", "Failed to schedule reminder due to invalid plant association");
+            return false;
+        }
         return true;
     }
 
