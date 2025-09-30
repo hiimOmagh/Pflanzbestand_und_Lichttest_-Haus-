@@ -8,13 +8,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,6 +24,9 @@ import com.google.android.material.snackbar.Snackbar;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Measurement;
+
+import java.util.List;
 
 /**
  * Fragment displaying all measurements for a plant.
@@ -40,6 +43,8 @@ public class MeasurementListFragment extends Fragment {
     private MeasurementRepository measurementRepository;
     private MeasurementAdapter adapter;
     private MaterialAutoCompleteTextView filterDropdown;
+    private RecyclerView measurementListView;
+    private View emptyStateView;
     private int filterSelection = FILTER_ALL;
 
     /**
@@ -81,10 +86,14 @@ public class MeasurementListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
-        RecyclerView listView = view.findViewById(R.id.measurement_list);
-        listView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        listView.setClipToPadding(false);
-        InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
+        measurementListView = view.findViewById(R.id.measurement_list);
+        measurementListView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        measurementListView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(measurementListView, false, false, false, true);
+        emptyStateView = view.findViewById(R.id.measurement_empty_state);
+        if (emptyStateView != null) {
+            InsetsUtils.applySystemWindowInsetsPadding(emptyStateView, false, false, false, true);
+        }
         filterDropdown = view.findViewById(R.id.measurement_filter_spinner);
         String[] filterOptions = getResources().getStringArray(R.array.measurement_filter_options);
         filterDropdown.setSimpleItems(filterOptions);
@@ -95,12 +104,13 @@ public class MeasurementListFragment extends Fragment {
             loadMeasurements();
         });
         adapter = new MeasurementAdapter(measurement -> {
-            EditText input = new EditText(requireContext());
-            input.setHint(R.string.measurement_add_note);
+            View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_measurement_note, null);
+            TextInputEditText input = dialogView.findViewById(R.id.measurement_note_input);
             input.setText(measurement.getNote());
             new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.measurement_add_note)
-                .setView(input)
+                .setView(dialogView)
                 .setPositiveButton(android.R.string.ok, (d, w) -> {
                     String note = input.getText().toString().trim();
                     measurement.setNote(note.isEmpty() ? null : note);
@@ -123,7 +133,7 @@ public class MeasurementListFragment extends Fragment {
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
         });
-        listView.setAdapter(adapter);
+        measurementListView.setAdapter(adapter);
         loadMeasurements();
     }
 
@@ -132,7 +142,7 @@ public class MeasurementListFragment extends Fragment {
             return;
         }
         if (filterDropdown == null) {
-            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, this::onMeasurementsLoaded,
                 e -> {
                     if (isAdded())
                         Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
@@ -144,20 +154,20 @@ public class MeasurementListFragment extends Fragment {
         long now = System.currentTimeMillis();
         if (position == FILTER_LAST_7_DAYS) {
             long since = now - 7L * 24 * 60 * 60 * 1000;
-            measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, since, this::onMeasurementsLoaded,
                 e -> {
                     if (isAdded())
                         Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                 });
         } else if (position == FILTER_LAST_30_DAYS) {
             long since = now - 30L * 24 * 60 * 60 * 1000;
-            measurementRepository.measurementsForPlantSince(plantId, since, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, since, this::onMeasurementsLoaded,
                 e -> {
                     if (isAdded())
                         Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                 });
         } else {
-            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, adapter::submitList,
+            measurementRepository.measurementsForPlantSince(plantId, Long.MIN_VALUE, this::onMeasurementsLoaded,
                 e -> {
                     if (isAdded())
                         Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
@@ -165,9 +175,25 @@ public class MeasurementListFragment extends Fragment {
         }
     }
 
+    private void onMeasurementsLoaded(List<Measurement> measurements) {
+        adapter.submitList(measurements);
+        updateEmptyState(measurements);
+    }
+
+    private void updateEmptyState(List<Measurement> measurements) {
+        if (measurementListView == null || emptyStateView == null) {
+            return;
+        }
+        boolean hasData = measurements != null && !measurements.isEmpty();
+        measurementListView.setVisibility(hasData ? View.VISIBLE : View.GONE);
+        emptyStateView.setVisibility(hasData ? View.GONE : View.VISIBLE);
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         filterDropdown = null;
+        measurementListView = null;
+        emptyStateView = null;
     }
 }
