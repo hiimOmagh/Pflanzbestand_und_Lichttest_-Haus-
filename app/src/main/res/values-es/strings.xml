@@ -83,6 +83,7 @@
     <string name="measurement_save">Guardar</string>
     <string name="measurement_saved">Medición guardada</string>
     <string name="error_select_plant">Seleccione una planta</string>
+    <string name="select_plant">Seleccionar planta</string>
     <string name="error_database">Error de base de datos</string>
     <string name="plant_photo_desc">Foto de la planta</string>
     <string name="plant_photo_desc_format">Foto de %1$s</string>
