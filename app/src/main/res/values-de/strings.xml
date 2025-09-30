@@ -345,7 +345,7 @@
     <string name="environment_log_update_entry">Eintrag aktualisieren</string>
     <string name="environment_log_cancel_edit">Abbrechen</string>
     <string name="environment_log_editing_label">Umgebungs­eintrag bearbeiten</string>
-    <string name="environment_log_empty">Noch keine Umgebungs­einträge</string>
+    <string name="environment_log_empty">Noch keine Umgebungs­einträge. Tippe auf +, um einen hinzuzufügen.</string>
     <string name="environment_log_saved">Umgebungs­eintrag gespeichert</string>
     <string name="environment_log_updated">Umgebungs­eintrag aktualisiert</string>
     <string name="environment_log_deleted">Umgebungs­eintrag gelöscht</string>
