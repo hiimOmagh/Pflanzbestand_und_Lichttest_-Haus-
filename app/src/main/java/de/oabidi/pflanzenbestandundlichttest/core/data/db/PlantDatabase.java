@@ -1,6 +1,7 @@
 package de.oabidi.pflanzenbestandundlichttest.core.data.db;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -23,8 +24,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -86,11 +89,12 @@ import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
         ProactiveAlertLog.class,
         NaturalLightEstimate.class
     },
-    version = 2
+    version = 3
 )
 @TypeConverters({Converters.class})
 public abstract class PlantDatabase extends RoomDatabase {
     private static final int NUMBER_OF_THREADS = 4;
+    private static final String TAG = "PlantDatabase";
     public static final ExecutorService databaseWriteExecutor =
         Executors.newFixedThreadPool(NUMBER_OF_THREADS);
     private static volatile PlantDatabase INSTANCE;
@@ -123,6 +127,68 @@ public abstract class PlantDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            Set<Long> knownPlantIds = new HashSet<>();
+            long fallbackPlantId = -1L;
+
+            Cursor plantCursor = database.query("SELECT id FROM Plant");
+            try {
+                while (plantCursor.moveToNext()) {
+                    long plantId = plantCursor.getLong(0);
+                    knownPlantIds.add(plantId);
+                    if (fallbackPlantId == -1L) {
+                        fallbackPlantId = plantId;
+                    }
+                }
+            } finally {
+                plantCursor.close();
+            }
+
+            int reassignedCount = 0;
+            int deletedCount = 0;
+            int examinedCount = 0;
+
+            Cursor reminderCursor = database.query("SELECT id, plantId FROM Reminder");
+            try {
+                while (reminderCursor.moveToNext()) {
+                    long reminderId = reminderCursor.getLong(0);
+                    boolean plantIdIsNull = reminderCursor.isNull(1);
+                    long reminderPlantId = plantIdIsNull ? -1L : reminderCursor.getLong(1);
+                    examinedCount++;
+
+                    boolean invalidPlant = plantIdIsNull || reminderPlantId <= 0L || !knownPlantIds.contains(reminderPlantId);
+                    if (!invalidPlant) {
+                        continue;
+                    }
+
+                    if (fallbackPlantId != -1L) {
+                        database.execSQL("UPDATE Reminder SET plantId = ? WHERE id = ?", new Object[]{fallbackPlantId, reminderId});
+                        reassignedCount++;
+                    } else {
+                        database.execSQL("DELETE FROM Reminder WHERE id = ?", new Object[]{reminderId});
+                        deletedCount++;
+                    }
+                }
+            } finally {
+                reminderCursor.close();
+            }
+
+            if (reassignedCount > 0) {
+                Log.i(TAG, String.format(Locale.US,
+                    "Reassigned %d orphaned reminders to plant %d", reassignedCount, fallbackPlantId));
+            }
+            if (deletedCount > 0) {
+                Log.w(TAG, String.format(Locale.US,
+                    "Deleted %d orphaned reminders without a fallback plant", deletedCount));
+            }
+            if (examinedCount > 0 && reassignedCount == 0 && deletedCount == 0) {
+                Log.d(TAG, "No orphaned reminders detected during migration 2->3");
+            }
+        }
+    };
+
     public static PlantDatabase getDatabase(Context context) {
         if (INSTANCE == null) {
             synchronized (PlantDatabase.class) {
@@ -130,7 +196,7 @@ public abstract class PlantDatabase extends RoomDatabase {
                     Context appContext = context.getApplicationContext();
                     INSTANCE = Room.databaseBuilder(appContext,
                             PlantDatabase.class, "plant_database")
-                        .addMigrations(MIGRATION_1_2)
+                        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                         // Fall back to destructive migrations when future schema diffs lack
                         // explicit migration paths (e.g., during development builds).
                         .fallbackToDestructiveMigration()
