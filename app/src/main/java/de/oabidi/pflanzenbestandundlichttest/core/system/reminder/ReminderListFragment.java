@@ -49,6 +49,8 @@ public class ReminderListFragment extends Fragment {
     private static final String ARG_PLANT_ID = "plantId";
 
     private ReminderAdapter adapter;
+    private RecyclerView reminderListView;
+    private View emptyStateView;
     private PlantRepository repository;
     private ReminderRepository reminderRepository;
     private SimpleDateFormat df;
@@ -110,12 +112,13 @@ public class ReminderListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
-        RecyclerView recyclerView = view.findViewById(R.id.reminder_list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerView.setClipToPadding(false);
-        InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
+        reminderListView = view.findViewById(R.id.reminder_list);
+        emptyStateView = view.findViewById(R.id.reminder_empty_state);
+        reminderListView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        reminderListView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(reminderListView, false, false, false, true);
         adapter = new ReminderAdapter(this::showEditDialog);
-        recyclerView.setAdapter(adapter);
+        reminderListView.setAdapter(adapter);
         if (repository == null) {
             repository = RepositoryProvider.getRepository(requireContext());
         }
@@ -163,7 +166,7 @@ public class ReminderListFragment extends Fragment {
                     .show();
             }
         });
-        helper.attachToRecyclerView(recyclerView);
+        helper.attachToRecyclerView(reminderListView);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_reminder);
         InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
@@ -182,16 +185,27 @@ public class ReminderListFragment extends Fragment {
         outState.putLong(ARG_PLANT_ID, plantId);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        reminderListView = null;
+        emptyStateView = null;
+    }
+
     private void loadReminders() {
         if (reminderRepository == null || plantId < 0) {
             if (adapter != null) {
-                adapter.submitList(Collections.emptyList());
+                List<Reminder> emptyList = Collections.emptyList();
+                adapter.submitList(emptyList);
+                updateEmptyState(emptyList);
             }
             return;
         }
         reminderRepository.getRemindersForPlant(plantId, reminders -> {
             if (isAdded()) {
-                adapter.submitList(reminders);
+                List<Reminder> safeReminders = reminders != null ? reminders : Collections.emptyList();
+                adapter.submitList(safeReminders);
+                updateEmptyState(safeReminders);
             }
         }, e -> {
             if (isAdded()) {
@@ -334,7 +348,9 @@ public class ReminderListFragment extends Fragment {
             }
             if (plants == null || plants.isEmpty()) {
                 selectingPlant = false;
-                adapter.submitList(Collections.emptyList());
+                List<Reminder> emptyList = Collections.emptyList();
+                adapter.submitList(emptyList);
+                updateEmptyState(emptyList);
                 Snackbar.make(requireView(), R.string.error_select_plant, Snackbar.LENGTH_LONG).show();
                 return;
             }
@@ -379,5 +395,14 @@ public class ReminderListFragment extends Fragment {
                 .apply();
         }
         loadReminders();
+    }
+
+    private void updateEmptyState(@Nullable List<Reminder> reminders) {
+        if (reminderListView == null || emptyStateView == null) {
+            return;
+        }
+        boolean isEmpty = reminders == null || reminders.isEmpty();
+        reminderListView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 }
