@@ -27,6 +27,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import de.oabidi.pflanzenbestandundlichttest.core.data.db.BulkReadDao;
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
@@ -51,6 +54,8 @@ public class ExportManager {
     private static final String ENVIRONMENT_PHOTO_PREFIX = "environment_";
     private static final String ENVIRONMENT_CSV_HEADER =
         "id,plantId,timestamp,temperature,humidity,soilMoisture,height,width,naturalDli,artificialDli,artificialHours,notes,photo";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private final Context context;
     private final BulkReadDao bulkDao;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -332,14 +337,18 @@ public class ExportManager {
             }
 
             writer.write("\nMeasurements\n");
-            writer.write("id,plantId,timeEpoch,luxAvg,ppfd\n");
+            writer.write("Date,Lux,PPFD,DLI,Note\n");
             for (Measurement m : data.measurements) {
-                writer.write(String.format(Locale.US, "%d,%d,%d,%f,%s\n",
-                    m.getId(),
-                    m.getPlantId(),
-                    m.getTimeEpoch(),
-                    m.getLuxAvg(),
-                    m.getPpfd() != null ? Float.toString(m.getPpfd()) : ""));
+                String[] columns = new String[]{
+                    DATE_TIME_FORMATTER.format(
+                        Instant.ofEpochMilli(m.getTimeEpoch()).atZone(ZoneId.systemDefault())),
+                    formatFloat(m.getLuxAvg()),
+                    formatFloat(m.getPpfd()),
+                    formatFloat(m.getDli()),
+                    escape(m.getNote())
+                };
+                writer.write(String.join(",", columns));
+                writer.write("\n");
             }
 
             writer.write("\nEnvironmentEntries\n");
