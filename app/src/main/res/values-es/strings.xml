@@ -345,7 +345,7 @@
     <string name="environment_log_update_entry">Actualizar entrada</string>
     <string name="environment_log_cancel_edit">Cancelar</string>
     <string name="environment_log_editing_label">Editando entrada ambiental</string>
-    <string name="environment_log_empty">Aún no hay entradas ambientales</string>
+    <string name="environment_log_empty">Aún no hay entradas ambientales. Toca + para añadir una.</string>
     <string name="environment_log_saved">Entrada ambiental guardada</string>
     <string name="environment_log_updated">Entrada ambiental actualizada</string>
     <string name="environment_log_deleted">Entrada ambiental eliminada</string>
