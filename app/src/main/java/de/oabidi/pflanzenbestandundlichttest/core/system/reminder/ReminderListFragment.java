@@ -4,6 +4,9 @@ import de.oabidi.pflanzenbestandundlichttest.R;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
@@ -13,6 +16,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.annotation.NonNull;
@@ -22,17 +26,19 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
+import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
+import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -40,10 +46,15 @@ import java.util.Objects;
  * Fragment displaying all scheduled reminders.
  */
 public class ReminderListFragment extends Fragment {
+    private static final String ARG_PLANT_ID = "plantId";
+
     private ReminderAdapter adapter;
     private PlantRepository repository;
     private ReminderRepository reminderRepository;
     private SimpleDateFormat df;
+    private long plantId = -1;
+    private SharedPreferences preferences;
+    private boolean selectingPlant;
 
     public ReminderListFragment() {
     }
@@ -53,8 +64,12 @@ public class ReminderListFragment extends Fragment {
         this.reminderRepository = repository.reminderRepository();
     }
 
-    public static ReminderListFragment newInstance(PlantRepository repository) {
-        return new ReminderListFragment(repository);
+    public static ReminderListFragment newInstance(long plantId, PlantRepository repository) {
+        ReminderListFragment fragment = new ReminderListFragment(repository);
+        Bundle args = new Bundle();
+        args.putLong(ARG_PLANT_ID, plantId);
+        fragment.setArguments(args);
+        return fragment;
     }
 
     @Nullable
@@ -62,6 +77,33 @@ public class ReminderListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_reminder_list, container, false);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (repository == null) {
+            repository = RepositoryProvider.getRepository(context);
+            reminderRepository = RepositoryProvider.getReminderRepository(context);
+        } else if (reminderRepository == null) {
+            reminderRepository = repository.reminderRepository();
+        }
+        preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        if (args != null) {
+            plantId = args.getLong(ARG_PLANT_ID, -1);
+        }
+        if (savedInstanceState != null) {
+            plantId = savedInstanceState.getLong(ARG_PLANT_ID, plantId);
+        }
+        if (plantId < 0 && preferences != null) {
+            plantId = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
+        }
     }
 
     @Override
@@ -76,9 +118,9 @@ public class ReminderListFragment extends Fragment {
         recyclerView.setAdapter(adapter);
         if (repository == null) {
             repository = RepositoryProvider.getRepository(requireContext());
+        }
+        if (reminderRepository == null) {
             reminderRepository = RepositoryProvider.getReminderRepository(requireContext());
-        } else if (reminderRepository == null) {
-            reminderRepository = repository.reminderRepository();
         }
         df = new SimpleDateFormat(getString(R.string.date_time_pattern), Locale.getDefault());
 
@@ -123,17 +165,34 @@ public class ReminderListFragment extends Fragment {
         InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
         fab.setOnClickListener(v -> showCreateDialog());
 
-        loadReminders();
+        if (plantId >= 0) {
+            loadReminders();
+        } else {
+            requestPlantSelection();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(ARG_PLANT_ID, plantId);
     }
 
     private void loadReminders() {
-        reminderRepository.getAllReminders(reminders -> {
+        if (reminderRepository == null || plantId < 0) {
+            if (adapter != null) {
+                adapter.submitList(Collections.emptyList());
+            }
+            return;
+        }
+        reminderRepository.getRemindersForPlant(plantId, reminders -> {
             if (isAdded()) {
                 adapter.submitList(reminders);
             }
         }, e -> {
-            if (isAdded())
+            if (isAdded()) {
                 Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+            }
         });
     }
 
@@ -142,6 +201,9 @@ public class ReminderListFragment extends Fragment {
     }
 
     private void showCreateDialog() {
+        if (!ensurePlantSelected()) {
+            return;
+        }
         showReminderDialog(null);
     }
 
@@ -183,7 +245,10 @@ public class ReminderListFragment extends Fragment {
                                 Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                         });
                 } else {
-                    Reminder newReminder = new Reminder(triggerAt, message, -1);
+                    if (!ensurePlantSelected()) {
+                        return;
+                    }
+                    Reminder newReminder = new Reminder(triggerAt, message, plantId);
                     reminderRepository.insertReminder(newReminder, () -> {
                         if (!isAdded()) {
                             return;
@@ -229,5 +294,72 @@ public class ReminderListFragment extends Fragment {
                 dateEdit.setError(null);
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+    }
+
+    private boolean ensurePlantSelected() {
+        if (plantId >= 0) {
+            return true;
+        }
+        requestPlantSelection();
+        return false;
+    }
+
+    private void requestPlantSelection() {
+        if (!isAdded() || repository == null || selectingPlant) {
+            return;
+        }
+        selectingPlant = true;
+        repository.getAllPlants((List<Plant> plants) -> {
+            if (!isAdded()) {
+                selectingPlant = false;
+                return;
+            }
+            if (plants == null || plants.isEmpty()) {
+                selectingPlant = false;
+                adapter.submitList(Collections.emptyList());
+                Snackbar.make(requireView(), R.string.error_select_plant, Snackbar.LENGTH_LONG).show();
+                return;
+            }
+            if (plants.size() == 1) {
+                setPlantSelection(plants.get(0).getId());
+                return;
+            }
+            CharSequence[] names = new CharSequence[plants.size()];
+            for (int i = 0; i < plants.size(); i++) {
+                names[i] = plants.get(i).getName();
+            }
+            new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.select_plant)
+                .setItems(names, (dialog, which) -> {
+                    if (which >= 0 && which < plants.size()) {
+                        setPlantSelection(plants.get(which).getId());
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> {
+                    // Keep plantId unset; user can retry by tapping add.
+                })
+                .setOnDismissListener(this::onSelectionDialogDismissed)
+                .show();
+        }, e -> {
+            selectingPlant = false;
+            if (isAdded()) {
+                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void onSelectionDialogDismissed(DialogInterface dialogInterface) {
+        selectingPlant = false;
+    }
+
+    private void setPlantSelection(long selectedPlantId) {
+        selectingPlant = false;
+        plantId = selectedPlantId;
+        if (preferences != null) {
+            preferences.edit()
+                .putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId)
+                .apply();
+        }
+        loadReminders();
     }
 }
