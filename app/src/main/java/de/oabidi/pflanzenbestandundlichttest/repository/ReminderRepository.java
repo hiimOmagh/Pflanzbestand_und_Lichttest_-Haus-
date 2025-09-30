@@ -37,6 +37,15 @@ public class ReminderRepository extends BaseRepository {
         getAllReminders(callback, null);
     }
 
+    public void getRemindersForPlant(long plantId, Consumer<List<Reminder>> callback,
+                                     @Nullable Consumer<Exception> errorCallback) {
+        queryAsync(() -> reminderDao.getForPlant(plantId), callback, errorCallback);
+    }
+
+    public void getRemindersForPlant(long plantId, Consumer<List<Reminder>> callback) {
+        getRemindersForPlant(plantId, callback, null);
+    }
+
     public void insertReminder(Reminder reminder, Runnable callback, @Nullable Consumer<Exception> errorCallback) {
         Objects.requireNonNull(reminder, "reminder");
         runAsync(() -> {
