@@ -346,7 +346,7 @@
     <string name="environment_log_update_entry">Mettre à jour l’entrée</string>
     <string name="environment_log_cancel_edit">Annuler</string>
     <string name="environment_log_editing_label">Modification de l’entrée environnementale</string>
-    <string name="environment_log_empty">Aucune entrée environnementale pour l’instant</string>
+    <string name="environment_log_empty">Aucune entrée environnementale pour l’instant. Appuyez sur + pour en ajouter une.</string>
     <string name="environment_log_saved">Entrée environnementale enregistrée</string>
     <string name="environment_log_updated">Entrée environnementale mise à jour</string>
     <string name="environment_log_deleted">Entrée environnementale supprimée</string>
