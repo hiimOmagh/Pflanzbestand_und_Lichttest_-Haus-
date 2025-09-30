@@ -1141,20 +1141,20 @@ public class PlantRepository implements CareRecommendationDelegate {
         reminderRepository.getAllReminders(callback, errorCallback);
     }
 
-    public void insertReminder(Reminder reminder, Runnable callback) {
-        reminderRepository.insertReminder(reminder, callback, null);
+    public boolean insertReminder(Reminder reminder, Runnable callback) {
+        return reminderRepository.insertReminder(reminder, callback, null);
     }
 
-    public void insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        reminderRepository.insertReminder(reminder, callback, errorCallback);
+    public boolean insertReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        return reminderRepository.insertReminder(reminder, callback, errorCallback);
     }
 
-    public void updateReminder(Reminder reminder, Runnable callback) {
-        reminderRepository.updateReminder(reminder, callback);
+    public boolean updateReminder(Reminder reminder, Runnable callback) {
+        return reminderRepository.updateReminder(reminder, callback);
     }
 
-    public void updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
-        reminderRepository.updateReminder(reminder, callback, errorCallback);
+    public boolean updateReminder(Reminder reminder, Runnable callback, Consumer<Exception> errorCallback) {
+        return reminderRepository.updateReminder(reminder, callback, errorCallback);
     }
 
     public void deleteReminderById(long id, Runnable callback) {
