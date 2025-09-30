@@ -36,7 +36,34 @@
             android:id="@+id/measurement_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:paddingHorizontal="16dp" />
+
+        <LinearLayout
+            android:id="@+id/measurement_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:paddingBottom="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/measurement_empty_icon_description"
+                android:src="@drawable/ic_insights" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="@string/measurement_empty_message"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />
+        </LinearLayout>
     </LinearLayout>
 
 </FrameLayout>
