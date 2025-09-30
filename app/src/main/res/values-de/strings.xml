@@ -86,6 +86,8 @@
     <string name="select_plant">Pflanze auswählen</string>
     <string name="error_database">Datenbankfehler</string>
     <string name="plant_photo_desc">Pflanzenfoto</string>
+    <string name="measurement_empty_message">Noch keine Messungen. Tippe auf +, um eine zu erfassen.</string>
+    <string name="measurement_empty_icon_description">Symbol für Einblicke</string>
     <string name="plant_photo_desc_format">Foto von %1$s</string>
     <string name="diary_entry_photo_desc">Tagebucheintragsfoto</string>
     <string name="action_view_diary">Tagebuch anzeigen</string>
