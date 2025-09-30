@@ -57,7 +57,7 @@ public class PlantDetailPagerAdapter extends FragmentStateAdapter {
         } else if (position == POSITION_MEASUREMENTS) {
             return MeasurementListFragment.newInstance(plantId, repository);
         } else {
-            return ReminderListFragment.newInstance(repository);
+            return ReminderListFragment.newInstance(plantId, repository);
         }
     }
 
