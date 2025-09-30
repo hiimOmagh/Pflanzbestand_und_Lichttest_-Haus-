@@ -67,6 +67,8 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     private Consumer<Uri> photoPickedCallback;
     private String searchQuery = "";
     private String typeFilter = "";
+    private RecyclerView diaryListView;
+    private View emptyView;
 
     /**
      * Creates a new instance of the fragment for the given plant.
@@ -130,10 +132,11 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
-        RecyclerView listView = view.findViewById(R.id.diary_list);
-        listView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        listView.setClipToPadding(false);
-        InsetsUtils.applySystemWindowInsetsPadding(listView, false, false, false, true);
+        diaryListView = view.findViewById(R.id.diary_list);
+        emptyView = view.findViewById(R.id.diary_empty_view);
+        diaryListView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        diaryListView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(diaryListView, false, false, false, true);
 
         MaterialAutoCompleteTextView filterDropdown = view.findViewById(R.id.diary_filter_spinner);
         String[] filterLabels = getResources().getStringArray(R.array.diary_filter_labels);
@@ -203,13 +206,16 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
         });
-        listView.setAdapter(adapter);
+        diaryListView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_entry);
         InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
 
         if (plantId < 0) {
-            listView.setVisibility(View.GONE);
+            diaryListView.setVisibility(View.GONE);
+            if (emptyView != null) {
+                emptyView.setVisibility(View.GONE);
+            }
             fab.setVisibility(View.GONE);
             return;
         }
@@ -407,6 +413,11 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
                 } catch (SecurityException ignored) {
                 }
             }
+        }
+        if (diaryListView != null && emptyView != null) {
+            boolean hasEntries = !entries.isEmpty();
+            diaryListView.setVisibility(hasEntries ? View.VISIBLE : View.GONE);
+            emptyView.setVisibility(hasEntries ? View.GONE : View.VISIBLE);
         }
         adapter.submitList(entries);
     }
