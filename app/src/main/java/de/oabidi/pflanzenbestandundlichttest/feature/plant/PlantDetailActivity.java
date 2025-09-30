@@ -31,9 +31,6 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -72,6 +69,7 @@ import de.oabidi.pflanzenbestandundlichttest.feature.environment.EnvironmentLogF
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoAdapter;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoLoader;
 import de.oabidi.pflanzenbestandundlichttest.feature.gallery.PlantPhotoViewerFragment;
+import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 
 /**
  * Activity responsible for showing detailed information about a plant.
@@ -358,13 +356,9 @@ public class PlantDetailActivity extends AppCompatActivity
             (requestKey, bundle) -> presenter.loadCareRecommendations()
         );
 
-        // After drawing edge-to-edge, pad the root view so content isn't
-        // obscured by system bars like the status and navigation bars.
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        View mainView = findViewById(R.id.main);
+        InsetsUtils.applySystemWindowInsetsPadding(mainView, false, true, false, true);
+        InsetsUtils.requestApplyInsetsWhenAttached(mainView);
     }
 
     @Override
