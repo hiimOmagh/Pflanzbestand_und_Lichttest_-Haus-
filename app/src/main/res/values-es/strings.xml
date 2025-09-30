@@ -211,6 +211,8 @@
     <string name="diary_entry_deleted">Entrada eliminada</string>
     <string name="measurement_deleted">Medición eliminada</string>
     <string name="measurement_add_note">Agregar nota</string>
+    <string name="measurement_empty_message">Aún no hay mediciones. Toca + para registrar una.</string>
+    <string name="measurement_empty_icon_description">Icono de información</string>
     <string name="action_skip">Omitir</string>
     <string name="reminder_deleted">Recordatorio eliminado</string>
     <string name="pref_calibration_factor">Factor de calibración</string>
