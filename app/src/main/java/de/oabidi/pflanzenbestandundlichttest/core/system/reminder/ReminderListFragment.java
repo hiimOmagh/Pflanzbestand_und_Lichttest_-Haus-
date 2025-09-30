@@ -144,18 +144,22 @@ public class ReminderListFragment extends Fragment {
                             Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
                     });
                 Snackbar.make(requireView(), R.string.reminder_deleted, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.action_undo, v ->
-                        reminderRepository.insertReminder(reminder, () -> {
+                    .setAction(R.string.action_undo, v -> {
+                        boolean accepted = reminderRepository.insertReminder(reminder, () -> {
+                            if (!isAdded()) {
+                                return;
+                            }
                             ReminderScheduler.scheduleReminderAt(requireContext(),
                                 reminder.getTriggerAt(),
                                 reminder.getMessage(),
                                 reminder.getId(),
                                 reminder.getPlantId());
                             loadReminders();
-                        }, e2 -> {
-                            if (isAdded())
-                                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
-                        }))
+                        }, this::handleReminderError);
+                        if (!accepted) {
+                            return;
+                        }
+                    })
                     .show();
             }
         });
@@ -194,6 +198,16 @@ public class ReminderListFragment extends Fragment {
                 Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void handleReminderError(Exception e) {
+        if (!isAdded()) {
+            return;
+        }
+        int messageRes = e instanceof IllegalArgumentException
+            ? R.string.error_select_plant
+            : R.string.error_database;
+        Snackbar.make(requireView(), messageRes, Snackbar.LENGTH_LONG).show();
     }
 
     private void showEditDialog(Reminder reminder) {
@@ -235,30 +249,34 @@ public class ReminderListFragment extends Fragment {
             try {
                 dateEdit.setError(null);
                 long triggerAt = Objects.requireNonNull(df.parse(dateStr)).getTime();
+                boolean accepted;
                 if (reminder != null) {
                     reminder.setMessage(message);
                     reminder.setTriggerAt(triggerAt);
-                    ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, reminder.getId(), reminder.getPlantId());
-                    reminderRepository.updateReminder(reminder, this::loadReminders,
-                        e -> {
-                            if (isAdded())
-                                Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
-                        });
+                    accepted = reminderRepository.updateReminder(reminder, () -> {
+                        if (!isAdded()) {
+                            return;
+                        }
+                        ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message,
+                            reminder.getId(), reminder.getPlantId());
+                        loadReminders();
+                    }, this::handleReminderError);
                 } else {
                     if (!ensurePlantSelected()) {
                         return;
                     }
                     Reminder newReminder = new Reminder(triggerAt, message, plantId);
-                    reminderRepository.insertReminder(newReminder, () -> {
+                    accepted = reminderRepository.insertReminder(newReminder, () -> {
                         if (!isAdded()) {
                             return;
                         }
-                        ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message, newReminder.getId(), newReminder.getPlantId());
+                        ReminderScheduler.scheduleReminderAt(requireContext(), triggerAt, message,
+                            newReminder.getId(), newReminder.getPlantId());
                         loadReminders();
-                    }, e -> {
-                        if (isAdded())
-                            Snackbar.make(requireView(), R.string.error_database, Snackbar.LENGTH_LONG).show();
-                    });
+                    }, this::handleReminderError);
+                }
+                if (!accepted) {
+                    return;
                 }
                 dialog.dismiss();
             } catch (ParseException e) {
