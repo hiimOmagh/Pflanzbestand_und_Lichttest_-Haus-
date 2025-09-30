@@ -255,7 +255,7 @@
     <string name="environment_log_chart_label_humidity">Humidity</string>
     <string name="environment_chart_default_content_description">Environment line chart</string>
     <string name="environment_chart_content_description">Environment line chart with %1$d measurements</string>
-    <string name="environment_log_empty">No environment entries yet</string>
+    <string name="environment_log_empty">No environment entries yet. Tap + to add one.</string>
     <string name="environment_log_saved">Environment entry saved</string>
     <string name="environment_log_updated">Environment entry updated</string>
     <string name="environment_log_deleted">Environment entry deleted</string>
