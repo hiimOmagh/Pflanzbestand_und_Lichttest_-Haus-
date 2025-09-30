@@ -83,6 +83,7 @@
     <string name="measurement_save">Speichern</string>
     <string name="measurement_saved">Messung gespeichert</string>
     <string name="error_select_plant">Bitte eine Pflanze auswählen</string>
+    <string name="select_plant">Pflanze auswählen</string>
     <string name="error_database">Datenbankfehler</string>
     <string name="plant_photo_desc">Pflanzenfoto</string>
     <string name="plant_photo_desc_format">Foto von %1$s</string>
