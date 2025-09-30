@@ -84,6 +84,7 @@
     <string name="measurement_save">Enregistrer</string>
     <string name="measurement_saved">Mesure enregistrée</string>
     <string name="error_select_plant">Veuillez sélectionner une plante</string>
+    <string name="select_plant">Sélectionner une plante</string>
     <string name="error_database">Erreur de base de données</string>
     <string name="plant_photo_desc">Photo de la plante</string>
     <string name="plant_photo_desc_format">Photo de %1$s</string>
