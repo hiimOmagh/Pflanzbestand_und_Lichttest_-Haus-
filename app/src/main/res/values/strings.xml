@@ -95,6 +95,8 @@
     <string name="measurement_empty_message">No measurements yet. Tap + to record one.</string>
     <string name="measurement_empty_icon_description">Insights icon</string>
     <string name="reminder_empty_state_message">No reminders yet. Tap + to schedule one.</string>
+    <string name="plant_list_empty_state_message">No entries yet, tap + to add one.</string>
+    <string name="plant_list_empty_state_icon_description">Potted plant icon</string>
     <string name="plant_photo_desc_format">Photo of %1$s</string>
     <string name="diary_entry_photo_desc">Diary entry photo</string>
     <string name="action_view_diary">View Diary</string>

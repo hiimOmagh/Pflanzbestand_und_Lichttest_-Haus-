@@ -70,6 +70,8 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             }
         });
     private PlantAdapter adapter;
+    private RecyclerView plantListView;
+    private View emptyStateView;
     private ProgressBar progressBar;
     private AlertDialog progressDialog;
 
@@ -154,12 +156,13 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         InsetsUtils.requestApplyInsetsWhenAttached(view);
-        RecyclerView recyclerView = view.findViewById(R.id.plant_list);
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        recyclerView.setClipToPadding(false);
-        InsetsUtils.applySystemWindowInsetsPadding(recyclerView, false, false, false, true);
+        plantListView = view.findViewById(R.id.plant_list);
+        emptyStateView = view.findViewById(R.id.plant_list_empty_state);
+        plantListView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        plantListView.setClipToPadding(false);
+        InsetsUtils.applySystemWindowInsetsPadding(plantListView, false, false, false, true);
         adapter = new PlantAdapter(this);
-        recyclerView.setAdapter(adapter);
+        plantListView.setAdapter(adapter);
         Context context = requireContext().getApplicationContext();
         PlantRepository repo = repository;
         if (repo == null) {
@@ -188,17 +191,21 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         }
         progressBar = null;
         progressDialog = null;
+        plantListView = null;
+        emptyStateView = null;
         super.onDestroyView();
     }
 
     @Override
     public void showPlants(List<Plant> plants) {
         adapter.submitList(new ArrayList<>(plants));
+        updateEmptyState(plants);
     }
 
     @Override
     public void showSearchResults(List<Plant> plants) {
         adapter.submitList(new ArrayList<>(plants));
+        updateEmptyState(plants);
     }
 
     @Override
@@ -355,5 +362,14 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
             .replace(R.id.nav_host_fragment, fragment)
             .addToBackStack(null)
             .commit();
+    }
+
+    private void updateEmptyState(@NonNull List<Plant> plants) {
+        if (plantListView == null || emptyStateView == null) {
+            return;
+        }
+        boolean hasItems = !plants.isEmpty();
+        plantListView.setVisibility(hasItems ? View.VISIBLE : View.GONE);
+        emptyStateView.setVisibility(hasItems ? View.GONE : View.VISIBLE);
     }
 }
