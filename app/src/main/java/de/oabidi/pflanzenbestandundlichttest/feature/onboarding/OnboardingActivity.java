@@ -80,6 +80,7 @@ public class OnboardingActivity extends AppCompatActivity {
         preferences.edit()
             .putBoolean(SettingsKeys.KEY_HAS_ONBOARDED, true)
             .putBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, true)
+            .putBoolean(SettingsKeys.KEY_ONBOARDING_DONE, true)
             .apply();
         setResult(Activity.RESULT_OK);
         finish();

@@ -10,4 +10,5 @@
     <dimen name="plant_list_item_corner_radius">16dp</dimen>
     <dimen name="plant_list_item_horizontal_padding">16dp</dimen>
     <dimen name="plant_list_item_vertical_padding">12dp</dimen>
+    <dimen name="onboarding_prompt_focal_padding">8dp</dimen>
 </resources>

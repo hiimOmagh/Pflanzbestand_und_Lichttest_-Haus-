@@ -45,6 +45,10 @@ public final class SettingsKeys {
      */
     public static final String KEY_ONBOARDING_COMPLETE = "onboarding_complete";
     /**
+     * Records that the interactive onboarding tour was finished or skipped.
+     */
+    public static final String KEY_ONBOARDING_DONE = "onboarding_done";
+    /**
      * Enables weekly automatic backups.
      */
     public static final String KEY_AUTO_BACKUP = "auto_backup";

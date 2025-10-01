@@ -10,15 +10,13 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-
 import androidx.core.view.ViewCompat;
+import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -26,7 +24,6 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import de.oabidi.pflanzenbestandundlichttest.PlantRepository;
-import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingActivity;
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.Plant;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
@@ -34,6 +31,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantDetailActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingManager;
 
 /**
  * Activity hosting the main navigation of the app.
@@ -56,11 +54,12 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
-    private ActivityResultLauncher<Intent> onboardingLauncher;
     private MainPresenter presenter;
     private LinearProgressIndicator exportProgressBar;
     @Nullable
     private Bundle pendingSavedInstanceState;
+    @Nullable
+    private OnboardingManager onboardingManager;
 
     /**
      * Creates an intent pre-filled with the given plant's details.
@@ -127,23 +126,11 @@ public class MainActivity extends AppCompatActivity implements MainView {
                 }
             });
 
-        onboardingLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
-                    initialisePresenterIfNeeded(pendingSavedInstanceState, getIntent());
-                } else if (result.getResultCode() != RESULT_OK) {
-                    finish();
-                }
-            });
-
         ViewCompat.requestApplyInsets(navHost);
 
-        if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
-            initialisePresenterIfNeeded(savedInstanceState, getIntent());
-        } else {
-            launchOnboarding();
-        }
+        initialisePresenterIfNeeded(savedInstanceState, getIntent());
+
+        onboardingManager = new OnboardingManager(this, preferences, new OnboardingCallbacks());
 
     }
 
@@ -165,9 +152,24 @@ public class MainActivity extends AppCompatActivity implements MainView {
     protected void onNewIntent(@NonNull Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        if (preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)) {
-            initialisePresenterIfNeeded(null, intent);
+        initialisePresenterIfNeeded(null, intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (onboardingManager != null
+            && !preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_DONE, false)) {
+            onboardingManager.maybeStartTour();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        if (onboardingManager != null) {
+            onboardingManager.onStop();
+        }
+        super.onStop();
     }
 
     @Override
@@ -296,9 +298,71 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void launchOnboarding() {
-        if (onboardingLauncher != null) {
-            Intent intent = new Intent(this, OnboardingActivity.class);
-            onboardingLauncher.launch(intent);
+        if (onboardingManager != null) {
+            onboardingManager.restartTour();
+        }
+    }
+
+    private final class OnboardingCallbacks implements OnboardingManager.HostCallbacks {
+        @Override
+        public void ensurePlantListVisible(@NonNull Runnable onReady) {
+            runOnUiThread(() -> {
+                NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
+                if (bottomNavigationView != null) {
+                    bottomNavigationView.setSelectedItemId(R.id.nav_plants);
+                }
+                View root = getWindow().getDecorView();
+                if (root != null) {
+                    root.post(onReady);
+                } else {
+                    onReady.run();
+                }
+            });
+        }
+
+        @Override
+        public void openFirstPlantDetail(@NonNull OnboardingManager.PlantDetailLaunchCallback callback) {
+            if (repository == null) {
+                callback.onUnavailable();
+                return;
+            }
+            repository.getAllPlants(plants -> {
+                if (plants == null || plants.isEmpty()) {
+                    callback.onUnavailable();
+                    return;
+                }
+                Plant plant = plants.get(0);
+                Intent intent = createPlantDetailIntent(MainActivity.this, plant);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
+                callback.onLaunched();
+            }, e -> callback.onUnavailable());
+        }
+
+        @Override
+        public void showRemindersScreen(@NonNull Runnable onReady) {
+            runOnUiThread(() -> {
+                NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
+                if (bottomNavigationView != null) {
+                    bottomNavigationView.setSelectedItemId(R.id.nav_reminders);
+                }
+                View root = getWindow().getDecorView();
+                if (root != null) {
+                    root.post(onReady);
+                } else {
+                    onReady.run();
+                }
+            });
+        }
+
+        @Override
+        public void returnToDefaultScreen() {
+            runOnUiThread(() -> {
+                NavigationBarView bottomNavigationView = findViewById(R.id.bottom_nav);
+                if (bottomNavigationView != null) {
+                    bottomNavigationView.setSelectedItemId(R.id.nav_plants);
+                }
+            });
         }
     }
 }
