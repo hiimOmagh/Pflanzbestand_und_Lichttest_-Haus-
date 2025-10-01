@@ -215,7 +215,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
     @Override
     public void showError(String message) {
         if (isAdded()) {
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            String displayMessage = message != null
+                ? message
+                : getString(R.string.error_database);
+            Snackbar.make(requireView(), displayMessage, Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -243,7 +246,7 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
                     Intent.createChooser(shareIntent, getString(R.string.share_backup))))
                 .show();
         } else {
-            Toast.makeText(requireContext(), R.string.export_failure, Toast.LENGTH_SHORT).show();
+            Snackbar.make(requireView(), R.string.export_failure, Snackbar.LENGTH_LONG).show();
         }
     }
 
@@ -263,7 +266,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         if (!isAdded()) {
             return;
         }
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+        String displayMessage = message != null
+            ? message
+            : getString(success ? R.string.import_success : R.string.import_failure);
+        Snackbar.make(requireView(), displayMessage, Snackbar.LENGTH_LONG).show();
         if (success && warnings != null && !warnings.isEmpty()) {
             showWarningDialog(warnings);
         }

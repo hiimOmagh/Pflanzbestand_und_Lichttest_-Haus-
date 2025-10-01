@@ -425,7 +425,10 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
     @Override
     public void showError(String message) {
         if (isAdded()) {
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
+            String displayMessage = message != null
+                ? message
+                : getString(R.string.error_database);
+            Snackbar.make(requireView(), displayMessage, Snackbar.LENGTH_LONG).show();
         }
     }
 }
