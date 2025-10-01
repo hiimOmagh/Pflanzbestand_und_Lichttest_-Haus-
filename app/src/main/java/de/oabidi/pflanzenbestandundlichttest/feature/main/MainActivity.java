@@ -1,5 +1,6 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.main;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -31,6 +32,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.system.RepositoryProvider;
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantDetailActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingActivity;
 import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingManager;
 
 /**
@@ -54,12 +56,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private ActivityResultLauncher<String> notificationPermissionLauncher;
     private ActivityResultLauncher<String> exportLauncher;
     private ActivityResultLauncher<String[]> importLauncher;
+    private ActivityResultLauncher<Intent> onboardingLauncher;
     private MainPresenter presenter;
     private LinearProgressIndicator exportProgressBar;
     @Nullable
     private Bundle pendingSavedInstanceState;
     @Nullable
     private OnboardingManager onboardingManager;
+    private boolean onboardingInProgress;
 
     /**
      * Creates an intent pre-filled with the given plant's details.
@@ -126,11 +130,25 @@ public class MainActivity extends AppCompatActivity implements MainView {
                 }
             });
 
+        onboardingLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                onboardingInProgress = false;
+                if (result.getResultCode() == Activity.RESULT_OK
+                    && onboardingManager != null) {
+                    onboardingManager.maybeStartTour();
+                }
+            });
+
         ViewCompat.requestApplyInsets(navHost);
 
         initialisePresenterIfNeeded(savedInstanceState, getIntent());
 
         onboardingManager = new OnboardingManager(this, preferences, new OnboardingCallbacks());
+
+        if (!preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_DONE, false)) {
+            startOnboardingActivity();
+        }
 
     }
 
@@ -153,15 +171,6 @@ public class MainActivity extends AppCompatActivity implements MainView {
         super.onNewIntent(intent);
         setIntent(intent);
         initialisePresenterIfNeeded(null, intent);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (onboardingManager != null
-            && !preferences.getBoolean(SettingsKeys.KEY_ONBOARDING_DONE, false)) {
-            onboardingManager.maybeStartTour();
-        }
     }
 
     @Override
@@ -298,9 +307,16 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void launchOnboarding() {
-        if (onboardingManager != null) {
-            onboardingManager.restartTour();
+        startOnboardingActivity();
+    }
+
+    private void startOnboardingActivity() {
+        if (onboardingLauncher == null || onboardingInProgress) {
+            return;
         }
+        onboardingInProgress = true;
+        Intent onboardingIntent = new Intent(this, OnboardingActivity.class);
+        onboardingLauncher.launch(onboardingIntent);
     }
 
     private final class OnboardingCallbacks implements OnboardingManager.HostCallbacks {
