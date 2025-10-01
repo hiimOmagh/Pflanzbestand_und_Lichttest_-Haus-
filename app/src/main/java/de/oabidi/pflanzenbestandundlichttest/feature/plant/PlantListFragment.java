@@ -21,13 +21,13 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -163,6 +163,10 @@ public class PlantListFragment extends Fragment implements PlantAdapter.OnPlantC
         InsetsUtils.applySystemWindowInsetsPadding(plantListView, false, false, false, true);
         adapter = new PlantAdapter(this);
         plantListView.setAdapter(adapter);
+
+        FloatingActionButton fab = view.findViewById(R.id.fab_add_plant);
+        InsetsUtils.applySystemWindowInsetsMargin(fab, false, false, false, true);
+        fab.setOnClickListener(v -> navigateToEdit(null));
         Context context = requireContext().getApplicationContext();
         PlantRepository repo = repository;
         if (repo == null) {
