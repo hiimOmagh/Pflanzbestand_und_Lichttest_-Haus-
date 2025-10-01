@@ -336,8 +336,7 @@ public final class OnboardingManager implements Application.ActivityLifecycleCal
             .setAutoFinish(true)
             .setBackButtonDismissEnabled(true)
             .setFocalPadding(host.getResources().getDimensionPixelSize(R.dimen.onboarding_prompt_focal_padding));
-        MaterialTapTargetPrompt prompt = builder.create();
-        prompt.setPromptStateChangeListener((p, state) -> {
+        builder.setPromptStateChangeListener((p, state) -> {
             if (!running) {
                 return;
             }
@@ -351,6 +350,7 @@ public final class OnboardingManager implements Application.ActivityLifecycleCal
                 handler.post(this::skipTour);
             }
         });
+        MaterialTapTargetPrompt prompt = builder.create();
         prompt.show();
         currentPrompt = prompt;
         showSkipSnackbar(host);
