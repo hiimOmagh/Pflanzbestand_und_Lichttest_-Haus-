@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import de.oabidi.pflanzenbestandundlichttest.common.util.LocaleHelper;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.ProactiveAlertWorkScheduler;
@@ -39,7 +40,13 @@ public class PlantApp extends Application implements RepositoryProvider, Executo
     }
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(LocaleHelper.applyLocale(base));
+    }
+
+    @Override
     public void onCreate() {
+        LocaleHelper.applyLocale(this);
         super.onCreate();
         DynamicColors.applyToActivitiesIfAvailable(this);
 

@@ -228,6 +228,23 @@
     <string name="pref_auto_backup_summary">Exportar datos semanalmente al almacenamiento de la app</string>
     <string name="pref_alert_history_summary">Ver alertas proactivas recientes</string>
     <string name="pref_theme">Tema</string>
+    <string name="pref_language">Idioma</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_german">Alemán</string>
+    <string name="language_french">Francés</string>
+    <string name="language_spanish">Español</string>
+    <string-array name="language_entries">
+        <item>@string/language_english</item>
+        <item>@string/language_german</item>
+        <item>@string/language_french</item>
+        <item>@string/language_spanish</item>
+    </string-array>
+    <string-array name="language_values">
+        <item>en</item>
+        <item>de</item>
+        <item>fr</item>
+        <item>es</item>
+    </string-array>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
     <string name="theme_system">Predeterminado del sistema</string>

@@ -437,6 +437,23 @@
     <string name="pref_alert_history">Alert history</string>
     <string name="pref_alert_history_summary">View recently triggered proactive alerts</string>
     <string name="pref_theme">Theme</string>
+    <string name="pref_language">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_german">German</string>
+    <string name="language_french">French</string>
+    <string name="language_spanish">Spanish</string>
+    <string-array name="language_entries">
+        <item>@string/language_english</item>
+        <item>@string/language_german</item>
+        <item>@string/language_french</item>
+        <item>@string/language_spanish</item>
+    </string-array>
+    <string-array name="language_values">
+        <item>en</item>
+        <item>de</item>
+        <item>fr</item>
+        <item>es</item>
+    </string-array>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System default</string>

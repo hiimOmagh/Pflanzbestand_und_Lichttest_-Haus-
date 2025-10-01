@@ -11,6 +11,7 @@ import androidx.preference.SwitchPreferenceCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
 import de.oabidi.pflanzenbestandundlichttest.core.system.BackupScheduler;
+import de.oabidi.pflanzenbestandundlichttest.common.util.LocaleHelper;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.AlertHistoryDialogFragment;
@@ -81,6 +82,15 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         if (themePref != null) {
             themePref.setOnPreferenceChangeListener((pref, newValue) -> {
                 ThemeUtils.applyNightMode((String) newValue);
+                return true;
+            });
+        }
+
+        ListPreference languagePref = findPreference(SettingsKeys.KEY_LANGUAGE);
+        if (languagePref != null) {
+            languagePref.setOnPreferenceChangeListener((pref, newValue) -> {
+                LocaleHelper.applyLocale(requireContext(), (String) newValue);
+                LocaleHelper.recreateActivity(requireActivity());
                 return true;
             });
         }

@@ -61,6 +61,10 @@ public final class SettingsKeys {
      */
     public static final String KEY_THEME = "theme";
     /**
+     * Selected application language code.
+     */
+    public static final String KEY_LANGUAGE = "language";
+    /**
      * Base key for storing dismissed care recommendation identifiers per plant.
      */
     public static final String KEY_DISMISSED_CARE_RECOMMENDATIONS = "dismissed_care_recommendations";
