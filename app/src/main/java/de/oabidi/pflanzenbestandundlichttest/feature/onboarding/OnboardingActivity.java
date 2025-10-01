@@ -40,7 +40,7 @@ public class OnboardingActivity extends AppCompatActivity {
         InsetsUtils.applySystemWindowInsetsPadding(actions, true, false, true, true);
 
         pager = findViewById(R.id.onboarding_pager);
-        pagerAdapter = new OnboardingPagerAdapter();
+        pagerAdapter = new OnboardingPagerAdapter(this);
         pager.setAdapter(pagerAdapter);
 
         skipButton = findViewById(R.id.onboarding_skip);

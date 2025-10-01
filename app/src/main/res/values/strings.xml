@@ -528,14 +528,16 @@
     </string-array>
     <string name="format_reminder_item">%1$s - %2$s</string>
     <string name="menu_help">Help</string>
-    <string name="onboarding_overview_description">Get an overview of how the app helps care for your collection.</string>
+    <string name="onboarding_overview_description">See how the app keeps every plant supported with insights and reminders.</string>
     <string name="onboarding_slide_welcome_title">Welcome</string>
     <string name="onboarding_slide_plants_title">Organise your plants</string>
     <string name="onboarding_slide_measure_title">Measure light precisely</string>
     <string name="onboarding_slide_diary_title">Track care and growth</string>
-    <string name="onboarding_plant_setup">Add your plants and keep track of them.</string>
-    <string name="onboarding_measurement">Measure light levels to help your plants thrive.</string>
-    <string name="onboarding_diary">Record care activities in the diary.</string>
+    <string name="onboarding_slide_alerts_title">Reminders and proactive alerts</string>
+    <string name="onboarding_plant_setup">Add each plant with photos, notes, and lighting targets.</string>
+    <string name="onboarding_measurement">Capture natural and artificial light to tune every grow space.</string>
+    <string name="onboarding_diary">Log watering, feeding, and observations to spot trends.</string>
+    <string name="onboarding_alerts">Stay ahead with scheduled reminders and proactive care alerts.</string>
     <string name="onboarding_action_skip">Skip</string>
     <string name="onboarding_action_next">Next</string>
     <string name="onboarding_action_get_started">Get started</string>
