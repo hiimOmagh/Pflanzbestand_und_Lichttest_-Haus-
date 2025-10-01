@@ -536,7 +536,7 @@
     <string name="onboarding_diary">Record care activities in the diary.</string>
     <string name="onboarding_action_skip">Skip</string>
     <string name="onboarding_action_next">Next</string>
-    <string name="onboarding_action_get_started">Los geht’s</string>
+    <string name="onboarding_action_get_started">Get started</string>
     <string name="onboarding_prompt_plants_title">Browse your plants</string>
     <string name="onboarding_prompt_plants_body">This list keeps every plant within easy reach.</string>
     <string name="onboarding_prompt_add_title">Add new plants</string>
