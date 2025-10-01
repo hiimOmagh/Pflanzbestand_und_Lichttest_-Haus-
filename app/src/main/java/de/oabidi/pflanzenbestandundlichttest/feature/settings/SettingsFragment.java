@@ -115,7 +115,17 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         ListPreference languagePref = findPreference(SettingsKeys.KEY_LANGUAGE);
         if (languagePref != null) {
             languagePref.setOnPreferenceChangeListener((pref, newValue) -> {
-                LocaleHelper.applyLocale(requireContext(), (String) newValue);
+                String languageCode = (String) newValue;
+                int entryIndex = languagePref.findIndexOfValue(languageCode);
+                CharSequence languageLabel = entryIndex >= 0
+                    ? languagePref.getEntries()[entryIndex]
+                    : languageCode;
+                LocaleHelper.applyLocale(requireContext(), languageCode);
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.language_changed_to, languageLabel),
+                    Toast.LENGTH_SHORT
+                ).show();
                 LocaleHelper.recreateActivity(requireActivity());
                 return true;
             });

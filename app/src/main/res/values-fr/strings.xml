@@ -87,6 +87,7 @@
     <string name="select_plant">Sélectionner une plante</string>
     <string name="error_database">Erreur de base de données</string>
     <string name="plant_photo_desc">Photo de la plante</string>
+    <string name="plant_list_empty_state_icon_description">Icône de plante en pot</string>
     <string name="plant_photo_desc_format">Photo de %1$s</string>
     <string name="diary_entry_photo_desc">Photo de l\'entrée de journal</string>
     <string name="action_view_diary">Voir le journal</string>
@@ -107,8 +108,10 @@
     <string name="title_reminders">Rappels</string>
     <string name="title_stats">Statistiques</string>
     <string name="title_settings">Paramètres</string>
+    <string name="language_changed_to">Langue changée en %1$s</string>
     <string name="stats_placeholder">Pas encore de statistiques</string>
     <string name="stats_no_diary_entries">Aucune entrée de journal pour l\'instant</string>
+    <string name="diary_empty_icon_description">Icône d’information</string>
     <string name="format_diary_counts">%1$s : %2$d, %3$s : %4$d, %5$s : %6$d</string>
     <string name="stats_chart_default_content_description">Diagramme en barres PPFD</string>
     <string name="format_stats_chart_content_description">Diagramme en barres PPFD, max %1$.1f µmol/m²/s</string>
@@ -268,6 +271,7 @@
     <string name="range_ok">OK</string>
     <string name="range_high">Élevé</string>
     <string name="action_edit_reminder">Modifier le rappel</string>
+    <string name="action_add_reminder">Ajouter un rappel</string>
     <string name="hint_reminder_message">Message</string>
     <string name="hint_reminder_time">Date (aaaa-MM-jj HH:mm)</string>
     <string name="reminder_suggestion_env_missing">Aucune donnée récente sur l’humidité du sol disponible.</string>
@@ -553,4 +557,8 @@
     <string name="calibration_profile_loading">Chargement du profil LED…</string>
     <string name="calibration_profile_summary">Profil LED : %1$s</string>
     <string name="calibration_missing_profile_summary">Assignez un profil LED pour que ces facteurs de calibration suivent votre configuration lumineuse.</string>
+    <string name="reminder_empty_state_message">Aucun rappel pour l’instant. Touchez + pour en planifier un.</string>
+    <string name="plant_list_empty_state_message">Aucune entrée pour l’instant, touchez + pour en ajouter une.</string>
+    <string name="diary_empty_message">Aucune entrée de journal pour l’instant. Touchez + pour en ajouter une.</string>
+    <string name="content_description_navigate_up">Revenir en arrière</string>
 </resources>

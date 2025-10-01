@@ -124,6 +124,7 @@
     <string name="title_reminders">Reminders</string>
     <string name="title_stats">Stats</string>
     <string name="title_settings">Settings</string>
+    <string name="language_changed_to">Language changed to %1$s</string>
     <string name="stats_placeholder">No statistics yet</string>
     <string name="stats_no_diary_entries">No diary entries yet</string>
     <string name="diary_empty_message">No diary entries yet. Tap + to add one.</string>

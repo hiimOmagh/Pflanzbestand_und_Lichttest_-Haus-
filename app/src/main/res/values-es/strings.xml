@@ -86,6 +86,7 @@
     <string name="select_plant">Seleccionar planta</string>
     <string name="error_database">Error de base de datos</string>
     <string name="plant_photo_desc">Foto de la planta</string>
+    <string name="plant_list_empty_state_icon_description">Ícono de planta en maceta</string>
     <string name="plant_photo_desc_format">Foto de %1$s</string>
     <string name="diary_entry_photo_desc">Foto del diario</string>
     <string name="action_view_diary">Ver diario</string>
@@ -106,8 +107,10 @@
     <string name="title_reminders">Recordatorios</string>
     <string name="title_stats">Estadísticas</string>
     <string name="title_settings">Configuración</string>
+    <string name="language_changed_to">Idioma cambiado a %1$s</string>
     <string name="stats_placeholder">Sin estadísticas aún</string>
     <string name="stats_no_diary_entries">Sin entradas en el diario aún</string>
+    <string name="diary_empty_icon_description">Ícono de información</string>
     <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
     <string name="stats_chart_default_content_description">Gráfico de barras PPFD</string>
     <string name="format_stats_chart_content_description">Gráfico de barras PPFD, máx %.1f µmol/m²/s</string>
@@ -267,6 +270,7 @@
     <string name="range_ok">OK</string>
     <string name="range_high">Alto</string>
     <string name="action_edit_reminder">Editar recordatorio</string>
+    <string name="action_add_reminder">Añadir recordatorio</string>
     <string name="hint_reminder_message">Mensaje</string>
     <string name="hint_reminder_time">Fecha (dd/MM/yyyy HH:mm)</string>
     <string name="reminder_suggestion_env_missing">No hay datos recientes de humedad del suelo disponibles.</string>
@@ -553,4 +557,8 @@
     <string name="calibration_profile_loading">Cargando perfil LED…</string>
     <string name="calibration_profile_summary">Perfil LED: %1$s</string>
     <string name="calibration_missing_profile_summary">Asigne un perfil LED para que estos factores de calibración sigan su configuración de iluminación.</string>
+    <string name="reminder_empty_state_message">Aún no hay recordatorios. Toque + para programar uno.</string>
+    <string name="plant_list_empty_state_message">Aún no hay entradas, toque + para añadir una.</string>
+    <string name="diary_empty_message">Aún no hay entradas de diario. Toque + para añadir una.</string>
+    <string name="content_description_navigate_up">Navegar hacia arriba</string>
 </resources>

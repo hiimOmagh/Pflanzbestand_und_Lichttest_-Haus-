@@ -88,6 +88,7 @@
     <string name="plant_photo_desc">Pflanzenfoto</string>
     <string name="measurement_empty_message">Noch keine Messungen. Tippe auf +, um eine zu erfassen.</string>
     <string name="measurement_empty_icon_description">Symbol für Einblicke</string>
+    <string name="plant_list_empty_state_icon_description">Symbol einer Topfpflanze</string>
     <string name="plant_photo_desc_format">Foto von %1$s</string>
     <string name="diary_entry_photo_desc">Tagebucheintragsfoto</string>
     <string name="action_view_diary">Tagebuch anzeigen</string>
@@ -108,8 +109,10 @@
     <string name="title_reminders">Erinnerungen</string>
     <string name="title_stats">Statistiken</string>
     <string name="title_settings">Einstellungen</string>
+    <string name="language_changed_to">Sprache geändert zu %1$s</string>
     <string name="stats_placeholder">Noch keine Statistiken</string>
     <string name="stats_no_diary_entries">Noch keine Tagebucheinträge</string>
+    <string name="diary_empty_icon_description">Informationssymbol</string>
     <string name="format_diary_counts">%1$s: %2$d, %3$s: %4$d, %5$s: %6$d</string>
     <string name="stats_chart_default_content_description">PPFD-Balkendiagramm</string>
     <string name="format_stats_chart_content_description">PPFD-Balkendiagramm, max %.1f µmol/m²/s</string>
@@ -267,6 +270,7 @@
     <string name="range_ok">OK</string>
     <string name="range_high">Hoch</string>
     <string name="action_edit_reminder">Erinnerung bearbeiten</string>
+    <string name="action_add_reminder">Erinnerung hinzufügen</string>
     <string name="hint_reminder_message">Nachricht</string>
     <string name="hint_reminder_time">Datum (JJJJ-MM-TT HH:mm)</string>
     <string name="reminder_suggestion_env_missing">Keine aktuellen Daten zur Bodenfeuchtigkeit verfügbar.</string>
@@ -552,4 +556,8 @@
     <string name="calibration_profile_loading">LED-Profil wird geladen…</string>
     <string name="calibration_profile_summary">LED-Profil: %1$s</string>
     <string name="calibration_missing_profile_summary">Weisen Sie ein LED-Profil zu, damit diese Kalibrierungsfaktoren Ihrer Beleuchtungskonfiguration folgen.</string>
+    <string name="reminder_empty_state_message">Noch keine Erinnerungen. Tippen Sie auf +, um eine zu planen.</string>
+    <string name="plant_list_empty_state_message">Noch keine Einträge, tippen Sie auf +, um einen hinzuzufügen.</string>
+    <string name="diary_empty_message">Noch keine Tagebuch­einträge. Tippen Sie auf +, um einen hinzuzufügen.</string>
+    <string name="content_description_navigate_up">Nach oben navigieren</string>
 </resources>
