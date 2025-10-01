@@ -9,11 +9,12 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,8 +43,10 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
     private TextView liveLuxView;
     private TextView capturedLuxView;
     private TextView ambientFactorView;
-    private EditText ppfdInput;
-    private EditText cameraFactorInput;
+    private TextInputLayout ppfdInputLayout;
+    private TextInputLayout cameraFactorInputLayout;
+    private TextInputEditText ppfdInput;
+    private TextInputEditText cameraFactorInput;
     private TextView summaryProfileView;
     private TextView summaryAmbientView;
     private TextView summaryCameraView;
@@ -101,6 +104,8 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         liveLuxView = view.findViewById(R.id.calibration_live_lux_value);
         capturedLuxView = view.findViewById(R.id.calibration_captured_value);
         ambientFactorView = view.findViewById(R.id.calibration_ambient_value);
+        ppfdInputLayout = view.findViewById(R.id.calibration_ppfd_input_layout);
+        cameraFactorInputLayout = view.findViewById(R.id.calibration_camera_input_layout);
         ppfdInput = view.findViewById(R.id.calibration_ppfd_input);
         cameraFactorInput = view.findViewById(R.id.calibration_camera_input);
         summaryProfileView = view.findViewById(R.id.calibration_summary_profile);
@@ -350,8 +355,8 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private void onReferenceInputChanged() {
         referencePpfd = parsePositiveFloat(ppfdInput);
-        if (referencePpfd != null) {
-            ppfdInput.setError(null);
+        if (referencePpfd != null && ppfdInputLayout != null) {
+            ppfdInputLayout.setError(null);
         }
         updateAmbientFactorFromInputs();
         updatePrimaryButtonState();
@@ -359,8 +364,8 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
 
     private void onCameraFactorChanged() {
         cameraFactor = parsePositiveFloat(cameraFactorInput);
-        if (cameraFactor != null) {
-            cameraFactorInput.setError(null);
+        if (cameraFactor != null && cameraFactorInputLayout != null) {
+            cameraFactorInputLayout.setError(null);
         }
         updatePrimaryButtonState();
         if (currentStep == Step.CONFIRM) {
@@ -402,20 +407,28 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         boolean valid = true;
         Float ppfd = parsePositiveFloat(ppfdInput);
         if (ppfd == null) {
-            ppfdInput.setError(getString(R.string.calibration_reference_error));
+            if (ppfdInputLayout != null) {
+                ppfdInputLayout.setError(getString(R.string.calibration_reference_error));
+            }
             valid = false;
         } else {
             referencePpfd = ppfd;
-            ppfdInput.setError(null);
+            if (ppfdInputLayout != null) {
+                ppfdInputLayout.setError(null);
+            }
         }
 
         Float camera = parsePositiveFloat(cameraFactorInput);
         if (camera == null) {
-            cameraFactorInput.setError(getString(R.string.calibration_camera_error));
+            if (cameraFactorInputLayout != null) {
+                cameraFactorInputLayout.setError(getString(R.string.calibration_camera_error));
+            }
             valid = false;
         } else {
             cameraFactor = camera;
-            cameraFactorInput.setError(null);
+            if (cameraFactorInputLayout != null) {
+                cameraFactorInputLayout.setError(null);
+            }
         }
 
         if (!hasCapturedLux()) {
@@ -442,7 +455,9 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         cameraFactorInput.setText(formatFactor(value));
         suppressCameraWatcher = false;
         cameraFactor = value;
-        cameraFactorInput.setError(null);
+        if (cameraFactorInputLayout != null) {
+            cameraFactorInputLayout.setError(null);
+        }
         cameraFactorDirty = false;
     }
 
@@ -631,7 +646,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
     }
 
     @Nullable
-    private Float parsePositiveFloat(@Nullable EditText editText) {
+    private Float parsePositiveFloat(@Nullable TextInputEditText editText) {
         if (editText == null) {
             return null;
         }

@@ -131,15 +131,21 @@
                 android:text="@string/calibration_reference_label"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <EditText
-                android:id="@+id/calibration_ppfd_input"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/calibration_ppfd_input_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xsmall"
-                android:digits="0123456789."
-                android:hint="@string/calibration_reference_hint"
-                android:inputType="numberDecimal"
-                android:minHeight="@dimen/form_field_min_height" />
+                android:layout_marginTop="@dimen/spacing_xsmall">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/calibration_ppfd_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789."
+                    android:hint="@string/calibration_reference_hint"
+                    android:inputType="numberDecimal"
+                    android:minHeight="@dimen/form_field_min_height" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <TextView
                 android:id="@+id/calibration_ambient_value"
@@ -157,15 +163,21 @@
                 android:text="@string/calibration_camera_label"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <EditText
-                android:id="@+id/calibration_camera_input"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/calibration_camera_input_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_xsmall"
-                android:digits="0123456789."
-                android:hint="@string/calibration_camera_hint"
-                android:inputType="numberDecimal"
-                android:minHeight="@dimen/form_field_min_height" />
+                android:layout_marginTop="@dimen/spacing_xsmall">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/calibration_camera_input"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:digits="0123456789."
+                    android:hint="@string/calibration_camera_hint"
+                    android:inputType="numberDecimal"
+                    android:minHeight="@dimen/form_field_min_height" />
+            </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
         <LinearLayout
