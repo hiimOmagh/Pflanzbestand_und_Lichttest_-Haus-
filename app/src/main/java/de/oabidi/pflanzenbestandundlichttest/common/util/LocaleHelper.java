@@ -39,7 +39,7 @@ public final class LocaleHelper {
      * @return a context configured with the provided locale
      */
     public static Context applyLocale(Context context, String languageCode) {
-        String normalized = normalizeLanguage(languageCode);
+        String normalized = normalizeLanguage(context, languageCode);
         persistLanguage(context, normalized);
         return updateResources(context, normalized);
     }
@@ -60,15 +60,43 @@ public final class LocaleHelper {
 
     private static String getPersistedLanguage(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
-        String persisted = prefs.getString(SettingsKeys.KEY_LANGUAGE, DEFAULT_LANGUAGE);
-        return normalizeLanguage(persisted);
+        String persisted = prefs.getString(SettingsKeys.KEY_LANGUAGE, null);
+        return normalizeLanguage(context, persisted);
     }
 
-    private static String normalizeLanguage(String languageCode) {
+    private static String normalizeLanguage(Context context, String languageCode) {
         if (languageCode == null || languageCode.trim().isEmpty()) {
-            return DEFAULT_LANGUAGE;
+            String systemLanguage = getSystemLanguage(context);
+            return systemLanguage != null ? systemLanguage : DEFAULT_LANGUAGE;
         }
         return languageCode.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String getSystemLanguage(Context context) {
+        Resources resources = context.getResources();
+        Configuration configuration = resources.getConfiguration();
+        Locale locale;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            LocaleList locales = configuration.getLocales();
+            locale = !locales.isEmpty() ? locales.get(0) : Locale.getDefault();
+        } else {
+            locale = configuration.locale;
+        }
+
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+
+        if (locale == null) {
+            return null;
+        }
+
+        String language = locale.getLanguage();
+        if (language == null || language.trim().isEmpty()) {
+            return null;
+        }
+
+        return language.trim().toLowerCase(Locale.ROOT);
     }
 
     private static Context updateResources(Context context, String languageCode) {
