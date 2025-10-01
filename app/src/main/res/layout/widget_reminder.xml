@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="@dimen/widget_padding">
 
     <TextView
         android:id="@+id/widget_reminder_text"
@@ -13,37 +13,39 @@
         android:textStyle="bold" />
 
     <LinearLayout
-        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/spacing_small"
         android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/widget_measure_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/widget_measure_now" />
+            android:text="@string/widget_measure_now"
+            android:textAllCaps="false"
+            style="?attr/materialButtonFilledStyle" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/widget_log_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/button_spacing"
             android:layout_weight="1"
-            android:text="@string/widget_log_light" />
+            android:text="@string/widget_log_light"
+            android:textAllCaps="false"
+            style="?attr/materialButtonOutlinedStyle" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/widget_mark_done_button"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/button_spacing"
             android:layout_weight="1"
-            android:text="@string/widget_mark_done" />
+            android:text="@string/widget_mark_done"
+            android:textAllCaps="false"
+            style="?attr/materialButtonFilledStyle" />
     </LinearLayout>
 
 </LinearLayout>

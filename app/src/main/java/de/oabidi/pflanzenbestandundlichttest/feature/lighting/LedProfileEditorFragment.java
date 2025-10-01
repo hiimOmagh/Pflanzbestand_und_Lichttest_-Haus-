@@ -7,7 +7,6 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -15,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -49,7 +49,7 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
     private TextInputEditText ambientInput;
     private TextInputEditText cameraInput;
     private LedProfileScheduleAdapter scheduleAdapter;
-    private Button positiveButton;
+    private MaterialButton positiveButton;
 
     private boolean entriesValid = true;
 
@@ -151,7 +151,7 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
         scheduleList.setLayoutManager(new LinearLayoutManager(requireContext()));
         scheduleAdapter = new LedProfileScheduleAdapter(this);
         scheduleList.setAdapter(scheduleAdapter);
-        Button addEntryButton = view.findViewById(R.id.btn_add_schedule_entry);
+        MaterialButton addEntryButton = view.findViewById(R.id.btn_add_schedule_entry);
         addEntryButton.setOnClickListener(v -> scheduleAdapter.addEntry());
 
         populateFromArgs();
@@ -168,7 +168,7 @@ public class LedProfileEditorFragment extends DialogFragment implements LedProfi
 
         Dialog dialog = builder.create();
         dialog.setOnShowListener(d -> {
-            positiveButton = ((android.app.AlertDialog) dialog).getButton(android.app.AlertDialog.BUTTON_POSITIVE);
+            positiveButton = (MaterialButton) ((android.app.AlertDialog) dialog).getButton(android.app.AlertDialog.BUTTON_POSITIVE);
             positiveButton.setOnClickListener(v -> saveProfile());
             updatePositiveButtonState();
         });

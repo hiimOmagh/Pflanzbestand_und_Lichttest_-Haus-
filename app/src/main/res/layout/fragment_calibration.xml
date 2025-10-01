@@ -8,8 +8,8 @@
         android:id="@+id/calibration_step_indicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginTop="@dimen/spacing_large"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -18,9 +18,9 @@
         android:id="@+id/calibration_step_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginTop="@dimen/spacing_xsmall"
+        android:layout_marginEnd="@dimen/spacing_large"
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -30,9 +30,9 @@
         android:id="@+id/calibration_profile_summary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginTop="@dimen/spacing_small"
+        android:layout_marginEnd="@dimen/spacing_large"
         android:textAppearance="?attr/textAppearanceBodyMedium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -42,9 +42,9 @@
         android:id="@+id/calibration_profile_warning"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginTop="@dimen/spacing_xsmall"
+        android:layout_marginEnd="@dimen/spacing_large"
         android:textAppearance="?attr/textAppearanceBodySmall"
         android:textColor="?attr/colorError"
         android:visibility="gone"
@@ -56,13 +56,13 @@
         android:id="@+id/calibration_step_flipper"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
         android:clipToPadding="false"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp"
+        android:paddingStart="@dimen/spacing_large"
+        android:paddingTop="@dimen/spacing_small"
+        android:paddingEnd="@dimen/spacing_large"
+        android:paddingBottom="@dimen/spacing_small"
         app:layout_constraintBottom_toTopOf="@id/calibration_navigation_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -97,22 +97,24 @@
                 android:id="@+id/calibration_live_lux_hint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_small"
                 android:text="@string/calibration_capture_hint"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/calibration_capture_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/calibration_capture_button" />
+                android:layout_marginTop="@dimen/spacing_large"
+                android:text="@string/calibration_capture_button"
+                android:textAllCaps="false"
+                style="?attr/materialButtonFilledStyle" />
 
             <TextView
                 android:id="@+id/calibration_captured_value"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_small"
                 android:text="@string/calibration_capture_saved_placeholder"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
         </LinearLayout>
@@ -133,17 +135,17 @@
                 android:id="@+id/calibration_ppfd_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/spacing_xsmall"
                 android:digits="0123456789."
                 android:hint="@string/calibration_reference_hint"
                 android:inputType="numberDecimal"
-                android:minHeight="48dp" />
+                android:minHeight="@dimen/form_field_min_height" />
 
             <TextView
                 android:id="@+id/calibration_ambient_value"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_large"
                 android:text="@string/calibration_ambient_placeholder"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
@@ -151,7 +153,7 @@
                 android:id="@+id/calibration_camera_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_large"
                 android:text="@string/calibration_camera_label"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
@@ -159,11 +161,11 @@
                 android:id="@+id/calibration_camera_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/spacing_xsmall"
                 android:digits="0123456789."
                 android:hint="@string/calibration_camera_hint"
                 android:inputType="numberDecimal"
-                android:minHeight="48dp" />
+                android:minHeight="@dimen/form_field_min_height" />
         </LinearLayout>
 
         <LinearLayout
@@ -181,7 +183,7 @@
                 android:id="@+id/calibration_summary_ambient"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_large"
                 android:text="@string/calibration_summary_ambient_placeholder"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
 
@@ -189,7 +191,7 @@
                 android:id="@+id/calibration_summary_camera"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/spacing_small"
                 android:text="@string/calibration_summary_camera_placeholder"
                 android:textAppearance="?attr/textAppearanceBodyMedium" />
         </LinearLayout>
@@ -199,32 +201,36 @@
         android:id="@+id/calibration_navigation_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="@dimen/spacing_large"
+        android:layout_marginEnd="@dimen/spacing_large"
+        android:layout_marginBottom="@dimen/spacing_large"
         android:gravity="end"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/calibration_back_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/calibration_back_button" />
+            android:text="@string/calibration_back_button"
+            android:textAllCaps="false"
+            style="?attr/materialButtonOutlinedStyle" />
 
         <Space
-            android:layout_width="16dp"
+            android:layout_width="@dimen/button_spacing_large"
             android:layout_height="wrap_content" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/calibration_primary_button"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/calibration_next_button" />
+            android:text="@string/calibration_next_button"
+            android:textAllCaps="false"
+            style="?attr/materialButtonFilledStyle" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

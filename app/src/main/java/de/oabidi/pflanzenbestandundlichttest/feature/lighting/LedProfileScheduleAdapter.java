@@ -5,11 +5,11 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -114,7 +114,7 @@ class LedProfileScheduleAdapter extends RecyclerView.Adapter<LedProfileScheduleA
         private final TextInputEditText startInput;
         private final TextInputEditText endInput;
         private final TextInputEditText intensityInput;
-        private final Button removeButton;
+        private final MaterialButton removeButton;
 
         private LedProfile.ScheduleEntry boundEntry;
         private final TextWatcher startWatcher = new SimpleTextWatcher() {

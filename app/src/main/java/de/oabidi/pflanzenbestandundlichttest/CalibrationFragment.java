@@ -9,11 +9,11 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
+import com.google.android.material.button.MaterialButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,9 +47,9 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
     private TextView summaryProfileView;
     private TextView summaryAmbientView;
     private TextView summaryCameraView;
-    private Button backButton;
-    private Button primaryButton;
-    private Button captureButton;
+    private MaterialButton backButton;
+    private MaterialButton primaryButton;
+    private MaterialButton captureButton;
 
     private LightSensorHelper lightSensorHelper;
     private PlantRepository repository;

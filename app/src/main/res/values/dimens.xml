@@ -11,4 +11,13 @@
     <dimen name="plant_list_item_horizontal_padding">16dp</dimen>
     <dimen name="plant_list_item_vertical_padding">12dp</dimen>
     <dimen name="onboarding_prompt_focal_padding">8dp</dimen>
+    <dimen name="spacing_xsmall">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="widget_padding">8dp</dimen>
+    <dimen name="button_spacing">8dp</dimen>
+    <dimen name="button_spacing_large">16dp</dimen>
+    <dimen name="button_min_height_compact">32dp</dimen>
+    <dimen name="form_field_min_height">48dp</dimen>
 </resources>

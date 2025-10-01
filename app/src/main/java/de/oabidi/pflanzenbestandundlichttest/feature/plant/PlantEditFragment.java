@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -22,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
@@ -163,9 +163,9 @@ public class PlantEditFragment extends Fragment implements PlantEditView {
         ledProfileInput = view.findViewById(R.id.input_led_profile);
         photoView = view.findViewById(R.id.image_photo);
 
-        Button pickPhoto = view.findViewById(R.id.btn_pick_photo);
-        Button capturePhoto = view.findViewById(R.id.btn_capture_photo);
-        Button saveButton = view.findViewById(R.id.btn_save);
+        MaterialButton pickPhoto = view.findViewById(R.id.btn_pick_photo);
+        MaterialButton capturePhoto = view.findViewById(R.id.btn_capture_photo);
+        MaterialButton saveButton = view.findViewById(R.id.btn_save);
 
         pickPhoto.setOnClickListener(v -> photoPicker.launch("image/*"));
         capturePhoto.setOnClickListener(v -> launchCameraCapture());

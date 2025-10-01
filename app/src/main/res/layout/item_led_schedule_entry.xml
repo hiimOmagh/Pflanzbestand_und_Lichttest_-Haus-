@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
+    android:layout_marginBottom="@dimen/spacing_medium"
     android:orientation="vertical">
 
     <LinearLayout
@@ -24,7 +24,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <Space
-            android:layout_width="12dp"
+            android:layout_width="@dimen/spacing_medium"
             android:layout_height="wrap_content" />
 
         <com.google.android.material.textfield.TextInputLayout
@@ -44,7 +44,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/spacing_small"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -61,12 +61,14 @@
                 android:inputType="number" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_remove_entry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:text="@string/action_remove_schedule_entry" />
+            android:layout_marginStart="@dimen/spacing_medium"
+            android:text="@string/action_remove_schedule_entry"
+            android:textAllCaps="false"
+            style="?attr/materialButtonOutlinedStyle" />
     </LinearLayout>
 
 </LinearLayout>

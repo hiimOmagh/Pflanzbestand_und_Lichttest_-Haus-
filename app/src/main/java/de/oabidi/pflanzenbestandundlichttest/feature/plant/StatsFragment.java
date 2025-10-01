@@ -11,11 +11,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.text.TextUtils;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import androidx.annotation.NonNull;
@@ -42,10 +42,10 @@ public class StatsFragment extends Fragment implements StatsPresenter.View {
     private StatsPresenter presenter;
     private TextView diaryCountsView;
     private TextView dliView;
-    private Button plantSelectorButton;
+    private MaterialButton plantSelectorButton;
     private BarChartView chart;
     private List<Plant> plants;
-    private View viewMeasurementsButton;
+    private MaterialButton viewMeasurementsButton;
     private TextView placeholderView;
     private SharedPreferences preferences;
 

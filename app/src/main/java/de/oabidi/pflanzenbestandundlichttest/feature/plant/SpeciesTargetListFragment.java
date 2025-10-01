@@ -12,7 +12,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -31,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -459,7 +459,7 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             .create();
 
         dialog.setOnShowListener(d -> {
-            Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            MaterialButton positive = (MaterialButton) dialog.getButton(AlertDialog.BUTTON_POSITIVE);
             SimpleTextWatcher watcher = new SimpleTextWatcher(() -> positive.setEnabled(isInputValid(
                 keyEdit.getText().toString(),
                 seedlingFields,

@@ -21,7 +21,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +35,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -62,7 +62,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView artificialCameraDliView;
     private Spinner plantSelector;
     private Spinner stageSelector;
-    private Button saveMeasurementButton;
+    private MaterialButton saveMeasurementButton;
     private TextView locationCheckView;
     private TextView cameraLumaView;
     private TextView cameraPpfdView;
@@ -137,7 +137,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         stageSelector = view.findViewById(R.id.stage_selector);
         saveMeasurementButton = view.findViewById(R.id.measurement_save_button);
         locationCheckView = view.findViewById(R.id.location_check_value);
-        Button calibrateButton = view.findViewById(R.id.measurement_calibrate_button);
+        MaterialButton calibrateButton = view.findViewById(R.id.measurement_calibrate_button);
 
         Context context = requireContext().getApplicationContext();
         preferences = context.getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
