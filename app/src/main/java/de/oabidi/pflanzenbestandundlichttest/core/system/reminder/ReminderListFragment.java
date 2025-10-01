@@ -158,7 +158,7 @@ public class ReminderListFragment extends Fragment {
                                 reminder.getId(),
                                 reminder.getPlantId());
                             loadReminders();
-                        }, this::handleReminderError);
+                        }, ReminderListFragment.this::handleReminderError);
                         if (!accepted) {
                             return;
                         }
