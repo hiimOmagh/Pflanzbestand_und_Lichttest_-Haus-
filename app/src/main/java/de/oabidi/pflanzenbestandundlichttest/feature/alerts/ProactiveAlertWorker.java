@@ -41,7 +41,7 @@ public class ProactiveAlertWorker extends Worker {
                 repository.speciesRepository(),
                 repository.alertRepository());
             List<ProactiveAlert> alerts = manager.evaluateNewAlerts();
-            repository.refreshAllReminderSuggestionsSync();
+            repository.reminderSuggestionManager().refreshAllReminderSuggestionsSync();
             new ProactiveAlertNotifier(context).dispatch(alerts);
             return Result.success();
         } catch (Exception e) {

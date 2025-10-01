@@ -199,7 +199,7 @@ public class LightMeasurementPresenter implements LightSensorHelper.OnLuxChanged
         activePlantId = plantId;
         activeLedProfile = null;
         updateArtificialLightProjection();
-        plantRepository.getLedCalibrationForPlant(plantId, calibration -> {
+        plantRepository.calibrationManager().getLedCalibrationForPlant(plantId, calibration -> {
             applyCalibration(calibration);
         }, e -> {
             applyDefaultCalibration();

@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -40,8 +39,10 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.util.PhotoManager;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZone;
 import de.oabidi.pflanzenbestandundlichttest.core.data.PlantZoneDao;
 import de.oabidi.pflanzenbestandundlichttest.feature.plant.PlantProfile;
-import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
 import de.oabidi.pflanzenbestandundlichttest.repository.ArtificialLightEstimateSource;
+import de.oabidi.pflanzenbestandundlichttest.repository.CalibrationManager;
+import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationDelegate;
+import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationService;
 import de.oabidi.pflanzenbestandundlichttest.repository.DatabaseArtificialLightEstimateSource;
 import de.oabidi.pflanzenbestandundlichttest.repository.DiaryRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.EnvironmentRepository;
@@ -50,20 +51,14 @@ import de.oabidi.pflanzenbestandundlichttest.repository.MeasurementRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.NaturalLightRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ProactiveAlertRepository;
 import de.oabidi.pflanzenbestandundlichttest.repository.ReminderRepository;
+import de.oabidi.pflanzenbestandundlichttest.repository.ReminderSuggestionManager;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
 import de.oabidi.pflanzenbestandundlichttest.feature.reminders.ReminderSuggestionFormatter;
 import de.oabidi.pflanzenbestandundlichttest.feature.reminders.SmartReminderEngine;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -78,10 +73,8 @@ import java.util.regex.Pattern;
  * allowing callers to update the UI directly from these callbacks.
  */
 public class PlantRepository implements CareRecommendationDelegate {
-    private static final String TAG = "PlantRepository";
     private static final Pattern UNSUPPORTED_CHARS = Pattern.compile("[^\\p{L}\\p{N}\\s]");
     private static final Pattern RESERVED_FTS = Pattern.compile("\\b(?:AND|OR|NOT|NEAR)\\b", Pattern.CASE_INSENSITIVE);
-    private static final int CARE_RECOMMENDATION_ENTRY_LIMIT = 30;
     private final PlantDao plantDao;
     private final PlantCalibrationDao plantCalibrationDao;
     private final LedProfileDao ledProfileDao;
@@ -100,10 +93,9 @@ public class PlantRepository implements CareRecommendationDelegate {
     private final Context context; // This will be the application context
     private final ExecutorService ioExecutor;
     private final SharedPreferences sharedPreferences;
-    private final CareRecommendationEngine careRecommendationEngine = new CareRecommendationEngine();
-    private final SmartReminderEngine smartReminderEngine = new SmartReminderEngine();
-    private final ReminderSuggestionFormatter reminderSuggestionFormatter;
-    private final ConcurrentHashMap<Long, CopyOnWriteArrayList<CareRecommendationListener>> careRecommendationListeners = new ConcurrentHashMap<>();
+    private final CalibrationManager calibrationManager;
+    private final ReminderSuggestionManager reminderSuggestionManager;
+    private final CareRecommendationService careRecommendationService;
 
     /**
      * Creates a new repository instance.
@@ -144,7 +136,15 @@ public class PlantRepository implements CareRecommendationDelegate {
             db.proactiveAlertDao());
         naturalLightRepository = new NaturalLightRepository(this.context, mainHandler, this.ioExecutor,
             db.naturalLightEstimateDao(), plantZoneDao, sharedPreferences);
-        reminderSuggestionFormatter = new ReminderSuggestionFormatter(this.context.getResources());
+        ReminderSuggestionFormatter reminderSuggestionFormatter =
+            new ReminderSuggestionFormatter(this.context.getResources());
+        calibrationManager = new CalibrationManager(this.context, mainHandler, this.ioExecutor,
+            plantDao, plantCalibrationDao, ledProfileDao, ledProfileAssociationDao);
+        reminderSuggestionManager = new ReminderSuggestionManager(this.context, mainHandler, this.ioExecutor,
+            plantDao, reminderRepository, environmentRepository, speciesRepository,
+            new SmartReminderEngine(), reminderSuggestionFormatter);
+        careRecommendationService = new CareRecommendationService(this.context, mainHandler, this.ioExecutor,
+            plantDao, speciesRepository, environmentRepository, sharedPreferences, reminderSuggestionManager);
     }
 
     // Helper method to get ExecutorService and perform checks
@@ -186,6 +186,18 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public NaturalLightRepository naturalLightRepository() {
         return naturalLightRepository;
+    }
+
+    public CalibrationManager calibrationManager() {
+        return calibrationManager;
+    }
+
+    public ReminderSuggestionManager reminderSuggestionManager() {
+        return reminderSuggestionManager;
+    }
+
+    public CareRecommendationService careRecommendationService() {
+        return careRecommendationService;
     }
 
     /**
@@ -404,132 +416,46 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
-    /**
-     * Retrieves calibration factors for the specified plant. LED profile assignments take
-     * precedence and fall back to legacy per-plant calibration values when no profile is linked.
-     */
     public void getLedCalibrationForPlant(long plantId, Consumer<LedProfileCalibration> callback) {
-        getLedCalibrationForPlant(plantId, callback, null);
+        calibrationManager.getLedCalibrationForPlant(plantId, callback);
     }
 
-    /**
-     * Retrieves calibration factors for the specified plant. LED profile assignments take
-     * precedence and fall back to legacy per-plant calibration values when no profile is linked.
-     */
     public void getLedCalibrationForPlant(long plantId, Consumer<LedProfileCalibration> callback,
                                           Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                Plant plant = plantDao.findById(plantId);
-                LedProfileCalibration calibration = LedProfileCalibration.empty();
-                if (plant != null) {
-                    PlantCalibration legacy = plantCalibrationDao.getForPlant(plantId);
-                    Long profileId = plant.getLedProfileId();
-                    if (profileId != null) {
-                        LedProfile profile = ledProfileDao.findById(profileId);
-                        calibration = LedProfileCalibration.forProfile(profile, legacy);
-                    } else if (legacy != null) {
-                        calibration = LedProfileCalibration.fromLegacy(legacy);
-                    }
-                }
-                LedProfileCalibration finalCalibration = calibration;
-                if (callback != null) {
-                    mainHandler.post(() -> callback.accept(finalCalibration));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        calibrationManager.getLedCalibrationForPlant(plantId, callback, errorCallback);
     }
 
-    /**
-     * Stores calibration factors for the specified plant respecting LED profile assignments.
-     */
     public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
                                            Runnable callback) {
-        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
+        calibrationManager.saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback);
     }
 
-    /**
-     * Stores calibration factors for the specified plant respecting LED profile assignments.
-     */
     public void saveLedCalibrationForPlant(long plantId, float ambientFactor, float cameraFactor,
                                            Runnable callback, Consumer<Exception> errorCallback) {
-        runAsync(() -> {
-            Plant plant = plantDao.findById(plantId);
-            if (plant == null) {
-                throw new IllegalArgumentException("Plant not found: " + plantId);
-            }
-            Long profileId = plant.getLedProfileId();
-            if (profileId != null) {
-                LedProfile profile = ledProfileDao.findById(profileId);
-                if (profile != null) {
-                    Map<String, Float> factors = new HashMap<>(profile.getCalibrationFactors());
-                    factors.put(LedProfile.CALIBRATION_KEY_AMBIENT, ambientFactor);
-                    factors.put(LedProfile.CALIBRATION_KEY_CAMERA, cameraFactor);
-                    profile.setCalibrationFactors(factors);
-                    ledProfileDao.update(profile);
-                    ledProfileAssociationDao.upsert(new LedProfileAssociation(plantId, profileId));
-                    return;
-                } else {
-                    ledProfileAssociationDao.deleteByPlantId(plantId);
-                    plant.setLedProfileId(null);
-                    plantDao.update(plant);
-                }
-            }
-            PlantCalibration calibration = new PlantCalibration(plantId, ambientFactor, cameraFactor);
-            plantCalibrationDao.insertOrUpdate(calibration);
-        }, callback, errorCallback);
+        calibrationManager.saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, errorCallback);
     }
 
-    /**
-     * @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer)} instead.
-     */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback) {
-        getPlantCalibration(plantId, callback, null);
+        calibrationManager.saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, errorCallback);
     }
 
-    /**
-     * @deprecated Use {@link #getLedCalibrationForPlant(long, Consumer, Consumer)} instead.
-     */
     @Deprecated
     public void getPlantCalibration(long plantId, Consumer<PlantCalibration> callback,
                                     Consumer<Exception> errorCallback) {
-        getLedCalibrationForPlant(plantId, calibration -> {
-            if (callback == null) {
-                return;
-            }
-            PlantCalibration legacy = null;
-            if (calibration != null && calibration.hasCalibrationValues()) {
-                Float ambient = calibration.getAmbientFactor();
-                Float camera = calibration.getCameraFactor();
-                if (ambient != null && camera != null) {
-                    legacy = new PlantCalibration(plantId, ambient, camera);
-                }
-            }
-            callback.accept(legacy);
-        }, errorCallback);
+        calibrationManager.getPlantCalibration(plantId, callback, errorCallback);
     }
 
-    /**
-     * @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable)} instead.
-     */
     @Deprecated
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback) {
-        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, null);
+        calibrationManager.getPlantCalibration(plantId, callback, errorCallback);
     }
 
-    /**
-     * @deprecated Use {@link #saveLedCalibrationForPlant(long, float, float, Runnable, Consumer)} instead.
-     */
     @Deprecated
     public void savePlantCalibration(long plantId, float ambientFactor, float cameraFactor,
                                      Runnable callback, Consumer<Exception> errorCallback) {
-        saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, callback, errorCallback);
+        calibrationManager.savePlantCalibration(plantId, ambientFactor, cameraFactor, callback, errorCallback);
     }
 
     private void runAsync(Runnable action, Runnable callback, Consumer<Exception> errorCallback) {
@@ -593,143 +519,9 @@ public class PlantRepository implements CareRecommendationDelegate {
         });
     }
 
-    private Supplier<Runnable> careRecommendationRefreshSupplier(long plantId) {
-        return () -> refreshCareRecommendationsAsync(plantId);
-    }
-
     @Override
     public Runnable refreshCareRecommendationsAsync(long plantId) {
-        return () -> {
-            try {
-                List<CareRecommendation> recommendations = computeCareRecommendations(plantId);
-                notifyCareRecommendationListeners(plantId, recommendations);
-            } catch (Exception e) {
-                notifyCareRecommendationError(plantId, e);
-            }
-            try {
-                refreshReminderSuggestionSync(plantId, System.currentTimeMillis());
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to refresh reminder suggestion", e);
-            }
-        };
-    }
-
-    private List<CareRecommendation> computeCareRecommendations(long plantId) {
-        Plant plant = plantDao.findById(plantId);
-        if (plant == null) {
-            clearDismissedCareRecommendations(plantId);
-            return Collections.emptyList();
-        }
-        PlantProfile profile = null;
-        String speciesKey = plant.getSpecies();
-        if (speciesKey != null && !speciesKey.isEmpty()) {
-            SpeciesTarget target = speciesRepository.getSpeciesTargetSync(speciesKey);
-            profile = PlantProfile.fromTarget(target);
-        }
-        List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId, CARE_RECOMMENDATION_ENTRY_LIMIT);
-        if (entries == null) {
-            entries = Collections.emptyList();
-        }
-        List<CareRecommendation> evaluated = careRecommendationEngine.evaluate(profile, entries, context.getResources());
-        return applyDismissals(plantId, evaluated);
-    }
-
-    private List<CareRecommendation> applyDismissals(long plantId, List<CareRecommendation> recommendations) {
-        if (recommendations == null || recommendations.isEmpty()) {
-            clearDismissedCareRecommendations(plantId);
-            return Collections.emptyList();
-        }
-        Set<String> dismissed = loadDismissedIds(plantId);
-        List<CareRecommendation> filtered = new ArrayList<>();
-        for (CareRecommendation recommendation : recommendations) {
-            if (!dismissed.contains(recommendation.getId())) {
-                filtered.add(recommendation);
-            }
-        }
-        pruneDismissedCareRecommendations(plantId, dismissed, recommendations);
-        if (filtered.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(filtered);
-    }
-
-    private void notifyCareRecommendationListeners(long plantId, List<CareRecommendation> recommendations) {
-        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
-        if (listeners == null || listeners.isEmpty()) {
-            return;
-        }
-        List<CareRecommendation> payload = recommendations.isEmpty()
-            ? Collections.emptyList()
-            : Collections.unmodifiableList(new ArrayList<>(recommendations));
-        mainHandler.post(() -> {
-            for (CareRecommendationListener listener : listeners) {
-                listener.onCareRecommendationsUpdated(plantId, payload);
-            }
-        });
-    }
-
-    private void notifyCareRecommendationError(long plantId, Exception exception) {
-        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
-        if (listeners == null || listeners.isEmpty()) {
-            return;
-        }
-        mainHandler.post(() -> {
-            for (CareRecommendationListener listener : listeners) {
-                listener.onCareRecommendationsError(plantId, exception);
-            }
-        });
-    }
-
-    private Set<String> loadDismissedIds(long plantId) {
-        Set<String> stored = sharedPreferences.getStringSet(getDismissedPrefKey(plantId), Collections.emptySet());
-        return new HashSet<>(stored);
-    }
-
-    private void saveDismissedCareRecommendations(long plantId, Set<String> ids) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        String key = getDismissedPrefKey(plantId);
-        if (ids == null || ids.isEmpty()) {
-            editor.remove(key);
-        } else {
-            editor.putStringSet(key, new HashSet<>(ids));
-        }
-        editor.apply();
-    }
-
-    private void clearDismissedCareRecommendations(long plantId) {
-        sharedPreferences.edit().remove(getDismissedPrefKey(plantId)).apply();
-    }
-
-    private void pruneDismissedCareRecommendations(long plantId, Set<String> dismissed,
-                                                   List<CareRecommendation> active) {
-        if (dismissed.isEmpty()) {
-            return;
-        }
-        Set<String> activeIds = new HashSet<>();
-        for (CareRecommendation recommendation : active) {
-            activeIds.add(recommendation.getId());
-        }
-        if (dismissed.retainAll(activeIds)) {
-            saveDismissedCareRecommendations(plantId, dismissed);
-        }
-    }
-
-    private void addDismissedId(long plantId, String recommendationId) {
-        Set<String> dismissed = loadDismissedIds(plantId);
-        if (dismissed.add(recommendationId)) {
-            saveDismissedCareRecommendations(plantId, dismissed);
-        }
-    }
-
-    private void removeDismissedId(long plantId, String recommendationId) {
-        Set<String> dismissed = loadDismissedIds(plantId);
-        if (dismissed.remove(recommendationId)) {
-            saveDismissedCareRecommendations(plantId, dismissed);
-        }
-    }
-
-    private String getDismissedPrefKey(long plantId) {
-        return SettingsKeys.KEY_DISMISSED_CARE_RECOMMENDATIONS + "_" + plantId;
+        return careRecommendationService.refreshCareRecommendationsAsync(plantId);
     }
 
     public void getAllPlants(Consumer<List<Plant>> callback) {
@@ -988,101 +780,40 @@ public class PlantRepository implements CareRecommendationDelegate {
         environmentRepository.getLatestLight(plantId, callback, errorCallback);
     }
 
-    /**
-     * Retrieves the current care recommendations for the supplied plant.
-     */
     public void getCareRecommendations(long plantId,
                                        Consumer<List<CareRecommendation>> callback,
                                        Consumer<Exception> errorCallback) {
-        PlantDatabase.databaseWriteExecutor.execute(() -> {
-            try {
-                List<CareRecommendation> recommendations = computeCareRecommendations(plantId);
-                if (callback != null) {
-                    List<CareRecommendation> payload = recommendations.isEmpty()
-                        ? Collections.emptyList()
-                        : Collections.unmodifiableList(new ArrayList<>(recommendations));
-                    mainHandler.post(() -> callback.accept(payload));
-                }
-            } catch (Exception e) {
-                if (errorCallback != null) {
-                    mainHandler.post(() -> errorCallback.accept(e));
-                }
-            }
-        });
+        careRecommendationService.getCareRecommendations(plantId, callback, errorCallback);
     }
 
-    /**
-     * Registers a listener that will receive recommendation updates for the given plant.
-     */
-    public void registerCareRecommendationListener(long plantId, CareRecommendationListener listener) {
-        if (listener == null) {
-            return;
-        }
-        careRecommendationListeners
-            .computeIfAbsent(plantId, id -> new CopyOnWriteArrayList<>())
-            .addIfAbsent(listener);
+    public void registerCareRecommendationListener(long plantId,
+                                                   CareRecommendationService.CareRecommendationListener listener) {
+        careRecommendationService.registerCareRecommendationListener(plantId, listener);
     }
 
-    /**
-     * Unregisters a previously registered care recommendation listener.
-     */
-    public void unregisterCareRecommendationListener(long plantId, CareRecommendationListener listener) {
-        if (listener == null) {
-            return;
-        }
-        CopyOnWriteArrayList<CareRecommendationListener> listeners = careRecommendationListeners.get(plantId);
-        if (listeners != null) {
-            listeners.remove(listener);
-            if (listeners.isEmpty()) {
-                careRecommendationListeners.remove(plantId, listeners);
-            }
-        }
+    public void unregisterCareRecommendationListener(long plantId,
+                                                     CareRecommendationService.CareRecommendationListener listener) {
+        careRecommendationService.unregisterCareRecommendationListener(plantId, listener);
     }
 
-    /**
-     * Marks a recommendation as dismissed for the supplied plant.
-     */
     public void dismissCareRecommendation(long plantId, String recommendationId) {
-        dismissCareRecommendation(plantId, recommendationId, null, null);
+        careRecommendationService.dismissCareRecommendation(plantId, recommendationId);
     }
 
-    /**
-     * Marks a recommendation as dismissed for the supplied plant.
-     */
     public void dismissCareRecommendation(long plantId, String recommendationId,
                                           @Nullable Runnable callback,
                                           @Nullable Consumer<Exception> errorCallback) {
-        if (recommendationId == null || recommendationId.isEmpty()) {
-            if (errorCallback != null) {
-                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("recommendationId")));
-            }
-            return;
-        }
-        runAsync(() -> addDismissedId(plantId, recommendationId),
-            careRecommendationRefreshSupplier(plantId), callback, errorCallback);
+        careRecommendationService.dismissCareRecommendation(plantId, recommendationId, callback, errorCallback);
     }
 
-    /**
-     * Removes a dismissal marker for the supplied recommendation.
-     */
     public void restoreCareRecommendation(long plantId, String recommendationId) {
-        restoreCareRecommendation(plantId, recommendationId, null, null);
+        careRecommendationService.restoreCareRecommendation(plantId, recommendationId);
     }
 
-    /**
-     * Removes a dismissal marker for the supplied recommendation.
-     */
     public void restoreCareRecommendation(long plantId, String recommendationId,
                                           @Nullable Runnable callback,
                                           @Nullable Consumer<Exception> errorCallback) {
-        if (recommendationId == null || recommendationId.isEmpty()) {
-            if (errorCallback != null) {
-                mainHandler.post(() -> errorCallback.accept(new IllegalArgumentException("recommendationId")));
-            }
-            return;
-        }
-        runAsync(() -> removeDismissedId(plantId, recommendationId),
-            careRecommendationRefreshSupplier(plantId), callback, errorCallback);
+        careRecommendationService.restoreCareRecommendation(plantId, recommendationId);
     }
 
     public void insertMeasurement(Measurement measurement, Runnable callback) {
@@ -1166,106 +897,29 @@ public class PlantRepository implements CareRecommendationDelegate {
     }
 
     public void getReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback) {
-        getReminderSuggestion(plantId, callback, null);
+        reminderSuggestionManager.getReminderSuggestion(plantId, callback);
     }
 
     public void getReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback,
                                       Consumer<Exception> errorCallback) {
-        queryAsync(() -> reminderRepository.getSuggestionForPlantSync(plantId), callback, errorCallback);
+        reminderSuggestionManager.getReminderSuggestion(plantId, callback);
     }
 
     public void computeReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback) {
-        computeReminderSuggestion(plantId, callback, null);
+        reminderSuggestionManager.computeReminderSuggestion(plantId, callback);
     }
 
     public void computeReminderSuggestion(long plantId, Consumer<ReminderSuggestion> callback,
                                           Consumer<Exception> errorCallback) {
-        queryAsync(() -> refreshReminderSuggestionSync(plantId, System.currentTimeMillis()), callback, errorCallback);
+        reminderSuggestionManager.computeReminderSuggestion(plantId, callback, errorCallback);
     }
 
     public ReminderSuggestion refreshReminderSuggestionSync(long plantId) {
-        return refreshReminderSuggestionSync(plantId, System.currentTimeMillis());
+        return reminderSuggestionManager.refreshReminderSuggestionSync(plantId);
     }
 
     public void refreshAllReminderSuggestionsSync() {
-        List<Plant> plants = plantDao.getAll();
-        if (plants == null || plants.isEmpty()) {
-            return;
-        }
-        long timestamp = System.currentTimeMillis();
-        for (Plant plant : plants) {
-            try {
-                refreshReminderSuggestionForPlant(plant, timestamp);
-            } catch (Exception e) {
-                Log.w(TAG, "Failed to refresh reminder suggestion for plant " + plant.getId(), e);
-            }
-        }
-    }
-
-    private ReminderSuggestion refreshReminderSuggestionSync(long plantId, long timestamp) {
-        Plant plant = plantDao.findById(plantId);
-        if (plant == null) {
-            reminderRepository.deleteSuggestionSync(plantId);
-            return null;
-        }
-        ReminderSuggestion suggestion = buildReminderSuggestion(plant, timestamp);
-        reminderRepository.saveSuggestionSync(suggestion);
-        return suggestion;
-    }
-
-    private void refreshReminderSuggestionForPlant(Plant plant, long timestamp) {
-        if (plant == null) {
-            return;
-        }
-        ReminderSuggestion suggestion = buildReminderSuggestion(plant, timestamp);
-        reminderRepository.saveSuggestionSync(suggestion);
-    }
-
-    private ReminderSuggestion buildReminderSuggestion(Plant plant, long timestamp) {
-        long plantId = plant.getId();
-        PlantProfile profile = resolveProfileForPlant(plant);
-        List<EnvironmentEntry> entries = environmentRepository.getRecentEntriesForPlantSync(plantId,
-            SmartReminderEngine.HISTORY_LIMIT);
-        if (entries == null) {
-            entries = Collections.emptyList();
-        }
-        SmartReminderEngine.Suggestion suggestion = smartReminderEngine.suggest(profile, entries);
-        ReminderSuggestion entity = new ReminderSuggestion();
-        entity.setPlantId(plantId);
-        entity.setSuggestedIntervalDays(suggestion.getSuggestedDays());
-        entity.setLastEvaluatedAt(timestamp);
-        entity.setConfidenceScore(computeConfidenceScore(suggestion));
-        entity.setExplanation(reminderSuggestionFormatter.format(plant, profile, suggestion));
-        return entity;
-    }
-
-    private float computeConfidenceScore(SmartReminderEngine.Suggestion suggestion) {
-        float confidence = 0.3f;
-        if (suggestion.getBaselineDays() > 0) {
-            confidence += 0.3f;
-        }
-        if (suggestion.getEnvironmentSignal() != SmartReminderEngine.EnvironmentSignal.NO_DATA) {
-            confidence += 0.2f;
-        }
-        if (suggestion.getAverageSoilMoisture() != null) {
-            confidence += 0.2f;
-        }
-        if (suggestion.getLatestSoilMoisture() != null) {
-            confidence += 0.1f;
-        }
-        return Math.max(0f, Math.min(1f, confidence));
-    }
-
-    private PlantProfile resolveProfileForPlant(Plant plant) {
-        if (plant == null) {
-            return null;
-        }
-        String speciesKey = plant.getSpecies();
-        if (!TextUtils.isEmpty(speciesKey)) {
-            SpeciesTarget target = speciesRepository.getSpeciesTargetSync(speciesKey);
-            return PlantProfile.fromTarget(target);
-        }
-        return null;
+        return reminderSuggestionManager.refreshReminderSuggestionSync(plantId);
     }
 
     public void getSpeciesTarget(String speciesKey, Consumer<SpeciesTarget> callback) {
@@ -1426,21 +1080,6 @@ public class PlantRepository implements CareRecommendationDelegate {
 
     public void searchDiaryEntries(long plantId, String query, Consumer<List<DiaryEntry>> callback, Consumer<Exception> errorCallback) {
         diaryRepository.searchDiaryEntries(plantId, query, callback, errorCallback);
-    }
-
-    /**
-     * Listener receiving automatic care recommendation updates.
-     */
-    public interface CareRecommendationListener {
-        /**
-         * Invoked when a new list of care recommendations is available.
-         */
-        void onCareRecommendationsUpdated(long plantId, List<CareRecommendation> recommendations);
-
-        /**
-         * Invoked when the recommendation engine encounters an error.
-         */
-        void onCareRecommendationsError(long plantId, Exception exception);
     }
 
     /**

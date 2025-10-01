@@ -21,6 +21,7 @@ import de.oabidi.pflanzenbestandundlichttest.core.data.EnvironmentEntry;
 import de.oabidi.pflanzenbestandundlichttest.core.data.LightSummary;
 import de.oabidi.pflanzenbestandundlichttest.core.data.plant.SpeciesTarget;
 import de.oabidi.pflanzenbestandundlichttest.core.system.ExportManager;
+import de.oabidi.pflanzenbestandundlichttest.repository.CareRecommendationService;
 
 /**
  * Presenter for {@link PlantDetailView} handling non-UI logic such as export,
@@ -32,10 +33,11 @@ public class PlantDetailPresenter {
     private final long plantId;
     private final DateFormat dateFormat = DateFormat.getDateInstance();
     private final PlantRepository repository;
+    private final CareRecommendationService careService;
     private final Handler mainHandler;
     private final List<CareRecommendation> currentRecommendations = new ArrayList<>();
-    private final PlantRepository.CareRecommendationListener careRecommendationListener =
-        new PlantRepository.CareRecommendationListener() {
+    private final CareRecommendationService.CareRecommendationListener careRecommendationListener =
+        new CareRecommendationService.CareRecommendationListener() {
             @Override
             public void onCareRecommendationsUpdated(long id, List<CareRecommendation> recommendations) {
                 if (id != plantId) {
@@ -66,6 +68,7 @@ public class PlantDetailPresenter {
         this.plantId = plantId;
         this.exportManager = Objects.requireNonNull(exportManager, "exportManager");
         this.repository = Objects.requireNonNull(repository, "repository");
+        this.careService = Objects.requireNonNull(repository.careRecommendationService(), "careService");
         this.mainHandler = Objects.requireNonNull(handler, "handler");
     }
 
@@ -110,7 +113,7 @@ public class PlantDetailPresenter {
         }
         ensureCareListenerRegistered();
         runOnViewThread(() -> view.setCareRecommendationsLoading(true));
-        repository.getCareRecommendations(plantId,
+        careService.getCareRecommendations(plantId,
             recommendations -> runOnViewThread(() -> deliverRecommendations(recommendations)),
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
@@ -164,7 +167,7 @@ public class PlantDetailPresenter {
             runOnViewThread(this::handleCareRecommendationError);
             return;
         }
-        repository.dismissCareRecommendation(plantId, recommendationId,
+        careService.dismissCareRecommendation(plantId, recommendationId,
             () -> runOnViewThread(() -> handleDismissSuccess(recommendationId)),
             error -> runOnViewThread(this::handleCareRecommendationError));
     }
@@ -200,7 +203,7 @@ public class PlantDetailPresenter {
      */
     public void onDestroy() {
         if (careListenerRegistered) {
-            repository.unregisterCareRecommendationListener(plantId, careRecommendationListener);
+            careService.unregisterCareRecommendationListener(plantId, careRecommendationListener);
             careListenerRegistered = false;
         }
     }
@@ -209,7 +212,7 @@ public class PlantDetailPresenter {
         if (careListenerRegistered) {
             return;
         }
-        repository.registerCareRecommendationListener(plantId, careRecommendationListener);
+        careService.registerCareRecommendationListener(plantId, careRecommendationListener);
         careListenerRegistered = true;
     }
 

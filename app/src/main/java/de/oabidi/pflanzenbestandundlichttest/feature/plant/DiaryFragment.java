@@ -330,9 +330,9 @@ public class DiaryFragment extends Fragment implements DiaryPresenter.View {
         PlantRepository repo = repository;
         if (repo != null) {
             final long targetPlantId = plantId;
-            repo.getReminderSuggestion(targetPlantId, suggestion ->
+            repo.reminderSuggestionManager().getReminderSuggestion(targetPlantId, suggestion ->
                 applyReminderSuggestion(suggestionView, remindEdit, suggestion, suppressWatcher, userEdited));
-            repo.computeReminderSuggestion(targetPlantId, suggestion ->
+            repo.reminderSuggestionManager().computeReminderSuggestion(targetPlantId, suggestion ->
                     applyReminderSuggestion(suggestionView, remindEdit, suggestion, suppressWatcher, userEdited),
                 e -> {
                     if (isAdded()) {

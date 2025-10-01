@@ -474,7 +474,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
         if (backButton != null) {
             backButton.setEnabled(false);
         }
-        repository.saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, () -> {
+        repository.calibrationManager().saveLedCalibrationForPlant(plantId, ambientFactor, cameraFactor, () -> {
             if (!isAdded()) {
                 return;
             }
@@ -503,7 +503,7 @@ public class CalibrationFragment extends Fragment implements LightSensorHelper.O
             updateProfileViews();
             return;
         }
-        repository.getLedCalibrationForPlant(plantId, calibration -> {
+        repository.calibrationManager().getLedCalibrationForPlant(plantId, calibration -> {
             if (!isAdded()) {
                 return;
             }
