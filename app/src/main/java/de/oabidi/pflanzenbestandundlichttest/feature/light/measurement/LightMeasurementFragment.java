@@ -20,8 +20,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +34,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.List;
@@ -60,8 +59,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private TextView artificialPhotonHoursView;
     private TextView artificialAmbientDliView;
     private TextView artificialCameraDliView;
-    private Spinner plantSelector;
-    private Spinner stageSelector;
+    private MaterialAutoCompleteTextView plantSelector;
+    private MaterialAutoCompleteTextView stageSelector;
     private MaterialButton saveMeasurementButton;
     private TextView locationCheckView;
     private TextView cameraLumaView;
@@ -87,6 +86,8 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
     private boolean cameraPermissionDenied;
     private boolean cameraUnavailable;
     private boolean updatingStageSelection;
+    @Nullable
+    private CharSequence[] stageItems;
 
     public static LightMeasurementFragment newInstance(PlantRepository repository) {
         LightMeasurementFragment fragment = new LightMeasurementFragment();
@@ -158,16 +159,17 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         presenter = new LightMeasurementPresenter(this, repo, context, DEFAULT_CALIBRATION, sampleSize);
         cameraLumaMonitor = new CameraLumaMonitor((raw, smoothed) -> presenter.onCameraLumaChanged(raw, smoothed));
 
-        ArrayAdapter<CharSequence> stageAdapter = ArrayAdapter.createFromResource(requireContext(),
-            R.array.growth_stage_labels, android.R.layout.simple_spinner_item);
-        stageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        stageSelector.setAdapter(stageAdapter);
+        stageItems = getResources().getTextArray(R.array.growth_stage_labels);
+        stageSelector.setSimpleItems(stageItems);
 
         String storedStage = preferences.getString(SettingsKeys.KEY_SELECTED_STAGE,
             SpeciesTarget.GrowthStage.VEGETATIVE.name());
         SpeciesTarget.GrowthStage initialStage = parseStage(storedStage);
         updatingStageSelection = true;
-        stageSelector.setSelection(stageToIndex(initialStage));
+        int initialIndex = stageToIndex(initialStage);
+        if (stageItems != null && initialIndex >= 0 && initialIndex < stageItems.length) {
+            stageSelector.setText(stageItems[initialIndex].toString(), false);
+        }
         updatingStageSelection = false;
         presenter.setActiveStage(initialStage);
 
@@ -197,37 +199,21 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             selectedPlantId = preferences.getLong(SettingsKeys.KEY_SELECTED_PLANT, -1);
         }
 
-        plantSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
-                if (plants != null && position >= 0 && position < plants.size()) {
-                    selectedPlantId = plants.get(position).getId();
-                    presenter.selectPlant(position);
-                    preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedPlantId = -1;
-                preferences.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
+        plantSelector.setOnItemClickListener((parent, selectedView, position, id) -> {
+            if (plants != null && position >= 0 && position < plants.size()) {
+                selectedPlantId = plants.get(position).getId();
+                presenter.selectPlant(position);
+                preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
             }
         });
 
-        stageSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View selectedView, int position, long id) {
-                if (updatingStageSelection) {
-                    return;
-                }
-                SpeciesTarget.GrowthStage stage = stageFromIndex(position);
-                preferences.edit().putString(SettingsKeys.KEY_SELECTED_STAGE, stage.name()).apply();
-                presenter.setActiveStage(stage);
+        stageSelector.setOnItemClickListener((parent, selectedView, position, id) -> {
+            if (updatingStageSelection) {
+                return;
             }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
+            SpeciesTarget.GrowthStage stage = stageFromIndex(position);
+            preferences.edit().putString(SettingsKeys.KEY_SELECTED_STAGE, stage.name()).apply();
+            presenter.setActiveStage(stage);
         });
 
         calibrateButton.setOnClickListener(v -> navigateToCalibration());
@@ -580,11 +566,7 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
         for (int i = 0; i < plants.size(); i++) {
             names[i] = plants.get(i).getName();
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-            android.R.layout.simple_spinner_item,
-            names);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        plantSelector.setAdapter(adapter);
+        plantSelector.setSimpleItems(names);
         if (!plants.isEmpty()) {
             int selection = 0;
             if (selectedPlantId != -1) {
@@ -597,9 +579,13 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
             } else {
                 selectedPlantId = plants.get(0).getId();
             }
-            plantSelector.setSelection(selection);
+            plantSelector.setText(names[selection], false);
+            presenter.selectPlant(selection);
+            preferences.edit().putLong(SettingsKeys.KEY_SELECTED_PLANT, selectedPlantId).apply();
         } else {
             selectedPlantId = -1;
+            plantSelector.setText("", false);
+            preferences.edit().remove(SettingsKeys.KEY_SELECTED_PLANT).apply();
         }
     }
 
@@ -612,8 +598,14 @@ public class LightMeasurementFragment extends Fragment implements LightMeasureme
 
     @Override
     public void showSelectedStage(SpeciesTarget.GrowthStage stage) {
+        if (stageSelector == null) {
+            return;
+        }
         updatingStageSelection = true;
-        stageSelector.setSelection(stageToIndex(stage));
+        int index = stageToIndex(stage);
+        if (stageItems != null && index >= 0 && index < stageItems.length) {
+            stageSelector.setText(stageItems[index].toString(), false);
+        }
         updatingStageSelection = false;
     }
 

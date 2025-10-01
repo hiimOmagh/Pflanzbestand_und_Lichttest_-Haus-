@@ -13,8 +13,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import android.text.Editable;
@@ -34,6 +32,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import de.oabidi.pflanzenbestandundlichttest.core.ui.InsetsUtils;
 import de.oabidi.pflanzenbestandundlichttest.repository.SpeciesRepository;
@@ -390,17 +389,18 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
         EditText sourceEdit = dialogView.findViewById(R.id.edit_source);
         EditText wateringFrequencyEdit = dialogView.findViewById(R.id.edit_watering_frequency);
         EditText wateringSoilEdit = dialogView.findViewById(R.id.edit_watering_soil);
-        Spinner toxicitySpinner = dialogView.findViewById(R.id.spinner_toxicity);
+        MaterialAutoCompleteTextView toxicityDropdown = dialogView.findViewById(R.id.spinner_toxicity);
         EditText temperatureMinEdit = dialogView.findViewById(R.id.edit_temperature_min);
         EditText temperatureMaxEdit = dialogView.findViewById(R.id.edit_temperature_max);
         EditText humidityMinEdit = dialogView.findViewById(R.id.edit_humidity_min);
         EditText humidityMaxEdit = dialogView.findViewById(R.id.edit_humidity_max);
         EditText careTipsEdit = dialogView.findViewById(R.id.edit_care_tips);
 
-        ArrayAdapter<CharSequence> toxicityAdapter = ArrayAdapter.createFromResource(requireContext(),
-            R.array.metadata_toxicity_options, android.R.layout.simple_spinner_item);
-        toxicityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        toxicitySpinner.setAdapter(toxicityAdapter);
+        CharSequence[] toxicityOptions = getResources().getTextArray(R.array.metadata_toxicity_options);
+        toxicityDropdown.setSimpleItems(toxicityOptions);
+        if (toxicityOptions.length > 0) {
+            toxicityDropdown.setText(toxicityOptions[0].toString(), false);
+        }
 
         StageFields seedlingFields = new StageFields(seedlingPpfdMin, seedlingPpfdMax, seedlingDliMin, seedlingDliMax);
         StageFields vegetativeFields = new StageFields(vegetativePpfdMin, vegetativePpfdMax, vegetativeDliMin, vegetativeDliMax);
@@ -426,7 +426,10 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     wateringSoilEdit.setText(wateringInfo.getSoilType());
                 }
             }
-            toxicitySpinner.setSelection(toxicitySelectionForValue(target.getToxicToPets()));
+            int toxicityIndex = toxicitySelectionForValue(target.getToxicToPets());
+            if (toxicityIndex >= 0 && toxicityIndex < toxicityOptions.length) {
+                toxicityDropdown.setText(toxicityOptions[toxicityIndex].toString(), false);
+            }
             SpeciesTarget.FloatRange temperatureRange = target.getTemperatureRange();
             if (temperatureRange != null) {
                 if (temperatureRange.getMin() != null) {
@@ -502,7 +505,8 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
                     } else {
                         newTarget.setHumidityRange(null);
                     }
-                    newTarget.setToxicToPets(parseToxicitySelection(toxicitySpinner.getSelectedItemPosition()));
+                    int toxicityIndex = toxicityIndexForText(toxicityOptions, toxicityDropdown.getText());
+                    newTarget.setToxicToPets(parseToxicitySelection(toxicityIndex));
                     List<String> careTips = parseCareTipsInput(careTipsEdit.getText().toString());
                     newTarget.setCareTips(careTips.isEmpty() ? null : careTips);
                     repository.insertSpeciesTarget(newTarget, this::loadTargets,
@@ -552,6 +556,18 @@ public class SpeciesTargetListFragment extends Fragment implements SpeciesTarget
             return 0;
         }
         return value ? 2 : 1;
+    }
+
+    private int toxicityIndexForText(@NonNull CharSequence[] options, @Nullable CharSequence value) {
+        if (value == null) {
+            return -1;
+        }
+        for (int i = 0; i < options.length; i++) {
+            if (TextUtils.equals(options[i], value)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Nullable

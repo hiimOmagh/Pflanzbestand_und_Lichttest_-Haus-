@@ -110,29 +110,43 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="camera_dli_value,artificial_camera_dli_value" />
 
-    <Spinner
-        android:id="@+id/plant_selector"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_large"
         android:layout_marginTop="@dimen/spacing_small"
         android:layout_marginEnd="@dimen/spacing_large"
-        android:minHeight="@dimen/form_field_min_height"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/light_projection_barrier" />
+        app:layout_constraintTop_toBottomOf="@id/light_projection_barrier">
 
-    <Spinner
-        android:id="@+id/stage_selector"
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/plant_selector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:minHeight="@dimen/form_field_min_height"
+            android:importantForAutofill="no" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/spacing_large"
         android:layout_marginTop="@dimen/spacing_small"
         android:layout_marginEnd="@dimen/spacing_large"
-        android:minHeight="@dimen/form_field_min_height"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/plant_selector" />
+        app:layout_constraintTop_toBottomOf="@id/plant_selector">
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/stage_selector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:minHeight="@dimen/form_field_min_height"
+            android:importantForAutofill="no" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/measurement_save_button"
