@@ -913,8 +913,13 @@ public class PlantDetailActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_export_plant) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_export_plant) {
             presenter.onExportRequested();
+            return true;
+        } else if (itemId == R.id.action_add_photo) {
+            launchCamera();
+            refreshPlantPhotos();
             return true;
         }
         return super.onOptionsItemSelected(item);
