@@ -1,5 +1,8 @@
 package de.oabidi.pflanzenbestandundlichttest.feature.settings;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -10,17 +13,20 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreferenceCompat;
 
 import de.oabidi.pflanzenbestandundlichttest.R;
-import de.oabidi.pflanzenbestandundlichttest.core.system.BackupScheduler;
 import de.oabidi.pflanzenbestandundlichttest.common.util.LocaleHelper;
 import de.oabidi.pflanzenbestandundlichttest.common.util.SettingsKeys;
 import de.oabidi.pflanzenbestandundlichttest.common.util.ThemeUtils;
+import de.oabidi.pflanzenbestandundlichttest.core.system.BackupScheduler;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.AlertHistoryDialogFragment;
 import de.oabidi.pflanzenbestandundlichttest.feature.alerts.ProactiveAlertWorkScheduler;
+import de.oabidi.pflanzenbestandundlichttest.feature.main.MainActivity;
+import de.oabidi.pflanzenbestandundlichttest.feature.onboarding.OnboardingActivity;
 
 /**
  * Fragment displaying application settings.
  */
 public class SettingsFragment extends PreferenceFragmentCompat {
+    private static final String KEY_SHOW_TUTORIAL = "show_tutorial";
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -74,6 +80,26 @@ public class SettingsFragment extends PreferenceFragmentCompat {
             historyPref.setOnPreferenceClickListener(pref -> {
                 AlertHistoryDialogFragment.newInstance()
                     .show(getParentFragmentManager(), "alert_history");
+                return true;
+            });
+        }
+
+        Preference tutorialPref = findPreference(KEY_SHOW_TUTORIAL);
+        if (tutorialPref != null) {
+            tutorialPref.setOnPreferenceClickListener(pref -> {
+                SharedPreferences sharedPreferences =
+                    requireContext().getSharedPreferences(SettingsKeys.PREFS_NAME, Context.MODE_PRIVATE);
+                sharedPreferences.edit()
+                    .putBoolean(SettingsKeys.KEY_ONBOARDING_DONE, false)
+                    .putBoolean(SettingsKeys.KEY_ONBOARDING_COMPLETE, false)
+                    .putBoolean(SettingsKeys.KEY_HAS_ONBOARDED, false)
+                    .apply();
+                if (requireActivity() instanceof MainActivity) {
+                    ((MainActivity) requireActivity()).launchOnboarding();
+                } else {
+                    Intent onboardingIntent = new Intent(requireContext(), OnboardingActivity.class);
+                    startActivity(onboardingIntent);
+                }
                 return true;
             });
         }

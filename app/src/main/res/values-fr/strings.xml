@@ -228,6 +228,8 @@
     <string name="pref_auto_backup">Sauvegardes automatiques</string>
     <string name="pref_auto_backup_summary">Exporter les données chaque semaine vers le stockage de l\'application</string>
     <string name="pref_alert_history_summary">Voir les alertes proactives récentes</string>
+    <string name="pref_show_tutorial">Revoir le tutoriel</string>
+    <string name="pref_show_tutorial_summary">Relance le parcours d\'introduction depuis le début</string>
     <string name="pref_theme">Thème</string>
     <string name="pref_language">Langue</string>
     <string name="language_english">Anglais</string>

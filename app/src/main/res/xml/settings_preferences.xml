@@ -43,6 +43,11 @@
         app:summary="@string/pref_alert_history_summary"
         app:title="@string/pref_alert_history" />
 
+    <Preference
+        app:key="show_tutorial"
+        app:summary="@string/pref_show_tutorial_summary"
+        app:title="@string/pref_show_tutorial" />
+
     <EditTextPreference
         android:inputType="number"
         app:defaultValue="3"

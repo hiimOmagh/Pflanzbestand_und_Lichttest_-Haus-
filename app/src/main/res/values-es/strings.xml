@@ -227,6 +227,8 @@
     <string name="pref_auto_backup">Copias de seguridad automáticas</string>
     <string name="pref_auto_backup_summary">Exportar datos semanalmente al almacenamiento de la app</string>
     <string name="pref_alert_history_summary">Ver alertas proactivas recientes</string>
+    <string name="pref_show_tutorial">Volver a mostrar el tutorial</string>
+    <string name="pref_show_tutorial_summary">Reinicia la guía de introducción desde el principio</string>
     <string name="pref_theme">Tema</string>
     <string name="pref_language">Idioma</string>
     <string name="language_english">Inglés</string>
