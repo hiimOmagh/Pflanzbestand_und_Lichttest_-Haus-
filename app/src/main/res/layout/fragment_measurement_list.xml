@@ -12,10 +12,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="16dp">
+            android:paddingHorizontal="@dimen/spacing_large"
+            android:paddingTop="@dimen/spacing_large">
 
-            <com.google.android.material.textfield.TextInputLayout
+        <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
@@ -37,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:paddingHorizontal="16dp" />
+            android:paddingHorizontal="@dimen/spacing_large" />
 
         <LinearLayout
             android:id="@+id/measurement_empty_state"
@@ -46,8 +46,8 @@
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical"
-            android:paddingHorizontal="32dp"
-            android:paddingBottom="32dp"
+            android:paddingHorizontal="@dimen/spacing_xxlarge"
+            android:paddingBottom="@dimen/spacing_xxlarge"
             android:visibility="gone">
 
             <ImageView
@@ -59,7 +59,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_large"
                 android:gravity="center"
                 android:text="@string/measurement_empty_message"
                 android:textAppearance="@style/TextAppearance.Material3.BodyLarge" />

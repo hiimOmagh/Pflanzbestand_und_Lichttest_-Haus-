@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:padding="16dp"
+    android:padding="@dimen/spacing_large"
     tools:context=".PlantGalleryTabFragment">
 
     <LinearLayout
@@ -38,7 +38,7 @@
             android:id="@+id/detail_add_photo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_large"
             android:text="@string/action_add_photo" />
 
     </LinearLayout>
